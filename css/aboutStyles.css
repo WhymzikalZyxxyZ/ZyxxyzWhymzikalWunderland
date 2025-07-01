@@ -20,12 +20,17 @@ banner {
     }
 
 .aboutBody {
-    background-image: url('../images/comebacklater.png');
-    background-size: cover; /* Makes the image cover the entire body */
+    background-image: url('../images/comebacklater.png'); /* Background image */
+    background-size: cover; /* Ensures the image covers the entire viewport */
     background-position: center; /* Centers the background image */
-    background-repeat: no-repeat; /* Prevents the background from repeating */
+    background-repeat: no-repeat; /* Prevents the image from repeating */
     background-attachment: fixed; /* Makes the background fixed when scrolling */
-    min-height: 100vh; /* Ensure the body takes full viewport height */
+    min-height: 100vh; /* Ensures the body takes at least the full viewport height */
+    width: 100%; /* Ensures the body takes up the full width */
+    display: flex; /* Use flexbox to center content if needed */
+    justify-content: center; /* Centers content horizontally */
+    align-items: center; /* Centers content vertically */
+    color: aliceblue; /* Optional: Ensures text stands out on the background */
 
 }
 
