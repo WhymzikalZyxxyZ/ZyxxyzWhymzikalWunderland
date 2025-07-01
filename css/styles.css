@@ -21,7 +21,7 @@ banner {
       display: block;
     }
 
-body {
+.indexBody {
     background-image: url('../images/logo.png');
     background-size: cover; /* Makes the image cover the entire body */
     background-position: center; /* Centers the background image */
