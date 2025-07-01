@@ -38,16 +38,16 @@ aboutBody {
 
 #demo {
     text-align: center;
-    color: white;
+    color: blueviolet;
 }
 
 button {
     display: block;
     margin: 20px auto;
     padding: 10px 20px;
-    background-color: #f4a261; /* Button color */
+    background-color: #8a26be; /* Button color */
     border: none;
-    color: white;
+    color: aliceblue;
     font-size: 1.2em;
     cursor: pointer;
 }
