@@ -2,15 +2,15 @@ fsbody {
   background-color: powderblue;
 }
 h1 {
-  color: blue;
+  color: darkslategrey;
   text-align: center;
   font-size: large;
-  font-family: 'Comic Sans MS';
+  font-family: Jokerman;
   text-decoration: blink;
   outline-color: aquamarine;
 }
 p {
-  color: red;
+  color: greenyellow;
 }
 
 banner {
@@ -20,7 +20,7 @@ banner {
     }
 
 body {
-    background-image: url('images/logo.png');
+    background-image: url('images/comebacklater.png');
     background-size: cover; /* Makes the image cover the entire body */
     background-position: center; /* Centers the background image */
     background-repeat: no-repeat; /* Prevents the background from repeating */
