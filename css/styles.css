@@ -4,7 +4,9 @@ fsbody {
 h1 {
   color: blue;
   text-align: center;
-  font-size: large;
+  font-size:x-large;
+  font-style:oblique;
+  font-palette:dark;
   font-family: 'Comic Sans MS';
   text-decoration: blink;
   outline-color: aquamarine;
