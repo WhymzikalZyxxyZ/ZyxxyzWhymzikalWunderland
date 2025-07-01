@@ -19,7 +19,7 @@ banner {
       display: block;
     }
 
-body {
+aboutBody {
     background-image: url('../images/comebacklater.png');
     background-size: cover; /* Makes the image cover the entire body */
     background-position: center; /* Centers the background image */
