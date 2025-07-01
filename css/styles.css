@@ -3,6 +3,11 @@ fsbody {
 }
 h1 {
   color: blue;
+  text-align: center;
+  font-size: large;
+  font-family: 'Comic Sans MS';
+  text-decoration: blink;
+  outline-color: aquamarine;
 }
 p {
   color: red;
