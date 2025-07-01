@@ -20,7 +20,7 @@ banner {
     }
 
 body {
-    background-image: url('images/logo.png');
+    background-image: url('../images/logo.png');
     background-size: cover; /* Makes the image cover the entire body */
     background-position: center; /* Centers the background image */
     background-repeat: no-repeat; /* Prevents the background from repeating */
