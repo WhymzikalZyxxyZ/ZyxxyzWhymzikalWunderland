@@ -25,7 +25,6 @@ banner {
     background-position: center; /* Centers the background image */
     background-repeat: no-repeat; /* Prevents the image from repeating */
     background-attachment: scroll; /* Makes the background scroll */
-    min-height: 100vh; /* Ensures the body takes at least the full viewport height */
     width: 100%; /* Ensures the body takes up the full width */
     display: flex; /* Use flexbox to center content if needed */
     justify-content: center; /* Centers content horizontally */

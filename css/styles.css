@@ -1,25 +1,29 @@
 fsbody {
-  background-color: powderblue;
+    background-color: powderblue;
 }
+
 h1 {
-  color: blue;
-  text-align: center;
-  font-size:x-large;
-  font-style:oblique;
-  font-palette:dark;
-  font-family: 'Comic Sans MS';
-  text-decoration: blink;
-  outline-color: aquamarine;
+    color: blue;
+    text-align: center;
+    text-decoration-line: underline;
+    font-size: 69px;
+    font-weight: bolder;
+    font-style: oblique;
+    font-palette: dark;
+    font-family: 'Comic Sans MS';
+    text-decoration: blink;
+    outline-color: aquamarine;
 }
+
 p {
-  color: red;
+    color: red;
 }
 
 banner {
-      width: 420px; 
-      height: 420px; 
-      display: block;
-    }
+    width: 420px;
+    height: 420px;
+    display: block;
+}
 
 .indexBody {
     background-image: url('../images/logo.png');
@@ -56,3 +60,28 @@ button {
     button:hover {
         background-color: #e76f51; /* Darker shade on hover */
     }
+
+.navbar {
+    width: 100%;
+    background-color: rgba(69, 69, 69, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+    .navbar a {
+        color: azure;
+        text-decoration: none;
+        margin: 0 20px;
+        padding: 8px 16px;
+        border-radius: 6px;
+        transition: background-color 0.3s;
+    }
+
+        .navbar a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
