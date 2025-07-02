@@ -108,13 +108,14 @@ button:hover {
 .content-row {
     margin-bottom: 20px; /* Adds space between rows */
     text-align: center; /* Centers text or content in each row */
+    z-index: 1;
 }
 
 /* Navigation bar style */
 .navbar-container {
     position: relative; /* Keep navbar in normal document flow */
     z-index: 1; /* Ensures navbar stays above the background */
-    background-color: rgba(0, 0, 0, 0.7); /* Optional: Adds background for readability */
+    background-color: rgba(69, 69, 69, 0.8); /* Optional: Adds background for readability */
     padding: 10px 0; /* Adds some space around the navbar */
 }
 
@@ -125,8 +126,9 @@ button:hover {
 .navbar a {
     margin: 0 15px; /* Adds space between navbar items */
     text-decoration: none; /* Removes underline */
-    color: #fff; /* White text color */
+    color: #80289d; /* White text color */
     font-size: 18px;
+    font-family: Papyrus;
 }
 
 .navbar a:hover {
