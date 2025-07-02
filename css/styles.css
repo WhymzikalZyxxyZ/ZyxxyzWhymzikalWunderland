@@ -49,7 +49,7 @@ banner {
     background-size: contain;
     background-position: center; /* Centers the background image */
     background-repeat: no-repeat; /* Prevents the background from repeating */
-    background-attachment: fixed; /* Makes the background fixed when scrolling */
+    background-attachment: scroll; /* Makes the background fixed when scrolling */
     min-height: 100vh; /* Ensure the body takes full viewport height */
 }
 
@@ -76,11 +76,11 @@ button {
     cursor: pointer;
 }
 
-    button:hover {
-        background-color: #e76f51; /* Darker shade on hover */
-    }
+button:hover {
+    background-color: #e76f51; /* Darker shade on hover */
+}
 
-.navbar {
+.indexNavbar {
     width: 100%;
     background-color: rgba(69, 69, 69, 0.8);
     display: flex;
@@ -92,20 +92,43 @@ button {
     z-index: 1000;
 }
 
-    .navbar a {
+.indexNavbar a {
         color: azure;
         text-decoration: none;
         margin: 0 20px;
         padding: 8px 16px;
         border-radius: 6px;
         transition: background-color 0.3s;
-    }
+}
 
-        .navbar a:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
+.indexNavbar a:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
 
 .content-row {
     margin-bottom: 20px; /* Adds space between rows */
     text-align: center; /* Centers text or content in each row */
+}
+
+/* Navigation bar style */
+.navbar-container {
+    position: relative; /* Keep navbar in normal document flow */
+    z-index: 1; /* Ensures navbar stays above the background */
+    background-color: rgba(0, 0, 0, 0.7); /* Optional: Adds background for readability */
+    padding: 10px 0; /* Adds some space around the navbar */
+}
+
+.navbar {
+    text-align: center;
+}
+
+.navbar a {
+    margin: 0 15px; /* Adds space between navbar items */
+    text-decoration: none; /* Removes underline */
+    color: #fff; /* White text color */
+    font-size: 18px;
+}
+
+.navbar a:hover {
+    color: #007bff; /* Color change on hover */
 }
