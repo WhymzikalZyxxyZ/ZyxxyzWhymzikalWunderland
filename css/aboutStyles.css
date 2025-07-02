@@ -21,10 +21,10 @@ banner {
 
 .aboutBody {
     background-image: url('../images/comebacklater.png'); /* Background image */
-    background-size: 100%;
+    background-size: auto;
     background-position: center; /* Centers the background image */
     background-repeat: no-repeat; /* Prevents the image from repeating */
-    background-attachment: fixed; /* Makes the background fixed when scrolling */
+    background-attachment: scroll; /* Makes the background scroll */
     min-height: 100vh; /* Ensures the body takes at least the full viewport height */
     width: 100%; /* Ensures the body takes up the full width */
     display: flex; /* Use flexbox to center content if needed */
