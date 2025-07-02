@@ -104,3 +104,8 @@ button {
         .navbar a:hover {
             background-color: rgba(255, 255, 255, 0.2);
         }
+
+.content-row {
+    margin-bottom: 20px; /* Adds space between rows */
+    text-align: center; /* Centers text or content in each row */
+}
