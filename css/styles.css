@@ -15,6 +15,16 @@ h1 {
     outline-color: aquamarine;
 }
 
+h2 {
+    color: darkslategrey;
+    text-align: center;
+    font-weight: bolder;
+    font-size: 69px;
+    font-family: Jokerman;
+    text-decoration: blink;
+    outline-color: aquamarine;
+}
+
 p {
     color: red;
 }
