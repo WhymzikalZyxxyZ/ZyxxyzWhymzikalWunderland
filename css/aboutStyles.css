@@ -21,7 +21,7 @@ banner {
 
 .aboutBody {
     background-image: url('../images/comebacklater.png'); /* Background image */
-    background-size: contain; /* Ensures the image covers the entire viewport */
+    background-size: 100%;
     background-position: center; /* Centers the background image */
     background-repeat: no-repeat; /* Prevents the image from repeating */
     background-attachment: fixed; /* Makes the background fixed when scrolling */
@@ -31,7 +31,6 @@ banner {
     justify-content: center; /* Centers content horizontally */
     align-items: center; /* Centers content vertically */
     color: aliceblue; /* Optional: Ensures text stands out on the background */
-
 }
 
 .banner {
