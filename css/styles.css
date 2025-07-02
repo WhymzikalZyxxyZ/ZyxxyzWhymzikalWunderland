@@ -44,6 +44,19 @@ banner {
     min-height: 100vh; /* Ensure the body takes full viewport height */
 }
 
+.notYetBody {
+    background-image: url('../images/comebacklater.png'); /* Background image */
+    background-size: auto;
+    background-position: center; /* Centers the background image */
+    background-repeat: no-repeat; /* Prevents the image from repeating */
+    background-attachment: scroll; /* Makes the background scroll */
+    width: 100%; /* Ensures the body takes up the full width */
+    display: flex; /* Use flexbox to center content if needed */
+    justify-content: center; /* Centers content horizontally */
+    align-items: center; /* Centers content vertically */
+    color: aliceblue; /* Optional: Ensures text stands out on the background */
+}
+
 .banner {
     width: 55vw;
     min-width: 330px;
