@@ -16,17 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3  # This action checks out your code so the next steps can use it
 
-      # Step 2: Set up FTP connection
-      - name: Set up FTP connection
-        uses: SamKirkland/FTP-Deploy-Action@4.0.0
-        with:
-          ftp-server: ${{ secrets.FTP_SERVER }}      # The FTP server address (Porkbun FTP server)
-          ftp-username: ${{ secrets.FTP_USERNAME }}  # FTP username from Porkbun
-          ftp-password: ${{ secrets.FTP_PASSWORD }}  # FTP password from Porkbun
-          local-dir: ./  # Local directory to upload (root of your repository)
-          remote-dir: /public_html  # Remote directory where the files will go on your Porkbun hosting
-          # You can change `/public_html` to the appropriate directory in your Porkbun account
 
-      # Step 3: Post-deployment confirmation (optional)
+      # Step 2: Post-deployment confirmation (optional)
       - name: Deployment Confirmation
         run: echo "Deployment to Porkbun successful!"
