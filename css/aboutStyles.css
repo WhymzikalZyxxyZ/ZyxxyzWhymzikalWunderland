@@ -21,7 +21,7 @@ banner {
 
 .aboutBody {
     background-image: url('../images/comebacklater.png'); /* Background image */
-    background-size: cover; /* Ensures the image covers the entire viewport */
+    background-size: contain; /* Ensures the image covers the entire viewport */
     background-position: center; /* Centers the background image */
     background-repeat: no-repeat; /* Prevents the image from repeating */
     background-attachment: fixed; /* Makes the background fixed when scrolling */
