@@ -46,7 +46,7 @@ banner {
 
 .notYetBody {
     background-image: url('../images/comebacklater.png'); /* Background image */
-    background-size: cover; /* Makes the image cover the entire body */
+    background-size: contain;
     background-position: center; /* Centers the background image */
     background-repeat: no-repeat; /* Prevents the background from repeating */
     background-attachment: fixed; /* Makes the background fixed when scrolling */
