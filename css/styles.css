@@ -45,7 +45,7 @@ banner {
 }
 
 .notYetBody {
-    background-image: url('../images/comebacklater.png'); /* Background image */
+    background-image: url('/images/comebacklater.png'); /* Background image */
     background-size: contain;
     background-position: center; /* Centers the background image */
     background-repeat: no-repeat; /* Prevents the background from repeating */
