@@ -5,6 +5,77 @@
     <title>About ZYXXYZ's Whymzykal Wunderland!</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
+    <style>
+        #tetris-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 16px;
+            margin: 24px auto;
+        }
+        #tetris-board {
+            border: 2px solid #555;
+            display: block;
+        }
+        #tetris-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 110px;
+        }
+        .tetris-box {
+            background: rgba(0,0,0,0.6);
+            border: 1px solid #555;
+            padding: 8px;
+            text-align: center;
+        }
+        .tetris-box label {
+            display: block;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
+        .tetris-box span {
+            display: block;
+            font-family: 'Courier New', monospace;
+            font-size: 22px;
+            font-weight: bold;
+            color: #f4a261;
+        }
+        #tetris-next {
+            display: block;
+            margin: 0 auto;
+        }
+        #tetris-status {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            font-weight: bold;
+            color: #f00;
+            text-align: center;
+            min-height: 20px;
+            background: rgba(0,0,0,0.6);
+            padding: 4px;
+        }
+        #tetris-start {
+            width: 100%;
+            font-family: 'Courier New', monospace;
+        }
+        #tetris-keys {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #888;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #444;
+            padding: 8px;
+        }
+        #tetris-keys p {
+            color: #888;
+            margin: 2px 0;
+            text-align: left;
+        }
+    </style>
 </head>
 <body class="notYetBody">
 
@@ -20,15 +91,260 @@
         <a href="../community/forum.html">Community</a>
     </div>
 
-    <!-- Removed the <img> tag here as it's no longer needed -->
-    <div class="banner"></div> <!-- Placeholder for your logo as background -->
-    <!-- Removed the <img> tag here as it's no longer needed -->
-    <div class="banner"></div> <!-- Placeholder for your logo as background -->
+    <div id="tetris-wrapper">
+        <canvas id="tetris-board" width="300" height="600"></canvas>
 
-    <br>
-    <p id="demo">ZYXXYZ</p>
+        <div id="tetris-sidebar">
+            <div class="tetris-box">
+                <label>NEXT</label>
+                <canvas id="tetris-next" width="96" height="96"></canvas>
+            </div>
+            <div class="tetris-box">
+                <label>SCORE</label>
+                <span id="tetris-score">0</span>
+            </div>
+            <div class="tetris-box">
+                <label>LINES</label>
+                <span id="tetris-lines">0</span>
+            </div>
+            <div class="tetris-box">
+                <label>LEVEL</label>
+                <span id="tetris-level">1</span>
+            </div>
+            <div id="tetris-status"></div>
+            <button id="tetris-start" onclick="startGame()">PLAY</button>
+            <div id="tetris-keys">
+                <p>&#8592; &#8594; &nbsp;Move</p>
+                <p>&#8593; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Rotate</p>
+                <p>&#8595; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Soft drop</p>
+                <p>Spc &nbsp;&nbsp;Hard drop</p>
+                <p>P &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Pause</p>
+            </div>
+        </div>
+    </div>
 
     <button type="button" onclick="navigateToPage('../index.html')">E.T. Phone Home!</button>
 
+    <script>
+        const COLS = 10, ROWS = 20, BLOCK = 30;
+
+        const COLORS = [
+            null,
+            '#00f0f0', // I
+            '#f0f000', // O
+            '#a000f0', // T
+            '#00f000', // S
+            '#f00000', // Z
+            '#0000f0', // J
+            '#f0a000', // L
+        ];
+
+        const SHAPES = [
+            null,
+            [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+            [[2,2],[2,2]],
+            [[0,3,0],[3,3,3],[0,0,0]],
+            [[0,4,4],[4,4,0],[0,0,0]],
+            [[5,5,0],[0,5,5],[0,0,0]],
+            [[6,0,0],[6,6,6],[0,0,0]],
+            [[0,0,7],[7,7,7],[0,0,0]],
+        ];
+
+        let board, piece, nextPiece;
+        let score, lines, level, dropInterval;
+        let gameOver, paused, lastDrop, animId;
+        let canvas, ctx, nextCanvas, nextCtx;
+
+        function newBoard() {
+            return Array.from({length: ROWS}, () => new Array(COLS).fill(0));
+        }
+
+        function newPiece() {
+            const id = Math.ceil(Math.random() * 7);
+            const shape = SHAPES[id].map(r => [...r]);
+            return { id, shape, x: Math.floor((COLS - shape[0].length) / 2), y: 0 };
+        }
+
+        function collides(p, dx = 0, dy = 0, shape = p.shape) {
+            return shape.some((row, y) =>
+                row.some((v, x) => {
+                    if (!v) return false;
+                    const nx = p.x + x + dx, ny = p.y + y + dy;
+                    return nx < 0 || nx >= COLS || ny >= ROWS || (ny >= 0 && board[ny][nx]);
+                })
+            );
+        }
+
+        function rotateShape(shape) {
+            return shape[0].map((_, i) => shape.map(r => r[i]).reverse());
+        }
+
+        function drawBlock(c, x, y, id, size) {
+            c.fillStyle = COLORS[id];
+            c.fillRect(x * size, y * size, size - 1, size - 1);
+            c.fillStyle = 'rgba(255,255,255,0.3)';
+            c.fillRect(x * size, y * size, size - 1, 3);
+            c.fillRect(x * size, y * size, 3, size - 1);
+        }
+
+        function render() {
+            ctx.fillStyle = '#111';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < COLS; x++) {
+                ctx.beginPath(); ctx.moveTo(x * BLOCK, 0); ctx.lineTo(x * BLOCK, canvas.height); ctx.stroke();
+            }
+            for (let y = 0; y < ROWS; y++) {
+                ctx.beginPath(); ctx.moveTo(0, y * BLOCK); ctx.lineTo(canvas.width, y * BLOCK); ctx.stroke();
+            }
+
+            board.forEach((row, y) => row.forEach((v, x) => { if (v) drawBlock(ctx, x, y, v, BLOCK); }));
+
+            if (!gameOver) {
+                let ghost = { x: piece.x, y: piece.y, shape: piece.shape };
+                while (!collides(ghost, 0, 1)) ghost = { x: ghost.x, y: ghost.y + 1, shape: ghost.shape };
+                ctx.globalAlpha = 0.15;
+                ghost.shape.forEach((row, dy) => row.forEach((v, dx) => { if (v) drawBlock(ctx, ghost.x + dx, ghost.y + dy, v, BLOCK); }));
+                ctx.globalAlpha = 1;
+
+                piece.shape.forEach((row, dy) => row.forEach((v, dx) => { if (v) drawBlock(ctx, piece.x + dx, piece.y + dy, v, BLOCK); }));
+            }
+
+            const nb = 24;
+            nextCtx.fillStyle = '#111';
+            nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
+            const ox = Math.floor((nextCanvas.width / nb - nextPiece.shape[0].length) / 2);
+            const oy = Math.floor((nextCanvas.height / nb - nextPiece.shape.length) / 2);
+            nextPiece.shape.forEach((row, dy) => row.forEach((v, dx) => { if (v) drawBlock(nextCtx, ox + dx, oy + dy, v, nb); }));
+        }
+
+        function clearLines() {
+            let cleared = 0;
+            for (let y = ROWS - 1; y >= 0; y--) {
+                if (board[y].every(v => v)) {
+                    board.splice(y, 1);
+                    board.unshift(new Array(COLS).fill(0));
+                    cleared++; y++;
+                }
+            }
+            if (!cleared) return;
+            const pts = [0, 100, 300, 500, 800];
+            score += pts[Math.min(cleared, 4)] * level;
+            lines += cleared;
+            level = Math.floor(lines / 10) + 1;
+            dropInterval = Math.max(80, 1000 - (level - 1) * 90);
+            document.getElementById('tetris-score').textContent = score;
+            document.getElementById('tetris-lines').textContent = lines;
+            document.getElementById('tetris-level').textContent = level;
+        }
+
+        function lockPiece() {
+            piece.shape.forEach((row, dy) => {
+                row.forEach((v, dx) => {
+                    if (!v) return;
+                    const y = piece.y + dy;
+                    if (y >= 0) board[y][piece.x + dx] = v;
+                });
+            });
+            clearLines();
+            piece = nextPiece;
+            nextPiece = newPiece();
+            if (collides(piece)) endGame();
+        }
+
+        function drop() {
+            if (!collides(piece, 0, 1)) piece.y++;
+            else lockPiece();
+        }
+
+        function hardDrop() {
+            while (!collides(piece, 0, 1)) piece.y++;
+            lockPiece();
+        }
+
+        function loop(timestamp) {
+            if (gameOver) return;
+            animId = requestAnimationFrame(loop);
+            if (paused) return;
+            if (!lastDrop) lastDrop = timestamp;
+            if (timestamp - lastDrop >= dropInterval) {
+                drop();
+                lastDrop = timestamp;
+            }
+            render();
+        }
+
+        function startGame() {
+            cancelAnimationFrame(animId);
+            board = newBoard();
+            piece = newPiece();
+            nextPiece = newPiece();
+            score = 0; lines = 0; level = 1; dropInterval = 1000;
+            gameOver = false; paused = false; lastDrop = 0;
+            document.getElementById('tetris-score').textContent = 0;
+            document.getElementById('tetris-lines').textContent = 0;
+            document.getElementById('tetris-level').textContent = 1;
+            document.getElementById('tetris-status').textContent = '';
+            document.getElementById('tetris-start').textContent = 'RESTART';
+            animId = requestAnimationFrame(loop);
+        }
+
+        function endGame() {
+            gameOver = true;
+            render();
+            document.getElementById('tetris-status').textContent = 'GAME OVER';
+            document.getElementById('tetris-start').textContent = 'PLAY AGAIN';
+        }
+
+        document.addEventListener('keydown', e => {
+            if (gameOver) return;
+            if (e.key === 'p' || e.key === 'P') {
+                paused = !paused;
+                document.getElementById('tetris-status').textContent = paused ? 'PAUSED' : '';
+                if (!paused) { lastDrop = performance.now(); render(); }
+                return;
+            }
+            if (paused) return;
+            switch (e.key) {
+                case 'ArrowLeft':
+                    if (!collides(piece, -1)) { piece.x--; render(); }
+                    e.preventDefault(); break;
+                case 'ArrowRight':
+                    if (!collides(piece, 1)) { piece.x++; render(); }
+                    e.preventDefault(); break;
+                case 'ArrowDown':
+                    drop(); lastDrop = performance.now(); render();
+                    e.preventDefault(); break;
+                case 'ArrowUp': {
+                    const rotated = rotateShape(piece.shape);
+                    for (const kick of [0, -1, 1, -2, 2]) {
+                        if (!collides({ x: piece.x + kick, y: piece.y, shape: piece.shape }, 0, 0, rotated)) {
+                            piece.shape = rotated;
+                            piece.x += kick;
+                            break;
+                        }
+                    }
+                    render();
+                    e.preventDefault(); break;
+                }
+                case ' ':
+                    hardDrop(); render();
+                    e.preventDefault(); break;
+            }
+        });
+
+        window.addEventListener('load', () => {
+            canvas = document.getElementById('tetris-board');
+            ctx = canvas.getContext('2d');
+            nextCanvas = document.getElementById('tetris-next');
+            nextCtx = nextCanvas.getContext('2d');
+            ctx.fillStyle = '#111';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            nextCtx.fillStyle = '#111';
+            nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
+        });
+    </script>
 </body>
-</html> 
+</html>
