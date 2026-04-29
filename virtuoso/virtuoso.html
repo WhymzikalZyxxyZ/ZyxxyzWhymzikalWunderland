@@ -2,9 +2,257 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>About ZYXXYZ's Whymzykal Wunderland!</title>
+    <title>Virtuoso - ZYXXYZ's Whymzykal Wunderland!</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
+    <style>
+        #virtuoso-content {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* ── Section titles ── */
+        #virtuoso-content .v-title {
+            font-family: 'Comic Sans MS', cursive;
+            font-size: 22px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* ══ CORKBOARD (public gallery) ══ */
+        #virtuoso-content .corkboard {
+            background-color: #b8722e;
+            background-image:
+                repeating-linear-gradient(0deg,   rgba(0,0,0,0.05) 0, rgba(0,0,0,0.05) 1px, transparent 1px, transparent 22px),
+                repeating-linear-gradient(90deg,  rgba(0,0,0,0.05) 0, rgba(0,0,0,0.05) 1px, transparent 1px, transparent 22px);
+            border: 10px solid #7a4a20;
+            border-radius: 10px;
+            padding: 36px 28px 44px;
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.3), 0 6px 24px rgba(0,0,0,0.35);
+            margin-bottom: 32px;
+        }
+
+        #virtuoso-content .corkboard .v-title { color: #fff3d4; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
+
+        /* how-to accordion */
+        #virtuoso-content .how-to {
+            background: rgba(255,255,255,0.15);
+            border-radius: 6px;
+            padding: 10px 16px;
+            margin-bottom: 24px;
+            color: #fff3d4;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        #virtuoso-content .how-to summary {
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            list-style: none;
+        }
+        #virtuoso-content .how-to summary::-webkit-details-marker { display: none; }
+        #virtuoso-content .how-to summary::before { content: '▶ '; }
+        #virtuoso-content details[open] .how-to summary::before { content: '▼ '; }
+        #virtuoso-content .how-to p { margin-top: 10px; }
+        #virtuoso-content .how-to code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        #virtuoso-content .how-to ol { padding-left: 18px; margin-top: 6px; }
+        #virtuoso-content .how-to li { margin: 4px 0; }
+
+        /* polaroid grid */
+        #virtuoso-content .polaroid-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 28px;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 80px;
+        }
+
+        /* individual polaroid */
+        #virtuoso-content .polaroid {
+            background: white;
+            padding: 10px 10px 38px;
+            box-shadow: 4px 4px 14px rgba(0,0,0,0.45), 0 1px 3px rgba(0,0,0,0.2);
+            position: relative;
+            width: 180px;
+            cursor: pointer;
+            transition: box-shadow 0.2s, transform 0.18s;
+            z-index: 1;
+        }
+        #virtuoso-content .polaroid:hover {
+            box-shadow: 8px 12px 35px rgba(0,0,0,0.55);
+            z-index: 50;
+        }
+        #virtuoso-content .polaroid img {
+            width: 100%;
+            height: 152px;
+            object-fit: cover;
+            display: block;
+        }
+        #virtuoso-content .polaroid .caption {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            text-align: center;
+            font-family: 'Comic Sans MS', cursive;
+            font-size: 12px;
+            color: #333;
+            padding: 6px 8px 10px;
+            word-break: break-word;
+        }
+
+        /* thumbtack */
+        #virtuoso-content .thumbtack {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #ff8080, #c0392b);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+            z-index: 2;
+        }
+
+        /* empty state */
+        #virtuoso-content .empty-state {
+            width: 100%;
+            text-align: center;
+            font-family: 'Comic Sans MS', cursive;
+            font-size: 15px;
+            color: rgba(255,255,255,0.65);
+            padding: 24px 0;
+        }
+
+        /* ══ LOCAL PREVIEW SECTION ══ */
+        #virtuoso-content .local-section {
+            background: rgba(0,0,0,0.45);
+            border: 2px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            padding: 28px 24px;
+            margin-bottom: 28px;
+        }
+        #virtuoso-content .local-section .v-title { color: #f4a261; }
+
+        /* drop zone */
+        #virtuoso-content .drop-zone {
+            border: 3px dashed rgba(244,162,97,0.55);
+            border-radius: 10px;
+            padding: 36px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            margin-bottom: 18px;
+            user-select: none;
+        }
+        #virtuoso-content .drop-zone:hover,
+        #virtuoso-content .drop-zone.drag-over {
+            border-color: #f4a261;
+            background: rgba(244,162,97,0.08);
+        }
+        #virtuoso-content .drop-zone .dz-text {
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+            margin: 4px 0;
+        }
+        #virtuoso-content .drop-zone .dz-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+            display: block;
+        }
+        #virtuoso-content .pick-btn {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 8px 22px;
+            background: #f4a261;
+            color: white;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s;
+        }
+        #virtuoso-content .pick-btn:hover { background: #e76f51; }
+        #file-input { display: none; }
+
+        /* clear button */
+        #virtuoso-content #clear-btn {
+            display: none;
+            margin: 0 auto 18px;
+            padding: 7px 18px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.25);
+            color: rgba(255,255,255,0.6);
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        #virtuoso-content #clear-btn:hover {
+            border-color: rgba(255,255,255,0.5);
+            color: white;
+            background: transparent;
+        }
+
+        /* ══ LIGHTBOX ══ */
+        #lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.88);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        #lightbox.open { display: flex; }
+        #lightbox img {
+            max-width: 90vw;
+            max-height: 85vh;
+            object-fit: contain;
+            box-shadow: 0 0 80px rgba(0,0,0,0.8);
+            border: 10px solid white;
+            pointer-events: none;
+        }
+        #lightbox-caption {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-family: 'Comic Sans MS', cursive;
+            font-size: 16px;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+            white-space: nowrap;
+        }
+        #lightbox-close {
+            position: fixed;
+            top: 20px;
+            right: 28px;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            line-height: 1;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        #lightbox-close:hover { opacity: 1; }
+
+        /* ── Responsive ── */
+        @media (max-width: 600px) {
+            #virtuoso-content .polaroid { width: 140px; }
+            #virtuoso-content .polaroid img { height: 118px; }
+        }
+    </style>
 </head>
 <body class="notYetBody">
 
@@ -13,7 +261,6 @@
     </div>
 
     <div class="content-row">
-        <!-- Navigation Bar -->
         <div class="navbar">
             <a href="../../index.html">Home</a>
             <a href="../../virtuoso/animations/motionpictures.html">Motion Pictures</a>
@@ -24,21 +271,181 @@
         </div>
     </div>
 
-    <div class="content-row">
-        <!-- Removed the <img> tag here as it's no longer needed -->
-        <div class="banner"></div> <!-- Placeholder for your logo as background -->
+    <div id="virtuoso-content">
+
+        <!-- ══ PUBLIC GALLERY ══ -->
+        <div class="corkboard">
+            <div class="v-title">✨ The Gallery</div>
+
+            <details>
+                <div class="how-to">
+                    <summary>How to add your art to this gallery</summary>
+                    <p>Since this is a static site, adding images is a two-step process:</p>
+                    <ol>
+                        <li>Put your image files in the <code>/virtuoso/gallery/</code> folder in the repo.</li>
+                        <li>Add an entry to the <code>GALLERY</code> array at the bottom of this page's <code>&lt;script&gt;</code> block, like:<br>
+                            <code>{ src: '/virtuoso/gallery/my-drawing.jpg', caption: 'My Drawing' }</code>
+                        </li>
+                        <li>Commit and push — Porkbun will deploy automatically.</li>
+                    </ol>
+                    <p>Supported formats: JPG, PNG, GIF, WebP, SVG.</p>
+                </div>
+            </details>
+
+            <div class="polaroid-grid" id="public-grid">
+                <div class="empty-state" id="empty-state">
+                    No art yet! Add images to <code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:3px;font-family:monospace;">/virtuoso/gallery/</code> to get started ✨
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ LOCAL PREVIEW ══ -->
+        <div class="local-section">
+            <div class="v-title">🎨 Preview Your Art</div>
+            <p class="dz-text" style="text-align:center;margin-bottom:14px;color:rgba(255,255,255,0.5);font-size:13px;">
+                Pick images from your computer to see them displayed here — nothing gets uploaded anywhere.
+            </p>
+
+            <div class="drop-zone" id="drop-zone">
+                <span class="dz-icon">🖼️</span>
+                <p class="dz-text">Drag &amp; drop images here</p>
+                <p class="dz-text">or</p>
+                <button class="pick-btn" onclick="document.getElementById('file-input').click()">Choose Files</button>
+                <input type="file" id="file-input" multiple accept="image/*">
+            </div>
+
+            <button id="clear-btn">✕ Clear preview</button>
+
+            <div class="polaroid-grid" id="local-grid"></div>
+        </div>
+
     </div>
 
-    <div class="content-row">
-        <p id="demo">Zyxxyz is a virtuoso, look at their art!</p>
-
-    </div>
     <div class="content-row">
         <button type="button" onclick="navigateToPage('../index.html')">E.T. Phone Home!</button>
-
     </div>
 
+    <!-- ══ LIGHTBOX ══ -->
+    <div id="lightbox">
+        <span id="lightbox-close" onclick="closeLightbox()">✕</span>
+        <img id="lightbox-img" src="" alt="">
+        <div id="lightbox-caption"></div>
+    </div>
 
+    <script>
+        // ─────────────────────────────────────────────────────────────
+        // PUBLIC GALLERY — add your images here:
+        // { src: '/virtuoso/gallery/filename.jpg', caption: 'Title' }
+        // ─────────────────────────────────────────────────────────────
+        const GALLERY = [
+            // { src: '/virtuoso/gallery/my-drawing.jpg',    caption: 'My Drawing'    },
+            // { src: '/virtuoso/gallery/watercolor.png',    caption: 'Watercolor'    },
+            // { src: '/virtuoso/gallery/doodle-sheet.jpg',  caption: 'Doodle Sheet'  },
+        ];
 
+        const PASTEL_BORDERS = ['#FFB3BA','#FFDFBA','#FFFFBA','#BAFFC9','#BAE1FF','#E8BAFF','#FFBAEE'];
+        let colorIdx = 0;
+
+        function randomRot(max) {
+            return (Math.random() - 0.5) * 2 * max;
+        }
+
+        function makePolaroid(src, caption, isLocal, borderColor) {
+            const rot  = randomRot(isLocal ? 11 : 8);
+            const wrap = document.createElement('div');
+            wrap.className = 'polaroid';
+            wrap.style.transform = `rotate(${rot}deg)`;
+            if (borderColor) wrap.style.borderTop = `7px solid ${borderColor}`;
+
+            const tack = document.createElement('div');
+            tack.className = 'thumbtack';
+            if (borderColor) {
+                tack.style.background = `radial-gradient(circle at 35% 35%, ${borderColor}, #888)`;
+            }
+
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = caption;
+            img.loading = 'lazy';
+
+            const cap = document.createElement('div');
+            cap.className = 'caption';
+            cap.textContent = caption;
+
+            wrap.appendChild(tack);
+            wrap.appendChild(img);
+            wrap.appendChild(cap);
+
+            wrap.addEventListener('mouseenter', () => {
+                wrap.style.transform = `rotate(${rot * 0.25}deg) scale(1.08)`;
+            });
+            wrap.addEventListener('mouseleave', () => {
+                wrap.style.transform = `rotate(${rot}deg)`;
+            });
+            wrap.addEventListener('click', () => openLightbox(src, caption));
+
+            return wrap;
+        }
+
+        // ── Render public gallery ──────────────────────────────────
+        function renderPublicGallery() {
+            const grid  = document.getElementById('public-grid');
+            const empty = document.getElementById('empty-state');
+            if (GALLERY.length === 0) { empty.style.display = 'block'; return; }
+            empty.style.display = 'none';
+            GALLERY.forEach(item => grid.appendChild(makePolaroid(item.src, item.caption, false, null)));
+        }
+
+        // ── Lightbox ───────────────────────────────────────────────
+        function openLightbox(src, caption) {
+            document.getElementById('lightbox-img').src = src;
+            document.getElementById('lightbox-caption').textContent = caption;
+            document.getElementById('lightbox').classList.add('open');
+        }
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('open');
+        }
+        document.getElementById('lightbox').addEventListener('click', function(e) {
+            if (e.target === this) closeLightbox();
+        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+        // ── Local file picker ─────────────────────────────────────
+        const dropZone  = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const localGrid = document.getElementById('local-grid');
+        const clearBtn  = document.getElementById('clear-btn');
+
+        function addFiles(files) {
+            Array.from(files).forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+                const url     = URL.createObjectURL(file);
+                const caption = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+                const color   = PASTEL_BORDERS[colorIdx % PASTEL_BORDERS.length];
+                colorIdx++;
+                localGrid.appendChild(makePolaroid(url, caption, true, color));
+            });
+            clearBtn.style.display = localGrid.children.length ? 'block' : 'none';
+        }
+
+        fileInput.addEventListener('change', e => addFiles(e.target.files));
+
+        dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            addFiles(e.dataTransfer.files);
+        });
+
+        clearBtn.addEventListener('click', () => {
+            localGrid.innerHTML = '';
+            fileInput.value     = '';
+            colorIdx            = 0;
+            clearBtn.style.display = 'none';
+        });
+
+        renderPublicGallery();
+    </script>
 </body>
-</html> 
+</html>
