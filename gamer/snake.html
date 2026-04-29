@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Snake — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js"></script>
+    <style>
+        #snake-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 16px;
+            margin: 24px auto;
+        }
+        #snake-board {
+            border: 2px solid #555;
+            display: block;
+        }
+        #snake-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 110px;
+        }
+        .snake-box {
+            background: rgba(0,0,0,0.6);
+            border: 1px solid #555;
+            padding: 8px;
+            text-align: center;
+        }
+        .snake-box label {
+            display: block;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
+        .snake-box span {
+            display: block;
+            font-family: 'Courier New', monospace;
+            font-size: 22px;
+            font-weight: bold;
+            color: #f4a261;
+        }
+        #snake-best {
+            color: #ffd700;
+        }
+        .snake-box.new-best {
+            animation: snakeBestFlash 0.5s ease 3;
+        }
+        @keyframes snakeBestFlash {
+            0%, 100% { background: rgba(0,0,0,0.6); }
+            50%       { background: rgba(255,215,0,0.25); }
+        }
+        #snake-status {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            font-weight: bold;
+            color: #f00;
+            text-align: center;
+            min-height: 20px;
+            background: rgba(0,0,0,0.6);
+            padding: 4px;
+        }
+        #snake-start {
+            width: 100%;
+            font-family: 'Courier New', monospace;
+        }
+        #snake-keys {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #888;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #444;
+            padding: 8px;
+        }
+        #snake-keys p {
+            color: #888;
+            margin: 2px 0;
+            text-align: left;
+        }
+    </style>
+</head>
+<body class="notYetBody">
+
+    <h2>Snake</h2>
+
+    <div class="navbar">
+        <a href="../index.html">Home</a>
+        <a href="games.html">Games</a>
+        <a href="tetris.html">Tetris</a>
+        <a href="snake.html">Snake</a>
+    </div>
+
+    <div id="snake-wrapper">
+        <canvas id="snake-board" width="400" height="400"></canvas>
+
+        <div id="snake-sidebar">
+            <div class="snake-box">
+                <label>SCORE</label>
+                <span id="snake-score">0</span>
+            </div>
+            <div class="snake-box" id="snake-best-box">
+                <label>BEST</label>
+                <span id="snake-best">0</span>
+            </div>
+            <div class="snake-box">
+                <label>LENGTH</label>
+                <span id="snake-length">3</span>
+            </div>
+            <div id="snake-status"></div>
+            <button id="snake-start" onclick="snakeStartGame()">PLAY</button>
+            <div id="snake-keys">
+                <p>&#8592; &#8594; &nbsp;Move</p>
+                <p>&#8593; &#8595; &nbsp;Move</p>
+                <p>P &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Pause</p>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" onclick="navigateToPage('games.html')">&#8592; Back to Games</button>
+
+    <script>
+        const S_COLS = 20, S_ROWS = 20, S_CELL = 20;
+
+        let sBoard, sDir, sNextDir, sFoodPos;
+        let sScore, sGameOver, sPaused;
+        let sTickMs, sIntervalId;
+        let sCanvas, sCtx;
+        let sHighScore = parseInt(localStorage.getItem('snakeHighScore') || '0');
+
+        function sPlaceFood() {
+            let pos;
+            do {
+                pos = { x: Math.floor(Math.random() * S_COLS), y: Math.floor(Math.random() * S_ROWS) };
+            } while (sBoard.some(s => s.x === pos.x && s.y === pos.y));
+            sFoodPos = pos;
+        }
+
+        function snakeStartGame() {
+            clearInterval(sIntervalId);
+            sBoard = [{x:12,y:10},{x:11,y:10},{x:10,y:10}];
+            sDir = {x:1, y:0};
+            sNextDir = {x:1, y:0};
+            sScore = 0;
+            sGameOver = false;
+            sPaused = false;
+            sTickMs = 150;
+            sPlaceFood();
+            document.getElementById('snake-score').textContent = 0;
+            document.getElementById('snake-length').textContent = 3;
+            document.getElementById('snake-best').textContent = sHighScore;
+            document.getElementById('snake-status').textContent = '';
+            document.getElementById('snake-status').style.color = '#f00';
+            document.getElementById('snake-start').textContent = 'RESTART';
+            document.getElementById('snake-best-box').classList.remove('new-best');
+            sRender();
+            sIntervalId = setInterval(sTick, sTickMs);
+        }
+
+        function sTick() {
+            if (sGameOver || sPaused) return;
+            sDir = sNextDir;
+            const head = {x: sBoard[0].x + sDir.x, y: sBoard[0].y + sDir.y};
+            if (head.x < 0 || head.x >= S_COLS || head.y < 0 || head.y >= S_ROWS) { sEndGame(); return; }
+            if (sBoard.some(s => s.x === head.x && s.y === head.y)) { sEndGame(); return; }
+            sBoard.unshift(head);
+            if (head.x === sFoodPos.x && head.y === sFoodPos.y) {
+                sScore += 10;
+                document.getElementById('snake-score').textContent = sScore;
+                document.getElementById('snake-length').textContent = sBoard.length;
+                sPlaceFood();
+                sTickMs = Math.max(60, sTickMs - 5);
+                clearInterval(sIntervalId);
+                sIntervalId = setInterval(sTick, sTickMs);
+            } else {
+                sBoard.pop();
+            }
+            sRender();
+        }
+
+        function sRender() {
+            sCtx.fillStyle = '#111';
+            sCtx.fillRect(0, 0, sCanvas.width, sCanvas.height);
+
+            sCtx.strokeStyle = 'rgba(255,255,255,0.04)';
+            sCtx.lineWidth = 1;
+            for (let x = 0; x < S_COLS; x++) {
+                sCtx.beginPath(); sCtx.moveTo(x * S_CELL, 0); sCtx.lineTo(x * S_CELL, sCanvas.height); sCtx.stroke();
+            }
+            for (let y = 0; y < S_ROWS; y++) {
+                sCtx.beginPath(); sCtx.moveTo(0, y * S_CELL); sCtx.lineTo(sCanvas.width, y * S_CELL); sCtx.stroke();
+            }
+
+            sCtx.fillStyle = '#f44';
+            sCtx.beginPath();
+            sCtx.arc(
+                sFoodPos.x * S_CELL + S_CELL / 2,
+                sFoodPos.y * S_CELL + S_CELL / 2,
+                S_CELL / 2 - 2, 0, Math.PI * 2
+            );
+            sCtx.fill();
+
+            sBoard.forEach((seg, i) => {
+                sCtx.fillStyle = i === 0 ? '#00f0f0' : '#00c000';
+                sCtx.fillRect(seg.x * S_CELL + 1, seg.y * S_CELL + 1, S_CELL - 2, S_CELL - 2);
+                if (i === 0) {
+                    sCtx.fillStyle = 'rgba(255,255,255,0.3)';
+                    sCtx.fillRect(seg.x * S_CELL + 1, seg.y * S_CELL + 1, S_CELL - 2, 3);
+                    sCtx.fillRect(seg.x * S_CELL + 1, seg.y * S_CELL + 1, 3, S_CELL - 2);
+                }
+            });
+        }
+
+        function sEndGame() {
+            sGameOver = true;
+            clearInterval(sIntervalId);
+            sRender();
+            if (sScore > sHighScore) {
+                sHighScore = sScore;
+                localStorage.setItem('snakeHighScore', sHighScore);
+                document.getElementById('snake-best').textContent = sHighScore;
+                document.getElementById('snake-status').textContent = 'NEW BEST!';
+                document.getElementById('snake-status').style.color = '#ffd700';
+                const box = document.getElementById('snake-best-box');
+                box.classList.remove('new-best');
+                void box.offsetWidth;
+                box.classList.add('new-best');
+            } else {
+                document.getElementById('snake-status').textContent = 'GAME OVER';
+                document.getElementById('snake-status').style.color = '#f00';
+            }
+            document.getElementById('snake-start').textContent = 'PLAY AGAIN';
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'p' || e.key === 'P') {
+                if (sGameOver) return;
+                sPaused = !sPaused;
+                if (sPaused) {
+                    document.getElementById('snake-status').textContent = 'PAUSED';
+                    document.getElementById('snake-status').style.color = '#f00';
+                } else {
+                    document.getElementById('snake-status').textContent = '';
+                    sRender();
+                }
+                return;
+            }
+            if (sPaused || sGameOver) return;
+            switch (e.key) {
+                case 'ArrowUp':
+                    if (sDir.y !== 1)  sNextDir = {x:0, y:-1};
+                    e.preventDefault(); break;
+                case 'ArrowDown':
+                    if (sDir.y !== -1) sNextDir = {x:0, y:1};
+                    e.preventDefault(); break;
+                case 'ArrowLeft':
+                    if (sDir.x !== 1)  sNextDir = {x:-1, y:0};
+                    e.preventDefault(); break;
+                case 'ArrowRight':
+                    if (sDir.x !== -1) sNextDir = {x:1, y:0};
+                    e.preventDefault(); break;
+            }
+        });
+
+        window.addEventListener('load', () => {
+            sCanvas = document.getElementById('snake-board');
+            sCtx = sCanvas.getContext('2d');
+            sCtx.fillStyle = '#111';
+            sCtx.fillRect(0, 0, sCanvas.width, sCanvas.height);
+            document.getElementById('snake-best').textContent = sHighScore;
+        });
+    </script>
+</body>
+</html>
