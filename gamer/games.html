@@ -5,6 +5,9 @@
     <title>Gamer — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
     <style>
         .game-cards {
             display: flex;
@@ -18,12 +21,15 @@
             background: rgba(0,0,0,0.5);
             border: 2px solid #555;
             border-radius: 12px;
-            padding: 36px 28px;
-            width: 200px;
+            padding: 32px 24px 20px;
+            width: 210px;
             text-align: center;
             text-decoration: none;
             color: #fff;
             transition: transform 0.2s, border-color 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         .game-card:hover {
             transform: translateY(-8px);
@@ -40,11 +46,34 @@
             margin: 0 0 8px;
             font-size: 1.2em;
         }
-        .game-card p {
+        .game-card > p {
             font-family: 'Courier New', monospace;
             font-size: 12px;
             color: #aaa;
-            margin: 0;
+            margin: 0 0 16px;
+        }
+        .world-score-box {
+            width: 100%;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-top: auto;
+        }
+        .world-score-box label {
+            display: block;
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            letter-spacing: 2px;
+            color: #555;
+            margin-bottom: 3px;
+        }
+        .world-score-box span {
+            display: block;
+            font-family: 'Courier New', monospace;
+            font-size: 22px;
+            font-weight: bold;
+            color: #4caf50;
         }
     </style>
 </head>
@@ -66,15 +95,33 @@
             <span class="game-card-icon">🧱</span>
             <h3>Tetris</h3>
             <p>Stack the blocks, clear the lines. Speed up over time.</p>
+            <div class="world-score-box">
+                <label>ALL-TIME BEST</label>
+                <span id="world-tetris">—</span>
+            </div>
         </a>
         <a href="snake.html" class="game-card">
             <span class="game-card-icon">🐍</span>
             <h3>Snake</h3>
             <p>Eat the food, grow longer, don't bite yourself.</p>
+            <div class="world-score-box">
+                <label>ALL-TIME BEST</label>
+                <span id="world-snake">—</span>
+            </div>
         </a>
     </div>
 
     <button type="button" onclick="navigateToPage('../index.html')">E.T. Phone Home!</button>
 
+    <script>
+        if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY) {
+            firebase.database().ref('scores/tetris').on('value', snap => {
+                document.getElementById('world-tetris').textContent = snap.val() || 0;
+            });
+            firebase.database().ref('scores/snake').on('value', snap => {
+                document.getElementById('world-snake').textContent = snap.val() || 0;
+            });
+        }
+    </script>
 </body>
 </html>

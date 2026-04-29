@@ -5,6 +5,9 @@
     <title>Tetris — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
     <style>
         #tetris-wrapper {
             display: flex;
@@ -44,9 +47,18 @@
             font-weight: bold;
             color: #f4a261;
         }
-        #tetris-next {
-            display: block;
-            margin: 0 auto;
+        #tetris-next { display: block; margin: 0 auto; }
+        #tetris-best { color: #ffd700; }
+        #tetris-world { color: #4caf50; }
+        .tetris-box.new-best { animation: bestFlash 0.5s ease 3; }
+        @keyframes bestFlash {
+            0%, 100% { background: rgba(0,0,0,0.6); }
+            50%       { background: rgba(255,215,0,0.25); }
+        }
+        .tetris-box.new-world { animation: worldFlash 0.5s ease 3; }
+        @keyframes worldFlash {
+            0%, 100% { background: rgba(0,0,0,0.6); }
+            50%       { background: rgba(76,175,80,0.25); }
         }
         #tetris-status {
             font-family: 'Courier New', monospace;
@@ -58,20 +70,7 @@
             background: rgba(0,0,0,0.6);
             padding: 4px;
         }
-        #tetris-start {
-            width: 100%;
-            font-family: 'Courier New', monospace;
-        }
-        #tetris-best {
-            color: #ffd700;
-        }
-        .tetris-box.new-best {
-            animation: bestFlash 0.5s ease 3;
-        }
-        @keyframes bestFlash {
-            0%, 100% { background: rgba(0,0,0,0.6); }
-            50%       { background: rgba(255,215,0,0.25); }
-        }
+        #tetris-start { width: 100%; font-family: 'Courier New', monospace; }
         #tetris-keys {
             font-family: 'Courier New', monospace;
             font-size: 10px;
@@ -80,11 +79,7 @@
             border: 1px solid #444;
             padding: 8px;
         }
-        #tetris-keys p {
-            color: #888;
-            margin: 2px 0;
-            text-align: left;
-        }
+        #tetris-keys p { color: #888; margin: 2px 0; text-align: left; }
     </style>
 </head>
 <body class="notYetBody">
@@ -114,6 +109,10 @@
                 <label>BEST</label>
                 <span id="tetris-best">0</span>
             </div>
+            <div class="tetris-box" id="tetris-world-box">
+                <label>WORLD</label>
+                <span id="tetris-world">—</span>
+            </div>
             <div class="tetris-box">
                 <label>LINES</label>
                 <span id="tetris-lines">0</span>
@@ -141,13 +140,8 @@
 
         const COLORS = [
             null,
-            '#00f0f0', // I
-            '#f0f000', // O
-            '#a000f0', // T
-            '#00f000', // S
-            '#f00000', // Z
-            '#0000f0', // J
-            '#f0a000', // L
+            '#00f0f0', '#f0f000', '#a000f0', '#00f000',
+            '#f00000', '#0000f0', '#f0a000',
         ];
 
         const SHAPES = [
@@ -203,7 +197,6 @@
         function render() {
             ctx.fillStyle = '#111';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
             ctx.strokeStyle = 'rgba(255,255,255,0.04)';
             ctx.lineWidth = 1;
             for (let x = 0; x < COLS; x++) {
@@ -212,19 +205,15 @@
             for (let y = 0; y < ROWS; y++) {
                 ctx.beginPath(); ctx.moveTo(0, y * BLOCK); ctx.lineTo(canvas.width, y * BLOCK); ctx.stroke();
             }
-
             board.forEach((row, y) => row.forEach((v, x) => { if (v) drawBlock(ctx, x, y, v, BLOCK); }));
-
             if (!gameOver) {
                 let ghost = { x: piece.x, y: piece.y, shape: piece.shape };
                 while (!collides(ghost, 0, 1)) ghost = { x: ghost.x, y: ghost.y + 1, shape: ghost.shape };
                 ctx.globalAlpha = 0.15;
                 ghost.shape.forEach((row, dy) => row.forEach((v, dx) => { if (v) drawBlock(ctx, ghost.x + dx, ghost.y + dy, v, BLOCK); }));
                 ctx.globalAlpha = 1;
-
                 piece.shape.forEach((row, dy) => row.forEach((v, dx) => { if (v) drawBlock(ctx, piece.x + dx, piece.y + dy, v, BLOCK); }));
             }
-
             const nb = 24;
             nextCtx.fillStyle = '#111';
             nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
@@ -247,10 +236,8 @@
             score += pts[Math.min(cleared, 4)] * level;
             lines += cleared;
             level = Math.floor(lines / 10) + 1;
-            dropInterval = Math.max(80, 1000 - (level - 1) * 90);
             document.getElementById('tetris-score').textContent = score;
             document.getElementById('tetris-lines').textContent = lines;
-            document.getElementById('tetris-level').textContent = level;
         }
 
         function lockPiece() {
@@ -282,10 +269,7 @@
             status.textContent = 'SPEED UP!';
             status.style.color = '#f0f000';
             setTimeout(() => {
-                if (!gameOver) {
-                    status.textContent = '';
-                    status.style.color = '#f00';
-                }
+                if (!gameOver) { status.textContent = ''; status.style.color = '#f00'; }
             }, 1500);
         }
 
@@ -293,23 +277,14 @@
             if (gameOver) return;
             animId = requestAnimationFrame(loop);
             if (paused) return;
-            if (!lastDrop) {
-                lastDrop = timestamp;
-                gameStartTimestamp = timestamp;
-            }
+            if (!lastDrop) { lastDrop = timestamp; gameStartTimestamp = timestamp; }
             const elapsed = timestamp - gameStartTimestamp - totalPauseTime;
             const newTimeLevel = Math.floor(elapsed / 30000);
-            if (newTimeLevel > timeLevel) {
-                timeLevel = newTimeLevel;
-                showSpeedUp();
-            }
+            if (newTimeLevel > timeLevel) { timeLevel = newTimeLevel; showSpeedUp(); }
             const effectiveLevel = level + timeLevel;
             dropInterval = Math.max(80, 1000 - (effectiveLevel - 1) * 90);
             document.getElementById('tetris-level').textContent = effectiveLevel;
-            if (timestamp - lastDrop >= dropInterval) {
-                drop();
-                lastDrop = timestamp;
-            }
+            if (timestamp - lastDrop >= dropInterval) { drop(); lastDrop = timestamp; }
             render();
         }
 
@@ -326,27 +301,53 @@
             document.getElementById('tetris-level').textContent = 1;
             document.getElementById('tetris-best').textContent = highScore;
             document.getElementById('tetris-status').textContent = '';
+            document.getElementById('tetris-status').style.color = '#f00';
             document.getElementById('tetris-start').textContent = 'RESTART';
             document.getElementById('tetris-best-box').classList.remove('new-best');
+            document.getElementById('tetris-world-box').classList.remove('new-world');
             animId = requestAnimationFrame(loop);
         }
 
         function endGame() {
             gameOver = true;
             render();
-            if (score > highScore) {
+            document.getElementById('tetris-start').textContent = 'PLAY AGAIN';
+
+            const isLocalBest = score > highScore;
+            if (isLocalBest) {
                 highScore = score;
                 localStorage.setItem('tetrisHighScore', highScore);
                 document.getElementById('tetris-best').textContent = highScore;
-                document.getElementById('tetris-status').textContent = 'NEW BEST!';
                 const box = document.getElementById('tetris-best-box');
                 box.classList.remove('new-best');
                 void box.offsetWidth;
                 box.classList.add('new-best');
-            } else {
-                document.getElementById('tetris-status').textContent = 'GAME OVER';
             }
-            document.getElementById('tetris-start').textContent = 'PLAY AGAIN';
+
+            if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY) {
+                const ref = firebase.database().ref('scores/tetris');
+                ref.once('value', snap => {
+                    const worldBest = snap.val() || 0;
+                    if (score > worldBest) {
+                        ref.set(score);
+                        document.getElementById('tetris-status').textContent = 'WORLD RECORD!';
+                        document.getElementById('tetris-status').style.color = '#4caf50';
+                        const wbox = document.getElementById('tetris-world-box');
+                        wbox.classList.remove('new-world');
+                        void wbox.offsetWidth;
+                        wbox.classList.add('new-world');
+                    } else if (isLocalBest) {
+                        document.getElementById('tetris-status').textContent = 'NEW BEST!';
+                        document.getElementById('tetris-status').style.color = '#ffd700';
+                    } else {
+                        document.getElementById('tetris-status').textContent = 'GAME OVER';
+                        document.getElementById('tetris-status').style.color = '#f00';
+                    }
+                });
+            } else {
+                document.getElementById('tetris-status').textContent = isLocalBest ? 'NEW BEST!' : 'GAME OVER';
+                document.getElementById('tetris-status').style.color = isLocalBest ? '#ffd700' : '#f00';
+            }
         }
 
         document.addEventListener('keydown', e => {
@@ -380,17 +381,13 @@
                     const rotated = rotateShape(piece.shape);
                     for (const kick of [0, -1, 1, -2, 2]) {
                         if (!collides({ x: piece.x + kick, y: piece.y, shape: piece.shape }, 0, 0, rotated)) {
-                            piece.shape = rotated;
-                            piece.x += kick;
-                            break;
+                            piece.shape = rotated; piece.x += kick; break;
                         }
                     }
-                    render();
-                    e.preventDefault(); break;
+                    render(); e.preventDefault(); break;
                 }
                 case ' ':
-                    hardDrop(); render();
-                    e.preventDefault(); break;
+                    hardDrop(); render(); e.preventDefault(); break;
             }
         });
 
@@ -404,6 +401,12 @@
             nextCtx.fillStyle = '#111';
             nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
             document.getElementById('tetris-best').textContent = highScore;
+
+            if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY) {
+                firebase.database().ref('scores/tetris').on('value', snap => {
+                    document.getElementById('tetris-world').textContent = snap.val() || 0;
+                });
+            }
         });
     </script>
 </body>

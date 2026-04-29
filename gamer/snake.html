@@ -5,6 +5,9 @@
     <title>Snake — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
     <style>
         #snake-wrapper {
             display: flex;
@@ -13,10 +16,7 @@
             gap: 16px;
             margin: 24px auto;
         }
-        #snake-board {
-            border: 2px solid #555;
-            display: block;
-        }
+        #snake-board { border: 2px solid #555; display: block; }
         #snake-sidebar {
             display: flex;
             flex-direction: column;
@@ -44,15 +44,17 @@
             font-weight: bold;
             color: #f4a261;
         }
-        #snake-best {
-            color: #ffd700;
-        }
-        .snake-box.new-best {
-            animation: snakeBestFlash 0.5s ease 3;
-        }
+        #snake-best { color: #ffd700; }
+        #snake-world { color: #4caf50; }
+        .snake-box.new-best { animation: snakeBestFlash 0.5s ease 3; }
         @keyframes snakeBestFlash {
             0%, 100% { background: rgba(0,0,0,0.6); }
             50%       { background: rgba(255,215,0,0.25); }
+        }
+        .snake-box.new-world { animation: snakeWorldFlash 0.5s ease 3; }
+        @keyframes snakeWorldFlash {
+            0%, 100% { background: rgba(0,0,0,0.6); }
+            50%       { background: rgba(76,175,80,0.25); }
         }
         #snake-status {
             font-family: 'Courier New', monospace;
@@ -64,10 +66,7 @@
             background: rgba(0,0,0,0.6);
             padding: 4px;
         }
-        #snake-start {
-            width: 100%;
-            font-family: 'Courier New', monospace;
-        }
+        #snake-start { width: 100%; font-family: 'Courier New', monospace; }
         #snake-keys {
             font-family: 'Courier New', monospace;
             font-size: 10px;
@@ -76,11 +75,7 @@
             border: 1px solid #444;
             padding: 8px;
         }
-        #snake-keys p {
-            color: #888;
-            margin: 2px 0;
-            text-align: left;
-        }
+        #snake-keys p { color: #888; margin: 2px 0; text-align: left; }
     </style>
 </head>
 <body class="notYetBody">
@@ -105,6 +100,10 @@
             <div class="snake-box" id="snake-best-box">
                 <label>BEST</label>
                 <span id="snake-best">0</span>
+            </div>
+            <div class="snake-box" id="snake-world-box">
+                <label>WORLD</label>
+                <span id="snake-world">—</span>
             </div>
             <div class="snake-box">
                 <label>LENGTH</label>
@@ -156,6 +155,7 @@
             document.getElementById('snake-status').style.color = '#f00';
             document.getElementById('snake-start').textContent = 'RESTART';
             document.getElementById('snake-best-box').classList.remove('new-best');
+            document.getElementById('snake-world-box').classList.remove('new-world');
             sRender();
             sIntervalId = setInterval(sTick, sTickMs);
         }
@@ -184,7 +184,6 @@
         function sRender() {
             sCtx.fillStyle = '#111';
             sCtx.fillRect(0, 0, sCanvas.width, sCanvas.height);
-
             sCtx.strokeStyle = 'rgba(255,255,255,0.04)';
             sCtx.lineWidth = 1;
             for (let x = 0; x < S_COLS; x++) {
@@ -193,16 +192,10 @@
             for (let y = 0; y < S_ROWS; y++) {
                 sCtx.beginPath(); sCtx.moveTo(0, y * S_CELL); sCtx.lineTo(sCanvas.width, y * S_CELL); sCtx.stroke();
             }
-
             sCtx.fillStyle = '#f44';
             sCtx.beginPath();
-            sCtx.arc(
-                sFoodPos.x * S_CELL + S_CELL / 2,
-                sFoodPos.y * S_CELL + S_CELL / 2,
-                S_CELL / 2 - 2, 0, Math.PI * 2
-            );
+            sCtx.arc(sFoodPos.x * S_CELL + S_CELL / 2, sFoodPos.y * S_CELL + S_CELL / 2, S_CELL / 2 - 2, 0, Math.PI * 2);
             sCtx.fill();
-
             sBoard.forEach((seg, i) => {
                 sCtx.fillStyle = i === 0 ? '#00f0f0' : '#00c000';
                 sCtx.fillRect(seg.x * S_CELL + 1, seg.y * S_CELL + 1, S_CELL - 2, S_CELL - 2);
@@ -218,21 +211,43 @@
             sGameOver = true;
             clearInterval(sIntervalId);
             sRender();
-            if (sScore > sHighScore) {
+            document.getElementById('snake-start').textContent = 'PLAY AGAIN';
+
+            const isLocalBest = sScore > sHighScore;
+            if (isLocalBest) {
                 sHighScore = sScore;
                 localStorage.setItem('snakeHighScore', sHighScore);
                 document.getElementById('snake-best').textContent = sHighScore;
-                document.getElementById('snake-status').textContent = 'NEW BEST!';
-                document.getElementById('snake-status').style.color = '#ffd700';
                 const box = document.getElementById('snake-best-box');
                 box.classList.remove('new-best');
                 void box.offsetWidth;
                 box.classList.add('new-best');
-            } else {
-                document.getElementById('snake-status').textContent = 'GAME OVER';
-                document.getElementById('snake-status').style.color = '#f00';
             }
-            document.getElementById('snake-start').textContent = 'PLAY AGAIN';
+
+            if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY) {
+                const ref = firebase.database().ref('scores/snake');
+                ref.once('value', snap => {
+                    const worldBest = snap.val() || 0;
+                    if (sScore > worldBest) {
+                        ref.set(sScore);
+                        document.getElementById('snake-status').textContent = 'WORLD RECORD!';
+                        document.getElementById('snake-status').style.color = '#4caf50';
+                        const wbox = document.getElementById('snake-world-box');
+                        wbox.classList.remove('new-world');
+                        void wbox.offsetWidth;
+                        wbox.classList.add('new-world');
+                    } else if (isLocalBest) {
+                        document.getElementById('snake-status').textContent = 'NEW BEST!';
+                        document.getElementById('snake-status').style.color = '#ffd700';
+                    } else {
+                        document.getElementById('snake-status').textContent = 'GAME OVER';
+                        document.getElementById('snake-status').style.color = '#f00';
+                    }
+                });
+            } else {
+                document.getElementById('snake-status').textContent = isLocalBest ? 'NEW BEST!' : 'GAME OVER';
+                document.getElementById('snake-status').style.color = isLocalBest ? '#ffd700' : '#f00';
+            }
         }
 
         document.addEventListener('keydown', e => {
@@ -250,18 +265,10 @@
             }
             if (sPaused || sGameOver) return;
             switch (e.key) {
-                case 'ArrowUp':
-                    if (sDir.y !== 1)  sNextDir = {x:0, y:-1};
-                    e.preventDefault(); break;
-                case 'ArrowDown':
-                    if (sDir.y !== -1) sNextDir = {x:0, y:1};
-                    e.preventDefault(); break;
-                case 'ArrowLeft':
-                    if (sDir.x !== 1)  sNextDir = {x:-1, y:0};
-                    e.preventDefault(); break;
-                case 'ArrowRight':
-                    if (sDir.x !== -1) sNextDir = {x:1, y:0};
-                    e.preventDefault(); break;
+                case 'ArrowUp':    if (sDir.y !== 1)  sNextDir = {x:0, y:-1}; e.preventDefault(); break;
+                case 'ArrowDown':  if (sDir.y !== -1) sNextDir = {x:0, y:1};  e.preventDefault(); break;
+                case 'ArrowLeft':  if (sDir.x !== 1)  sNextDir = {x:-1, y:0}; e.preventDefault(); break;
+                case 'ArrowRight': if (sDir.x !== -1) sNextDir = {x:1, y:0};  e.preventDefault(); break;
             }
         });
 
@@ -271,6 +278,12 @@
             sCtx.fillStyle = '#111';
             sCtx.fillRect(0, 0, sCanvas.width, sCanvas.height);
             document.getElementById('snake-best').textContent = sHighScore;
+
+            if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY) {
+                firebase.database().ref('scores/snake').on('value', snap => {
+                    document.getElementById('snake-world').textContent = snap.val() || 0;
+                });
+            }
         });
     </script>
 </body>
