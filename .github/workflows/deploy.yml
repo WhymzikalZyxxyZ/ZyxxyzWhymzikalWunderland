@@ -1,22 +1,29 @@
 name: Deploy Website to Porkbun
 
-# Trigger the workflow on push to the main branch
 on:
   push:
     branches:
-      - main  # This will trigger the deployment when code is pushed to the 'main' branch
+      - main
 
-# Define the jobs that run in this workflow
 jobs:
   deploy:
-    runs-on: ubuntu-latest  # The operating system for the runner
-    
+    runs-on: ubuntu-latest
+
     steps:
-      # Step 1: Check out the repository
       - name: Checkout repository
-        uses: actions/checkout@v3  # This action checks out your code so the next steps can use it
+        uses: actions/checkout@v4
 
-
-      # Step 2: Post-deployment confirmation (optional)
-      - name: Deployment Confirmation
-        run: echo "Deployment to Porkbun successful!"
+      - name: Deploy via FTP to Porkbun
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./
+          server-dir: /
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.vs/**
+            **/images/in-progress/**

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep *)",
+      "Bash(file images/in-progress/*.pdn)",
+      "Bash(file virtuoso/animations/*.pclx)",
+      "Bash(git rm *)"
+    ]
+  }
+}
