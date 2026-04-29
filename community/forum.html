@@ -2,9 +2,145 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>About ZYXXYZ's Whymzykal Wunderland!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publyk Forum — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
+    <style>
+        #forum-wrap {
+            max-width: 700px;
+            margin: 24px auto;
+            padding: 0 16px;
+        }
+
+        #chat-box {
+            background: rgba(0,0,0,0.45);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        #chat-title {
+            font-family: 'Comic Sans MS', cursive;
+            font-size: 18px;
+            color: #f4a261;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        #username-tag {
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 12px;
+        }
+        #username-tag span {
+            color: #f4a261;
+            font-weight: bold;
+        }
+
+        #messages {
+            height: 380px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 4px 0;
+            margin-bottom: 14px;
+        }
+        #messages::-webkit-scrollbar { width: 5px; }
+        #messages::-webkit-scrollbar-track { background: transparent; }
+        #messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+
+        .msg-row {
+            display: flex;
+            flex-direction: column;
+            max-width: 78%;
+        }
+        .msg-row.mine { align-self: flex-end; align-items: flex-end; }
+        .msg-row.theirs { align-self: flex-start; align-items: flex-start; }
+
+        .msg-meta {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            margin-bottom: 3px;
+            padding: 0 4px;
+        }
+        .msg-row.mine .msg-meta { color: #f4a261; }
+        .msg-row.theirs .msg-meta { color: #888; }
+
+        .msg-bubble {
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+        .msg-row.mine .msg-bubble {
+            background: rgba(244,162,97,0.22);
+            border: 1px solid rgba(244,162,97,0.35);
+            color: #ffe0c0;
+            border-radius: 10px 10px 3px 10px;
+        }
+        .msg-row.theirs .msg-bubble {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #ddd;
+            border-radius: 10px 10px 10px 3px;
+        }
+
+        #input-row {
+            display: flex;
+            gap: 8px;
+        }
+        #msg-input {
+            flex: 1;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 9px 12px;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        #msg-input:focus { border-color: #f4a261; }
+        #msg-input:disabled { opacity: 0.5; cursor: not-allowed; }
+        #msg-input::placeholder { color: rgba(255,255,255,0.3); }
+
+        #send-btn {
+            background: #f4a261;
+            color: #111;
+            border: none;
+            border-radius: 8px;
+            padding: 9px 18px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        #send-btn:hover:not(:disabled) { background: #e76f51; color: #fff; }
+        #send-btn:disabled { background: #555; color: #888; cursor: default; }
+
+        #forum-status {
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #888;
+            margin-top: 10px;
+            min-height: 16px;
+        }
+    </style>
 </head>
 <body class="notYetBody">
 
@@ -12,23 +148,156 @@
 
     <!-- Navigation Bar -->
     <div class="navbar">
-        <a href="../index.html">Home</a>
-        <a href="../about.html">About</a>
-        <a href="../virtuoso/virtuoso.html">Virtuoso</a>
-        <a href="../gamer/games.html">Gamer</a>
-        <a href="../technologist/apps.html">Technologist</a>
-        <a href="../community/forum.html">Community</a>
+        <a href="/index.html">Home</a>
+        <a href="/about.html">About</a>
+        <a href="/virtuoso/virtuoso.html">Virtuoso</a>
+        <a href="/gamer/games.html">Gamer</a>
+        <a href="/technologist/apps.html">Technologist</a>
+        <a href="/community/forum.html">Community</a>
     </div>
 
-    <!-- Removed the <img> tag here as it's no longer needed -->
-    <div class="banner"></div> <!-- Placeholder for your logo as background -->
-    <!-- Removed the <img> tag here as it's no longer needed -->
-    <div class="banner"></div> <!-- Placeholder for your logo as background -->
+    <div class="banner"></div>
 
-    <br>
-    <p id="demo">ZYXXYZ</p>
+    <div id="forum-wrap">
+        <div id="chat-box">
+            <div id="chat-title">💬 Live Chat</div>
+            <div id="username-tag">You are: <span id="uname-display">getting your name...</span></div>
 
-    <button type="button" onclick="navigateToPage('../../index.html')">E.T. Phone Home!</button>
+            <div id="messages"></div>
+
+            <div id="input-row">
+                <input type="text" id="msg-input" placeholder="getting your name..." disabled maxlength="500">
+                <button id="send-btn" disabled>Send</button>
+            </div>
+            <div id="forum-status"></div>
+        </div>
+    </div>
+
+    <script>
+        // ── Helpers ───────────────────────────────────────────────────────────────────
+        function escHtml(s) {
+            return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+        function fmtTime(ts) {
+            const d = new Date(ts);
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        function setStatus(msg) {
+            document.getElementById('forum-status').textContent = msg;
+        }
+
+        // ── Random name generation ────────────────────────────────────────────────────
+        const ADJS  = ['Cosmic','Neon','Velvet','Funky','Mystic','Jazzy','Quirky','Sneaky',
+                        'Zesty','Fuzzy','Glitchy','Lunar','Tangy','Wobbly','Spiffy'];
+        const NOUNS = ['Penguin','Wizard','Pickle','Comet','Noodle','Goblin','Muffin','Platypus',
+                        'Biscuit','Cactus','Gnome','Waffle','Ferret','Pebble','Sprocket'];
+
+        function genUsername() {
+            const adj  = ADJS[Math.floor(Math.random() * ADJS.length)];
+            const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
+            const num  = String(Math.floor(Math.random() * 900) + 100);
+            return `${adj}${noun}_${num}`;
+        }
+
+        // ── Unique username claiming via Firebase transaction ─────────────────────────
+        let myUsername = null;
+
+        function claimUsername(username) {
+            const ref = firebase.database().ref(`forum/presence/${username}`);
+            ref.onDisconnect().remove();
+            return new Promise(resolve => {
+                ref.transaction(
+                    current => current === null ? { ts: Date.now() } : undefined,
+                    (err, committed) => {
+                        if (!committed) ref.onDisconnect().cancel();
+                        resolve(!err && committed);
+                    }
+                );
+            });
+        }
+
+        async function initUsername() {
+            const stored = sessionStorage.getItem('forumUsername');
+            if (stored && await claimUsername(stored)) return stored;
+            let name;
+            do { name = genUsername(); } while (!await claimUsername(name));
+            sessionStorage.setItem('forumUsername', name);
+            return name;
+        }
+
+        // ── Message rendering ─────────────────────────────────────────────────────────
+        function addMessageEl(username, text, ts) {
+            const isMine = username === myUsername;
+            const row = document.createElement('div');
+            row.className = `msg-row ${isMine ? 'mine' : 'theirs'}`;
+
+            const meta = document.createElement('div');
+            meta.className = 'msg-meta';
+            meta.innerHTML = `<span class="sender">${isMine ? 'You' : escHtml(username)}</span>` +
+                             `<span class="time"> · ${fmtTime(ts)}</span>`;
+
+            const bubble = document.createElement('div');
+            bubble.className = 'msg-bubble';
+            bubble.textContent = text;
+
+            row.appendChild(meta);
+            row.appendChild(bubble);
+
+            const msgs = document.getElementById('messages');
+            msgs.appendChild(row);
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+
+        // ── Send message ──────────────────────────────────────────────────────────────
+        function sendMessage() {
+            const input = document.getElementById('msg-input');
+            const text  = input.value.trim();
+            if (!text || !myUsername) return;
+            input.value = '';
+            firebase.database().ref('forum/messages').push({
+                username: myUsername,
+                text,
+                ts: Date.now()
+            }).catch(() => setStatus('Failed to send — check connection.'));
+        }
+
+        document.getElementById('send-btn').addEventListener('click', sendMessage);
+        document.getElementById('msg-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+        });
+
+        // ── Boot ──────────────────────────────────────────────────────────────────────
+        (async function boot() {
+            if (typeof FIREBASE_READY === 'undefined' || !FIREBASE_READY) {
+                document.getElementById('uname-display').textContent = 'unavailable';
+                document.getElementById('msg-input').placeholder = 'Firebase not configured';
+                setStatus('Real-time chat requires Firebase. See /js/firebase-config.js');
+                return;
+            }
+
+            setStatus('Securing your name...');
+            myUsername = await initUsername();
+
+            document.getElementById('uname-display').textContent = myUsername;
+
+            const input   = document.getElementById('msg-input');
+            const sendBtn = document.getElementById('send-btn');
+            input.placeholder = 'Say something...';
+            input.disabled    = false;
+            sendBtn.disabled  = false;
+            input.focus();
+            setStatus('');
+
+            // Load existing + listen for new messages
+            firebase.database().ref('forum/messages')
+                .orderByChild('ts')
+                .limitToLast(100)
+                .on('child_added', snap => {
+                    const { username, text, ts } = snap.val();
+                    addMessageEl(username, text, ts);
+                });
+        })();
+    </script>
 
 </body>
-</html> 
+</html>
