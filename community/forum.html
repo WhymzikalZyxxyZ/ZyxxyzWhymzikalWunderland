@@ -5,11 +5,9 @@
     <title>Publyk Forum — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
-
-    <!-- Firebase compat SDK (no build step needed) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
+    <script src="/js/firebase-config.js"></script>
     <style>
         .chat-window {
             max-width: 680px;
@@ -19,7 +17,7 @@
             border-radius: 14px;
             display: flex;
             flex-direction: column;
-            height: 500px;
+            height: 520px;
             overflow: hidden;
         }
         .chat-header {
@@ -45,16 +43,14 @@
             font-family: 'Courier New', monospace;
             color: #888;
         }
-        .chat-status-dot.live {
-            color: #4caf50;
-        }
+        .chat-status-dot.live { color: #4caf50; }
         .chat-messages {
             flex: 1;
             overflow-y: auto;
             padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
         .chat-messages::-webkit-scrollbar { width: 5px; }
         .chat-messages::-webkit-scrollbar-track { background: transparent; }
@@ -64,21 +60,18 @@
             flex-direction: column;
             max-width: 78%;
         }
-        .msg.mine {
-            align-self: flex-end;
-            align-items: flex-end;
-        }
-        .msg.theirs {
-            align-self: flex-start;
-            align-items: flex-start;
-        }
+        .msg.mine   { align-self: flex-end;   align-items: flex-end; }
+        .msg.theirs { align-self: flex-start; align-items: flex-start; }
         .msg-meta {
             font-family: 'Courier New', monospace;
             font-size: 10px;
-            color: #666;
             margin-bottom: 3px;
             padding: 0 4px;
         }
+        .msg.mine .msg-meta   { color: #f4a261; text-align: right; }
+        .msg.theirs .msg-meta { color: #888; }
+        .msg-meta .sender { font-weight: bold; }
+        .msg-meta .time   { opacity: 0.6; }
         .msg-bubble {
             padding: 9px 14px;
             font-family: 'Courier New', monospace;
@@ -125,12 +118,8 @@
             outline: none;
             transition: border-color 0.2s;
         }
-        .chat-input-bar input:focus {
-            border-color: #f4a261;
-        }
-        .chat-input-bar input::placeholder {
-            color: #555;
-        }
+        .chat-input-bar input:focus { border-color: #f4a261; }
+        .chat-input-bar input::placeholder { color: #555; }
         #chat-send {
             background: #f4a261;
             border: none;
@@ -142,18 +131,9 @@
             cursor: pointer;
             font-size: 13px;
             margin: 0;
-            display: block;
             transition: background 0.2s;
         }
-        #chat-send:hover {
-            background: #e76f51;
-            color: #fff;
-        }
-        #chat-send:disabled {
-            background: #555;
-            color: #888;
-            cursor: default;
-        }
+        #chat-send:hover { background: #e76f51; color: #fff; }
         .char-count {
             font-family: 'Courier New', monospace;
             font-size: 10px;
@@ -163,24 +143,7 @@
             margin: 0 auto 4px;
             padding: 0 4px;
         }
-        .char-count.warn {
-            color: #f4a261;
-        }
-        .setup-notice {
-            max-width: 680px;
-            margin: 24px auto;
-            background: rgba(244,162,97,0.1);
-            border: 1px solid rgba(244,162,97,0.3);
-            border-radius: 10px;
-            padding: 20px 24px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            color: #aaa;
-            line-height: 1.8;
-        }
-        .setup-notice strong {
-            color: #f4a261;
-        }
+        .char-count.warn { color: #f4a261; }
     </style>
 </head>
 <body class="notYetBody">
@@ -196,13 +159,7 @@
         <a href="../community/forum.html">Community</a>
     </div>
 
-    <div id="setup-notice" class="setup-notice" style="display:none;">
-        <strong>&#9888; Chat not yet connected.</strong><br>
-        To enable live messaging, add your Firebase config to forum.html.<br>
-        See the <code>FIREBASE SETUP</code> comment in the script block below.
-    </div>
-
-    <div class="chat-window" id="chat-window">
+    <div class="chat-window">
         <div class="chat-header">
             <div class="chat-user-badge">Chatting as: <span id="chat-username">...</span></div>
             <div class="chat-status-dot" id="chat-status-dot">● connecting</div>
@@ -218,146 +175,148 @@
     <button type="button" onclick="navigateToPage('../index.html')">E.T. Phone Home!</button>
 
     <script>
-        // ─── USERNAME ───────────────────────────────────────────────────────────────
+        // ── Username pool ─────────────────────────────────────────────────────────────
         const ADJECTIVES = ['Whymzykal','Mystic','Velvet','Crimson','Silver','Golden',
             'Shadow','Crystal','Cosmic','Neon','Lunar','Wild','Electric','Curious','Arcane'];
         const NOUNS = ['Wanderer','Fox','Owl','Phoenix','Raven','Wolf','Sprite',
             'Specter','Sage','Muse','Echo','Ghost','Cipher','Rebel','Enigma'];
 
         function genUsername() {
-            const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+            const adj  = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
             const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
-            const num = Math.floor(Math.random() * 900 + 100);
-            return `${adj}${noun}_${num}`;
+            return `${adj}${noun}_${Math.floor(Math.random() * 900 + 100)}`;
         }
 
-        let myUsername = sessionStorage.getItem('forumUsername');
-        if (!myUsername) {
-            myUsername = genUsername();
-            sessionStorage.setItem('forumUsername', myUsername);
+        // Atomically claim a username slot. Registers onDisconnect cleanup first
+        // so the slot is always released even if the tab crashes.
+        function claimUsername(username) {
+            const ref = firebase.database().ref(`forum/presence/${username}`);
+            ref.onDisconnect().remove();
+            return new Promise(resolve => {
+                ref.transaction(
+                    current => current === null ? { ts: Date.now() } : undefined,
+                    (err, committed) => {
+                        if (!committed) ref.onDisconnect().cancel();
+                        resolve(!err && committed);
+                    }
+                );
+            });
         }
-        document.getElementById('chat-username').textContent = myUsername;
 
-        // ─── FIREBASE SETUP ─────────────────────────────────────────────────────────
-        // 1. Go to https://console.firebase.google.com and create a project.
-        // 2. Add a Web App to get your config object.
-        // 3. Under Build > Realtime Database, create a database (start in test mode).
-        // 4. Replace the placeholder values below with your actual config.
-        // 5. Set database rules to:
-        //      { "rules": { "forum": { ".read": true, ".write": true } } }
+        // Try to reclaim the stored name; if taken, loop until a free one is found.
+        async function initUsername() {
+            const stored = sessionStorage.getItem('forumUsername');
+            if (stored && await claimUsername(stored)) return stored;
+            let name;
+            do { name = genUsername(); } while (!await claimUsername(name));
+            sessionStorage.setItem('forumUsername', name);
+            return name;
+        }
 
-        const FIREBASE_CONFIG = {
-            apiKey: "AIzaSyBolSqtz8_CTVVLjRGFZaIQ_7u4sIWAuZY",
-            authDomain: "wunderland-cd935.firebaseapp.com
-            databaseURL: "https://wunderland-cd935-default-rtdb.firebaseio.com",
-            projectId: "wunderland-cd935
-            storageBucket: "wunderland-cd935.firebasestorage.app
-            messagingSenderId: "96451930583
-            appId: "1:96451930583:web:37350a5d4bf76cd6bd8392
-            measurementId: "G-KNX537QQ8G"
-        };
+        // ── Helpers ───────────────────────────────────────────────────────────────────
+        const chatMessages = document.getElementById('chat-messages');
+        const statusDot    = document.getElementById('chat-status-dot');
+        const chatInput    = document.getElementById('chat-input');
+        const chatSend     = document.getElementById('chat-send');
 
-        // ─── INIT ────────────────────────────────────────────────────────────────────
-        const isConfigured = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
+        function escHtml(str) {
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
 
-        if (!isConfigured) {
-            document.getElementById('setup-notice').style.display = 'block';
-            document.getElementById('chat-window').style.display = 'none';
-            document.getElementById('char-count').style.display = 'none';
-        } else {
-            firebase.initializeApp(FIREBASE_CONFIG);
-            const db = firebase.database();
-            const messagesRef = db.ref('forum/messages');
-            const chatMessages = document.getElementById('chat-messages');
-            const statusDot = document.getElementById('chat-status-dot');
+        function fmtTime(ts) {
+            return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
 
-            // ─── HELPERS ─────────────────────────────────────────────────────────────
-            function escHtml(str) {
-                return str
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;');
-            }
+        function addSystemMsg(text) {
+            const el = document.createElement('div');
+            el.className = 'msg-system';
+            el.textContent = text;
+            chatMessages.appendChild(el);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
 
-            function fmtTime(ts) {
-                return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            }
+        function addMessageEl(username, text, ts, isMine) {
+            const div = document.createElement('div');
+            div.className = 'msg ' + (isMine ? 'mine' : 'theirs');
+            const displayName = isMine ? 'You' : escHtml(username);
+            div.innerHTML =
+                `<div class="msg-meta">` +
+                    `<span class="sender">${displayName}</span>` +
+                    `<span class="time"> · ${fmtTime(ts)}</span>` +
+                `</div>` +
+                `<div class="msg-bubble">${escHtml(text)}</div>`;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
 
-            function addSystemMsg(text) {
-                const el = document.createElement('div');
-                el.className = 'msg-system';
-                el.textContent = text;
-                chatMessages.appendChild(el);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
+        // ── Firebase ──────────────────────────────────────────────────────────────────
+        if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY) {
+            // Lock input until username is secured
+            chatInput.disabled     = true;
+            chatSend.disabled      = true;
+            chatInput.placeholder  = 'getting your name...';
 
-            function addMessageEl(username, text, ts, isMine) {
-                const div = document.createElement('div');
-                div.className = 'msg ' + (isMine ? 'mine' : 'theirs');
-                const meta = isMine
-                    ? fmtTime(ts)
-                    : `${escHtml(username)} · ${fmtTime(ts)}`;
-                div.innerHTML =
-                    `<div class="msg-meta">${meta}</div>` +
-                    `<div class="msg-bubble">${escHtml(text)}</div>`;
-                chatMessages.appendChild(div);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-
-            // ─── LOAD + LISTEN ────────────────────────────────────────────────────────
-            addSystemMsg('— connecting —');
-
-            messagesRef.limitToLast(100).on('child_added', snapshot => {
-                // Clear "connecting" placeholder on first message arrival
-                const placeholder = chatMessages.querySelector('.msg-system');
-                if (placeholder && placeholder.textContent === '— connecting —') {
-                    placeholder.remove();
-                    addSystemMsg('— last 100 messages —');
-                }
-                const msg = snapshot.val();
-                addMessageEl(msg.username, msg.text, msg.ts, msg.username === myUsername);
-            });
-
-            // Connection state indicator
-            firebase.database().ref('.info/connected').on('value', snap => {
-                if (snap.val()) {
-                    statusDot.textContent = '● live';
-                    statusDot.classList.add('live');
-                } else {
-                    statusDot.textContent = '● reconnecting';
-                    statusDot.classList.remove('live');
-                }
-            });
-
-            // ─── SEND ─────────────────────────────────────────────────────────────────
-            let lastSent = 0;
+            const messagesRef = firebase.database().ref('forum/messages');
+            let myUsername    = null;
+            let lastSent      = 0;
 
             window.sendMessage = function () {
-                const input = document.getElementById('chat-input');
-                const text = input.value.trim();
+                if (!myUsername) return;
+                const text = chatInput.value.trim();
                 if (!text || text.length > 500) return;
-                if (Date.now() - lastSent < 1500) return; // simple rate limit
+                if (Date.now() - lastSent < 1500) return;
                 lastSent = Date.now();
                 messagesRef.push({ username: myUsername, text, ts: Date.now() });
-                input.value = '';
+                chatInput.value = '';
                 document.getElementById('char-count').textContent = '0 / 500';
                 document.getElementById('char-count').classList.remove('warn');
             };
 
-            // Enter to send
-            document.getElementById('chat-input').addEventListener('keydown', e => {
-                if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
+            firebase.database().ref('.info/connected').on('value', snap => {
+                statusDot.textContent = snap.val() ? '● live' : '● reconnecting';
+                statusDot.classList.toggle('live', !!snap.val());
             });
 
-            // Character counter
-            document.getElementById('chat-input').addEventListener('input', function () {
-                const len = this.value.length;
-                const counter = document.getElementById('char-count');
-                counter.textContent = `${len} / 500`;
-                counter.classList.toggle('warn', len > 420);
+            initUsername().then(username => {
+                myUsername = username;
+                document.getElementById('chat-username').textContent = username;
+                chatInput.disabled    = false;
+                chatSend.disabled     = false;
+                chatInput.placeholder = 'Say something...';
+
+                let initialLoad = true;
+                messagesRef.limitToLast(100).on('child_added', snapshot => {
+                    if (initialLoad) {
+                        addSystemMsg('— last 100 messages —');
+                        initialLoad = false;
+                    }
+                    const msg = snapshot.val();
+                    if (msg && msg.text) {
+                        addMessageEl(msg.username, msg.text, msg.ts, msg.username === myUsername);
+                    }
+                });
             });
+
+        } else {
+            // No Firebase — fall back to unguaranteed local username
+            statusDot.textContent = '● not configured';
+            let myUsername = sessionStorage.getItem('forumUsername') || genUsername();
+            sessionStorage.setItem('forumUsername', myUsername);
+            document.getElementById('chat-username').textContent = myUsername;
+            addSystemMsg('— chat not yet configured — see /js/firebase-config.js —');
+            window.sendMessage = function () {};
         }
+
+        chatInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
+        });
+
+        chatInput.addEventListener('input', function () {
+            const len     = this.value.length;
+            const counter = document.getElementById('char-count');
+            counter.textContent = `${len} / 500`;
+            counter.classList.toggle('warn', len > 420);
+        });
     </script>
 </body>
 </html>
