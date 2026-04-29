@@ -1,1 +1,18 @@
 .vs/
+
+# Binary working files
+*.pdn
+*.pclx
+*.psd
+*.ai
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
