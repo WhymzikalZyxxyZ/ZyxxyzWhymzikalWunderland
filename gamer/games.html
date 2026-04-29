@@ -62,6 +62,16 @@
             width: 100%;
             font-family: 'Courier New', monospace;
         }
+        #tetris-best {
+            color: #ffd700;
+        }
+        .tetris-box.new-best {
+            animation: bestFlash 0.5s ease 3;
+        }
+        @keyframes bestFlash {
+            0%, 100% { background: rgba(0,0,0,0.6); }
+            50%       { background: rgba(255,215,0,0.25); }
+        }
         #tetris-keys {
             font-family: 'Courier New', monospace;
             font-size: 10px;
@@ -102,6 +112,10 @@
             <div class="tetris-box">
                 <label>SCORE</label>
                 <span id="tetris-score">0</span>
+            </div>
+            <div class="tetris-box" id="tetris-best-box">
+                <label>BEST</label>
+                <span id="tetris-best">0</span>
             </div>
             <div class="tetris-box">
                 <label>LINES</label>
@@ -154,6 +168,7 @@
         let score, lines, level, dropInterval;
         let gameOver, paused, lastDrop, animId;
         let canvas, ctx, nextCanvas, nextCtx;
+        let highScore = parseInt(localStorage.getItem('tetrisHighScore') || '0');
 
         function newBoard() {
             return Array.from({length: ROWS}, () => new Array(COLS).fill(0));
@@ -286,15 +301,28 @@
             document.getElementById('tetris-score').textContent = 0;
             document.getElementById('tetris-lines').textContent = 0;
             document.getElementById('tetris-level').textContent = 1;
+            document.getElementById('tetris-best').textContent = highScore;
             document.getElementById('tetris-status').textContent = '';
             document.getElementById('tetris-start').textContent = 'RESTART';
+            document.getElementById('tetris-best-box').classList.remove('new-best');
             animId = requestAnimationFrame(loop);
         }
 
         function endGame() {
             gameOver = true;
             render();
-            document.getElementById('tetris-status').textContent = 'GAME OVER';
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('tetrisHighScore', highScore);
+                document.getElementById('tetris-best').textContent = highScore;
+                document.getElementById('tetris-status').textContent = 'NEW BEST!';
+                const box = document.getElementById('tetris-best-box');
+                box.classList.remove('new-best');
+                void box.offsetWidth; // restart animation if already playing
+                box.classList.add('new-best');
+            } else {
+                document.getElementById('tetris-status').textContent = 'GAME OVER';
+            }
             document.getElementById('tetris-start').textContent = 'PLAY AGAIN';
         }
 
@@ -344,6 +372,7 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             nextCtx.fillStyle = '#111';
             nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
+            document.getElementById('tetris-best').textContent = highScore;
         });
     </script>
 </body>
