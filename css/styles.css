@@ -137,19 +137,21 @@ button:hover {
 }
 
 .hero {
-    background: rgba(0, 0, 0, 0.6);
-    max-width: 660px;
-    margin: 40px auto 24px;
-    padding: 24px 32px;
+    background: rgba(0, 0, 0, 0.65);
+    width: calc(100% - 48px);
+    max-width: 700px;
+    margin: 48px auto 32px;
+    padding: 28px 40px;
     text-align: center;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    border: 1px solid rgba(244, 162, 97, 0.3);
+    box-shadow: 0 4px 32px rgba(0, 0, 0, 0.4);
 }
 
 .hero p {
     color: #f0f0f0;
-    font-size: 1.15em;
-    line-height: 1.7;
+    font-size: 1.2em;
+    line-height: 1.8;
     margin: 0;
 }
 
@@ -157,39 +159,53 @@ button:hover {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 20px;
-    max-width: 820px;
-    margin: 0 auto 60px;
-    padding: 0 20px;
+    gap: 24px;
+    width: calc(100% - 48px);
+    max-width: 960px;
+    margin: 0 auto 72px;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 .card {
-    background: rgba(0, 0, 0, 0.6);
-    border: 2px solid rgba(255, 255, 255, 0.12);
-    border-radius: 10px;
-    padding: 24px 20px;
-    width: 210px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid rgba(244, 162, 97, 0.25);
+    border-radius: 14px;
+    padding: 36px 28px 28px;
+    width: 240px;
     text-decoration: none;
     text-align: center;
-    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    transition: background 0.2s, border-color 0.2s, transform 0.18s, box-shadow 0.18s;
 }
 
 .card:hover {
-    background: rgba(244, 162, 97, 0.2);
+    background: rgba(244, 162, 97, 0.18);
     border-color: #f4a261;
-    transform: translateY(-4px);
+    transform: translateY(-8px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.card-icon {
+    font-size: 2.8em;
+    line-height: 1;
+    display: block;
 }
 
 .card h3 {
     color: #f4a261;
     font-family: Jokerman, fantasy;
-    font-size: 1.3em;
-    margin: 0 0 10px;
+    font-size: 1.5em;
+    margin: 0;
 }
 
 .card p {
-    color: #ccc;
-    font-size: 0.88em;
-    line-height: 1.5;
+    color: #bbb;
+    font-size: 0.9em;
+    line-height: 1.55;
     margin: 0;
 }
