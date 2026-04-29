@@ -3,17 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About ZYXXYZ's Whymzykal Wunderland!</title>
+    <title>About — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
+    <style>
+        .about-card {
+            max-width: 620px;
+            margin: 40px auto;
+            background: rgba(0,0,0,0.55);
+            border: 1px solid rgba(244,162,97,0.3);
+            border-radius: 14px;
+            padding: 40px 48px;
+            text-align: center;
+        }
+        .about-card p {
+            font-family: 'Courier New', monospace;
+            font-size: 1.05em;
+            line-height: 1.8;
+            color: #ddd;
+            margin: 0 0 20px;
+        }
+        .about-card p:last-child {
+            margin-bottom: 0;
+        }
+        .about-card .signature {
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            color: #f4a261;
+            font-style: italic;
+            margin-top: 28px;
+        }
+        .about-divider {
+            border: none;
+            border-top: 1px solid rgba(244,162,97,0.25);
+            margin: 24px 0;
+        }
+    </style>
 </head>
 <body class="notYetBody">
+
     <div class="content-row">
-        <h2>ABOUT ZYXXYZ</h2>
+        <h2>About ZYXXYZ</h2>
     </div>
 
     <div class="content-row">
-        <!-- Navigation Bar -->
         <div class="navbar">
             <a href="/index.html">Home</a>
             <a href="/about.html">About</a>
@@ -24,17 +57,36 @@
         </div>
     </div>
 
-    <div class="content-row">
-        <!-- Removed the <img> tag here as it's no longer needed -->
-        <div class="banner"></div> <!-- Placeholder for your logo as background -->
+    <div class="about-card">
+        <p>
+            Well, hello there. You've wandered into the right place.
+        </p>
+        <p>
+            I'm Zyxxyz &mdash; creator, tinkerer, and the architect of this little wunderland you've found yourself in.
+            Consider this my personal corner of the internet: part gallery, part playground, part something you didn't
+            know you were looking for.
+        </p>
+        <hr class="about-divider">
+        <p>
+            Games that'll have you coming back for one more round. Art that might linger in the back of your mind.
+            Tech projects born purely out of curiosity and a little too much free time. It's all here &mdash;
+            and it's all made with intention.
+        </p>
+        <p>
+            This is a living, breathing space. New things find their way in as they're ready, so there's always
+            a reason to return. I'd love to know what catches your eye &mdash; the community's open, and bold opinions
+            are more than welcome.
+        </p>
+        <hr class="about-divider">
+        <p>
+            Thanks for visiting. Genuinely. Now go explore &mdash; something in here was made for you.
+        </p>
+        <p class="signature">&mdash; ZYXXYZ</p>
     </div>
-    
-    <div class="content-row"
-        <button type="button" onclick="navigateToPage('../index.html')">E.T. Phone Home!</button>
-    </div
 
     <div class="content-row">
-        <p id="demo">The Wunderland of Whymzykal Zyxxyz</p>
+        <button type="button" onclick="navigateToPage('/index.html')">E.T. Phone Home!</button>
     </div>
+
 </body>
-</html> 
+</html>
