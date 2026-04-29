@@ -169,6 +169,7 @@
         let gameOver, paused, lastDrop, animId;
         let canvas, ctx, nextCanvas, nextCtx;
         let highScore = parseInt(localStorage.getItem('tetrisHighScore') || '0');
+        let timeLevel, gameStartTimestamp, totalPauseTime, pauseStartTimestamp;
 
         function newBoard() {
             return Array.from({length: ROWS}, () => new Array(COLS).fill(0));
@@ -279,11 +280,35 @@
             lockPiece();
         }
 
+        function showSpeedUp() {
+            const status = document.getElementById('tetris-status');
+            status.textContent = 'SPEED UP!';
+            status.style.color = '#f0f000';
+            setTimeout(() => {
+                if (!gameOver) {
+                    status.textContent = '';
+                    status.style.color = '#f00';
+                }
+            }, 1500);
+        }
+
         function loop(timestamp) {
             if (gameOver) return;
             animId = requestAnimationFrame(loop);
             if (paused) return;
-            if (!lastDrop) lastDrop = timestamp;
+            if (!lastDrop) {
+                lastDrop = timestamp;
+                gameStartTimestamp = timestamp;
+            }
+            const elapsed = timestamp - gameStartTimestamp - totalPauseTime;
+            const newTimeLevel = Math.floor(elapsed / 30000);
+            if (newTimeLevel > timeLevel) {
+                timeLevel = newTimeLevel;
+                showSpeedUp();
+            }
+            const effectiveLevel = level + timeLevel;
+            dropInterval = Math.max(80, 1000 - (effectiveLevel - 1) * 90);
+            document.getElementById('tetris-level').textContent = effectiveLevel;
             if (timestamp - lastDrop >= dropInterval) {
                 drop();
                 lastDrop = timestamp;
@@ -297,6 +322,7 @@
             piece = newPiece();
             nextPiece = newPiece();
             score = 0; lines = 0; level = 1; dropInterval = 1000;
+            timeLevel = 0; gameStartTimestamp = 0; totalPauseTime = 0; pauseStartTimestamp = 0;
             gameOver = false; paused = false; lastDrop = 0;
             document.getElementById('tetris-score').textContent = 0;
             document.getElementById('tetris-lines').textContent = 0;
@@ -330,8 +356,16 @@
             if (gameOver) return;
             if (e.key === 'p' || e.key === 'P') {
                 paused = !paused;
-                document.getElementById('tetris-status').textContent = paused ? 'PAUSED' : '';
-                if (!paused) { lastDrop = performance.now(); render(); }
+                if (paused) {
+                    pauseStartTimestamp = performance.now();
+                    document.getElementById('tetris-status').textContent = 'PAUSED';
+                    document.getElementById('tetris-status').style.color = '#f00';
+                } else {
+                    totalPauseTime += performance.now() - pauseStartTimestamp;
+                    document.getElementById('tetris-status').textContent = '';
+                    lastDrop = performance.now();
+                    render();
+                }
                 return;
             }
             if (paused) return;
