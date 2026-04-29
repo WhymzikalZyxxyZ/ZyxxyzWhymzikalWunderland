@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Publyk Forum — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
@@ -119,6 +120,7 @@
             transition: border-color 0.2s;
         }
         .chat-input-bar input:focus { border-color: #f4a261; }
+        .chat-input-bar input:disabled { opacity: 0.5; cursor: not-allowed; }
         .chat-input-bar input::placeholder { color: #555; }
         #chat-send {
             background: #f4a261;
@@ -133,7 +135,8 @@
             margin: 0;
             transition: background 0.2s;
         }
-        #chat-send:hover { background: #e76f51; color: #fff; }
+        #chat-send:hover:not(:disabled) { background: #e76f51; color: #fff; }
+        #chat-send:disabled { background: #555; color: #888; cursor: default; }
         .char-count {
             font-family: 'Courier New', monospace;
             font-size: 10px;
@@ -151,13 +154,15 @@
     <h2>Publyk Forum</h2>
 
     <div class="navbar">
-        <a href="../index.html">Home</a>
-        <a href="../about.html">About</a>
-        <a href="../virtuoso/virtuoso.html">Virtuoso</a>
-        <a href="../gamer/games.html">Gamer</a>
-        <a href="../technologist/apps.html">Technologist</a>
-        <a href="../community/forum.html">Community</a>
+        <a href="/index.html">Home</a>
+        <a href="/about.html">About</a>
+        <a href="/virtuoso/virtuoso.html">Virtuoso</a>
+        <a href="/gamer/games.html">Gamer</a>
+        <a href="/technologist/apps.html">Technologist</a>
+        <a href="/community/forum.html">Community</a>
     </div>
+
+    <div class="banner"></div>
 
     <div class="chat-window">
         <div class="chat-header">
@@ -166,29 +171,25 @@
         </div>
         <div class="chat-messages" id="chat-messages"></div>
         <div class="chat-input-bar">
-            <input type="text" id="chat-input" placeholder="Say something..." maxlength="500" autocomplete="off">
-            <button id="chat-send" onclick="sendMessage()">SEND</button>
+            <input type="text" id="chat-input" placeholder="getting your name..." maxlength="500" autocomplete="off" disabled>
+            <button id="chat-send" onclick="sendMessage()" disabled>SEND</button>
         </div>
     </div>
     <div class="char-count" id="char-count">0 / 500</div>
 
-    <button type="button" onclick="navigateToPage('../index.html')">E.T. Phone Home!</button>
-
     <script>
         // ── Username pool ─────────────────────────────────────────────────────────────
-        const ADJECTIVES = ['Whymzykal','Mystic','Velvet','Crimson','Silver','Golden',
-            'Shadow','Crystal','Cosmic','Neon','Lunar','Wild','Electric','Curious','Arcane'];
-        const NOUNS = ['Wanderer','Fox','Owl','Phoenix','Raven','Wolf','Sprite',
-            'Specter','Sage','Muse','Echo','Ghost','Cipher','Rebel','Enigma'];
+        const ADJS  = ['Cosmic','Neon','Velvet','Funky','Mystic','Jazzy','Quirky','Sneaky',
+                        'Zesty','Fuzzy','Glitchy','Lunar','Tangy','Wobbly','Spiffy'];
+        const NOUNS = ['Penguin','Wizard','Pickle','Comet','Noodle','Goblin','Muffin','Platypus',
+                        'Biscuit','Cactus','Gnome','Waffle','Ferret','Pebble','Sprocket'];
 
         function genUsername() {
-            const adj  = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+            const adj  = ADJS[Math.floor(Math.random() * ADJS.length)];
             const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
             return `${adj}${noun}_${Math.floor(Math.random() * 900 + 100)}`;
         }
 
-        // Atomically claim a username slot. Registers onDisconnect cleanup first
-        // so the slot is always released even if the tab crashes.
         function claimUsername(username) {
             const ref = firebase.database().ref(`forum/presence/${username}`);
             ref.onDisconnect().remove();
@@ -203,7 +204,6 @@
             });
         }
 
-        // Try to reclaim the stored name; if taken, loop until a free one is found.
         async function initUsername() {
             const stored = sessionStorage.getItem('forumUsername');
             if (stored && await claimUsername(stored)) return stored;
@@ -222,11 +222,9 @@
         function escHtml(str) {
             return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
-
         function fmtTime(ts) {
             return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
-
         function addSystemMsg(text) {
             const el = document.createElement('div');
             el.className = 'msg-system';
@@ -234,7 +232,6 @@
             chatMessages.appendChild(el);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
-
         function addMessageEl(username, text, ts, isMine) {
             const div = document.createElement('div');
             div.className = 'msg ' + (isMine ? 'mine' : 'theirs');
@@ -251,11 +248,6 @@
 
         // ── Firebase ──────────────────────────────────────────────────────────────────
         if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY) {
-            // Lock input until username is secured
-            chatInput.disabled     = true;
-            chatSend.disabled      = true;
-            chatInput.placeholder  = 'getting your name...';
-
             const messagesRef = firebase.database().ref('forum/messages');
             let myUsername    = null;
             let lastSent      = 0;
@@ -283,9 +275,10 @@
                 chatInput.disabled    = false;
                 chatSend.disabled     = false;
                 chatInput.placeholder = 'Say something...';
+                chatInput.focus();
 
                 let initialLoad = true;
-                messagesRef.limitToLast(100).on('child_added', snapshot => {
+                messagesRef.orderByChild('ts').limitToLast(100).on('child_added', snapshot => {
                     if (initialLoad) {
                         addSystemMsg('— last 100 messages —');
                         initialLoad = false;
@@ -298,19 +291,17 @@
             });
 
         } else {
-            // No Firebase — fall back to unguaranteed local username
             statusDot.textContent = '● not configured';
-            let myUsername = sessionStorage.getItem('forumUsername') || genUsername();
+            const myUsername = sessionStorage.getItem('forumUsername') || genUsername();
             sessionStorage.setItem('forumUsername', myUsername);
             document.getElementById('chat-username').textContent = myUsername;
-            addSystemMsg('— chat not yet configured — see /js/firebase-config.js —');
+            addSystemMsg('— chat requires Firebase — see /js/firebase-config.js —');
             window.sendMessage = function () {};
         }
 
         chatInput.addEventListener('keydown', e => {
             if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
         });
-
         chatInput.addEventListener('input', function () {
             const len     = this.value.length;
             const counter = document.getElementById('char-count');
@@ -318,5 +309,6 @@
             counter.classList.toggle('warn', len > 420);
         });
     </script>
+
 </body>
 </html>
