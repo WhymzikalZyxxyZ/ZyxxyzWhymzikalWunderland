@@ -2,34 +2,591 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>About ZYXXYZ's Whymzykal Wunderland!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doodle Pad — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
+    <style>
+        #artpad-page {
+            max-width: 960px;
+            margin: 20px auto;
+            padding: 0 14px 48px;
+        }
+
+        /* ══ LAYOUT ══ */
+        .ap-layout {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+
+        /* ══ SIDEBAR ══ */
+        .ap-sidebar {
+            width: 136px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .ap-section {
+            background: rgba(0,0,0,0.38);
+            border: 1px solid rgba(255,255,255,0.09);
+            border-radius: 8px;
+            padding: 9px 8px 8px;
+        }
+        .ap-section-label {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #555;
+            margin-bottom: 7px;
+        }
+        .tool-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+        }
+        .tool-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.13);
+            color: #aaa;
+            border-radius: 5px;
+            padding: 7px 2px;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            text-align: center;
+            transition: border-color 0.13s, color 0.13s, background 0.13s;
+            line-height: 1.25;
+            user-select: none;
+        }
+        .tool-btn:hover { border-color: #f4a261; color: #fff; }
+        .tool-btn.active {
+            background: #f4a261;
+            border-color: #f4a261;
+            color: #111;
+            font-weight: bold;
+        }
+
+        /* Size slider */
+        .ap-range { width: 100%; accent-color: #f4a261; margin: 5px 0 2px; cursor: pointer; }
+        .ap-range-label {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #777;
+            text-align: center;
+        }
+
+        /* Fill checkbox */
+        .ap-check-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #aaa;
+            cursor: pointer;
+        }
+        .ap-check-row input { accent-color: #f4a261; cursor: pointer; margin: 0; }
+
+        /* Active color */
+        .active-color-wrap { text-align: center; }
+        #active-swatch {
+            width: 44px; height: 44px;
+            border: 2px solid rgba(255,255,255,0.22);
+            border-radius: 5px;
+            margin: 0 auto 4px;
+            cursor: pointer;
+            transition: border-color 0.15s;
+        }
+        #active-swatch:hover { border-color: #f4a261; }
+        .active-color-label {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            color: #555;
+            letter-spacing: 1px;
+        }
+
+        /* ══ CANVAS COLUMN ══ */
+        .ap-canvas-col { flex: 1; min-width: 0; }
+
+        .canvas-wrap {
+            position: relative;
+            display: block;
+            line-height: 0;
+            border: 3px solid #3a3a3a;
+            border-radius: 3px;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+            max-width: 100%;
+            overflow: hidden;
+        }
+        #main-canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+        #overlay-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            cursor: crosshair;
+        }
+
+        /* ══ PALETTE ══ */
+        .ap-palette-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .palette-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 3px;
+            flex: 1;
+        }
+        .pal-swatch {
+            aspect-ratio: 1;
+            border-radius: 3px;
+            border: 1px solid rgba(0,0,0,0.4);
+            cursor: pointer;
+            transition: transform 0.1s;
+            position: relative;
+        }
+        .pal-swatch:hover { transform: scale(1.25); z-index: 5; }
+        .pal-swatch.selected {
+            outline: 2px solid #fff;
+            outline-offset: 1px;
+            box-shadow: 0 0 0 3px #f4a261;
+        }
+        #custom-color-btn {
+            width: 34px; height: 34px;
+            border-radius: 5px;
+            border: 2px solid rgba(255,255,255,0.18);
+            cursor: pointer;
+            padding: 0;
+            flex-shrink: 0;
+            title: "Custom colour";
+        }
+
+        /* ══ ACTION BUTTONS ══ */
+        .ap-actions {
+            margin-top: 8px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .ap-btn {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.18);
+            color: #ccc;
+            border-radius: 6px;
+            padding: 7px 14px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: border-color 0.13s, color 0.13s;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .ap-btn:hover { border-color: #f4a261; color: #fff; }
+        .ap-btn.primary {
+            background: #f4a261;
+            border-color: #f4a261;
+            color: #111;
+            font-weight: bold;
+        }
+        .ap-btn.primary:hover { background: #e76f51; color: #fff; border-color: #e76f51; }
+
+        /* ══ TIP ══ */
+        .ap-tip {
+            margin-top: 14px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #4a4a4a;
+            border-top: 1px solid #222;
+            padding-top: 10px;
+            line-height: 1.6;
+        }
+        .ap-tip a { color: #f4a261; text-decoration: none; }
+        .ap-tip a:hover { text-decoration: underline; }
+        .ap-tip code {
+            background: rgba(255,255,255,0.06);
+            padding: 1px 5px;
+            border-radius: 3px;
+            color: #888;
+        }
+
+        /* ══ MOBILE ══ */
+        @media (max-width: 620px) {
+            .ap-layout { flex-direction: column; }
+            .ap-sidebar {
+                width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            .ap-section { flex: 1; min-width: 110px; }
+            .palette-grid { grid-template-columns: repeat(12, 1fr); }
+        }
+    </style>
 </head>
 <body class="notYetBody">
 
-    <h2>Zyxxyz Doodlez</h2>
-    <br />
+    <h2>Zyxxyz's Doodle Pad</h2>
 
-    <div class="content-row">
-        <!-- Navigation Bar -->
-        <div class="navbar">
-            <a href="../../index.html">Home</a>
-            <a href="../../virtuoso/animations/motionpictures.html">Motion Pictures</a>
-            <a href="../../virtuoso/comics/webcomic.html">Webcomic</a>
-            <a href="../../virtuoso/crafts/handmade.html">Handmade</a>
-            <a href="../../virtuoso/drawings/doodles.html">Doodles</a>
-            <a href="../../virtuoso/writings/stories.html">Stories</a>
+    <div class="navbar">
+        <a href="/index.html">Home</a>
+        <a href="/virtuoso/animations/motionpictures.html">Motion Pictures</a>
+        <a href="/virtuoso/comics/webcomic.html">Webcomic</a>
+        <a href="/virtuoso/crafts/handmade.html">Handmade</a>
+        <a href="/virtuoso/drawings/doodles.html">Doodles</a>
+        <a href="/virtuoso/writings/stories.html">Stories</a>
+    </div>
+
+    <div class="banner"></div>
+
+    <div id="artpad-page">
+        <div class="ap-layout">
+
+            <!-- ══ SIDEBAR ══ -->
+            <div class="ap-sidebar">
+
+                <div class="ap-section">
+                    <div class="ap-section-label">Draw</div>
+                    <div class="tool-grid">
+                        <button class="tool-btn active" id="btn-pen"    onclick="setTool('pen')"    title="Freehand pen">✏️<br>Pen</button>
+                        <button class="tool-btn"        id="btn-eraser" onclick="setTool('eraser')" title="Eraser">⬜<br>Erase</button>
+                    </div>
+                </div>
+
+                <div class="ap-section">
+                    <div class="ap-section-label">Shapes</div>
+                    <div class="tool-grid">
+                        <button class="tool-btn" id="btn-line"     onclick="setTool('line')"     title="Straight line">╱<br>Line</button>
+                        <button class="tool-btn" id="btn-rect"     onclick="setTool('rect')"     title="Rectangle">▭<br>Rect</button>
+                        <button class="tool-btn" id="btn-circle"   onclick="setTool('circle')"   title="Circle / Ellipse">◯<br>Circle</button>
+                        <button class="tool-btn" id="btn-triangle" onclick="setTool('triangle')" title="Triangle">△<br>Tri</button>
+                    </div>
+                </div>
+
+                <div class="ap-section">
+                    <div class="ap-section-label">Size</div>
+                    <input type="range" class="ap-range" id="size-slider" min="1" max="60" value="4">
+                    <div class="ap-range-label" id="size-label">4 px</div>
+                </div>
+
+                <div class="ap-section">
+                    <div class="ap-section-label">Options</div>
+                    <label class="ap-check-row">
+                        <input type="checkbox" id="fill-check"> Fill shapes
+                    </label>
+                </div>
+
+                <div class="ap-section">
+                    <div class="ap-section-label">Colour</div>
+                    <div class="active-color-wrap">
+                        <div id="active-swatch" title="Click to pick custom colour"
+                             onclick="document.getElementById('custom-color-btn').click()"></div>
+                        <div class="active-color-label">ACTIVE</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ══ CANVAS COLUMN ══ -->
+            <div class="ap-canvas-col">
+
+                <div class="canvas-wrap">
+                    <canvas id="main-canvas"    width="600" height="600"></canvas>
+                    <canvas id="overlay-canvas" width="600" height="600"></canvas>
+                </div>
+
+                <!-- Colour palette -->
+                <div class="ap-palette-row">
+                    <div class="palette-grid" id="palette-grid"></div>
+                    <input type="color" id="custom-color-btn" value="#000000" title="Custom colour">
+                </div>
+
+                <!-- Actions -->
+                <div class="ap-actions">
+                    <label class="ap-btn" title="Upload an image to draw on">
+                        📂 Upload Image
+                        <input type="file" id="img-upload" accept="image/*" style="display:none">
+                    </label>
+                    <button class="ap-btn" id="undo-btn" onclick="undoLast()" title="Undo last action">↩ Undo</button>
+                    <button class="ap-btn" onclick="clearCanvas()" title="Clear to white">🗑 Clear</button>
+                    <button class="ap-btn primary" onclick="downloadCanvas()" title="Save as PNG">⬇ Save PNG</button>
+                </div>
+
+                <div class="ap-tip">
+                    <strong>Using art in your webcomic:</strong> Save your panel as PNG, drop it in
+                    <code>virtuoso/comics/panels/</code>, then add it to the
+                    <a href="/virtuoso/comics/webcomic.html">webcomic.html</a> COMICS array.
+                    Recommended size: 600 × 600 px (square).
+                </div>
+
+            </div>
         </div>
     </div>
 
-    <!-- Removed the <img> tag here as it's no longer needed -->
-    <div class="banner"></div> <!-- Placeholder for your logo as background -->
+    <script>
+        // ── Colour palette ────────────────────────────────────────────────────────────
+        const PALETTE = [
+            '#000000','#222222','#555555','#888888','#bbbbbb','#ffffff',
+            '#7b0000','#cc0000','#e85d04','#f4c21c','#a8d5a2','#23a55a',
+            '#006d77','#1565c0','#4527a0','#ad1457','#6d4c41','#bcaaa4',
+            '#ffcdd2','#ffe0b2','#fff9c4','#dcedc8','#b3e5fc','#e1bee7',
+        ];
 
-    <br>
-    <p id="demo">ZYXXYZ</p>
+        // ── State ─────────────────────────────────────────────────────────────────────
+        let tool       = 'pen';
+        let color      = '#000000';
+        let brushSz    = 4;
+        let fillShapes = false;
+        let isDrawing  = false;
+        let startX = 0, startY = 0;
+        let startSnap  = null;
+        const undoStack = [];
 
-    <button type="button" onclick="navigateToPage('../../index.html')">E.T. Phone Home!</button>
+        // ── Canvas setup ──────────────────────────────────────────────────────────────
+        const canvas  = document.getElementById('main-canvas');
+        const ctx     = canvas.getContext('2d');
+        const overlay = document.getElementById('overlay-canvas');
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // ── Coordinate helper ─────────────────────────────────────────────────────────
+        function getPos(e) {
+            const rect = overlay.getBoundingClientRect();
+            const scaleX = canvas.width  / rect.width;
+            const scaleY = canvas.height / rect.height;
+            let cx, cy;
+            if (e.touches && e.touches.length) {
+                cx = e.touches[0].clientX; cy = e.touches[0].clientY;
+            } else if (e.changedTouches && e.changedTouches.length) {
+                cx = e.changedTouches[0].clientX; cy = e.changedTouches[0].clientY;
+            } else {
+                cx = e.clientX; cy = e.clientY;
+            }
+            return { x: (cx - rect.left) * scaleX, y: (cy - rect.top) * scaleY };
+        }
+
+        // ── Undo stack ────────────────────────────────────────────────────────────────
+        function pushUndo(snap) {
+            undoStack.push(snap !== undefined ? snap : ctx.getImageData(0, 0, canvas.width, canvas.height));
+            if (undoStack.length > 20) undoStack.shift();
+            document.getElementById('undo-btn').disabled = false;
+        }
+
+        function undoLast() {
+            if (!undoStack.length) return;
+            ctx.putImageData(undoStack.pop(), 0, 0);
+            document.getElementById('undo-btn').disabled = undoStack.length === 0;
+        }
+
+        // ── Draw helpers ──────────────────────────────────────────────────────────────
+        function applyPenStyle() {
+            ctx.lineWidth   = brushSz;
+            ctx.lineCap     = 'round';
+            ctx.lineJoin    = 'round';
+            ctx.strokeStyle = tool === 'eraser' ? '#ffffff' : color;
+            ctx.fillStyle   = color;
+        }
+
+        function drawShape(cx, sx, sy, ex, ey) {
+            cx.lineWidth   = brushSz;
+            cx.lineCap     = 'round';
+            cx.lineJoin    = 'round';
+            cx.strokeStyle = color;
+            cx.fillStyle   = color;
+            cx.beginPath();
+            switch (tool) {
+                case 'line':
+                    cx.moveTo(sx, sy);
+                    cx.lineTo(ex, ey);
+                    cx.stroke();
+                    break;
+                case 'rect':
+                    if (fillShapes) cx.fillRect(sx, sy, ex - sx, ey - sy);
+                    cx.strokeRect(sx, sy, ex - sx, ey - sy);
+                    break;
+                case 'circle': {
+                    const rx = (ex - sx) / 2, ry = (ey - sy) / 2;
+                    cx.ellipse(sx + rx, sy + ry, Math.abs(rx), Math.abs(ry), 0, 0, Math.PI * 2);
+                    if (fillShapes) cx.fill();
+                    cx.stroke();
+                    break;
+                }
+                case 'triangle':
+                    cx.moveTo((sx + ex) / 2, sy);
+                    cx.lineTo(ex, ey);
+                    cx.lineTo(sx, ey);
+                    cx.closePath();
+                    if (fillShapes) cx.fill();
+                    cx.stroke();
+                    break;
+            }
+        }
+
+        // ── Mouse / touch events ──────────────────────────────────────────────────────
+        function onDown(e) {
+            e.preventDefault();
+            const { x, y } = getPos(e);
+            isDrawing = true;
+            startX = x; startY = y;
+            startSnap = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+            if (tool === 'pen' || tool === 'eraser') {
+                pushUndo(startSnap);
+                applyPenStyle();
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+            }
+        }
+
+        function onMove(e) {
+            e.preventDefault();
+            if (!isDrawing) return;
+            const { x, y } = getPos(e);
+
+            if (tool === 'pen' || tool === 'eraser') {
+                applyPenStyle();
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+            } else {
+                ctx.putImageData(startSnap, 0, 0);
+                drawShape(ctx, startX, startY, x, y);
+            }
+        }
+
+        function onUp(e) {
+            if (!isDrawing) return;
+            isDrawing = false;
+            if (tool !== 'pen' && tool !== 'eraser') {
+                const { x, y } = getPos(e);
+                ctx.putImageData(startSnap, 0, 0);
+                pushUndo(startSnap);
+                drawShape(ctx, startX, startY, x, y);
+            }
+            ctx.beginPath();
+        }
+
+        overlay.addEventListener('mousedown',  onDown);
+        overlay.addEventListener('mousemove',  onMove);
+        overlay.addEventListener('mouseup',    onUp);
+        overlay.addEventListener('mouseleave', onUp);
+        overlay.addEventListener('touchstart', onDown, { passive: false });
+        overlay.addEventListener('touchmove',  onMove, { passive: false });
+        overlay.addEventListener('touchend',   onUp,   { passive: false });
+
+        // ── Tool selection ────────────────────────────────────────────────────────────
+        const ALL_TOOLS = ['pen','eraser','line','rect','circle','triangle'];
+
+        function setTool(t) {
+            tool = t;
+            ALL_TOOLS.forEach(id =>
+                document.getElementById('btn-' + id).classList.toggle('active', id === t)
+            );
+            overlay.style.cursor = t === 'eraser' ? 'cell' : 'crosshair';
+        }
+
+        // ── Size slider ───────────────────────────────────────────────────────────────
+        document.getElementById('size-slider').addEventListener('input', function () {
+            brushSz = +this.value;
+            document.getElementById('size-label').textContent = brushSz + ' px';
+        });
+
+        // ── Fill checkbox ─────────────────────────────────────────────────────────────
+        document.getElementById('fill-check').addEventListener('change', function () {
+            fillShapes = this.checked;
+        });
+
+        // ── Colour palette ────────────────────────────────────────────────────────────
+        const paletteGrid = document.getElementById('palette-grid');
+        let selectedSwatch = null;
+
+        function setColor(c) {
+            color = c;
+            document.getElementById('active-swatch').style.background = c;
+            document.getElementById('custom-color-btn').value = c;
+        }
+
+        PALETTE.forEach((c, i) => {
+            const sw = document.createElement('div');
+            sw.className = 'pal-swatch';
+            sw.style.background = c;
+            sw.title = c;
+            sw.addEventListener('click', () => {
+                if (selectedSwatch) selectedSwatch.classList.remove('selected');
+                sw.classList.add('selected');
+                selectedSwatch = sw;
+                setColor(c);
+            });
+            paletteGrid.appendChild(sw);
+            if (i === 0) { sw.classList.add('selected'); selectedSwatch = sw; }
+        });
+
+        document.getElementById('custom-color-btn').addEventListener('input', function () {
+            if (selectedSwatch) selectedSwatch.classList.remove('selected');
+            selectedSwatch = null;
+            setColor(this.value);
+        });
+
+        document.getElementById('active-swatch').style.background = color;
+        document.getElementById('undo-btn').disabled = true;
+
+        // ── Clear ─────────────────────────────────────────────────────────────────────
+        function clearCanvas() {
+            if (!confirm('Clear the canvas? This cannot be undone.')) return;
+            undoStack.length = 0;
+            document.getElementById('undo-btn').disabled = true;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // ── Download ──────────────────────────────────────────────────────────────────
+        function downloadCanvas() {
+            const now = new Date();
+            const ts  = [
+                now.getFullYear(),
+                String(now.getMonth() + 1).padStart(2, '0'),
+                String(now.getDate()).padStart(2, '0'),
+                String(now.getHours()).padStart(2, '0'),
+                String(now.getMinutes()).padStart(2, '0'),
+                String(now.getSeconds()).padStart(2, '0'),
+            ].join('');
+            const a = document.createElement('a');
+            a.download = 'panel-' + ts + '.png';
+            a.href = canvas.toDataURL('image/png');
+            a.click();
+        }
+
+        // ── Image upload ──────────────────────────────────────────────────────────────
+        document.getElementById('img-upload').addEventListener('change', function () {
+            const file = this.files[0];
+            if (!file || !file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = function (ev) {
+                const img = new Image();
+                img.onload = function () {
+                    pushUndo();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+                    const w = img.width * scale;
+                    const h = img.height * scale;
+                    ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+            this.value = '';
+        });
+    </script>
 
 </body>
-</html> 
+</html>
