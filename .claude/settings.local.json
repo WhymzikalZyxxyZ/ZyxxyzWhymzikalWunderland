@@ -12,7 +12,12 @@
       "Bash(git merge *)",
       "Bash(git stash *)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(git -C \"C:/Users/mcspc/OneDrive/Documents/ZYXXYZ's Whymzykal Wunderland/Whymzykal Wunderland/ZyxxyzWhymzykalWunderland\" show HEAD~2:.github/workflows/deploy.yml)",
+      "Bash(git -C \"C:/Users/mcspc/OneDrive/Documents/ZYXXYZ's Whymzykal Wunderland/Whymzykal Wunderland/ZyxxyzWhymzykalWunderland\" log --oneline --all)",
+      "Bash(git -C \"C:/Users/mcspc/OneDrive/Documents/ZYXXYZ's Whymzykal Wunderland/Whymzykal Wunderland/ZyxxyzWhymzykalWunderland\" show --stat HEAD~5)",
+      "Bash(git *)",
+      "Bash(npm install *)"
     ]
   }
 }

@@ -359,18 +359,24 @@
 
         // ── Coordinate helper ─────────────────────────────────────────────────────────
         function getPos(e) {
-            const rect = overlay.getBoundingClientRect();
-            const scaleX = canvas.width  / rect.width;
-            const scaleY = canvas.height / rect.height;
-            let cx, cy;
             if (e.touches && e.touches.length) {
-                cx = e.touches[0].clientX; cy = e.touches[0].clientY;
-            } else if (e.changedTouches && e.changedTouches.length) {
-                cx = e.changedTouches[0].clientX; cy = e.changedTouches[0].clientY;
-            } else {
-                cx = e.clientX; cy = e.clientY;
+                const rect = overlay.getBoundingClientRect();
+                return {
+                    x: (e.touches[0].clientX - rect.left) * (canvas.width  / rect.width),
+                    y: (e.touches[0].clientY - rect.top)  * (canvas.height / rect.height)
+                };
             }
-            return { x: (cx - rect.left) * scaleX, y: (cy - rect.top) * scaleY };
+            if (e.changedTouches && e.changedTouches.length) {
+                const rect = overlay.getBoundingClientRect();
+                return {
+                    x: (e.changedTouches[0].clientX - rect.left) * (canvas.width  / rect.width),
+                    y: (e.changedTouches[0].clientY - rect.top)  * (canvas.height / rect.height)
+                };
+            }
+            return {
+                x: e.offsetX * (canvas.width  / overlay.offsetWidth),
+                y: e.offsetY * (canvas.height / overlay.offsetHeight)
+            };
         }
 
         // ── Undo stack ────────────────────────────────────────────────────────────────
