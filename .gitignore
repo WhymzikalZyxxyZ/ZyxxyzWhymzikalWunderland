@@ -11,6 +11,9 @@
 Thumbs.db
 desktop.ini
 
+# Firebase config (real credentials — generated at deploy time from secrets)
+js/firebase-config.js
+
 # IDE files
 .vscode/
 .idea/

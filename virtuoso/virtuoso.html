@@ -463,6 +463,7 @@
                 captionInput.className = 'staged-caption';
                 captionInput.value = defaultCaption;
                 captionInput.placeholder = 'Caption...';
+                captionInput.maxLength = 120;
 
                 const progress = document.createElement('div');
                 progress.className = 'staged-progress';
@@ -520,7 +521,7 @@
                 statusText.textContent  = 'Uploading...';
 
                 try {
-                    const caption  = captionInput.value.trim() || file.name;
+                    const caption  = (captionInput.value.trim() || file.name).slice(0, 120);
                     const ts       = Date.now();
                     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
                     const ref      = firebase.storage().ref(`gallery/${ts}_${safeName}`);
