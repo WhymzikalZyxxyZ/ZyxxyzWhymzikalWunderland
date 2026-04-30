@@ -2,33 +2,1136 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>About ZYXXYZ's Whymzykal Wunderland!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motion Pictures — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
+    <style>
+        #animator-page {
+            max-width: 1060px;
+            margin: 0 auto;
+            padding: 0 14px 60px;
+        }
+
+        /* ══ SECTION HEADINGS ══ */
+        .mp-section-title {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #f4a261;
+            border-bottom: 1px solid #2a2a2a;
+            padding-bottom: 8px;
+            margin: 32px 0 16px;
+        }
+
+        /* ══ EDITOR ══ */
+        #editor-wrap {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        /* toolbar */
+        #editor-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .tb-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tb-sep {
+            width: 1px;
+            height: 24px;
+            background: #2a2a2a;
+        }
+        .tb-label {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #555;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+        #frame-counter {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #f4a261;
+            min-width: 54px;
+            text-align: center;
+        }
+        .tb-btn {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.14);
+            color: #bbb;
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: border-color 0.13s, color 0.13s;
+            user-select: none;
+        }
+        .tb-btn:hover:not(:disabled) { border-color: #f4a261; color: #fff; }
+        .tb-btn:disabled { opacity: 0.35; cursor: default; }
+        .tb-btn.danger:hover:not(:disabled) { border-color: #f44; color: #f44; }
+        .tb-btn.accent {
+            background: #f4a261; border-color: #f4a261; color: #111; font-weight: bold;
+        }
+        .tb-btn.accent:hover:not(:disabled) { background: #e76f51; border-color: #e76f51; color: #fff; }
+        #fps-input {
+            width: 44px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #f4a261;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            text-align: center;
+            padding: 3px 0;
+        }
+        #onion-toggle {
+            accent-color: #f4a261;
+            cursor: pointer;
+            width: 14px; height: 14px;
+        }
+
+        /* editor body */
+        #editor-body {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        /* sidebar */
+        #ed-sidebar {
+            width: 120px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .ed-sec {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 7px;
+            padding: 8px 7px 7px;
+        }
+        .ed-sec-label {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #444;
+            margin-bottom: 6px;
+        }
+        .tool-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+        }
+        .tool-btn {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #888;
+            border-radius: 5px;
+            padding: 6px 2px;
+            font-size: 10px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            text-align: center;
+            transition: border-color 0.12s, color 0.12s, background 0.12s;
+            line-height: 1.3;
+            user-select: none;
+        }
+        .tool-btn:hover { border-color: #f4a261; color: #fff; }
+        .tool-btn.active { background: #f4a261; border-color: #f4a261; color: #111; font-weight: bold; }
+        .ed-range { width: 100%; accent-color: #f4a261; margin: 4px 0 2px; cursor: pointer; }
+        .ed-range-label { font-family: 'Courier New', monospace; font-size: 10px; color: #666; text-align: center; }
+        .ed-check-row {
+            display: flex; align-items: center; gap: 5px;
+            font-family: 'Courier New', monospace; font-size: 10px; color: #888; cursor: pointer;
+        }
+        .ed-check-row input { accent-color: #f4a261; cursor: pointer; margin: 0; }
+        .active-swatch-wrap { text-align: center; }
+        #ed-active-swatch {
+            width: 38px; height: 38px;
+            border: 2px solid rgba(255,255,255,0.18);
+            border-radius: 5px; margin: 0 auto 3px; cursor: pointer;
+            transition: border-color 0.15s;
+        }
+        #ed-active-swatch:hover { border-color: #f4a261; }
+        .active-swatch-label { font-family: 'Courier New', monospace; font-size: 9px; color: #444; letter-spacing: 1px; }
+
+        /* canvas column */
+        #ed-canvas-col { flex: 1; min-width: 0; }
+        .canvas-wrap {
+            position: relative; display: block; line-height: 0;
+            border: 2px solid #2a2a2a; border-radius: 3px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5); overflow: hidden;
+            max-width: 100%;
+        }
+        #anim-canvas { display: block; max-width: 100%; height: auto; }
+        #anim-overlay {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; cursor: crosshair;
+        }
+
+        /* palette */
+        .ed-palette-row {
+            display: flex; align-items: center; gap: 7px; margin-top: 8px;
+        }
+        .ed-palette-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 3px; flex: 1;
+        }
+        .pal-swatch {
+            aspect-ratio: 1; border-radius: 3px;
+            border: 1px solid rgba(0,0,0,0.4); cursor: pointer;
+            transition: transform 0.1s; position: relative;
+        }
+        .pal-swatch:hover { transform: scale(1.25); z-index: 5; }
+        .pal-swatch.selected { outline: 2px solid #fff; outline-offset: 1px; box-shadow: 0 0 0 3px #f4a261; }
+        #ed-custom-color { width: 30px; height: 30px; border-radius: 5px; border: 2px solid rgba(255,255,255,0.15); cursor: pointer; padding: 0; flex-shrink: 0; }
+
+        /* action row */
+        .ed-actions {
+            display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px;
+        }
+        .ed-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #bbb; border-radius: 5px; padding: 6px 11px;
+            font-family: 'Courier New', monospace; font-size: 11px;
+            cursor: pointer; transition: border-color 0.12s, color 0.12s;
+            white-space: nowrap; user-select: none;
+        }
+        .ed-btn:hover { border-color: #f4a261; color: #fff; }
+        .ed-btn.primary { background: #f4a261; border-color: #f4a261; color: #111; font-weight: bold; }
+        .ed-btn.primary:hover { background: #e76f51; border-color: #e76f51; color: #fff; }
+
+        /* ══ FRAME STRIP ══ */
+        #frame-strip-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #2a2a2a;
+        }
+        #frame-strip {
+            display: flex;
+            gap: 5px;
+            overflow-x: auto;
+            flex: 1;
+            padding: 4px 2px 6px;
+            scrollbar-width: thin;
+            scrollbar-color: #333 transparent;
+        }
+        #frame-strip::-webkit-scrollbar { height: 4px; }
+        #frame-strip::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+        .thumb-wrap {
+            flex-shrink: 0;
+            position: relative;
+            border: 2px solid #2a2a2a;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: border-color 0.12s;
+            overflow: hidden;
+        }
+        .thumb-wrap:hover { border-color: #888; }
+        .thumb-wrap.active { border-color: #f4a261; }
+        .thumb-wrap canvas { display: block; }
+        .thumb-num {
+            position: absolute; bottom: 1px; right: 3px;
+            font-family: 'Courier New', monospace; font-size: 8px;
+            color: rgba(255,255,255,0.5); pointer-events: none;
+        }
+        #add-frame-btn {
+            flex-shrink: 0;
+            width: 72px; height: 72px;
+            background: rgba(255,255,255,0.03);
+            border: 2px dashed rgba(244,162,97,0.35);
+            border-radius: 4px;
+            color: #f4a261;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: border-color 0.12s, background 0.12s;
+        }
+        #add-frame-btn:hover { border-color: #f4a261; background: rgba(244,162,97,0.07); }
+
+        /* ══ PUBLISH PANEL ══ */
+        #publish-panel {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-top: 16px;
+        }
+        #publish-panel .pub-row {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;
+        }
+        #anim-title-input {
+            flex: 1; min-width: 160px;
+            background: rgba(255,255,255,0.07); border: 1px solid #333;
+            border-radius: 5px; color: #fff;
+            font-family: 'Courier New', monospace; font-size: 12px;
+            padding: 6px 10px; outline: none;
+        }
+        #anim-title-input:focus { border-color: #f4a261; }
+        #snippet-output {
+            display: none; width: 100%; box-sizing: border-box;
+            background: rgba(0,0,0,0.5); border: 1px solid #333; border-radius: 5px;
+            color: #aaa; font-family: 'Courier New', monospace; font-size: 10px;
+            padding: 8px; min-height: 80px; resize: vertical; margin-top: 8px;
+        }
+        #snippet-status { font-family: 'Courier New', monospace; font-size: 11px; color: #4caf50; }
+        .pub-note {
+            font-family: 'Courier New', monospace; font-size: 10px; color: #444;
+            line-height: 1.6; margin-top: 6px;
+        }
+
+        /* ══ ANIMATION VIEWER ══ */
+        #viewer-section { margin-top: 8px; }
+        #anim-viewer-wrap {
+            background: rgba(0,0,0,0.4); border: 1px solid #2a2a2a;
+            border-radius: 10px; padding: 16px; margin-bottom: 16px;
+        }
+        #viewer-header {
+            display: flex; justify-content: space-between;
+            align-items: baseline; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;
+        }
+        #viewer-title { font-family: 'Courier New', monospace; font-size: 16px; color: #f4a261; }
+        #viewer-meta { font-family: 'Courier New', monospace; font-size: 10px; color: #555; }
+        #viewer-canvas-wrap {
+            position: relative; line-height: 0; max-width: 480px; margin: 0 auto;
+            border: 2px solid #2a2a2a; border-radius: 3px; overflow: hidden;
+        }
+        #viewer-canvas { display: block; max-width: 100%; height: auto; }
+        #viewer-controls {
+            display: flex; align-items: center; gap: 8px; margin-top: 10px;
+            justify-content: center; flex-wrap: wrap;
+        }
+        #viewer-progress {
+            flex: 1; min-width: 100px; max-width: 240px;
+            height: 4px; background: #2a2a2a; border-radius: 2px; overflow: hidden;
+        }
+        #viewer-bar { height: 100%; background: #f4a261; width: 0%; transition: width 0.1s linear; }
+        #viewer-frame-label {
+            font-family: 'Courier New', monospace; font-size: 10px; color: #555;
+        }
+
+        /* viewer TOC */
+        #viewer-toc-title {
+            font-family: 'Courier New', monospace; font-size: 13px; color: #f4a261;
+            border-bottom: 1px solid #2a2a2a; padding-bottom: 6px; margin-bottom: 12px;
+        }
+        #viewer-toc-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px;
+        }
+        .toc-card {
+            background: rgba(0,0,0,0.35); border: 2px solid #2a2a2a;
+            border-radius: 6px; padding: 8px; cursor: pointer;
+            transition: border-color 0.14s, transform 0.14s;
+        }
+        .toc-card:hover { border-color: #f4a261; transform: translateY(-2px); }
+        .toc-card.active { border-color: #f4a261; background: rgba(244,162,97,0.08); }
+        .toc-thumb {
+            width: 100%; aspect-ratio: 1; background: #111;
+            border: 1px solid #333; border-radius: 2px; margin-bottom: 6px; overflow: hidden;
+        }
+        .toc-thumb canvas { width: 100%; height: 100%; display: block; }
+        .toc-label { font-family: 'Courier New', monospace; font-size: 10px; color: #ccc; line-height: 1.4; }
+        .toc-date { display: block; font-size: 9px; color: #555; }
+
+        .empty-notice {
+            text-align: center; font-family: 'Courier New', monospace;
+            font-size: 13px; color: #444; padding: 24px 0;
+        }
+
+        /* ══ ARCHIVE ══ */
+        #archive-details {
+            margin-top: 16px; border: 1px solid #2a2a2a;
+            border-radius: 8px; overflow: hidden;
+        }
+        #archive-details summary {
+            font-family: 'Courier New', monospace; font-size: 12px; color: #555;
+            padding: 12px 16px; cursor: pointer; list-style: none;
+            background: rgba(0,0,0,0.25);
+        }
+        #archive-details summary:hover { color: #888; }
+        #archive-details summary::-webkit-details-marker { display: none; }
+        #archive-details summary::before { content: '▶  '; }
+        #archive-details[open] summary::before { content: '▼  '; }
+        #archive-grid { padding: 14px 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+
+        /* ══ RESPONSIVE ══ */
+        @media (max-width: 620px) {
+            #editor-body { flex-direction: column; }
+            #ed-sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; }
+            .ed-sec { flex: 1; min-width: 100px; }
+            .ed-palette-grid { grid-template-columns: repeat(8, 1fr); }
+        }
+    </style>
 </head>
-<body class="indexBody">
+<body class="notYetBody">
 
     <h2>Zyxxyz, the Director</h2>
 
-    <div class="content-row">
-        <!-- Navigation Bar -->
-        <div class="navbar">
-            <a href="../../index.html">Home</a>
-            <a href="../../virtuoso/animations/motionpictures.html">Motion Pictures</a>
-            <a href="../../virtuoso/comics/webcomic.html">Webcomic</a>
-            <a href="../../virtuoso/crafts/handmade.html">Handmade</a>
-            <a href="../../virtuoso/drawings/doodles.html">Doodles</a>
-            <a href="../../virtuoso/writings/stories.html">Stories</a>
-        </div>
+    <div class="navbar">
+        <a href="../../index.html">Home</a>
+        <a href="../../virtuoso/animations/motionpictures.html">Motion Pictures</a>
+        <a href="../../virtuoso/comics/webcomic.html">Webcomic</a>
+        <a href="../../virtuoso/crafts/handmade.html">Handmade</a>
+        <a href="../../virtuoso/drawings/doodles.html">Doodles</a>
+        <a href="../../virtuoso/writings/stories.html">Stories</a>
     </div>
 
-    <!-- Removed the <img> tag here as it's no longer needed -->
-    <div class="banner"></div> <!-- Placeholder for your logo as background -->
+    <div class="banner"></div>
 
-    <br>
-    <p id="demo">ZYXXYZ</p>
+    <div id="animator-page">
+
+        <!-- ══ FRAME EDITOR ══ -->
+        <div class="mp-section-title">Frame Editor</div>
+
+        <div id="editor-wrap">
+
+            <!-- Toolbar -->
+            <div id="editor-toolbar">
+                <div class="tb-group">
+                    <button class="tb-btn" id="btn-prev-frame" onclick="prevFrame()" title="Previous frame">&#9664; Prev</button>
+                    <span id="frame-counter">1 / 1</span>
+                    <button class="tb-btn" id="btn-next-frame" onclick="nextFrame()" title="Next frame">Next &#9654;</button>
+                </div>
+                <div class="tb-sep"></div>
+                <div class="tb-group">
+                    <button class="tb-btn" onclick="duplicateFrame()" title="Duplicate current frame">&#10065; Dup</button>
+                    <button class="tb-btn danger" onclick="deleteFrame()" title="Delete current frame">&#10005; Del</button>
+                </div>
+                <div class="tb-sep"></div>
+                <div class="tb-group">
+                    <span class="tb-label">FPS</span>
+                    <input type="number" id="fps-input" value="8" min="1" max="24" title="Frames per second">
+                </div>
+                <div class="tb-sep"></div>
+                <div class="tb-group">
+                    <button class="tb-btn accent" id="btn-play" onclick="playAnimation()" title="Play animation">&#9654; Play</button>
+                    <button class="tb-btn" id="btn-stop" onclick="stopAnimation()" disabled title="Stop">&#9632; Stop</button>
+                </div>
+                <div class="tb-sep"></div>
+                <div class="tb-group">
+                    <label class="tb-label" style="display:flex;align-items:center;gap:5px;cursor:pointer;">
+                        <input type="checkbox" id="onion-toggle" checked> Onion skin
+                    </label>
+                </div>
+            </div>
+
+            <!-- Body: sidebar + canvas -->
+            <div id="editor-body">
+
+                <!-- Sidebar -->
+                <div id="ed-sidebar">
+                    <div class="ed-sec">
+                        <div class="ed-sec-label">Draw</div>
+                        <div class="tool-grid">
+                            <button class="tool-btn active" id="btn-pen"    onclick="setTool('pen')">&#9999;<br>Pen</button>
+                            <button class="tool-btn"        id="btn-eraser" onclick="setTool('eraser')">&#9633;<br>Erase</button>
+                        </div>
+                    </div>
+                    <div class="ed-sec">
+                        <div class="ed-sec-label">Shapes</div>
+                        <div class="tool-grid">
+                            <button class="tool-btn" id="btn-line"     onclick="setTool('line')">&#9585;<br>Line</button>
+                            <button class="tool-btn" id="btn-rect"     onclick="setTool('rect')">&#9645;<br>Rect</button>
+                            <button class="tool-btn" id="btn-circle"   onclick="setTool('circle')">&#9711;<br>Circle</button>
+                            <button class="tool-btn" id="btn-triangle" onclick="setTool('triangle')">&#9651;<br>Tri</button>
+                        </div>
+                    </div>
+                    <div class="ed-sec">
+                        <div class="ed-sec-label">Size</div>
+                        <input type="range" class="ed-range" id="size-slider" min="1" max="60" value="4">
+                        <div class="ed-range-label" id="size-label">4 px</div>
+                    </div>
+                    <div class="ed-sec">
+                        <div class="ed-sec-label">Options</div>
+                        <label class="ed-check-row">
+                            <input type="checkbox" id="fill-check"> Fill shapes
+                        </label>
+                    </div>
+                    <div class="ed-sec">
+                        <div class="ed-sec-label">Colour</div>
+                        <div class="active-swatch-wrap">
+                            <div id="ed-active-swatch" onclick="document.getElementById('ed-custom-color').click()" title="Click to pick custom colour"></div>
+                            <div class="active-swatch-label">ACTIVE</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Canvas column -->
+                <div id="ed-canvas-col">
+                    <div class="canvas-wrap">
+                        <canvas id="anim-canvas"  width="480" height="480"></canvas>
+                        <canvas id="anim-overlay" width="480" height="480"></canvas>
+                    </div>
+
+                    <div class="ed-palette-row">
+                        <div class="ed-palette-grid" id="ed-palette-grid"></div>
+                        <input type="color" id="ed-custom-color" value="#000000" title="Custom colour">
+                    </div>
+
+                    <div class="ed-actions">
+                        <button class="ed-btn" id="undo-btn" onclick="undoLast()" title="Undo">&#8629; Undo</button>
+                        <button class="ed-btn" onclick="clearFrame()" title="Clear frame to white">&#128465; Clear</button>
+                        <button class="ed-btn" onclick="downloadFrame()" title="Download current frame as PNG">&#8595; Save Frame</button>
+                        <button class="ed-btn" onclick="downloadAllFrames()" title="Download all frames as PNGs">&#8595; All Frames</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Frame strip -->
+            <div id="frame-strip-wrap">
+                <div id="frame-strip"></div>
+                <button id="add-frame-btn" onclick="addFrame()" title="Add new blank frame">+</button>
+            </div>
+
+        </div>
+
+        <!-- Publish panel -->
+        <div id="publish-panel">
+            <div class="pub-row">
+                <input type="text" id="anim-title-input" placeholder="Animation title..." maxlength="80">
+                <button class="ed-btn primary" onclick="generateSnippet()">&#128196; Prepare to Publish</button>
+                <span id="snippet-status"></span>
+            </div>
+            <textarea id="snippet-output" readonly></textarea>
+            <div class="pub-note">
+                Copy the snippet above and paste it into the <code>ANIMATIONS</code> array in this file's
+                <code>&lt;script&gt;</code> block. Animations dated more than 30 days ago are automatically
+                moved to the Archive section.
+            </div>
+        </div>
+
+        <!-- ══ PUBLISHED ANIMATIONS ══ -->
+        <div class="mp-section-title" id="viewer-section">Published Animations</div>
+
+        <div id="viewer-section-body">
+            <div id="anim-viewer-wrap">
+                <div id="viewer-header">
+                    <div id="viewer-title">—</div>
+                    <div id="viewer-meta"></div>
+                </div>
+                <div id="viewer-canvas-wrap">
+                    <canvas id="viewer-canvas" width="480" height="480"></canvas>
+                </div>
+                <div id="viewer-controls">
+                    <button class="tb-btn accent" id="vbtn-play" onclick="viewerPlay()">&#9654; Play</button>
+                    <button class="tb-btn" id="vbtn-stop" onclick="viewerStop()" disabled>&#9632; Stop</button>
+                    <div id="viewer-progress"><div id="viewer-bar"></div></div>
+                    <span id="viewer-frame-label">— / —</span>
+                </div>
+            </div>
+
+            <div id="viewer-toc-title">All Animations</div>
+            <div id="viewer-toc-grid"></div>
+            <div class="empty-notice" id="viewer-empty" style="display:none;">
+                No animations published yet — use the editor above to create one!
+            </div>
+        </div>
+
+        <!-- ══ ARCHIVE ══ -->
+        <details id="archive-details">
+            <summary>Archive — older than 30 days</summary>
+            <div id="archive-grid"></div>
+        </details>
+
+    </div>
 
     <button type="button" onclick="navigateToPage('../../index.html')">E.T. Phone Home!</button>
 
+    <script>
+        // ════════════════════════════════════════════════════════════════════════
+        //  HOW TO ADD A PUBLISHED ANIMATION
+        //  ─────────────────────────────────────────────────────────────────────
+        //  1. Use the editor above to draw your frames.
+        //  2. Click "Prepare to Publish", give it a title, copy the snippet.
+        //  3. Paste the snippet into the ANIMATIONS array below.
+        //
+        //  Animations with a date older than 30 days are automatically
+        //  shown in the Archive section instead of the main viewer.
+        //
+        //  Each entry:
+        //    title  — shown in the viewer header
+        //    date   — "YYYY-MM-DD" publish date
+        //    fps    — playback speed (1–24)
+        //    frames — array of image paths OR data URLs
+        // ════════════════════════════════════════════════════════════════════════
+
+        const ANIMATIONS = [
+            // ── Add published animations above this line ────────────────────
+        ];
+
+        // ── Constants ────────────────────────────────────────────────────────
+        const CANVAS_W    = 480;
+        const CANVAS_H    = 480;
+        const MAX_FRAMES  = 48;
+        const THUMB_W     = 72;
+        const THUMB_H     = 72;
+        const ARCHIVE_MS  = 30 * 24 * 60 * 60 * 1000;
+
+        // ── Editor state ─────────────────────────────────────────────────────
+        let edFrames     = [];
+        let edIdx        = 0;
+        let edPlaying    = false;
+        let edPlayTimer  = null;
+
+        let tool       = 'pen';
+        let color      = '#000000';
+        let brushSz    = 4;
+        let fillShapes = false;
+        let isDrawing  = false;
+        let startX = 0, startY = 0, startSnap = null;
+        const undoStack = [];
+
+        const canvas  = document.getElementById('anim-canvas');
+        const ctx     = canvas.getContext('2d');
+        const overlay = document.getElementById('anim-overlay');
+        const ovCtx   = overlay.getContext('2d');
+
+        // ── Frame helpers ────────────────────────────────────────────────────
+
+        function makeBlankImageData() {
+            const id = ctx.createImageData(CANVAS_W, CANVAS_H);
+            for (let i = 0; i < id.data.length; i += 4) {
+                id.data[i] = id.data[i+1] = id.data[i+2] = 255;
+                id.data[i+3] = 255;
+            }
+            return id;
+        }
+
+        function saveCurrentFrame() {
+            if (edFrames.length) {
+                edFrames[edIdx] = ctx.getImageData(0, 0, CANVAS_W, CANVAS_H);
+            }
+        }
+
+        function loadFrame(idx) {
+            undoStack.length = 0;
+            document.getElementById('undo-btn').disabled = true;
+            ctx.putImageData(edFrames[idx], 0, 0);
+            edIdx = idx;
+            updateToolbar();
+            renderOnionSkin();
+            renderStrip();
+        }
+
+        function addFrame() {
+            if (edFrames.length >= MAX_FRAMES) { alert('Max ' + MAX_FRAMES + ' frames.'); return; }
+            saveCurrentFrame();
+            edFrames.splice(edIdx + 1, 0, makeBlankImageData());
+            loadFrame(edIdx + 1);
+        }
+
+        function duplicateFrame() {
+            if (edFrames.length >= MAX_FRAMES) { alert('Max ' + MAX_FRAMES + ' frames.'); return; }
+            saveCurrentFrame();
+            const src = edFrames[edIdx].data;
+            const copy = new ImageData(new Uint8ClampedArray(src), CANVAS_W, CANVAS_H);
+            edFrames.splice(edIdx + 1, 0, copy);
+            loadFrame(edIdx + 1);
+        }
+
+        function deleteFrame() {
+            if (edFrames.length === 1) {
+                if (!confirm('Clear this frame?')) return;
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+                edFrames[0] = ctx.getImageData(0, 0, CANVAS_W, CANVAS_H);
+                renderStrip();
+                return;
+            }
+            edFrames.splice(edIdx, 1);
+            loadFrame(Math.min(edIdx, edFrames.length - 1));
+        }
+
+        function prevFrame() {
+            if (edIdx > 0) { saveCurrentFrame(); loadFrame(edIdx - 1); }
+        }
+
+        function nextFrame() {
+            if (edIdx < edFrames.length - 1) { saveCurrentFrame(); loadFrame(edIdx + 1); }
+        }
+
+        // ── Onion skinning ───────────────────────────────────────────────────
+
+        function renderOnionSkin() {
+            ovCtx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+            const on = document.getElementById('onion-toggle').checked;
+            if (!on || edIdx === 0) return;
+            const tmp = document.createElement('canvas');
+            tmp.width = CANVAS_W; tmp.height = CANVAS_H;
+            tmp.getContext('2d').putImageData(edFrames[edIdx - 1], 0, 0);
+            ovCtx.globalAlpha = 0.3;
+            ovCtx.drawImage(tmp, 0, 0);
+            ovCtx.globalAlpha = 1;
+        }
+
+        // ── Toolbar ──────────────────────────────────────────────────────────
+
+        function updateToolbar() {
+            document.getElementById('frame-counter').textContent =
+                (edIdx + 1) + ' / ' + edFrames.length;
+            document.getElementById('btn-prev-frame').disabled = edIdx === 0;
+            document.getElementById('btn-next-frame').disabled = edIdx === edFrames.length - 1;
+        }
+
+        // ── Frame strip ──────────────────────────────────────────────────────
+
+        function renderStrip() {
+            const strip = document.getElementById('frame-strip');
+            strip.innerHTML = '';
+            edFrames.forEach((frame, i) => {
+                const wrap = document.createElement('div');
+                wrap.className = 'thumb-wrap' + (i === edIdx ? ' active' : '');
+
+                const c = document.createElement('canvas');
+                c.width = THUMB_W; c.height = THUMB_H;
+                const tmp = document.createElement('canvas');
+                tmp.width = CANVAS_W; tmp.height = CANVAS_H;
+                tmp.getContext('2d').putImageData(frame, 0, 0);
+                c.getContext('2d').drawImage(tmp, 0, 0, THUMB_W, THUMB_H);
+
+                const num = document.createElement('div');
+                num.className = 'thumb-num';
+                num.textContent = i + 1;
+
+                wrap.appendChild(c);
+                wrap.appendChild(num);
+                wrap.addEventListener('click', () => {
+                    if (edPlaying) stopAnimation();
+                    saveCurrentFrame();
+                    loadFrame(i);
+                });
+                strip.appendChild(wrap);
+            });
+            const active = strip.querySelector('.active');
+            if (active) active.scrollIntoView({ block: 'nearest', inline: 'center' });
+        }
+
+        // ── Playback ─────────────────────────────────────────────────────────
+
+        function playAnimation() {
+            if (edPlaying) return;
+            saveCurrentFrame();
+            edPlaying = true;
+            document.getElementById('btn-play').disabled = true;
+            document.getElementById('btn-stop').disabled = false;
+            let pi = 0;
+            const fps = Math.max(1, Math.min(24, parseInt(document.getElementById('fps-input').value) || 8));
+            edPlayTimer = setInterval(() => {
+                ctx.putImageData(edFrames[pi], 0, 0);
+                pi = (pi + 1) % edFrames.length;
+            }, 1000 / fps);
+        }
+
+        function stopAnimation() {
+            if (!edPlaying) return;
+            clearInterval(edPlayTimer);
+            edPlaying = false;
+            document.getElementById('btn-play').disabled = false;
+            document.getElementById('btn-stop').disabled = true;
+            loadFrame(edIdx);
+        }
+
+        // ── Drawing utilities ────────────────────────────────────────────────
+
+        function getPos(e) {
+            if (e.touches && e.touches.length) {
+                const r = overlay.getBoundingClientRect();
+                return {
+                    x: (e.touches[0].clientX - r.left) * (CANVAS_W / r.width),
+                    y: (e.touches[0].clientY - r.top)  * (CANVAS_H / r.height)
+                };
+            }
+            if (e.changedTouches && e.changedTouches.length) {
+                const r = overlay.getBoundingClientRect();
+                return {
+                    x: (e.changedTouches[0].clientX - r.left) * (CANVAS_W / r.width),
+                    y: (e.changedTouches[0].clientY - r.top)  * (CANVAS_H / r.height)
+                };
+            }
+            return {
+                x: e.offsetX * (CANVAS_W / overlay.offsetWidth),
+                y: e.offsetY * (CANVAS_H / overlay.offsetHeight)
+            };
+        }
+
+        function pushUndo(snap) {
+            undoStack.push(snap !== undefined ? snap : ctx.getImageData(0, 0, CANVAS_W, CANVAS_H));
+            if (undoStack.length > 20) undoStack.shift();
+            document.getElementById('undo-btn').disabled = false;
+        }
+
+        function undoLast() {
+            if (!undoStack.length) return;
+            ctx.putImageData(undoStack.pop(), 0, 0);
+            document.getElementById('undo-btn').disabled = undoStack.length === 0;
+        }
+
+        function applyPenStyle() {
+            ctx.lineWidth   = brushSz;
+            ctx.lineCap     = 'round';
+            ctx.lineJoin    = 'round';
+            ctx.strokeStyle = tool === 'eraser' ? '#ffffff' : color;
+            ctx.fillStyle   = color;
+        }
+
+        function drawShape(cx, sx, sy, ex, ey) {
+            cx.lineWidth = brushSz; cx.lineCap = 'round'; cx.lineJoin = 'round';
+            cx.strokeStyle = color; cx.fillStyle = color;
+            cx.beginPath();
+            switch (tool) {
+                case 'line':
+                    cx.moveTo(sx, sy); cx.lineTo(ex, ey); cx.stroke(); break;
+                case 'rect':
+                    if (fillShapes) cx.fillRect(sx, sy, ex - sx, ey - sy);
+                    cx.strokeRect(sx, sy, ex - sx, ey - sy); break;
+                case 'circle': {
+                    const rx = (ex - sx) / 2, ry = (ey - sy) / 2;
+                    cx.ellipse(sx + rx, sy + ry, Math.abs(rx), Math.abs(ry), 0, 0, Math.PI * 2);
+                    if (fillShapes) cx.fill(); cx.stroke(); break;
+                }
+                case 'triangle':
+                    cx.moveTo((sx + ex) / 2, sy); cx.lineTo(ex, ey);
+                    cx.lineTo(sx, ey); cx.closePath();
+                    if (fillShapes) cx.fill(); cx.stroke(); break;
+            }
+        }
+
+        // ── Mouse / touch events ─────────────────────────────────────────────
+
+        function onDown(e) {
+            e.preventDefault();
+            if (edPlaying) return;
+            const { x, y } = getPos(e);
+            isDrawing = true; startX = x; startY = y;
+            startSnap = ctx.getImageData(0, 0, CANVAS_W, CANVAS_H);
+            if (tool === 'pen' || tool === 'eraser') {
+                pushUndo(startSnap); applyPenStyle();
+                ctx.beginPath(); ctx.moveTo(x, y);
+            } else {
+                ovCtx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+            }
+        }
+
+        function onMove(e) {
+            e.preventDefault();
+            if (!isDrawing || edPlaying) return;
+            const { x, y } = getPos(e);
+            if (tool === 'pen' || tool === 'eraser') {
+                applyPenStyle(); ctx.lineTo(x, y); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(x, y);
+            } else {
+                ovCtx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+                drawShape(ovCtx, startX, startY, x, y);
+            }
+        }
+
+        function onUp(e) {
+            if (!isDrawing || edPlaying) return;
+            isDrawing = false;
+            if (tool !== 'pen' && tool !== 'eraser') {
+                const { x, y } = getPos(e);
+                ovCtx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+                pushUndo(startSnap);
+                ctx.putImageData(startSnap, 0, 0);
+                drawShape(ctx, startX, startY, x, y);
+                renderOnionSkin();
+            }
+            ctx.beginPath();
+        }
+
+        overlay.addEventListener('mousedown',  onDown);
+        overlay.addEventListener('mousemove',  onMove);
+        overlay.addEventListener('mouseup',    onUp);
+        overlay.addEventListener('mouseleave', onUp);
+        overlay.addEventListener('touchstart', onDown, { passive: false });
+        overlay.addEventListener('touchmove',  onMove, { passive: false });
+        overlay.addEventListener('touchend',   onUp,   { passive: false });
+
+        // ── Tool selection ───────────────────────────────────────────────────
+
+        const ALL_TOOLS = ['pen', 'eraser', 'line', 'rect', 'circle', 'triangle'];
+
+        function setTool(t) {
+            tool = t;
+            ALL_TOOLS.forEach(id =>
+                document.getElementById('btn-' + id).classList.toggle('active', id === t)
+            );
+            overlay.style.cursor = t === 'eraser' ? 'cell' : 'crosshair';
+        }
+
+        document.getElementById('size-slider').addEventListener('input', function () {
+            brushSz = +this.value;
+            document.getElementById('size-label').textContent = brushSz + ' px';
+        });
+
+        document.getElementById('fill-check').addEventListener('change', function () {
+            fillShapes = this.checked;
+        });
+
+        document.getElementById('onion-toggle').addEventListener('change', renderOnionSkin);
+
+        // ── Colour palette ───────────────────────────────────────────────────
+
+        const PALETTE = [
+            '#000000','#222222','#555555','#888888','#bbbbbb','#ffffff',
+            '#7b0000','#cc0000','#e85d04','#f4c21c','#a8d5a2','#23a55a',
+            '#006d77','#1565c0','#4527a0','#ad1457','#6d4c41','#bcaaa4',
+            '#ffcdd2','#ffe0b2','#fff9c4','#dcedc8','#b3e5fc','#e1bee7',
+        ];
+
+        const paletteGrid = document.getElementById('ed-palette-grid');
+        let selectedSwatch = null;
+
+        function setColor(c) {
+            color = c;
+            document.getElementById('ed-active-swatch').style.background = c;
+            document.getElementById('ed-custom-color').value = c;
+        }
+
+        PALETTE.forEach((c, i) => {
+            const sw = document.createElement('div');
+            sw.className = 'pal-swatch'; sw.style.background = c; sw.title = c;
+            sw.addEventListener('click', () => {
+                if (selectedSwatch) selectedSwatch.classList.remove('selected');
+                sw.classList.add('selected'); selectedSwatch = sw; setColor(c);
+            });
+            paletteGrid.appendChild(sw);
+            if (i === 0) { sw.classList.add('selected'); selectedSwatch = sw; }
+        });
+
+        document.getElementById('ed-custom-color').addEventListener('input', function () {
+            if (selectedSwatch) selectedSwatch.classList.remove('selected');
+            selectedSwatch = null; setColor(this.value);
+        });
+
+        document.getElementById('ed-active-swatch').style.background = color;
+
+        // ── Clear / export ───────────────────────────────────────────────────
+
+        function clearFrame() {
+            if (!confirm('Clear this frame?')) return;
+            pushUndo();
+            ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+        }
+
+        function frameDataURL() {
+            const tmp = document.createElement('canvas');
+            tmp.width = CANVAS_W; tmp.height = CANVAS_H;
+            tmp.getContext('2d').putImageData(ctx.getImageData(0, 0, CANVAS_W, CANVAS_H), 0, 0);
+            return tmp.toDataURL('image/png');
+        }
+
+        function downloadFrame() {
+            const a = document.createElement('a');
+            const n = String(edIdx + 1).padStart(3, '0');
+            a.download = 'frame-' + n + '.png';
+            a.href = frameDataURL(); a.click();
+        }
+
+        function downloadAllFrames() {
+            saveCurrentFrame();
+            const tmp = document.createElement('canvas');
+            tmp.width = CANVAS_W; tmp.height = CANVAS_H;
+            const tc = tmp.getContext('2d');
+            edFrames.forEach((frame, i) => {
+                tc.putImageData(frame, 0, 0);
+                const a = document.createElement('a');
+                a.download = 'frame-' + String(i + 1).padStart(3, '0') + '.png';
+                a.href = tmp.toDataURL('image/png'); a.click();
+            });
+        }
+
+        // ── Publish snippet ──────────────────────────────────────────────────
+
+        function generateSnippet() {
+            saveCurrentFrame();
+            const title = document.getElementById('anim-title-input').value.trim() || 'Untitled';
+            const fps   = Math.max(1, Math.min(24, parseInt(document.getElementById('fps-input').value) || 8));
+            const today = new Date().toISOString().split('T')[0];
+
+            const tmp = document.createElement('canvas');
+            tmp.width = CANVAS_W; tmp.height = CANVAS_H;
+            const tc = tmp.getContext('2d');
+
+            const frameUrls = edFrames.map(frame => {
+                tc.putImageData(frame, 0, 0);
+                return tmp.toDataURL('image/png');
+            });
+
+            const snippet =
+                '    {\n' +
+                '        title:  "' + title + '",\n' +
+                '        date:   "' + today + '",\n' +
+                '        fps:    ' + fps + ',\n' +
+                '        frames: [\n' +
+                frameUrls.map(u => '            "' + u + '",').join('\n') + '\n' +
+                '        ]\n' +
+                '    },';
+
+            const ta = document.getElementById('snippet-output');
+            ta.value = snippet; ta.style.display = 'block';
+            ta.select(); document.execCommand('copy');
+            document.getElementById('snippet-status').textContent = '✓ Copied to clipboard!';
+            setTimeout(() => { document.getElementById('snippet-status').textContent = ''; }, 2500);
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        //  VIEWER
+        // ════════════════════════════════════════════════════════════════════
+
+        const ARCHIVE_CUTOFF = Date.now() - ARCHIVE_MS;
+        const published = ANIMATIONS.filter(a => new Date(a.date).getTime() >= ARCHIVE_CUTOFF);
+        const archived  = ANIMATIONS.filter(a => new Date(a.date).getTime() <  ARCHIVE_CUTOFF);
+
+        const viewerCanvas = document.getElementById('viewer-canvas');
+        const vCtx         = viewerCanvas.getContext('2d');
+        let viewerIdx       = 0;
+        let viewerFrameIdx  = 0;
+        let viewerTimer     = null;
+        let viewerPlaying   = false;
+
+        function showAnimation(idx) {
+            viewerStop();
+            viewerIdx = idx;
+            viewerFrameIdx = 0;
+            const anim = published[idx];
+            document.getElementById('viewer-title').textContent = anim.title;
+            document.getElementById('viewer-meta').textContent  =
+                anim.date + ' · ' + anim.fps + ' fps · ' + anim.frames.length + ' frames';
+
+            // Show first frame
+            renderViewerFrame(0);
+            document.getElementById('viewer-bar').style.width = '0%';
+            document.getElementById('viewer-frame-label').textContent = '1 / ' + anim.frames.length;
+
+            // Highlight TOC
+            document.querySelectorAll('#viewer-toc-grid .toc-card').forEach((c, i) => {
+                c.classList.toggle('active', i === idx);
+            });
+        }
+
+        function renderViewerFrame(frameIdx) {
+            const anim = published[viewerIdx];
+            if (!anim || !anim.frames[frameIdx]) return;
+            const img = new Image();
+            img.onload = () => {
+                vCtx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H);
+            };
+            img.src = anim.frames[frameIdx];
+
+            const pct = anim.frames.length > 1
+                ? (frameIdx / (anim.frames.length - 1)) * 100
+                : 100;
+            document.getElementById('viewer-bar').style.width = pct + '%';
+            document.getElementById('viewer-frame-label').textContent =
+                (frameIdx + 1) + ' / ' + anim.frames.length;
+        }
+
+        function viewerPlay() {
+            if (viewerPlaying || !published[viewerIdx]) return;
+            viewerPlaying = true;
+            document.getElementById('vbtn-play').disabled = true;
+            document.getElementById('vbtn-stop').disabled = false;
+            const anim = published[viewerIdx];
+            const fps  = Math.max(1, anim.fps);
+            viewerTimer = setInterval(() => {
+                renderViewerFrame(viewerFrameIdx);
+                viewerFrameIdx = (viewerFrameIdx + 1) % anim.frames.length;
+            }, 1000 / fps);
+        }
+
+        function viewerStop() {
+            if (!viewerPlaying) return;
+            clearInterval(viewerTimer);
+            viewerPlaying = false;
+            document.getElementById('vbtn-play').disabled = false;
+            document.getElementById('vbtn-stop').disabled = true;
+        }
+
+        function buildTocCard(anim, idx, container, isArchive) {
+            const card = document.createElement('div');
+            card.className = 'toc-card';
+            if (!isArchive) card.addEventListener('click', () => showAnimation(idx));
+
+            const thumb = document.createElement('div');
+            thumb.className = 'toc-thumb';
+
+            if (anim.frames.length) {
+                const tc = document.createElement('canvas');
+                tc.width = 60; tc.height = 60;
+                const img = new Image();
+                img.onload = () => tc.getContext('2d').drawImage(img, 0, 0, 60, 60);
+                img.src = anim.frames[0];
+                thumb.appendChild(tc);
+            }
+
+            const label = document.createElement('div');
+            label.className = 'toc-label';
+            const dateSpan = document.createElement('span');
+            dateSpan.className = 'toc-date';
+            dateSpan.textContent = '#' + (idx + 1) + ' · ' + anim.date;
+            label.appendChild(dateSpan);
+            label.appendChild(document.createTextNode(anim.title));
+
+            card.appendChild(thumb);
+            card.appendChild(label);
+            container.appendChild(card);
+        }
+
+        function initViewer() {
+            const tocGrid = document.getElementById('viewer-toc-grid');
+            const archiveGrid = document.getElementById('archive-grid');
+
+            if (!published.length) {
+                document.getElementById('viewer-empty').style.display = 'block';
+                document.getElementById('anim-viewer-wrap').style.display = 'none';
+            } else {
+                published.forEach((a, i) => buildTocCard(a, i, tocGrid, false));
+                showAnimation(0);
+            }
+
+            if (!archived.length) {
+                document.getElementById('archive-details').style.display = 'none';
+            } else {
+                archived.forEach((a, i) => buildTocCard(a, i, archiveGrid, true));
+            }
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        //  INIT
+        // ════════════════════════════════════════════════════════════════════
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+        edFrames.push(ctx.getImageData(0, 0, CANVAS_W, CANVAS_H));
+        document.getElementById('undo-btn').disabled = true;
+        updateToolbar();
+        renderOnionSkin();
+        renderStrip();
+        initViewer();
+
+    </script>
+
 </body>
-</html> 
+</html>
