@@ -1,0 +1,24 @@
+{
+  "env": {
+    "browser": true,
+    "es2021":  true
+  },
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "ecmaVersion": 2021
+  },
+  "rules": {
+    "no-unused-vars": ["warn", { "varsIgnorePattern": "^FIREBASE_" }]
+  },
+  "overrides": [
+    {
+      "files": ["js/tetris-engine.js", "js/snake-engine.js", "js/forum-utils.js"],
+      "env": { "browser": false, "node": true }
+    },
+    {
+      "files": ["tests/**/*.js"],
+      "env": { "node": true, "jest": true },
+      "rules": { "no-undef": "off" }
+    }
+  ]
+}
