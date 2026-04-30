@@ -5,6 +5,7 @@
     <title>Snake — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
+    <script src="/js/snake-engine.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="/js/firebase-config.js"></script>
@@ -122,7 +123,8 @@
     <button type="button" onclick="navigateToPage('games.html')">&#8592; Back to Games</button>
 
     <script>
-        const S_COLS = 20, S_ROWS = 20, S_CELL = 20;
+        // S_COLS, S_ROWS, S_CELL, SNAKE_MAX_SCORE, snakePlaceFood, snakeTick,
+        // snakeChangeDirection all provided by /js/snake-engine.js
 
         let sBoard, sDir, sNextDir, sFoodPos;
         let sScore, sGameOver, sPaused;
@@ -130,30 +132,22 @@
         let sCanvas, sCtx;
         let sHighScore = parseInt(localStorage.getItem('snakeHighScore') || '0');
 
-        function sPlaceFood() {
-            let pos;
-            do {
-                pos = { x: Math.floor(Math.random() * S_COLS), y: Math.floor(Math.random() * S_ROWS) };
-            } while (sBoard.some(s => s.x === pos.x && s.y === pos.y));
-            sFoodPos = pos;
-        }
-
         function snakeStartGame() {
             clearInterval(sIntervalId);
-            sBoard = [{x:12,y:10},{x:11,y:10},{x:10,y:10}];
-            sDir = {x:1, y:0};
+            sBoard   = [{x:12,y:10},{x:11,y:10},{x:10,y:10}];
+            sDir     = {x:1, y:0};
             sNextDir = {x:1, y:0};
-            sScore = 0;
+            sScore   = 0;
             sGameOver = false;
-            sPaused = false;
-            sTickMs = 150;
-            sPlaceFood();
-            document.getElementById('snake-score').textContent = 0;
+            sPaused   = false;
+            sTickMs   = 150;
+            sFoodPos  = snakePlaceFood(sBoard);
+            document.getElementById('snake-score').textContent  = 0;
             document.getElementById('snake-length').textContent = 3;
-            document.getElementById('snake-best').textContent = sHighScore;
+            document.getElementById('snake-best').textContent   = sHighScore;
             document.getElementById('snake-status').textContent = '';
             document.getElementById('snake-status').style.color = '#f00';
-            document.getElementById('snake-start').textContent = 'RESTART';
+            document.getElementById('snake-start').textContent  = 'RESTART';
             document.getElementById('snake-best-box').classList.remove('new-best');
             document.getElementById('snake-world-box').classList.remove('new-world');
             sRender();
@@ -162,21 +156,18 @@
 
         function sTick() {
             if (sGameOver || sPaused) return;
-            sDir = sNextDir;
-            const head = {x: sBoard[0].x + sDir.x, y: sBoard[0].y + sDir.y};
-            if (head.x < 0 || head.x >= S_COLS || head.y < 0 || head.y >= S_ROWS) { sEndGame(); return; }
-            if (sBoard.some(s => s.x === head.x && s.y === head.y)) { sEndGame(); return; }
-            sBoard.unshift(head);
-            if (head.x === sFoodPos.x && head.y === sFoodPos.y) {
-                sScore += 10;
-                document.getElementById('snake-score').textContent = sScore;
+            const result = snakeTick(sBoard, sDir, sNextDir, sFoodPos, sScore, sTickMs);
+            if (result.gameOver) { sEndGame(); return; }
+            sBoard   = result.board;
+            sDir     = result.dir;
+            sFoodPos = result.foodPos;
+            sScore   = result.score;
+            sTickMs  = result.tickMs;
+            if (result.ate) {
+                document.getElementById('snake-score').textContent  = sScore;
                 document.getElementById('snake-length').textContent = sBoard.length;
-                sPlaceFood();
-                sTickMs = Math.max(60, sTickMs - 5);
                 clearInterval(sIntervalId);
                 sIntervalId = setInterval(sTick, sTickMs);
-            } else {
-                sBoard.pop();
             }
             sRender();
         }
@@ -230,7 +221,7 @@
                     const raw = snap.val();
                     const worldBest = (Number.isFinite(raw) && raw >= 0) ? raw : 0;
                     if (sScore > worldBest) {
-                        ref.set(Math.min(sScore, 10000));
+                        ref.set(Math.min(sScore, SNAKE_MAX_SCORE));
                         document.getElementById('snake-status').textContent = 'WORLD RECORD!';
                         document.getElementById('snake-status').style.color = '#4caf50';
                         const wbox = document.getElementById('snake-world-box');
@@ -265,12 +256,8 @@
                 return;
             }
             if (sPaused || sGameOver) return;
-            switch (e.key) {
-                case 'ArrowUp':    if (sDir.y !== 1)  sNextDir = {x:0, y:-1}; e.preventDefault(); break;
-                case 'ArrowDown':  if (sDir.y !== -1) sNextDir = {x:0, y:1};  e.preventDefault(); break;
-                case 'ArrowLeft':  if (sDir.x !== 1)  sNextDir = {x:-1, y:0}; e.preventDefault(); break;
-                case 'ArrowRight': if (sDir.x !== -1) sNextDir = {x:1, y:0};  e.preventDefault(); break;
-            }
+            const newDir = snakeChangeDirection(sDir, sNextDir, e.key);
+            if (newDir !== sNextDir) { sNextDir = newDir; e.preventDefault(); }
         });
 
         window.addEventListener('load', () => {

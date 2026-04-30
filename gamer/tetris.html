@@ -5,6 +5,7 @@
     <title>Tetris — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
+    <script src="/js/tetris-engine.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="/js/firebase-config.js"></script>
@@ -136,25 +137,8 @@
     <button type="button" onclick="navigateToPage('games.html')">&#8592; Back to Games</button>
 
     <script>
-        const COLS = 10, ROWS = 20, BLOCK = 30;
-        const MAX_SCORE = 9999999;
-
-        const COLORS = [
-            null,
-            '#00f0f0', '#f0f000', '#a000f0', '#00f000',
-            '#f00000', '#0000f0', '#f0a000',
-        ];
-
-        const SHAPES = [
-            null,
-            [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
-            [[2,2],[2,2]],
-            [[0,3,0],[3,3,3],[0,0,0]],
-            [[0,4,4],[4,4,0],[0,0,0]],
-            [[5,5,0],[0,5,5],[0,0,0]],
-            [[6,0,0],[6,6,6],[0,0,0]],
-            [[0,0,7],[7,7,7],[0,0,0]],
-        ];
+        // COLS, ROWS, BLOCK, COLORS, SHAPES, MAX_SCORE, newBoard, newPiece,
+        // collides, rotateShape, clearLines all provided by /js/tetris-engine.js
 
         let board, piece, nextPiece;
         let score, lines, level, dropInterval;
@@ -162,30 +146,6 @@
         let canvas, ctx, nextCanvas, nextCtx;
         let highScore = parseInt(localStorage.getItem('tetrisHighScore') || '0');
         let timeLevel, gameStartTimestamp, totalPauseTime, pauseStartTimestamp;
-
-        function newBoard() {
-            return Array.from({length: ROWS}, () => new Array(COLS).fill(0));
-        }
-
-        function newPiece() {
-            const id = Math.ceil(Math.random() * 7);
-            const shape = SHAPES[id].map(r => [...r]);
-            return { id, shape, x: Math.floor((COLS - shape[0].length) / 2), y: 0 };
-        }
-
-        function collides(p, dx = 0, dy = 0, shape = p.shape) {
-            return shape.some((row, y) =>
-                row.some((v, x) => {
-                    if (!v) return false;
-                    const nx = p.x + x + dx, ny = p.y + y + dy;
-                    return nx < 0 || nx >= COLS || ny >= ROWS || (ny >= 0 && board[ny][nx]);
-                })
-            );
-        }
-
-        function rotateShape(shape) {
-            return shape[0].map((_, i) => shape.map(r => r[i]).reverse());
-        }
 
         function drawBlock(c, x, y, id, size) {
             c.fillStyle = COLORS[id];
@@ -209,7 +169,7 @@
             board.forEach((row, y) => row.forEach((v, x) => { if (v) drawBlock(ctx, x, y, v, BLOCK); }));
             if (!gameOver) {
                 let ghost = { x: piece.x, y: piece.y, shape: piece.shape };
-                while (!collides(ghost, 0, 1)) ghost = { x: ghost.x, y: ghost.y + 1, shape: ghost.shape };
+                while (!collides(board, ghost, 0, 1)) ghost = { x: ghost.x, y: ghost.y + 1, shape: ghost.shape };
                 ctx.globalAlpha = 0.15;
                 ghost.shape.forEach((row, dy) => row.forEach((v, dx) => { if (v) drawBlock(ctx, ghost.x + dx, ghost.y + dy, v, BLOCK); }));
                 ctx.globalAlpha = 1;
@@ -223,24 +183,6 @@
             nextPiece.shape.forEach((row, dy) => row.forEach((v, dx) => { if (v) drawBlock(nextCtx, ox + dx, oy + dy, v, nb); }));
         }
 
-        function clearLines() {
-            let cleared = 0;
-            for (let y = ROWS - 1; y >= 0; y--) {
-                if (board[y].every(v => v)) {
-                    board.splice(y, 1);
-                    board.unshift(new Array(COLS).fill(0));
-                    cleared++; y++;
-                }
-            }
-            if (!cleared) return;
-            const pts = [0, 100, 300, 500, 800];
-            score += pts[Math.min(cleared, 4)] * level;
-            lines += cleared;
-            level = Math.floor(lines / 10) + 1;
-            document.getElementById('tetris-score').textContent = score;
-            document.getElementById('tetris-lines').textContent = lines;
-        }
-
         function lockPiece() {
             piece.shape.forEach((row, dy) => {
                 row.forEach((v, dx) => {
@@ -249,19 +191,24 @@
                     if (y >= 0) board[y][piece.x + dx] = v;
                 });
             });
-            clearLines();
+            const cl = clearLines(board, score, lines, level);
+            board = cl.board; score = cl.score; lines = cl.lines; level = cl.level;
+            if (cl.cleared) {
+                document.getElementById('tetris-score').textContent = score;
+                document.getElementById('tetris-lines').textContent = lines;
+            }
             piece = nextPiece;
             nextPiece = newPiece();
-            if (collides(piece)) endGame();
+            if (collides(board, piece)) endGame();
         }
 
         function drop() {
-            if (!collides(piece, 0, 1)) piece.y++;
+            if (!collides(board, piece, 0, 1)) piece.y++;
             else lockPiece();
         }
 
         function hardDrop() {
-            while (!collides(piece, 0, 1)) piece.y++;
+            while (!collides(board, piece, 0, 1)) piece.y++;
             lockPiece();
         }
 
@@ -371,10 +318,10 @@
             if (paused) return;
             switch (e.key) {
                 case 'ArrowLeft':
-                    if (!collides(piece, -1)) { piece.x--; render(); }
+                    if (!collides(board, piece, -1)) { piece.x--; render(); }
                     e.preventDefault(); break;
                 case 'ArrowRight':
-                    if (!collides(piece, 1)) { piece.x++; render(); }
+                    if (!collides(board, piece, 1)) { piece.x++; render(); }
                     e.preventDefault(); break;
                 case 'ArrowDown':
                     drop(); lastDrop = performance.now(); render();
@@ -382,7 +329,7 @@
                 case 'ArrowUp': {
                     const rotated = rotateShape(piece.shape);
                     for (const kick of [0, -1, 1, -2, 2]) {
-                        if (!collides({ x: piece.x + kick, y: piece.y, shape: piece.shape }, 0, 0, rotated)) {
+                        if (!collides(board, { x: piece.x + kick, y: piece.y, shape: piece.shape }, 0, 0, rotated)) {
                             piece.shape = rotated; piece.x += kick; break;
                         }
                     }
