@@ -16,7 +16,8 @@
       "Bash(git -C \"C:/Users/mcspc/OneDrive/Documents/ZYXXYZ's Whymzykal Wunderland/Whymzykal Wunderland/ZyxxyzWhymzykalWunderland\" show HEAD~2:.github/workflows/deploy.yml)",
       "Bash(git -C \"C:/Users/mcspc/OneDrive/Documents/ZYXXYZ's Whymzykal Wunderland/Whymzykal Wunderland/ZyxxyzWhymzykalWunderland\" log --oneline --all)",
       "Bash(git -C \"C:/Users/mcspc/OneDrive/Documents/ZYXXYZ's Whymzykal Wunderland/Whymzykal Wunderland/ZyxxyzWhymzykalWunderland\" show --stat HEAD~5)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(npm install *)"
     ]
   }
 }
