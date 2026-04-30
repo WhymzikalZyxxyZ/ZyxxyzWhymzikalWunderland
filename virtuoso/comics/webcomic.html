@@ -2,34 +2,392 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>About ZYXXYZ's Whymzykal Wunderland!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webcomic — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
+    <style>
+        #comic-page {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 20px 16px 40px;
+            font-family: 'Comic Sans MS', cursive;
+        }
+
+        /* ══ STRIP VIEWER ══ */
+        #strip-viewer {
+            background: #1a1a1a;
+            border: 4px solid #f4a261;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 28px;
+        }
+
+        #strip-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        #strip-title {
+            font-size: 22px;
+            color: #f4a261;
+            font-weight: bold;
+        }
+        #strip-date {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #666;
+        }
+
+        /* 2×2 panel grid */
+        #panel-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .panel {
+            position: relative;
+            background: #fff;
+            border: 3px solid #222;
+            aspect-ratio: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .panel-img-wrap {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f9f4ec;
+        }
+        .panel-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        /* placeholder when no image provided */
+        .panel-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: repeating-linear-gradient(
+                45deg,
+                #f0ebe3,
+                #f0ebe3 10px,
+                #e8e1d6 10px,
+                #e8e1d6 20px
+            );
+        }
+        .panel-placeholder span {
+            font-size: 40px;
+            opacity: 0.3;
+        }
+        /* caption / dialogue box */
+        .panel-caption {
+            background: #fff;
+            border-top: 2px solid #222;
+            padding: 5px 7px;
+            font-size: 12px;
+            color: #111;
+            line-height: 1.35;
+            min-height: 28px;
+            font-family: 'Comic Sans MS', cursive;
+        }
+        /* panel number badge */
+        .panel-num {
+            position: absolute;
+            top: 4px; left: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: rgba(0,0,0,0.25);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* prev / next nav */
+        #strip-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 4px;
+        }
+        .nav-btn {
+            background: #f4a261;
+            color: #111;
+            border: none;
+            border-radius: 6px;
+            padding: 7px 18px;
+            font-family: 'Comic Sans MS', cursive;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.18s;
+        }
+        .nav-btn:hover { background: #e76f51; color: #fff; }
+        .nav-btn:disabled { background: #333; color: #666; cursor: default; }
+        #strip-counter {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* ══ TABLE OF CONTENTS ══ */
+        #toc-section {
+            margin-top: 8px;
+        }
+        #toc-title {
+            font-size: 17px;
+            color: #f4a261;
+            border-bottom: 2px solid #333;
+            padding-bottom: 6px;
+            margin-bottom: 14px;
+        }
+        #toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+        .toc-card {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 6px;
+            padding: 10px 10px 8px;
+            cursor: pointer;
+            transition: border-color 0.15s, transform 0.15s;
+        }
+        .toc-card:hover { border-color: #f4a261; transform: translateY(-2px); }
+        .toc-card.active { border-color: #f4a261; background: rgba(244,162,97,0.1); }
+        .toc-thumb {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px;
+            margin-bottom: 7px;
+            border: 1px solid #444;
+        }
+        .toc-thumb-panel {
+            aspect-ratio: 1;
+            background: #f0ebe3;
+            overflow: hidden;
+        }
+        .toc-thumb-panel img {
+            width: 100%; height: 100%;
+            object-fit: cover; display: block;
+        }
+        .toc-thumb-panel.blank {
+            background: repeating-linear-gradient(
+                45deg, #2a2a2a, #2a2a2a 4px, #333 4px, #333 8px
+            );
+        }
+        .toc-label {
+            font-size: 11px;
+            color: #ccc;
+            line-height: 1.3;
+            word-break: break-word;
+        }
+        .toc-label .ep-num {
+            display: block;
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            color: #666;
+        }
+
+        @media (max-width: 500px) {
+            #panel-grid { grid-template-columns: 1fr 1fr; gap: 4px; }
+            #strip-viewer { padding: 12px; }
+        }
+    </style>
 </head>
 <body class="notYetBody">
 
     <h2>Zyxxyz made a webcomic!</h2>
-    <br />
 
-    <div class="content-row">
-        <!-- Navigation Bar -->
-        <div class="navbar">
-            <a href="../../index.html">Home</a>
-            <a href="../../virtuoso/animations/motionpictures.html">Motion Pictures</a>
-            <a href="../../virtuoso/comics/webcomic.html">Webcomic</a>
-            <a href="../../virtuoso/crafts/handmade.html">Handmade</a>
-            <a href="../../virtuoso/drawings/doodles.html">Doodles</a>
-            <a href="../../virtuoso/writings/stories.html">Stories</a>
+    <div class="navbar">
+        <a href="/index.html">Home</a>
+        <a href="/virtuoso/animations/motionpictures.html">Motion Pictures</a>
+        <a href="/virtuoso/comics/webcomic.html">Webcomic</a>
+        <a href="/virtuoso/crafts/handmade.html">Handmade</a>
+        <a href="/virtuoso/drawings/doodles.html">Doodles</a>
+        <a href="/virtuoso/writings/stories.html">Stories</a>
+    </div>
+
+    <div class="banner"></div>
+
+    <div id="comic-page">
+        <div id="strip-viewer">
+            <div id="strip-header">
+                <div id="strip-title"></div>
+                <div id="strip-date"></div>
+            </div>
+            <div id="panel-grid"></div>
+            <div id="strip-nav">
+                <button class="nav-btn" id="btn-prev" onclick="showComic(currentIndex - 1)">← Prev</button>
+                <span id="strip-counter"></span>
+                <button class="nav-btn" id="btn-next" onclick="showComic(currentIndex + 1)">Next →</button>
+            </div>
+        </div>
+
+        <div id="toc-section">
+            <div id="toc-title">📚 All Comics</div>
+            <div id="toc-grid"></div>
         </div>
     </div>
 
-    <!-- Removed the <img> tag here as it's no longer needed -->
-    <div class="banner"></div> <!-- Placeholder for your logo as background -->
+    <script>
+        // ════════════════════════════════════════════════════════════════════════════
+        //  HOW TO ADD A NEW COMIC
+        //  ─────────────────────────────────────────────────────────────────────────
+        //  Add a new object to the COMICS array below.
+        //
+        //  Required fields:
+        //    title  — episode title shown above the strip
+        //    date   — publish date string, e.g. "2026-05-01"
+        //    panels — array of exactly 4 objects, each with:
+        //               img     — path to the panel image, relative to this file
+        //                         e.g. "panels/ep2-p1.png"
+        //                         leave as "" or null to show a placeholder
+        //               caption — text shown in the caption bar below the image
+        //                         leave as "" for no caption
+        //
+        //  Example:
+        //    {
+        //      title:  "Episode 2: The Return",
+        //      date:   "2026-05-08",
+        //      panels: [
+        //        { img: "panels/ep2-p1.png", caption: "It was a dark and stormy night..." },
+        //        { img: "panels/ep2-p2.png", caption: "Suddenly — a noise." },
+        //        { img: "panels/ep2-p3.png", caption: "..." },
+        //        { img: "panels/ep2-p4.png", caption: "Just the cat." },
+        //      ]
+        //    },
+        //
+        //  Store panel images in: virtuoso/comics/panels/
+        //  Recommended panel size: 600×600 px (square)
+        // ════════════════════════════════════════════════════════════════════════════
 
-    <br>
-    <p id="demo">ZYXXYZ</p>
+        const COMICS = [
+            {
+                title:  "Episode 1: It Begins",
+                date:   "2026-04-29",
+                panels: [
+                    { img: "", caption: "Every great story starts somewhere." },
+                    { img: "", caption: "This one starts here." },
+                    { img: "", caption: "Right here. You're looking at it." },
+                    { img: "", caption: "Stay tuned. 👀" },
+                ]
+            },
+            // ── Add more comics above this line ──────────────────────────────────
+        ];
 
-    <button type="button" onclick="navigateToPage('../../index.html')">E.T. Phone Home!</button>
+        // ── Rendering ─────────────────────────────────────────────────────────────
+        let currentIndex = 0;
+
+        function showComic(index) {
+            if (index < 0 || index >= COMICS.length) return;
+            currentIndex = index;
+            const comic = COMICS[index];
+
+            document.getElementById('strip-title').textContent = comic.title;
+            document.getElementById('strip-date').textContent  = comic.date;
+            document.getElementById('strip-counter').textContent =
+                `${index + 1} / ${COMICS.length}`;
+
+            document.getElementById('btn-prev').disabled = index === 0;
+            document.getElementById('btn-next').disabled = index === COMICS.length - 1;
+
+            const grid = document.getElementById('panel-grid');
+            grid.innerHTML = '';
+            comic.panels.forEach((p, i) => {
+                const panel = document.createElement('div');
+                panel.className = 'panel';
+
+                const num = document.createElement('div');
+                num.className = 'panel-num';
+                num.textContent = i + 1;
+
+                const imgWrap = document.createElement('div');
+                imgWrap.className = 'panel-img-wrap';
+
+                if (p.img) {
+                    const img = document.createElement('img');
+                    img.src = p.img;
+                    img.alt = p.caption || `Panel ${i + 1}`;
+                    img.loading = 'lazy';
+                    imgWrap.appendChild(img);
+                } else {
+                    const ph = document.createElement('div');
+                    ph.className = 'panel-placeholder';
+                    const icon = document.createElement('span');
+                    icon.textContent = '🖼️';
+                    ph.appendChild(icon);
+                    imgWrap.appendChild(ph);
+                }
+
+                panel.appendChild(num);
+                panel.appendChild(imgWrap);
+
+                if (p.caption) {
+                    const cap = document.createElement('div');
+                    cap.className = 'panel-caption';
+                    cap.textContent = p.caption;
+                    panel.appendChild(cap);
+                }
+
+                grid.appendChild(panel);
+            });
+
+            // Highlight active TOC card
+            document.querySelectorAll('.toc-card').forEach((c, i) => {
+                c.classList.toggle('active', i === index);
+            });
+
+            document.getElementById('strip-viewer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function buildToc() {
+            const tocGrid = document.getElementById('toc-grid');
+            COMICS.forEach((comic, index) => {
+                const card = document.createElement('div');
+                card.className = 'toc-card';
+                card.onclick = () => showComic(index);
+
+                const thumb = document.createElement('div');
+                thumb.className = 'toc-thumb';
+                comic.panels.forEach(p => {
+                    const tp = document.createElement('div');
+                    tp.className = 'toc-thumb-panel' + (p.img ? '' : ' blank');
+                    if (p.img) {
+                        const img = document.createElement('img');
+                        img.src = p.img;
+                        img.alt = '';
+                        img.loading = 'lazy';
+                        tp.appendChild(img);
+                    }
+                    thumb.appendChild(tp);
+                });
+
+                const label = document.createElement('div');
+                label.className = 'toc-label';
+                label.innerHTML = `<span class="ep-num">#${index + 1} · ${comic.date}</span>${comic.title}`;
+
+                card.appendChild(thumb);
+                card.appendChild(label);
+                tocGrid.appendChild(card);
+            });
+        }
+
+        buildToc();
+        showComic(0);
+    </script>
 
 </body>
-</html> 
+</html>
