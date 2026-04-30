@@ -137,6 +137,7 @@
 
     <script>
         const COLS = 10, ROWS = 20, BLOCK = 30;
+        const MAX_SCORE = 9999999;
 
         const COLORS = [
             null,
@@ -327,9 +328,10 @@
             if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY) {
                 const ref = firebase.database().ref('scores/tetris');
                 ref.once('value', snap => {
-                    const worldBest = snap.val() || 0;
+                    const raw = snap.val();
+                    const worldBest = (Number.isFinite(raw) && raw >= 0) ? raw : 0;
                     if (score > worldBest) {
-                        ref.set(score);
+                        ref.set(Math.min(score, MAX_SCORE));
                         document.getElementById('tetris-status').textContent = 'WORLD RECORD!';
                         document.getElementById('tetris-status').style.color = '#4caf50';
                         const wbox = document.getElementById('tetris-world-box');
@@ -404,7 +406,8 @@
 
             if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY) {
                 firebase.database().ref('scores/tetris').on('value', snap => {
-                    document.getElementById('tetris-world').textContent = snap.val() || 0;
+                    const v = snap.val();
+                    document.getElementById('tetris-world').textContent = (Number.isFinite(v) && v >= 0) ? v : 0;
                 });
             }
         });

@@ -227,9 +227,10 @@
             if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY) {
                 const ref = firebase.database().ref('scores/snake');
                 ref.once('value', snap => {
-                    const worldBest = snap.val() || 0;
+                    const raw = snap.val();
+                    const worldBest = (Number.isFinite(raw) && raw >= 0) ? raw : 0;
                     if (sScore > worldBest) {
-                        ref.set(sScore);
+                        ref.set(Math.min(sScore, 10000));
                         document.getElementById('snake-status').textContent = 'WORLD RECORD!';
                         document.getElementById('snake-status').style.color = '#4caf50';
                         const wbox = document.getElementById('snake-world-box');
@@ -281,7 +282,8 @@
 
             if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY) {
                 firebase.database().ref('scores/snake').on('value', snap => {
-                    document.getElementById('snake-world').textContent = snap.val() || 0;
+                    const v = snap.val();
+                    document.getElementById('snake-world').textContent = (Number.isFinite(v) && v >= 0) ? v : 0;
                 });
             }
         });

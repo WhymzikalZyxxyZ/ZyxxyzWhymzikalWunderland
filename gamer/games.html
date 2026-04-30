@@ -116,10 +116,12 @@
     <script>
         if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY) {
             firebase.database().ref('scores/tetris').on('value', snap => {
-                document.getElementById('world-tetris').textContent = snap.val() || 0;
+                const v = snap.val();
+                document.getElementById('world-tetris').textContent = (Number.isFinite(v) && v >= 0) ? v : 0;
             });
             firebase.database().ref('scores/snake').on('value', snap => {
-                document.getElementById('world-snake').textContent = snap.val() || 0;
+                const v = snap.val();
+                document.getElementById('world-snake').textContent = (Number.isFinite(v) && v >= 0) ? v : 0;
             });
         }
     </script>
