@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/username-gen.js"></script>
+    <script src="/js/rps-engine.js"></script>
+    <style>
+        #rps-page { max-width: 640px; margin: 0 auto; padding: 0 16px 80px; }
+        .rps-panel {
+            background: rgba(0,0,0,0.75); border: 1px solid #2a2a2a;
+            border-radius: 12px; padding: 24px; margin-bottom: 18px;
+        }
+        .rps-title { font-family:'Courier New',monospace; font-size:11px; letter-spacing:3px;
+            text-transform:uppercase; color:#f4a261; border-bottom:1px solid #2a2a2a;
+            padding-bottom:8px; margin:0 0 18px; }
+        .mode-btns { display:flex; gap:12px; justify-content:center; }
+        .mode-btn {
+            background:rgba(255,255,255,0.06); border:2px solid rgba(255,255,255,0.14);
+            color:#bbb; border-radius:8px; padding:14px 28px;
+            font-family:'Courier New',monospace; font-size:13px; cursor:pointer;
+            transition:border-color 0.15s,color 0.15s; }
+        .mode-btn:hover,.mode-btn.active { border-color:#f4a261; color:#fff; }
+        .diff-row { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+        .diff-row label { font-family:'Courier New',monospace; font-size:11px; color:#888; white-space:nowrap; }
+        #diff-slider { flex:1; accent-color:#f4a261; }
+        #diff-val { font-family:'Courier New',monospace; font-size:13px; color:#f4a261; min-width:14px; }
+        .choices { display:flex; gap:16px; justify-content:center; margin:20px 0; }
+        .choice-btn {
+            font-size:3em; background:rgba(255,255,255,0.05);
+            border:2px solid #333; border-radius:12px; padding:14px 20px;
+            cursor:pointer; transition:transform 0.12s,border-color 0.12s;
+        }
+        .choice-btn:hover:not(:disabled) { transform:scale(1.12); border-color:#f4a261; }
+        .choice-btn:disabled { opacity:0.35; cursor:default; }
+        #rps-status {
+            text-align:center; font-family:'Courier New',monospace;
+            font-size:1.5em; min-height:2em; color:#f4a261; margin:10px 0;
+        }
+        .scoreboard { display:flex; gap:16px; justify-content:center; margin:12px 0; }
+        .score-cell {
+            background:rgba(0,0,0,0.4); border:1px solid #2a2a2a;
+            border-radius:8px; padding:12px 20px; text-align:center; min-width:80px;
+        }
+        .score-cell label { display:block; font-family:'Courier New',monospace;
+            font-size:9px; letter-spacing:2px; color:#555; margin-bottom:4px; }
+        .score-cell span { font-family:'Courier New',monospace; font-size:24px;
+            font-weight:bold; color:#4caf50; }
+        .result-display {
+            display:flex; align-items:center; justify-content:center; gap:24px;
+            font-size:3.5em; min-height:80px; margin:8px 0;
+        }
+        #vs-label { font-family:'Courier New',monospace; font-size:13px; color:#555; }
+        #hs-box { text-align:center; font-family:'Courier New',monospace; font-size:11px; color:#666; }
+        #hs-box strong { color:#f4a261; }
+        .mp-section { margin-top:12px; }
+        .mp-row { display:flex; gap:8px; margin-bottom:8px; }
+        .mp-input {
+            flex:1; background:rgba(255,255,255,0.07); border:1px solid #333;
+            border-radius:6px; color:#fff; font-family:'Courier New',monospace;
+            font-size:12px; padding:6px 10px; outline:none; text-transform:uppercase;
+        }
+        .mp-input:focus { border-color:#f4a261; }
+        .mp-btn {
+            background:#f4a261; border:none; border-radius:6px; color:#111;
+            font-family:'Courier New',monospace; font-size:12px; font-weight:bold;
+            padding:6px 14px; cursor:pointer; white-space:nowrap;
+        }
+        .mp-btn:hover { background:#e76f51; }
+        #mp-status { font-family:'Courier New',monospace; font-size:11px;
+            color:#888; min-height:1.4em; }
+        #room-code-display { color:#f4a261; font-weight:bold; letter-spacing:3px; }
+    </style>
+</head>
+<body class="notYetBody">
+    <h2>Zyxxyz, the Gambler</h2>
+    <div class="navbar">
+        <a href="../index.html">Home</a>
+        <a href="../gamer/games.html">Games</a>
+    </div>
+
+    <div id="rps-page">
+        <!-- Mode selection -->
+        <div class="rps-panel">
+            <div class="rps-title">Rock · Paper · Scissors</div>
+            <div class="mode-btns">
+                <button class="mode-btn active" id="btn-sp" onclick="setMode('sp')">&#129302; Single Player</button>
+                <button class="mode-btn"        id="btn-mp" onclick="setMode('mp')">&#127760; Multiplayer</button>
+            </div>
+        </div>
+
+        <!-- Single Player -->
+        <div class="rps-panel" id="sp-panel">
+            <div class="rps-title">Single Player</div>
+            <div class="diff-row">
+                <label>AI Difficulty</label>
+                <input type="range" id="diff-slider" min="0" max="9" value="3">
+                <span id="diff-val">3</span>
+            </div>
+            <div class="result-display">
+                <span id="your-choice">❓</span>
+                <span id="vs-label">VS</span>
+                <span id="cpu-choice">❓</span>
+            </div>
+            <div id="rps-status">Choose your weapon!</div>
+            <div class="choices">
+                <button class="choice-btn" onclick="play('rock')"     title="Rock">🪨</button>
+                <button class="choice-btn" onclick="play('paper')"    title="Paper">📄</button>
+                <button class="choice-btn" onclick="play('scissors')" title="Scissors">✂️</button>
+            </div>
+            <div class="scoreboard">
+                <div class="score-cell"><label>WIN</label><span id="sc-win">0</span></div>
+                <div class="score-cell"><label>DRAW</label><span id="sc-draw">0</span></div>
+                <div class="score-cell"><label>LOSE</label><span id="sc-lose">0</span></div>
+                <div class="score-cell"><label>STREAK</label><span id="sc-streak">0</span></div>
+            </div>
+        </div>
+
+        <!-- Multiplayer -->
+        <div class="rps-panel" id="mp-panel" style="display:none;">
+            <div class="rps-title">Multiplayer</div>
+            <div class="mp-section">
+                <div class="mp-row">
+                    <button class="mp-btn" onclick="createRoom()">Create Room</button>
+                    <input class="mp-input" id="join-code" placeholder="ROOM CODE" maxlength="6">
+                    <button class="mp-btn" onclick="joinRoom()">Join</button>
+                </div>
+                <div id="mp-status">Not connected.</div>
+                <div id="room-code-display"></div>
+            </div>
+            <div id="mp-game" style="display:none;">
+                <div class="result-display">
+                    <span id="mp-your-choice">❓</span>
+                    <span id="vs-label2">VS</span>
+                    <span id="mp-opp-choice">❓</span>
+                </div>
+                <div id="mp-rps-status" style="text-align:center;font-family:'Courier New',monospace;font-size:1.3em;color:#f4a261;min-height:2em;">Waiting...</div>
+                <div class="choices" id="mp-choices">
+                    <button class="choice-btn" onclick="mpPlay('rock')"     title="Rock">🪨</button>
+                    <button class="choice-btn" onclick="mpPlay('paper')"    title="Paper">📄</button>
+                    <button class="choice-btn" onclick="mpPlay('scissors')" title="Scissors">✂️</button>
+                </div>
+                <div class="scoreboard">
+                    <div class="score-cell"><label>YOU</label><span id="mp-sc-you">0</span></div>
+                    <div class="score-cell"><label>OPP</label><span id="mp-sc-opp">0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- High Score -->
+        <div id="hs-box">
+            <div>🏆 All-Time Best Streak: <strong id="hs-val">—</strong>
+                by <strong id="hs-user">—</strong></div>
+        </div>
+    </div>
+
+    <button type="button" onclick="navigateToPage('../gamer/games.html')">&#8592; Back to Games</button>
+
+    <script src="/js/gamer-chat.js"></script>
+    <script>
+        const EMOJI  = { rock:'🪨', paper:'📄', scissors:'✂️' };
+        const FB_PATH = 'scores/rps';
+        const myName  = (typeof getOrCreateUsername === 'function') ? getOrCreateUsername() : 'Guest';
+        let history  = [];
+        let wins=0, losses=0, draws=0, streak=0, bestStreak=0;
+        let difficulty = 3;
+        let busy = false;
+
+        document.getElementById('diff-slider').addEventListener('input', function() {
+            difficulty = +this.value;
+            document.getElementById('diff-val').textContent = this.value;
+        });
+
+        function setMode(m) {
+            document.getElementById('sp-panel').style.display = m==='sp' ? '' : 'none';
+            document.getElementById('mp-panel').style.display = m==='mp' ? '' : 'none';
+            document.getElementById('btn-sp').classList.toggle('active', m==='sp');
+            document.getElementById('btn-mp').classList.toggle('active', m==='mp');
+        }
+
+        function setChoiceBtns(disabled) {
+            document.querySelectorAll('.choices .choice-btn').forEach(b => b.disabled = disabled);
+        }
+
+        function play(playerChoice) {
+            if (busy) return;
+            busy = true;
+            setChoiceBtns(true);
+            const cpuChoice = getComputerChoice(difficulty, history);
+            const result    = rpsResult(playerChoice, cpuChoice);
+            document.getElementById('your-choice').textContent = EMOJI[playerChoice];
+            document.getElementById('cpu-choice').textContent  = EMOJI[cpuChoice];
+            history.push(playerChoice);
+            if (history.length > 20) history.shift();
+
+            if (result === 'win')  { wins++;   streak++; if (streak > bestStreak) bestStreak = streak; }
+            else if (result === 'lose') { losses++; streak = 0; }
+            else draws++;
+
+            const msg = result === 'win' ? '🎉 You Win!' : result === 'lose' ? '💀 You Lose…' : '🤝 Draw!';
+            document.getElementById('rps-status').textContent = msg;
+            document.getElementById('sc-win').textContent    = wins;
+            document.getElementById('sc-draw').textContent   = draws;
+            document.getElementById('sc-lose').textContent   = losses;
+            document.getElementById('sc-streak').textContent = streak;
+
+            maybeUpdateHighScore(bestStreak);
+
+            setTimeout(() => {
+                document.getElementById('rps-status').textContent = 'Choose your weapon!';
+                setChoiceBtns(false);
+                busy = false;
+            }, 1200);
+        }
+
+        // ── Firebase high score ─────────────────────────────────────────────
+        function maybeUpdateHighScore(s) {
+            if (!window.FIREBASE_READY) return;
+            const ref = firebase.database().ref(FB_PATH);
+            ref.once('value', snap => {
+                const v = snap.val();
+                const current = (v && Number.isFinite(v.score) && v.score >= 0) ? v.score : 0;
+                if (s > current) ref.set({ score: Math.min(s, 9999), username: String(myName).slice(0,40) });
+            });
+        }
+
+        if (window.FIREBASE_READY) {
+            firebase.database().ref(FB_PATH).on('value', snap => {
+                const v = snap.val();
+                if (!v) return;
+                const sc = (Number.isFinite(v.score) && v.score >= 0) ? v.score : 0;
+                document.getElementById('hs-val').textContent  = sc;
+                document.getElementById('hs-user').textContent = typeof v.username === 'string'
+                    ? v.username.slice(0,40) : '—';
+            });
+        }
+
+        // ── Multiplayer (Firebase rooms) ────────────────────────────────────
+        const MP_BASE = 'rpsRooms';
+        let mpRoomId = null, mpRole = null, mpScoreYou = 0, mpScoreOpp = 0;
+
+        function genRoomId() {
+            return Math.random().toString(36).slice(2,8).toUpperCase();
+        }
+
+        function createRoom() {
+            if (!window.FIREBASE_READY) { alert('Firebase not available.'); return; }
+            mpRoomId = genRoomId();
+            mpRole   = 'p1';
+            const ref = firebase.database().ref(`${MP_BASE}/${mpRoomId}`);
+            ref.set({ p1: myName, p2: null, p1Choice: null, p2Choice: null, round: 0 });
+            document.getElementById('mp-status').textContent = `Room created. Share code: `;
+            document.getElementById('room-code-display').textContent = mpRoomId;
+            listenRoom();
+        }
+
+        function joinRoom() {
+            const code = document.getElementById('join-code').value.trim().toUpperCase().slice(0,6);
+            if (!code || !window.FIREBASE_READY) return;
+            mpRoomId = code;
+            mpRole   = 'p2';
+            const ref = firebase.database().ref(`${MP_BASE}/${mpRoomId}`);
+            ref.once('value', snap => {
+                const d = snap.val();
+                if (!d || !d.p1) { document.getElementById('mp-status').textContent = 'Room not found.'; return; }
+                ref.update({ p2: myName });
+                document.getElementById('mp-status').textContent = `Joined room ${code}`;
+                document.getElementById('mp-game').style.display = '';
+                listenRoom();
+            });
+        }
+
+        function mpPlay(choice) {
+            if (!mpRoomId || !window.FIREBASE_READY) return;
+            const field = mpRole === 'p1' ? 'p1Choice' : 'p2Choice';
+            firebase.database().ref(`${MP_BASE}/${mpRoomId}`).update({ [field]: choice });
+            document.querySelectorAll('#mp-choices .choice-btn').forEach(b => b.disabled = true);
+            document.getElementById('mp-rps-status').textContent = 'Waiting for opponent…';
+        }
+
+        function listenRoom() {
+            if (!window.FIREBASE_READY) return;
+            firebase.database().ref(`${MP_BASE}/${mpRoomId}`).on('value', snap => {
+                const d = snap.val();
+                if (!d) return;
+                if (d.p2 && d.p1) {
+                    document.getElementById('mp-game').style.display = '';
+                    document.getElementById('mp-status').textContent =
+                        `${d.p1} vs ${d.p2}`;
+                }
+                if (d.p1Choice && d.p2Choice) resolveMpRound(d);
+            });
+        }
+
+        function resolveMpRound(d) {
+            const myChoice  = mpRole === 'p1' ? d.p1Choice : d.p2Choice;
+            const oppChoice = mpRole === 'p1' ? d.p2Choice : d.p1Choice;
+            if (!RPS_CHOICES.includes(myChoice) || !RPS_CHOICES.includes(oppChoice)) return;
+            const res = rpsResult(myChoice, oppChoice);
+            document.getElementById('mp-your-choice').textContent = EMOJI[myChoice];
+            document.getElementById('mp-opp-choice').textContent  = EMOJI[oppChoice];
+            const msg = res === 'win' ? '🎉 You Win!' : res === 'lose' ? '💀 You Lose…' : '🤝 Draw!';
+            document.getElementById('mp-rps-status').textContent = msg;
+            if (res === 'win')  mpScoreYou++;
+            if (res === 'lose') mpScoreOpp++;
+            document.getElementById('mp-sc-you').textContent = mpScoreYou;
+            document.getElementById('mp-sc-opp').textContent = mpScoreOpp;
+            // Reset choices for next round
+            setTimeout(() => {
+                if (!mpRoomId || !window.FIREBASE_READY) return;
+                firebase.database().ref(`${MP_BASE}/${mpRoomId}`)
+                    .update({ p1Choice: null, p2Choice: null });
+                document.querySelectorAll('#mp-choices .choice-btn').forEach(b => b.disabled = false);
+                document.getElementById('mp-rps-status').textContent = 'Choose your weapon!';
+                document.getElementById('mp-your-choice').textContent = '❓';
+                document.getElementById('mp-opp-choice').textContent  = '❓';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
