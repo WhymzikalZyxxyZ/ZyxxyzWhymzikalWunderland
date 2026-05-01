@@ -23,7 +23,8 @@
       "Bash(gh run *)",
       "Bash(npm test *)",
       "Bash(npx jest *)",
-      "Bash(node_modules/.bin/jest)"
+      "Bash(node_modules/.bin/jest)",
+      "Bash(node *)"
     ]
   }
 }
