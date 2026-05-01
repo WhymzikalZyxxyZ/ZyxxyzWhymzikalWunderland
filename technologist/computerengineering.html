@@ -2,32 +2,859 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>About ZYXXYZ's Whymzykal Wunderland!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computer Engineering — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
+    <style>
+    /* ── Page shell ── */
+    #ce-page { max-width:1100px; margin:0 auto; padding:0 14px 80px; }
+
+    /* ── Tabs ── */
+    .main-tabs { display:flex; gap:0; margin-bottom:18px; border-bottom:2px solid #2a2a2a; }
+    .main-tab {
+        padding:10px 28px; font-family:'Courier New',monospace; font-size:11px;
+        letter-spacing:2px; text-transform:uppercase; color:#666; cursor:pointer;
+        border-bottom:2px solid transparent; margin-bottom:-2px;
+    }
+    .main-tab.active { color:#f4a261; border-bottom-color:#f4a261; }
+
+    /* ── Panels ── */
+    .panel { background:rgba(0,0,0,0.75); border:1px solid #2a2a2a;
+        border-radius:12px; padding:18px; margin-bottom:16px; }
+    .panel-title { font-family:'Courier New',monospace; font-size:11px; letter-spacing:3px;
+        text-transform:uppercase; color:#f4a261;
+        border-bottom:1px solid #2a2a2a; padding-bottom:8px; margin:0 0 14px; }
+
+    /* ── Builder layout ── */
+    #builder-wrap { display:grid; grid-template-columns:1fr 320px; gap:14px; }
+    @media(max-width:720px){ #builder-wrap{ grid-template-columns:1fr; } }
+
+    /* ── Part rows ── */
+    .part-row {
+        display:grid; grid-template-columns:90px 1fr auto;
+        align-items:center; gap:10px; padding:8px 0;
+        border-bottom:1px solid #1a1a1a; cursor:pointer;
+    }
+    .part-row:last-child { border-bottom:none; }
+    .part-row:hover { background:rgba(255,255,255,0.03); border-radius:6px; }
+    .part-row.selected-row { background:rgba(244,162,97,0.07); border-radius:6px; }
+    .part-cat  { font-family:'Courier New',monospace; font-size:10px; color:#555;
+        letter-spacing:1px; text-transform:uppercase; }
+    .part-name { font-family:'Courier New',monospace; font-size:12px; color:#ccc; }
+    .part-name.empty { color:#444; font-style:italic; }
+    .part-price { font-family:'Courier New',monospace; font-size:11px; color:#888;
+        white-space:nowrap; }
+    .part-price.total { color:#f4a261; font-size:13px; }
+
+    /* ── Selector panel ── */
+    #selector-panel {
+        background:#0a0a12; border:1px solid #2a2a2a; border-radius:8px;
+        padding:14px; margin-top:10px; display:none;
+    }
+    #selector-panel.open { display:block; }
+    .selector-header { display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+    #sel-search {
+        flex:1; background:rgba(255,255,255,0.07); border:1px solid #333;
+        color:#ccc; border-radius:5px; padding:7px 12px;
+        font-family:'Courier New',monospace; font-size:12px; outline:none;
+    }
+    #sel-search:focus { border-color:#f4a261; }
+    #sel-cat {
+        background:rgba(255,255,255,0.07); border:1px solid #333;
+        color:#ccc; border-radius:5px; padding:7px 8px;
+        font-family:'Courier New',monospace; font-size:11px; cursor:pointer;
+    }
+    #sel-list { max-height:320px; overflow-y:auto; }
+    .sel-item {
+        display:grid; grid-template-columns:1fr auto 180px;
+        align-items:center; gap:10px; padding:8px 10px;
+        border-radius:5px; cursor:pointer; margin-bottom:2px;
+    }
+    .sel-item:hover { background:rgba(255,255,255,0.06); }
+    .sel-item.current-part { background:rgba(244,162,97,0.1); }
+    .sel-item-name { font-family:'Courier New',monospace; font-size:12px; color:#ccc; }
+    .sel-item-price { font-family:'Courier New',monospace; font-size:11px; color:#888; white-space:nowrap; }
+    .sel-deltas { display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end; }
+    .delta { font-family:'Courier New',monospace; font-size:10px; padding:1px 6px;
+        border-radius:3px; white-space:nowrap; }
+    .delta.good  { background:rgba(76,175,80,0.2);  color:#4caf50; }
+    .delta.bad   { background:rgba(231,76,60,0.2);  color:#e74c3c; }
+    .delta.neutral { background:rgba(255,255,255,0.07); color:#888; }
+    .sel-no-results { font-family:'Courier New',monospace; font-size:12px; color:#444;
+        text-align:center; padding:24px 0; }
+
+    /* ── Stats panel ── */
+    #stats-panel { position:sticky; top:14px; }
+    .stat-label { font-family:'Courier New',monospace; font-size:10px; color:#666;
+        letter-spacing:1px; text-transform:uppercase; margin-bottom:3px; }
+    .stat-bar-wrap { background:#111; border-radius:4px; height:12px; margin-bottom:10px; overflow:hidden; }
+    .stat-bar { height:100%; border-radius:4px; transition:width 0.4s ease; }
+    .stat-bar.gaming  { background:linear-gradient(90deg,#1565c0,#42a5f5); }
+    .stat-bar.prod    { background:linear-gradient(90deg,#2e7d32,#66bb6a); }
+    .stat-bar.create  { background:linear-gradient(90deg,#6a1b9a,#ab47bc); }
+    .stat-bar.value   { background:linear-gradient(90deg,#e65100,#ffa726); }
+    .stat-val { font-family:'Courier New',monospace; font-size:12px; color:#f4a261;
+        float:right; margin-top:-14px; }
+    .stat-row { display:flex; justify-content:space-between; margin-bottom:6px;
+        font-family:'Courier New',monospace; font-size:12px; color:#888; }
+    .stat-row .val { color:#ccc; }
+    .stat-row .val.good { color:#4caf50; }
+    .stat-row .val.warn { color:#f4a261; }
+    .stat-row .val.bad  { color:#e74c3c; }
+    .compat-warn { font-family:'Courier New',monospace; font-size:11px; padding:6px 10px;
+        border-radius:5px; margin-bottom:5px; }
+    .compat-warn.error { background:rgba(231,76,60,0.15); color:#e74c3c; border:1px solid rgba(231,76,60,0.3); }
+    .compat-warn.warn  { background:rgba(244,162,97,0.12); color:#f4a261; border:1px solid rgba(244,162,97,0.3); }
+    .compat-warn.ok    { background:rgba(76,175,80,0.12);  color:#4caf50; border:1px solid rgba(76,175,80,0.3); }
+    .fps-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:6px; }
+    .fps-box { background:rgba(255,255,255,0.05); border-radius:6px; padding:7px;
+        text-align:center; font-family:'Courier New',monospace; }
+    .fps-res { font-size:9px; color:#555; letter-spacing:1px; }
+    .fps-val { font-size:16px; color:#f4a261; font-weight:bold; }
+    .fps-unit { font-size:9px; color:#666; }
+
+    /* ── Build total bar ── */
+    .build-total { display:flex; justify-content:space-between; align-items:center;
+        margin-top:10px; padding-top:10px; border-top:1px solid #2a2a2a; }
+    .ce-btn { background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15);
+        color:#bbb; border-radius:5px; padding:7px 15px;
+        font-family:'Courier New',monospace; font-size:11px; cursor:pointer; }
+    .ce-btn:hover { border-color:#f4a261; color:#fff; }
+    .ce-btn.accent { background:#f4a261; border-color:#f4a261; color:#111; font-weight:bold; }
+
+    /* ── Glossary terms ── */
+    .term { color:#f4a261; text-decoration:underline dotted; cursor:help; position:relative; display:inline-block; }
+    .term::after { content:attr(data-def); position:absolute; bottom:calc(100% + 6px); left:50%;
+        transform:translateX(-50%); background:#0d1117; color:#ccc; padding:8px 12px;
+        border-radius:6px; border:1px solid #f4a261; font-size:11px; line-height:1.5;
+        width:260px; white-space:normal; display:none; z-index:200;
+        font-family:'Courier New',monospace; pointer-events:none; box-shadow:0 4px 16px rgba(0,0,0,0.7); }
+    .term:hover::after { display:block; }
+
+    /* ── Learn section ── */
+    .learn-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media(max-width:600px){ .learn-grid{ grid-template-columns:1fr; } }
+    .learn-card { background:rgba(255,255,255,0.03); border:1px solid #2a2a2a;
+        border-radius:8px; padding:14px; }
+    .learn-card-title { font-family:'Courier New',monospace; font-size:11px; letter-spacing:2px;
+        color:#f4a261; text-transform:uppercase; margin-bottom:10px; cursor:pointer;
+        display:flex; justify-content:space-between; }
+    .learn-card-body { display:none; font-family:'Courier New',monospace; font-size:12px;
+        color:#aaa; line-height:1.7; }
+    .learn-card-body.open { display:block; }
+    .learn-card-body ul { margin:6px 0 10px; padding-left:16px; }
+    .learn-card-body li { margin-bottom:4px; }
+    .spec-tag { display:inline-block; background:rgba(244,162,97,0.1);
+        color:#f4a261; border-radius:3px; padding:1px 7px; font-size:10px; margin:2px; }
+    .prose { font-family:'Courier New',monospace; font-size:12px; color:#aaa; line-height:1.7; }
+    .prose p { margin:0 0 10px; }
+    </style>
 </head>
 <body class="notYetBody">
-
-    <h2>Zyxxyz Builds Computers!?!</h2>    
-    <br />
-
-    <!-- Navigation Bar -->
+    <h2>Zyxxyz Builds Computers!?!</h2>
     <div class="navbar">
-        <a href="../../index.html">Home</a>
-        <a href="../../technologist/apps.html">Apps</a>
-        <a href="../../technologist/bioseufi.html">BIOS/UEFI</a>
-        <a href="../../technologist/computerengineering.html">Computer Engineering</a>
-        <a href="../../technologist/software.html">Software</a>
-        <a href="../../technologist/systemoperator.html">System Operator</a>
+        <a href="../index.html">Home</a>
+        <a href="../technologist/apps.html">Apps</a>
+        <a href="../technologist/biosuefi.html">BIOS/UEFI</a>
+        <a href="../technologist/computerengineering.html">Computer Engineering</a>
+        <a href="../technologist/software.html">Software</a>
+        <a href="../technologist/systemoperator.html">System Operator</a>
     </div>
 
-    <!-- Removed the <img> tag here as it's no longer needed -->
-    <div class="banner"></div> <!-- Placeholder for your logo as background -->
+    <div id="ce-page">
+        <div class="main-tabs">
+            <div class="main-tab active" id="tab-builder" onclick="switchTab('builder')">PC Builder</div>
+            <div class="main-tab"        id="tab-learn"   onclick="switchTab('learn')">Learning Center</div>
+        </div>
 
-    <br>
-    <p id="demo">ZYXXYZ</p>
+        <!-- ═══════════ BUILDER TAB ═══════════ -->
+        <div id="tab-builder-content">
+            <div id="builder-wrap">
+                <!-- Left: build list -->
+                <div>
+                    <div class="panel">
+                        <div class="panel-title">Your Build</div>
+                        <div id="build-rows"></div>
+                        <div class="build-total">
+                            <div>
+                                <button class="ce-btn" onclick="clearBuild()">Clear Build</button>
+                            </div>
+                            <div style="font-family:'Courier New',monospace;font-size:13px;color:#888;">
+                                Total: <span class="part-price total" id="total-price">$0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Part selector -->
+                    <div id="selector-panel">
+                        <div class="selector-header">
+                            <input id="sel-search" type="text" placeholder="Search parts…" oninput="renderList()">
+                            <select id="sel-cat" onchange="openCategory(this.value)"></select>
+                        </div>
+                        <div id="sel-list"></div>
+                    </div>
+                </div>
 
-    <button type="button" onclick="navigateToPage('../../index.html')">E.T. Phone Home!</button>
+                <!-- Right: stats -->
+                <div id="stats-panel" class="panel">
+                    <div class="panel-title">Build Statistics</div>
+                    <div id="compat-warnings"></div>
 
+                    <div class="stat-label">Gaming Performance</div>
+                    <div class="stat-bar-wrap"><div class="stat-bar gaming" id="bar-gaming" style="width:0%"></div></div>
+                    <div class="stat-val" id="val-gaming">—</div>
+
+                    <div class="stat-label" style="margin-top:6px;">Productivity / Workstation</div>
+                    <div class="stat-bar-wrap"><div class="stat-bar prod" id="bar-prod" style="width:0%"></div></div>
+                    <div class="stat-val" id="val-prod">—</div>
+
+                    <div class="stat-label" style="margin-top:6px;">Content Creation</div>
+                    <div class="stat-bar-wrap"><div class="stat-bar create" id="bar-create" style="width:0%"></div></div>
+                    <div class="stat-val" id="val-create">—</div>
+
+                    <div class="stat-label" style="margin-top:6px;">Value (Perf / $)</div>
+                    <div class="stat-bar-wrap"><div class="stat-bar value" id="bar-value" style="width:0%"></div></div>
+                    <div class="stat-val" id="val-value">—</div>
+
+                    <div style="margin-top:10px;">
+                        <div class="stat-row"><span>Est. Power Draw</span><span class="val" id="stat-power">—</span></div>
+                        <div class="stat-row"><span>PSU Headroom</span><span class="val" id="stat-psu">—</span></div>
+                        <div class="stat-row"><span>CPU Bottleneck</span><span class="val" id="stat-cpu-bn">—</span></div>
+                        <div class="stat-row"><span>GPU Bottleneck</span><span class="val" id="stat-gpu-bn">—</span></div>
+                        <div class="stat-row"><span>RAM Bandwidth</span><span class="val" id="stat-rambw">—</span></div>
+                        <div class="stat-row"><span>Storage Speed</span><span class="val" id="stat-strbw">—</span></div>
+                    </div>
+
+                    <div class="stat-label" style="margin-top:12px;">Estimated FPS (AAA Games, Ultra)</div>
+                    <div class="fps-grid">
+                        <div class="fps-box">
+                            <div class="fps-res">1080P</div>
+                            <div class="fps-val" id="fps-1080">—</div>
+                            <div class="fps-unit">fps</div>
+                        </div>
+                        <div class="fps-box">
+                            <div class="fps-res">1440P</div>
+                            <div class="fps-val" id="fps-1440">—</div>
+                            <div class="fps-unit">fps</div>
+                        </div>
+                        <div class="fps-box">
+                            <div class="fps-res">4K</div>
+                            <div class="fps-val" id="fps-4k">—</div>
+                            <div class="fps-unit">fps</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════ LEARN TAB ═══════════ -->
+        <div id="tab-learn-content" style="display:none;">
+            <div class="panel">
+                <div class="panel-title">How PC Components Work</div>
+                <div class="prose" style="margin-bottom:14px;">
+                    <p>
+                        A PC is an ecosystem of components that communicate over standardised
+                        <span class="term" data-def="A communication system that transfers data between components. Common buses: PCIe (GPU/NVMe), SATA (storage), USB (peripherals), DMI (CPU to chipset).">buses</span>.
+                        Understanding what each part does — and how they talk to each other —
+                        helps you make better build decisions and diagnose problems.
+                    </p>
+                </div>
+                <div class="learn-grid" id="learn-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" onclick="navigateToPage('../index.html')">&#8592; Home</button>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// PARTS DATABASE
+// Fields: id, name, brand, price, [category-specific specs], score fields
+// ═══════════════════════════════════════════════════════════════════════════
+const DB = {
+
+cpu: [
+  {id:'i9-14900k', name:'Core i9-14900K',    brand:'Intel', price:389,  socket:'LGA1700',tdp:125, cores:24,threads:32, boostGHz:6.0, scoreST:2430,scoreMT:41200},
+  {id:'i9-13900k', name:'Core i9-13900K',    brand:'Intel', price:319,  socket:'LGA1700',tdp:125, cores:24,threads:32, boostGHz:5.8, scoreST:2280,scoreMT:40100},
+  {id:'i7-14700k', name:'Core i7-14700K',    brand:'Intel', price:279,  socket:'LGA1700',tdp:125, cores:20,threads:28, boostGHz:5.6, scoreST:2200,scoreMT:35500},
+  {id:'i7-13700k', name:'Core i7-13700K',    brand:'Intel', price:239,  socket:'LGA1700',tdp:125, cores:16,threads:24, boostGHz:5.4, scoreST:2100,scoreMT:33000},
+  {id:'i5-14600k', name:'Core i5-14600K',    brand:'Intel', price:199,  socket:'LGA1700',tdp:125, cores:14,threads:20, boostGHz:5.3, scoreST:2100,scoreMT:24500},
+  {id:'i5-13600k', name:'Core i5-13600K',    brand:'Intel', price:169,  socket:'LGA1700',tdp:125, cores:14,threads:20, boostGHz:5.1, scoreST:1990,scoreMT:23200},
+  {id:'i5-12600k', name:'Core i5-12600K',    brand:'Intel', price:139,  socket:'LGA1700',tdp:125, cores:10,threads:16, boostGHz:4.9, scoreST:1880,scoreMT:18200},
+  {id:'i3-13100',  name:'Core i3-13100',     brand:'Intel', price:109,  socket:'LGA1700',tdp:60,  cores:4, threads:8,  boostGHz:4.5, scoreST:1750,scoreMT:7800},
+  {id:'u9-285k',   name:'Core Ultra 9 285K', brand:'Intel', price:589,  socket:'LGA1851',tdp:125, cores:24,threads:24, boostGHz:5.7, scoreST:2500,scoreMT:43500},
+  {id:'u7-265k',   name:'Core Ultra 7 265K', brand:'Intel', price:349,  socket:'LGA1851',tdp:125, cores:20,threads:20, boostGHz:5.5, scoreST:2380,scoreMT:35800},
+  {id:'r9-9950x',  name:'Ryzen 9 9950X',     brand:'AMD',   price:649,  socket:'AM5',    tdp:170, cores:16,threads:32, boostGHz:5.7, scoreST:2480,scoreMT:43000},
+  {id:'r9-9900x',  name:'Ryzen 9 9900X',     brand:'AMD',   price:449,  socket:'AM5',    tdp:120, cores:12,threads:24, boostGHz:5.6, scoreST:2380,scoreMT:29000},
+  {id:'r7-9700x',  name:'Ryzen 7 9700X',     brand:'AMD',   price:299,  socket:'AM5',    tdp:65,  cores:8, threads:16, boostGHz:5.5, scoreST:2320,scoreMT:16500},
+  {id:'r5-9600x',  name:'Ryzen 5 9600X',     brand:'AMD',   price:229,  socket:'AM5',    tdp:65,  cores:6, threads:12, boostGHz:5.4, scoreST:2250,scoreMT:12000},
+  {id:'r9-7950x',  name:'Ryzen 9 7950X',     brand:'AMD',   price:549,  socket:'AM5',    tdp:170, cores:16,threads:32, boostGHz:5.7, scoreST:2100,scoreMT:38500},
+  {id:'r9-7900x',  name:'Ryzen 9 7900X',     brand:'AMD',   price:329,  socket:'AM5',    tdp:170, cores:12,threads:24, boostGHz:5.6, scoreST:2050,scoreMT:28200},
+  {id:'r7-7700x',  name:'Ryzen 7 7700X',     brand:'AMD',   price:199,  socket:'AM5',    tdp:105, cores:8, threads:16, boostGHz:5.4, scoreST:1980,scoreMT:15300},
+  {id:'r5-7600x',  name:'Ryzen 5 7600X',     brand:'AMD',   price:149,  socket:'AM5',    tdp:105, cores:6, threads:12, boostGHz:5.3, scoreST:1940,scoreMT:12100},
+  {id:'r5-7600',   name:'Ryzen 5 7600',      brand:'AMD',   price:119,  socket:'AM5',    tdp:65,  cores:6, threads:12, boostGHz:5.1, scoreST:1900,scoreMT:11500},
+  {id:'r7-5800x3d',name:'Ryzen 7 5800X3D',  brand:'AMD',   price:249,  socket:'AM4',    tdp:105, cores:8, threads:16, boostGHz:4.5, scoreST:1640,scoreMT:14200},
+  {id:'r9-5950x',  name:'Ryzen 9 5950X',     brand:'AMD',   price:349,  socket:'AM4',    tdp:105, cores:16,threads:32, boostGHz:4.9, scoreST:1650,scoreMT:26800},
+  {id:'r5-5600x',  name:'Ryzen 5 5600X',     brand:'AMD',   price:139,  socket:'AM4',    tdp:65,  cores:6, threads:12, boostGHz:4.6, scoreST:1600,scoreMT:10800},
+  {id:'r5-5600',   name:'Ryzen 5 5600',      brand:'AMD',   price:99,   socket:'AM4',    tdp:65,  cores:6, threads:12, boostGHz:4.4, scoreST:1550,scoreMT:10000},
+],
+
+gpu: [
+  {id:'rtx4090',   name:'GeForce RTX 4090',        brand:'NVIDIA',price:1599,vram:24,tdp:450,scoreMark:23500},
+  {id:'rtx4080s',  name:'GeForce RTX 4080 Super',  brand:'NVIDIA',price:999, vram:16,tdp:320,scoreMark:18200},
+  {id:'rtx4080',   name:'GeForce RTX 4080',         brand:'NVIDIA',price:799, vram:16,tdp:320,scoreMark:17100},
+  {id:'rtx4070tis',name:'GeForce RTX 4070 Ti Super',brand:'NVIDIA',price:799,vram:16,tdp:285,scoreMark:16400},
+  {id:'rtx4070ti', name:'GeForce RTX 4070 Ti',      brand:'NVIDIA',price:599,vram:12,tdp:285,scoreMark:14800},
+  {id:'rtx4070s',  name:'GeForce RTX 4070 Super',   brand:'NVIDIA',price:499,vram:12,tdp:220,scoreMark:13200},
+  {id:'rtx4070',   name:'GeForce RTX 4070',          brand:'NVIDIA',price:399,vram:12,tdp:200,scoreMark:11300},
+  {id:'rtx4060ti', name:'GeForce RTX 4060 Ti',       brand:'NVIDIA',price:349,vram:16,tdp:165,scoreMark:9100},
+  {id:'rtx4060',   name:'GeForce RTX 4060',           brand:'NVIDIA',price:249,vram:8, tdp:115,scoreMark:7600},
+  {id:'rtx3090ti', name:'GeForce RTX 3090 Ti',       brand:'NVIDIA',price:699,vram:24,tdp:450,scoreMark:14100},
+  {id:'rtx3080ti', name:'GeForce RTX 3080 Ti',       brand:'NVIDIA',price:599,vram:12,tdp:350,scoreMark:13200},
+  {id:'rtx3080',   name:'GeForce RTX 3080',           brand:'NVIDIA',price:449,vram:10,tdp:320,scoreMark:11600},
+  {id:'rtx3070ti', name:'GeForce RTX 3070 Ti',       brand:'NVIDIA',price:349,vram:8, tdp:290,scoreMark:10200},
+  {id:'rtx3070',   name:'GeForce RTX 3070',           brand:'NVIDIA',price:299,vram:8, tdp:220,scoreMark:9600},
+  {id:'rtx3060ti', name:'GeForce RTX 3060 Ti',       brand:'NVIDIA',price:249,vram:8, tdp:200,scoreMark:8700},
+  {id:'rtx3060',   name:'GeForce RTX 3060',           brand:'NVIDIA',price:199,vram:12,tdp:170,scoreMark:7100},
+  {id:'rx7900xtx', name:'Radeon RX 7900 XTX',        brand:'AMD',   price:799,vram:24,tdp:355,scoreMark:18300},
+  {id:'rx7900xt',  name:'Radeon RX 7900 XT',         brand:'AMD',   price:649,vram:20,tdp:315,scoreMark:16200},
+  {id:'rx7800xt',  name:'Radeon RX 7800 XT',         brand:'AMD',   price:449,vram:16,tdp:263,scoreMark:11200},
+  {id:'rx7700xt',  name:'Radeon RX 7700 XT',         brand:'AMD',   price:349,vram:12,tdp:245,scoreMark:10100},
+  {id:'rx7600',    name:'Radeon RX 7600',             brand:'AMD',   price:199,vram:8, tdp:165,scoreMark:7100},
+  {id:'rx6800xt',  name:'Radeon RX 6800 XT',         brand:'AMD',   price:399,vram:16,tdp:300,scoreMark:12200},
+  {id:'rx6700xt',  name:'Radeon RX 6700 XT',         brand:'AMD',   price:249,vram:12,tdp:230,scoreMark:8700},
+  {id:'rx6600',    name:'Radeon RX 6600',             brand:'AMD',   price:169,vram:8, tdp:132,scoreMark:6800},
+  {id:'arca770',   name:'Arc A770 16GB',              brand:'Intel', price:299,vram:16,tdp:225,scoreMark:7600},
+  {id:'arca750',   name:'Arc A750',                   brand:'Intel', price:199,vram:8, tdp:225,scoreMark:6500},
+],
+
+mobo: [
+  {id:'z790-apex',  name:'ROG Maximus Z790 Apex',        brand:'ASUS',      price:499,socket:'LGA1700',chipset:'Z790',  form:'E-ATX',ddr:'DDR5',pcie5:true},
+  {id:'z790-hero',  name:'ROG STRIX Z790-E Gaming WiFi', brand:'ASUS',      price:399,socket:'LGA1700',chipset:'Z790',  form:'ATX',  ddr:'DDR5',pcie5:true},
+  {id:'z790-msi',   name:'MEG Z790 ACE',                 brand:'MSI',       price:449,socket:'LGA1700',chipset:'Z790',  form:'ATX',  ddr:'DDR5',pcie5:true},
+  {id:'b760-pro',   name:'B760M Pro RS DDR5',            brand:'ASRock',    price:149,socket:'LGA1700',chipset:'B760',  form:'mATX', ddr:'DDR5',pcie5:false},
+  {id:'b760-asus',  name:'TUF GAMING B760M-PLUS WiFi',  brand:'ASUS',      price:149,socket:'LGA1700',chipset:'B760',  form:'mATX', ddr:'DDR4',pcie5:false},
+  {id:'b760-msi',   name:'PRO B760M-A WiFi',             brand:'MSI',       price:129,socket:'LGA1700',chipset:'B760',  form:'mATX', ddr:'DDR4',pcie5:false},
+  {id:'z890-apex',  name:'ROG STRIX Z890-E Gaming WiFi', brand:'ASUS',     price:499,socket:'LGA1851',chipset:'Z890',  form:'ATX',  ddr:'DDR5',pcie5:true},
+  {id:'z890-msi',   name:'MPG Z890 Carbon WiFi',         brand:'MSI',       price:349,socket:'LGA1851',chipset:'Z890',  form:'ATX',  ddr:'DDR5',pcie5:true},
+  {id:'x670e-apex', name:'ROG Crosshair X670E Apex',     brand:'ASUS',      price:699,socket:'AM5',    chipset:'X670E', form:'ATX',  ddr:'DDR5',pcie5:true},
+  {id:'x670e-hero', name:'ROG Crosshair X670E Hero',     brand:'ASUS',      price:499,socket:'AM5',    chipset:'X670E', form:'ATX',  ddr:'DDR5',pcie5:true},
+  {id:'x670-pro',   name:'X670E Pro RS',                 brand:'ASRock',    price:279,socket:'AM5',    chipset:'X670',  form:'ATX',  ddr:'DDR5',pcie5:false},
+  {id:'b650e-taichi',name:'B650E Taichi',                brand:'ASRock',    price:299,socket:'AM5',    chipset:'B650E', form:'ATX',  ddr:'DDR5',pcie5:true},
+  {id:'b650-plus',  name:'TUF GAMING B650-PLUS WiFi',   brand:'ASUS',      price:179,socket:'AM5',    chipset:'B650',  form:'ATX',  ddr:'DDR5',pcie5:false},
+  {id:'b650m-pro',  name:'PRO B650M-A WiFi',             brand:'MSI',       price:149,socket:'AM5',    chipset:'B650',  form:'mATX', ddr:'DDR5',pcie5:false},
+  {id:'x570-aqua',  name:'Aqua X570',                    brand:'Gigabyte',  price:299,socket:'AM4',    chipset:'X570',  form:'ATX',  ddr:'DDR4',pcie5:false},
+  {id:'x570-hero',  name:'ROG Crosshair VIII Hero',      brand:'ASUS',      price:249,socket:'AM4',    chipset:'X570',  form:'ATX',  ddr:'DDR4',pcie5:false},
+  {id:'b550-pro',   name:'MAG B550 TOMAHAWK',            brand:'MSI',       price:149,socket:'AM4',    chipset:'B550',  form:'ATX',  ddr:'DDR4',pcie5:false},
+  {id:'b550m-ds3h', name:'B550M DS3H',                  brand:'Gigabyte',  price:89, socket:'AM4',    chipset:'B550',  form:'mATX', ddr:'DDR4',pcie5:false},
+],
+
+ram: [
+  {id:'tridentz5-6400-32', name:'Trident Z5 DDR5-6400 32GB',brand:'G.Skill',  price:189,type:'DDR5',speed:6400, capacity:32,cl:32},
+  {id:'tridentz5-6000-32', name:'Trident Z5 DDR5-6000 32GB',brand:'G.Skill',  price:149,type:'DDR5',speed:6000, capacity:32,cl:30},
+  {id:'dom-plat-6000-32',  name:'Dominator Platinum DDR5-6000 32GB',brand:'Corsair',price:169,type:'DDR5',speed:6000,capacity:32,cl:30},
+  {id:'fury-beast-5600-32',name:'Fury Beast DDR5-5600 32GB',brand:'Kingston',  price:109,type:'DDR5',speed:5600, capacity:32,cl:40},
+  {id:'fury-beast-5200-32',name:'Fury Beast DDR5-5200 32GB',brand:'Kingston',  price:89, type:'DDR5',speed:5200, capacity:32,cl:40},
+  {id:'dom-plat-5600-64',  name:'Dominator Platinum DDR5-5600 64GB',brand:'Corsair',price:249,type:'DDR5',speed:5600,capacity:64,cl:36},
+  {id:'ripjaws-3600-32',   name:'Ripjaws V DDR4-3600 32GB', brand:'G.Skill',  price:79, type:'DDR4',speed:3600, capacity:32,cl:18},
+  {id:'ripjaws-3200-32',   name:'Ripjaws V DDR4-3200 32GB', brand:'G.Skill',  price:59, type:'DDR4',speed:3200, capacity:32,cl:16},
+  {id:'vengeance-3200-16', name:'Vengeance LPX DDR4-3200 16GB',brand:'Corsair',price:39,type:'DDR4',speed:3200, capacity:16,cl:16},
+  {id:'fury-beast-3600-32',name:'Fury Beast DDR4-3600 32GB',brand:'Kingston',  price:69, type:'DDR4',speed:3600, capacity:32,cl:18},
+  {id:'dom-plat-3600-32',  name:'Dominator Platinum DDR4-3600 32GB',brand:'Corsair',price:119,type:'DDR4',speed:3600,capacity:32,cl:18},
+  {id:'ripjaws-3600-64',   name:'Ripjaws V DDR4-3600 64GB', brand:'G.Skill',  price:139,type:'DDR4',speed:3600, capacity:64,cl:18},
+],
+
+storage: [
+  {id:'990pro-2t',   name:'990 Pro NVMe 2TB',           brand:'Samsung', price:139,type:'NVMe Gen4',readMB:7450,writeMB:6900,formFactor:'M.2 2280'},
+  {id:'990pro-1t',   name:'990 Pro NVMe 1TB',           brand:'Samsung', price:89, type:'NVMe Gen4',readMB:7450,writeMB:6900,formFactor:'M.2 2280'},
+  {id:'sn850x-2t',   name:'WD Black SN850X 2TB',        brand:'WD',      price:149,type:'NVMe Gen4',readMB:7300,writeMB:6600,formFactor:'M.2 2280'},
+  {id:'sn850x-1t',   name:'WD Black SN850X 1TB',        brand:'WD',      price:89, type:'NVMe Gen4',readMB:7300,writeMB:6300,formFactor:'M.2 2280'},
+  {id:'firecuda-2t', name:'FireCuda 530 2TB',            brand:'Seagate', price:159,type:'NVMe Gen4',readMB:7300,writeMB:6900,formFactor:'M.2 2280'},
+  {id:'mp600pro-2t', name:'MP600 Pro XT 2TB',            brand:'Corsair', price:149,type:'NVMe Gen4',readMB:7100,writeMB:6800,formFactor:'M.2 2280'},
+  {id:'sn770-1t',    name:'WD Black SN770 1TB',          brand:'WD',      price:69, type:'NVMe Gen3',readMB:5150,writeMB:4900,formFactor:'M.2 2280'},
+  {id:'980pro-2t',   name:'980 Pro NVMe 2TB',            brand:'Samsung', price:119,type:'NVMe Gen4',readMB:7000,writeMB:5100,formFactor:'M.2 2280'},
+  {id:'970evo-1t',   name:'970 EVO Plus 1TB',            brand:'Samsung', price:79, type:'NVMe Gen3',readMB:3500,writeMB:3300,formFactor:'M.2 2280'},
+  {id:'870evo-2t',   name:'870 EVO SATA 2TB',            brand:'Samsung', price:119,type:'SATA SSD', readMB:560, writeMB:530, formFactor:'2.5"'},
+  {id:'mx500-1t',    name:'MX500 SATA 1TB',              brand:'Crucial', price:69, type:'SATA SSD', readMB:560, writeMB:510, formFactor:'2.5"'},
+  {id:'barracuda-2t',name:'Barracuda HDD 2TB',           brand:'Seagate', price:49, type:'HDD 7200',  readMB:190, writeMB:190, formFactor:'3.5"'},
+  {id:'ironwolf-4t', name:'IronWolf HDD 4TB',            brand:'Seagate', price:89, type:'HDD 5900',  readMB:185, writeMB:185, formFactor:'3.5"'},
+  {id:'wd-red-4t',   name:'WD Red Plus HDD 4TB',         brand:'WD',      price:79, type:'HDD 5400',  readMB:180, writeMB:180, formFactor:'3.5"'},
+],
+
+cooler: [
+  {id:'nhd15s',       name:'NH-D15S',                   brand:'Noctua',    price:99, type:'Air',     tdpRating:250,fanMM:140,noise:24.6},
+  {id:'nhd15',        name:'NH-D15',                    brand:'Noctua',    price:109,type:'Air',     tdpRating:250,fanMM:140,noise:24.6},
+  {id:'darkrock-pro4',name:'Dark Rock Pro 4',           brand:'be quiet!', price:89, type:'Air',     tdpRating:250,fanMM:135,noise:24.3},
+  {id:'pa120se',      name:'Peerless Assassin 120 SE',  brand:'Thermalright',price:45,type:'Air',   tdpRating:260,fanMM:120,noise:25.6},
+  {id:'ak620',        name:'AK620',                     brand:'Deepcool',  price:49, type:'Air',     tdpRating:260,fanMM:120,noise:28.0},
+  {id:'h150i',        name:'iCUE H150i Elite',          brand:'Corsair',   price:199,type:'360mm AIO',tdpRating:350,fanMM:120,noise:33.0},
+  {id:'h115i',        name:'iCUE H115i Elite',          brand:'Corsair',   price:159,type:'280mm AIO',tdpRating:300,fanMM:140,noise:32.0},
+  {id:'h100i',        name:'iCUE H100i Elite',          brand:'Corsair',   price:129,type:'240mm AIO',tdpRating:250,fanMM:120,noise:33.0},
+  {id:'krakenz3',     name:'Kraken Z73',                brand:'NZXT',      price:179,type:'360mm AIO',tdpRating:350,fanMM:120,noise:33.0},
+  {id:'krakenz2',     name:'Kraken X63',                brand:'NZXT',      price:129,type:'280mm AIO',tdpRating:280,fanMM:140,noise:33.0},
+  {id:'lf360',        name:'Liquid Freezer II 360',     brand:'Arctic',    price:109,type:'360mm AIO',tdpRating:350,fanMM:120,noise:30.0},
+  {id:'lf240',        name:'Liquid Freezer II 240',     brand:'Arctic',    price:79, type:'240mm AIO',tdpRating:300,fanMM:120,noise:29.0},
+],
+
+psu: [
+  {id:'hx1200i',  name:'HX1200i',                brand:'Corsair',  price:269,wattage:1200,rating:'80+ Platinum',modular:'Full'},
+  {id:'hx1000i',  name:'HX1000i',                brand:'Corsair',  price:229,wattage:1000,rating:'80+ Platinum',modular:'Full'},
+  {id:'hx850i',   name:'HX850i',                 brand:'Corsair',  price:189,wattage:850, rating:'80+ Platinum',modular:'Full'},
+  {id:'g6-850',   name:'SuperNOVA 850 G6',       brand:'EVGA',     price:139,wattage:850, rating:'80+ Gold',    modular:'Full'},
+  {id:'g6-750',   name:'SuperNOVA 750 G6',       brand:'EVGA',     price:119,wattage:750, rating:'80+ Gold',    modular:'Full'},
+  {id:'focus-750',name:'Focus GX-750',            brand:'Seasonic', price:129,wattage:750, rating:'80+ Gold',    modular:'Full'},
+  {id:'focus-650',name:'Focus GX-650',            brand:'Seasonic', price:109,wattage:650, rating:'80+ Gold',    modular:'Full'},
+  {id:'rm850x',   name:'RM850x',                  brand:'Corsair',  price:149,wattage:850, rating:'80+ Gold',    modular:'Full'},
+  {id:'rm750x',   name:'RM750x',                  brand:'Corsair',  price:129,wattage:750, rating:'80+ Gold',    modular:'Full'},
+  {id:'rm650x',   name:'RM650x',                  brand:'Corsair',  price:99, wattage:650, rating:'80+ Gold',    modular:'Full'},
+  {id:'bp11-650', name:'Straight Power 11 650W',  brand:'be quiet!',price:109,wattage:650, rating:'80+ Platinum',modular:'Full'},
+  {id:'cx650m',   name:'CX650M',                  brand:'Corsair',  price:79, wattage:650, rating:'80+ Bronze',  modular:'Semi'},
+  {id:'cx550',    name:'CX550',                   brand:'Corsair',  price:59, wattage:550, rating:'80+ Bronze',  modular:'Non'},
+],
+
+case: [
+  {id:'o11d-evo',   name:'O11 Dynamic EVO',       brand:'Lian Li',   price:149,form:'ATX,E-ATX,mATX', style:'Mid Tower',airflow:'High'},
+  {id:'p500a',      name:'Eclipse P500A DRGB',     brand:'Phanteks',  price:129,form:'ATX,E-ATX,mATX', style:'Mid Tower',airflow:'Very High'},
+  {id:'4000d',      name:'4000D Airflow',           brand:'Corsair',   price:99, form:'ATX,mATX,Mini-ITX',style:'Mid Tower',airflow:'High'},
+  {id:'h510',       name:'H510 Flow',               brand:'NZXT',      price:99, form:'ATX,mATX,Mini-ITX',style:'Mid Tower',airflow:'Medium'},
+  {id:'h7-flow',    name:'H7 Flow',                 brand:'NZXT',      price:149,form:'ATX,E-ATX,mATX', style:'Mid Tower',airflow:'Very High'},
+  {id:'define-7',   name:'Define 7',                brand:'Fractal',   price:149,form:'ATX,E-ATX,mATX', style:'Mid Tower',airflow:'Low'},
+  {id:'meshroom-s', name:'MeshRoom S',              brand:'Cooler Master',price:89,form:'mATX,Mini-ITX',style:'mATX Tower',airflow:'High'},
+  {id:'h510i',      name:'H510i',                   brand:'NZXT',      price:99, form:'ATX,mATX,Mini-ITX',style:'Mid Tower',airflow:'Medium'},
+  {id:'nr200p',     name:'NR200P',                  brand:'Cooler Master',price:99,form:'Mini-ITX',     style:'Mini-ITX',  airflow:'High'},
+  {id:'rog-z11',    name:'ROG Strix Helios',        brand:'ASUS',      price:299,form:'ATX,E-ATX,mATX', style:'Full Tower',airflow:'High'},
+],
+
+}; // end DB
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BUILDER STATE
+// ═══════════════════════════════════════════════════════════════════════════
+const CATS = ['cpu','gpu','mobo','ram','storage','cooler','psu','case'];
+const CAT_LABELS = { cpu:'CPU', gpu:'GPU', mobo:'Motherboard', ram:'RAM',
+                     storage:'Storage', cooler:'CPU Cooler', psu:'Power Supply', case:'Case' };
+const CAT_STAT   = {
+  cpu:     p => `${p.cores}C/${p.threads}T  ${p.boostGHz}GHz`,
+  gpu:     p => `${p.vram}GB VRAM  ${p.scoreMark} mark`,
+  mobo:    p => `${p.chipset}  ${p.form}  ${p.ddr}`,
+  ram:     p => `${p.capacity}GB  ${p.type}-${p.speed}`,
+  storage: p => `${p.readMB} MB/s read`,
+  cooler:  p => `${p.type}  ${p.tdpRating}W rated`,
+  psu:     p => `${p.wattage}W  ${p.rating}`,
+  case:    p => p.style,
+};
+
+const build = { cpu:null, gpu:null, mobo:null, ram:null, storage:null, cooler:null, psu:null, case:null };
+let activeCat = null;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SCORING
+// ═══════════════════════════════════════════════════════════════════════════
+const MAX = { gpuMark:23500, cpuST:2500, cpuMT:43500, ramSpeed:6400, storRead:7450 };
+
+function scores() {
+  const c = build.cpu, g = build.gpu, r = build.ram, s = build.storage;
+  if (!c && !g) return null;
+  const gpu  = g ? g.scoreMark / MAX.gpuMark  : 0;
+  const cpuST= c ? c.scoreST   / MAX.cpuST    : 0;
+  const cpuMT= c ? c.scoreMT   / MAX.cpuMT    : 0;
+  const ram  = r ? Math.min(r.speed / MAX.ramSpeed, 1) : 0.5;
+  const ramC = r ? Math.min(r.capacity / 64, 1)        : 0.25;
+  const str  = s ? Math.min(s.readMB / MAX.storRead,1) : 0.3;
+
+  const gaming      = Math.round((gpu*65 + cpuST*25 + ram*5 + str*5));
+  const productivity= Math.round((cpuMT*50 + cpuST*20 + ramC*15 + ram*10 + str*5));
+  const create      = Math.round((cpuMT*40 + cpuST*15 + gpu*25 + ramC*15 + str*5));
+  const totalCost   = CATS.reduce((s,k) => s + (build[k] ? build[k].price : 0), 0);
+  const perfScore   = (gaming + productivity) / 2;
+  const value       = totalCost > 0 ? Math.min(Math.round(perfScore / totalCost * 180), 100) : 0;
+
+  const cpuTDP = c ? c.tdp : 0;
+  const gpuTDP = g ? g.tdp : 0;
+  const sysTDP = cpuTDP + gpuTDP + 80;
+
+  const cpuBN = g && c ? Math.max(0, Math.round((gpu - cpuST) * 100)) : 0;
+  const gpuBN = g && c ? Math.max(0, Math.round((cpuST - gpu) * 100)) : 0;
+
+  const fps1080 = g ? Math.round(Math.min(g.scoreMark / 75,  360)) : 0;
+  const fps1440 = g ? Math.round(Math.min(g.scoreMark / 110, 240)) : 0;
+  const fps4k   = g ? Math.round(Math.min(g.scoreMark / 175, 144)) : 0;
+
+  return { gaming, productivity, create, value, sysTDP, cpuBN, gpuBN,
+           fps1080, fps1440, fps4k, totalCost };
+}
+
+function compatWarnings() {
+  const w = [];
+  const c = build.cpu, m = build.mobo, r = build.ram,
+        g = build.gpu, p = build.psu, k = build.cooler;
+
+  if (c && m && c.socket !== m.socket)
+    w.push({ level:'error', msg:`CPU socket ${c.socket} ≠ Motherboard socket ${m.socket}` });
+  if (m && r && r.type !== m.ddr)
+    w.push({ level:'error', msg:`RAM type ${r.type} ≠ Motherboard supports ${m.ddr}` });
+
+  const sysTDP = (c ? c.tdp : 0) + (g ? g.tdp : 0) + 80;
+  if (p && p.wattage < sysTDP)
+    w.push({ level:'error', msg:`PSU ${p.wattage}W is under estimated draw of ${sysTDP}W` });
+  else if (p && p.wattage < sysTDP * 1.2)
+    w.push({ level:'warn', msg:`PSU headroom is tight — consider a ${p.wattage + 100}W unit` });
+
+  if (c && k && k.tdpRating < c.tdp)
+    w.push({ level:'warn', msg:`Cooler rated ${k.tdpRating}W may struggle with CPU TDP ${c.tdp}W` });
+
+  if (w.length === 0 && CATS.filter(k => build[k]).length === CATS.length)
+    w.push({ level:'ok', msg:'✓ Full build — no compatibility issues detected' });
+
+  return w;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RENDERING
+// ═══════════════════════════════════════════════════════════════════════════
+function renderBuildRows() {
+  const el = document.getElementById('build-rows');
+  el.innerHTML = '';
+  CATS.forEach(cat => {
+    const part = build[cat];
+    const row  = document.createElement('div');
+    row.className = 'part-row' + (activeCat === cat ? ' selected-row' : '');
+    row.onclick   = () => toggleCat(cat);
+
+    const catEl  = document.createElement('div'); catEl.className = 'part-cat';  catEl.textContent = CAT_LABELS[cat];
+    const nameEl = document.createElement('div'); nameEl.className = 'part-name' + (part ? '' : ' empty');
+    nameEl.textContent = part ? part.name : '— click to choose —';
+    const priceEl = document.createElement('div'); priceEl.className = 'part-price';
+    if (part) {
+      priceEl.textContent = '$' + part.price;
+      nameEl.title = part ? CAT_STAT[cat](part) : '';
+    }
+    row.appendChild(catEl); row.appendChild(nameEl); row.appendChild(priceEl);
+    el.appendChild(row);
+  });
+
+  const totalCost = CATS.reduce((s,k) => s + (build[k] ? build[k].price : 0), 0);
+  document.getElementById('total-price').textContent = '$' + totalCost.toLocaleString();
+}
+
+function renderStats() {
+  const sc = scores();
+  const setBar = (id, pct) => { document.getElementById('bar-'+id).style.width = Math.min(pct,100)+'%'; };
+  const setVal = (id, v)   => { document.getElementById('val-'+id).textContent = v; };
+  const setStat = (id, v, cls) => {
+    const el = document.getElementById('stat-'+id);
+    el.textContent  = v;
+    el.className    = 'val' + (cls ? ' '+cls : '');
+  };
+
+  if (!sc) {
+    ['gaming','prod','create','value'].forEach(k => { setBar(k,0); setVal(k,'—'); });
+    ['power','psu','cpu-bn','gpu-bn','rambw','strbw'].forEach(k => setStat(k,'—',''));
+    ['fps-1080','fps-1440','fps-4k'].forEach(k => document.getElementById(k).textContent = '—');
+    document.getElementById('compat-warnings').innerHTML = '';
+    return;
+  }
+
+  setBar('gaming',  sc.gaming);       setVal('gaming',  sc.gaming + '/100');
+  setBar('prod',    sc.productivity);  setVal('prod',    sc.productivity + '/100');
+  setBar('create',  sc.create);        setVal('create',  sc.create + '/100');
+  setBar('value',   sc.value);         setVal('value',   sc.value + '/100');
+
+  setStat('power', sc.sysTDP + 'W', sc.sysTDP > 400 ? 'warn' : 'good');
+  const psu = build.psu;
+  if (psu) setStat('psu', (psu.wattage - sc.sysTDP) + 'W free', psu.wattage - sc.sysTDP < 100 ? 'warn' : 'good');
+  else setStat('psu', '—', '');
+
+  setStat('cpu-bn', sc.cpuBN + '%', sc.cpuBN > 20 ? 'bad' : sc.cpuBN > 10 ? 'warn' : 'good');
+  setStat('gpu-bn', sc.gpuBN + '%', sc.gpuBN > 20 ? 'bad' : sc.gpuBN > 10 ? 'warn' : 'good');
+  const ram = build.ram;
+  setStat('rambw', ram ? ram.type + '-' + ram.speed + ' ' + ram.capacity + 'GB' : '—', '');
+  const str = build.storage;
+  setStat('strbw', str ? str.readMB + ' MB/s' : '—', str && str.readMB > 5000 ? 'good' : str ? 'warn' : '');
+
+  document.getElementById('fps-1080').textContent = sc.fps1080 || '—';
+  document.getElementById('fps-1440').textContent = sc.fps1440 || '—';
+  document.getElementById('fps-4k').textContent   = sc.fps4k   || '—';
+
+  const cw = document.getElementById('compat-warnings');
+  cw.innerHTML = '';
+  compatWarnings().forEach(w => {
+    const d = document.createElement('div');
+    d.className   = 'compat-warn ' + (w.level === 'error' ? 'error' : w.level === 'warn' ? 'warn' : 'ok');
+    d.textContent = w.msg;
+    cw.appendChild(d);
+  });
+}
+
+function renderList() {
+  if (!activeCat) return;
+  const query   = (document.getElementById('sel-search').value || '').toLowerCase();
+  const items   = DB[activeCat].filter(p =>
+    p.name.toLowerCase().includes(query) || p.brand.toLowerCase().includes(query)
+  );
+  const listEl  = document.getElementById('sel-list');
+  listEl.innerHTML = '';
+
+  if (!items.length) {
+    listEl.innerHTML = '<div class="sel-no-results">No parts match your search.</div>';
+    return;
+  }
+
+  items.forEach(part => {
+    const isCurrent = build[activeCat] && build[activeCat].id === part.id;
+    const div = document.createElement('div');
+    div.className = 'sel-item' + (isCurrent ? ' current-part' : '');
+    div.onclick   = () => selectPart(activeCat, part);
+
+    const nameSpan  = document.createElement('span'); nameSpan.className = 'sel-item-name';
+    nameSpan.textContent = (isCurrent ? '✓ ' : '') + part.name;
+    const priceSpan = document.createElement('span'); priceSpan.className = 'sel-item-price';
+    priceSpan.textContent = '$' + part.price;
+    const deltasDiv = document.createElement('div'); deltasDiv.className = 'sel-deltas';
+
+    buildDeltas(activeCat, part, build[activeCat]).forEach(d => {
+      const s = document.createElement('span');
+      s.className   = 'delta ' + d.cls;
+      s.textContent = d.text;
+      deltasDiv.appendChild(s);
+    });
+
+    div.appendChild(nameSpan); div.appendChild(priceSpan); div.appendChild(deltasDiv);
+    listEl.appendChild(div);
+  });
+}
+
+function buildDeltas(cat, newPart, curPart) {
+  const d = [];
+  const delta = (label, nv, cv, higherBetter, unit, pct) => {
+    if (!cv && cv !== 0) { d.push({text: label + ': ' + nv + (unit||''), cls:'neutral'}); return; }
+    const diff = nv - cv;
+    if (Math.abs(diff) < 0.01) { d.push({text: label + ': =' , cls:'neutral'}); return; }
+    const arrow = diff > 0 ? '▲' : '▼';
+    const good  = (diff > 0) === higherBetter;
+    const disp  = pct && cv !== 0 ? arrow + Math.abs(Math.round(diff/cv*100)) + '%'
+                                  : arrow + Math.abs(Math.round(diff)) + (unit||'');
+    d.push({ text: label + ' ' + disp, cls: good ? 'good' : 'bad' });
+  };
+
+  if (cat === 'cpu') {
+    delta('ST', newPart.scoreST, curPart?.scoreST, true, '', true);
+    delta('MT', newPart.scoreMT, curPart?.scoreMT, true, '', true);
+    delta('TDP', newPart.tdp, curPart?.tdp, false, 'W', false);
+    delta('$', newPart.price, curPart?.price, false, '', true);
+  } else if (cat === 'gpu') {
+    delta('Perf', newPart.scoreMark, curPart?.scoreMark, true, '', true);
+    delta('VRAM', newPart.vram, curPart?.vram, true, 'GB', false);
+    delta('TDP', newPart.tdp, curPart?.tdp, false, 'W', false);
+    delta('$', newPart.price, curPart?.price, false, '', true);
+  } else if (cat === 'ram') {
+    delta('Speed', newPart.speed, curPart?.speed, true, '', true);
+    delta('Cap', newPart.capacity, curPart?.capacity, true, 'GB', false);
+    delta('$', newPart.price, curPart?.price, false, '', true);
+  } else if (cat === 'storage') {
+    delta('Read', newPart.readMB, curPart?.readMB, true, '', true);
+    delta('$', newPart.price, curPart?.price, false, '', true);
+  } else if (cat === 'cooler') {
+    delta('TDP', newPart.tdpRating, curPart?.tdpRating, true, 'W', false);
+    delta('$', newPart.price, curPart?.price, false, '', true);
+  } else if (cat === 'psu') {
+    delta('Watts', newPart.wattage, curPart?.wattage, true, 'W', false);
+    delta('$', newPart.price, curPart?.price, false, '', true);
+  } else {
+    delta('$', newPart.price, curPart?.price, false, '', true);
+  }
+  return d;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INTERACTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+function toggleCat(cat) {
+  const panel = document.getElementById('selector-panel');
+  if (activeCat === cat) {
+    activeCat = null; panel.classList.remove('open');
+  } else {
+    openCategory(cat);
+  }
+  renderBuildRows();
+}
+
+function openCategory(cat) {
+  activeCat = cat;
+  const panel = document.getElementById('selector-panel');
+  panel.classList.add('open');
+  document.getElementById('sel-search').value = '';
+
+  // Populate category dropdown
+  const catSel = document.getElementById('sel-cat');
+  catSel.innerHTML = '';
+  CATS.forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = k; opt.textContent = CAT_LABELS[k];
+    if (k === cat) opt.selected = true;
+    catSel.appendChild(opt);
+  });
+
+  renderList();
+  renderBuildRows();
+  panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function selectPart(cat, part) {
+  build[cat] = part;
+  renderBuildRows();
+  renderStats();
+  renderList();
+}
+
+function clearBuild() {
+  CATS.forEach(k => build[k] = null);
+  activeCat = null;
+  document.getElementById('selector-panel').classList.remove('open');
+  renderBuildRows();
+  renderStats();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════════════════════
+function switchTab(tab) {
+  document.getElementById('tab-builder-content').style.display = tab === 'builder' ? '' : 'none';
+  document.getElementById('tab-learn-content').style.display   = tab === 'learn'   ? '' : 'none';
+  document.getElementById('tab-builder').classList.toggle('active', tab === 'builder');
+  document.getElementById('tab-learn').classList.toggle('active',   tab === 'learn');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LEARNING CENTER DATA
+// ═══════════════════════════════════════════════════════════════════════════
+const LEARN_CARDS = [
+  { title:'CPU — The Brain', body:`
+    <p>The <span class="term" data-def="Central Processing Unit — executes instructions, handles logic, arithmetic, and coordinates all other components.">CPU</span>
+    runs your operating system and applications. Key specs to understand:</p>
+    <ul>
+      <li><strong>Cores / Threads</strong> — more cores = better multitasking. <span class="term" data-def="Hyper-Threading (Intel) / SMT (AMD) — each physical core handles two instruction streams simultaneously, appearing as double the thread count.">SMT/HT</span> doubles the thread count.</li>
+      <li><strong>Clock Speed (GHz)</strong> — how many cycles per second. Higher = faster per-thread work.</li>
+      <li><strong><span class="term" data-def="Instructions Per Cycle — how much work the CPU does per clock tick. A CPU with higher IPC can outperform a faster-clocked but older design.">IPC</span></strong> — newer architectures do more work per clock, so a 4 GHz modern CPU beats an old 5 GHz one.</li>
+      <li><strong>Cache (L1/L2/L3)</strong> — fast on-chip memory. AMD's <span class="term" data-def="3D V-Cache — AMD's stacked SRAM technology that adds a large L3 cache die on top of the CPU die, dramatically boosting gaming performance.">3D V-Cache</span> variants triple the L3 size for gaming gains.</li>
+      <li><strong>TDP</strong> — heat output. Higher TDP = needs a beefier cooler.</li>
+    </ul>
+    <p>Tags: <span class="spec-tag">Socket</span> <span class="spec-tag">Cores</span> <span class="spec-tag">GHz</span> <span class="spec-tag">TDP</span> <span class="spec-tag">Cache</span></p>
+  `},
+  { title:'GPU — The Renderer', body:`
+    <p>The <span class="term" data-def="Graphics Processing Unit — specialised chip with thousands of small cores optimised for parallel computation: rendering pixels, ray tracing, and AI inference.">GPU</span>
+    drives your display. It matters most for gaming and creative work.</p>
+    <ul>
+      <li><strong>VRAM</strong> — frame buffer memory. 1080p needs 8GB minimum; 4K/modding needs 12–16GB.</li>
+      <li><strong>Memory Bandwidth</strong> — how fast data moves between GPU and VRAM. Bottlenecks textures at high res.</li>
+      <li><strong>Shader Cores / CUDA Cores / Stream Processors</strong> — the parallel compute units. More ≠ always faster (architecture matters).</li>
+      <li><strong><span class="term" data-def="Ray Tracing — simulating how light physically bounces around a scene. GPU-accelerated on NVIDIA RTX (RT Cores) and AMD RDNA2+ (Ray Accelerators). Beautiful but expensive.">Ray Tracing</span></strong> — physically accurate lighting. Needs dedicated hardware (RT Cores / Ray Accelerators) to run well.</li>
+      <li><strong><span class="term" data-def="DLSS / FSR / XeSS — AI-powered upscaling techniques. Render at lower resolution, upscale intelligently to higher output. DLSS (NVIDIA), FSR (AMD), XeSS (Intel).">Upscaling (DLSS/FSR)</span></strong> — renders at lower res, upscales via AI. Recovers 30–80% framerate.</li>
+    </ul>
+    <p>Tags: <span class="spec-tag">VRAM</span> <span class="spec-tag">TDP</span> <span class="spec-tag">PCIe slot</span> <span class="spec-tag">Ray Tracing</span></p>
+  `},
+  { title:'Motherboard — The Backbone', body:`
+    <p>The <span class="term" data-def="Motherboard — the main circuit board connecting CPU, RAM, storage, GPU, and all peripherals via standardised slots and buses.">motherboard</span>
+    dictates what CPU, RAM, and features you can use.</p>
+    <ul>
+      <li><strong>Socket</strong> — must match CPU. LGA1700 for 12th–14th gen Intel; LGA1851 for Intel Arrow Lake; AM5 for Ryzen 7000/9000; AM4 for Ryzen 5000.</li>
+      <li><strong>Chipset</strong> — determines overclocking support (Z/X = unlocked; B = partial; H/A = locked), PCIe lanes, and USB ports.</li>
+      <li><strong>Form Factor</strong> — ATX (standard), Micro-ATX (smaller), Mini-ITX (tiny). Case must match.</li>
+      <li><strong>DDR4 vs DDR5</strong> — cannot mix. The board specifies which generation it supports.</li>
+      <li><strong>VRM Quality</strong> — voltage regulator modules power the CPU. Poor VRMs throttle performance on high-core-count CPUs.</li>
+    </ul>
+    <p>Tags: <span class="spec-tag">Socket</span> <span class="spec-tag">Chipset</span> <span class="spec-tag">DDR4/5</span> <span class="spec-tag">Form Factor</span></p>
+  `},
+  { title:'RAM — Working Memory', body:`
+    <p><span class="term" data-def="Random-Access Memory — volatile, fast storage that holds running programs and data. Lost on power-off. Connected directly to the CPU's memory controller.">RAM</span>
+    stores actively running data. It is not permanent storage.</p>
+    <ul>
+      <li><strong>Capacity</strong> — 16GB is minimum for modern gaming; 32GB is ideal; 64GB for professional workloads.</li>
+      <li><strong>Speed (MT/s or MHz)</strong> — DDR5-6000 is the sweet spot for Ryzen 7000. Higher speed = more memory bandwidth = better CPU performance.</li>
+      <li><strong><span class="term" data-def="CAS Latency — the delay between a memory access request and when data is actually delivered, measured in clock cycles. Lower = faster response. CL30 at DDR5-6000 is better than CL36 at DDR5-7200.">CAS Latency (CL)</span></strong> — lower is better. True latency = CL / (speed/2) in nanoseconds.</li>
+      <li><strong>Dual Channel</strong> — installing RAM in the correct two slots doubles memory bandwidth. Check your motherboard manual.</li>
+      <li><strong>XMP / EXPO</strong> — BIOS profiles that enable rated speeds. Without enabling XMP, DDR5-6000 runs at default DDR5-4800.</li>
+    </ul>
+    <p>Tags: <span class="spec-tag">DDR4/5</span> <span class="spec-tag">Capacity</span> <span class="spec-tag">Speed</span> <span class="spec-tag">CAS Latency</span></p>
+  `},
+  { title:'Storage — Permanent Memory', body:`
+    <p>Storage retains data permanently. The interface and medium define performance dramatically.</p>
+    <ul>
+      <li><strong>NVMe (PCIe Gen 4)</strong> — fastest consumer drives. 5,000–7,500 MB/s sequential read. Windows loads in ~5 seconds.</li>
+      <li><strong>NVMe (PCIe Gen 3)</strong> — still fast: 3,000–3,500 MB/s. Barely noticeable difference for gaming vs Gen 4.</li>
+      <li><strong>SATA SSD</strong> — limited to ~560 MB/s. Fine for secondary storage; noticeably slower for OS drive vs NVMe.</li>
+      <li><strong>HDD</strong> — 150–200 MB/s, high latency. Good for mass cheap storage (photos, videos, backups). Not suitable for OS.</li>
+      <li><strong>Sequential vs Random IO</strong> — sequential = large files (game levels). Random = OS operations (small scattered reads). <span class="term" data-def="IOPS — Input/Output Operations Per Second. Random IOPS matters for OS responsiveness. NVMe drives deliver 500,000+ IOPS vs HDD 100–200 IOPS.">IOPS</span> measures random performance.</li>
+    </ul>
+    <p>Tags: <span class="spec-tag">NVMe</span> <span class="spec-tag">SATA</span> <span class="spec-tag">MB/s</span> <span class="spec-tag">IOPS</span></p>
+  `},
+  { title:'Cooling — Heat Management', body:`
+    <p>Every component generates heat. Sustained high temperatures cause
+    <span class="term" data-def="Thermal Throttling — when a CPU or GPU reduces its clock speed to lower heat output when it exceeds its temperature limit (usually 95–100°C). Results in sudden performance drops.">thermal throttling</span>
+    and long-term degradation.</p>
+    <ul>
+      <li><strong>TDP (Thermal Design Power)</strong> — the heat the cooler must dissipate. A 125W CPU needs a cooler rated for ≥125W.</li>
+      <li><strong>Air Coolers</strong> — reliable, no pump, quiet (especially Noctua). Top-end air coolers (NH-D15) compete with 240mm AIOs.</li>
+      <li><strong>AIO Liquid Coolers</strong> — all-in-one closed-loop. 240mm is good; 360mm is excellent for high-TDP CPUs (185W+).</li>
+      <li><strong>Thermal Paste</strong> — fills microscopic air gaps between CPU and cooler. Most coolers ship with acceptable paste; high-end paste (Thermal Grizzly Kryonaut) improves temps 2–5°C.</li>
+      <li><strong>Case Airflow</strong> — even a great cooler struggles in a poorly ventilated case. Front intake + rear/top exhaust is the standard layout.</li>
+    </ul>
+    <p>Tags: <span class="spec-tag">TDP Rating</span> <span class="spec-tag">Air vs AIO</span> <span class="spec-tag">Fan Size</span></p>
+  `},
+  { title:'PSU — Power Delivery', body:`
+    <p>The <span class="term" data-def="Power Supply Unit — converts AC mains power to regulated DC voltages (+12V, +5V, +3.3V) for the PC. Insufficient or unstable power causes crashes and component damage.">PSU</span>
+    converts wall power to the voltages your components need. Do not cheap out here.</p>
+    <ul>
+      <li><strong>Wattage</strong> — add CPU TDP + GPU TDP + ~80W for everything else. Add 20% headroom. A 650W GPU + 125W CPU system needs ~550W minimum, 750W comfortably.</li>
+      <li><strong>80+ Rating</strong> — efficiency certification. Bronze = 82%, Gold = 87%, Platinum = 90%, Titanium = 92% efficient at 50% load. Higher efficiency = less heat and electricity wasted.</li>
+      <li><strong>Modular vs Non-Modular</strong> — modular PSUs only have cables you need, improving airflow and tidiness. Non-modular includes all cables permanently.</li>
+      <li><strong>Rail Quality</strong> — <span class="term" data-def="+12V Rail — the primary voltage rail powering CPU and GPU. Look for high amperage (50–100A) and tight voltage regulation (±1%) for stable overclocking.">+12V amperage</span> and voltage regulation quality matters under load.</li>
+    </ul>
+    <p>Tags: <span class="spec-tag">Wattage</span> <span class="spec-tag">80+ Rating</span> <span class="spec-tag">Modular</span></p>
+  `},
+  { title:'Compatibility Checklist', body:`
+    <p>Before buying, verify these compatibility points:</p>
+    <ul>
+      <li>✓ <strong>CPU ↔ Motherboard</strong>: same socket (LGA1700, AM5, AM4, LGA1851)</li>
+      <li>✓ <strong>RAM ↔ Motherboard</strong>: same generation (DDR4 or DDR5)</li>
+      <li>✓ <strong>Case ↔ Motherboard</strong>: form factor fits (ATX, Micro-ATX, Mini-ITX)</li>
+      <li>✓ <strong>PSU ↔ System TDP</strong>: wattage ≥ CPU TDP + GPU TDP + 80W, with 20% headroom</li>
+      <li>✓ <strong>Cooler ↔ CPU TDP</strong>: cooler rated for at least the CPU's TDP</li>
+      <li>✓ <strong>Cooler height ↔ Case clearance</strong>: tall air coolers (170mm+) may not fit smaller cases</li>
+      <li>✓ <strong>GPU length ↔ Case clearance</strong>: high-end GPUs can be 330–360mm long</li>
+      <li>✓ <strong>M.2 slots available</strong>: verify your board has enough M.2 slots for your NVMe drives</li>
+    </ul>
+    <p>The builder above checks CPU socket, RAM type, and PSU wattage automatically.</p>
+  `},
+];
+
+function renderLearnCards() {
+  const grid = document.getElementById('learn-grid');
+  grid.innerHTML = '';
+  LEARN_CARDS.forEach((card, i) => {
+    const div = document.createElement('div');
+    div.className = 'learn-card';
+    div.innerHTML = `
+      <div class="learn-card-title" onclick="toggleLearn(${i})">
+        <span>${card.title}</span><span id="larrow-${i}">&#9658;</span>
+      </div>
+      <div class="learn-card-body" id="lbody-${i}">${card.body}</div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function toggleLearn(i) {
+  const body  = document.getElementById('lbody-' + i);
+  const arrow = document.getElementById('larrow-' + i);
+  const open  = body.classList.toggle('open');
+  arrow.innerHTML = open ? '&#9660;' : '&#9658;';
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+renderBuildRows();
+renderStats();
+renderLearnCards();
+</script>
 </body>
-</html> 
+</html>
