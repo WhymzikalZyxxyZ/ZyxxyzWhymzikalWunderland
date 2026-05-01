@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/username-gen.js"></script>
+    <script src="/js/pong-engine.js"></script>
+    <style>
+        #pong-page { max-width: 860px; margin: 0 auto; padding: 0 16px 80px; }
+        .pong-panel {
+            background:rgba(0,0,0,0.75); border:1px solid #2a2a2a;
+            border-radius:12px; padding:20px; margin-bottom:16px; }
+        .pong-title { font-family:'Courier New',monospace; font-size:11px;
+            letter-spacing:3px; text-transform:uppercase; color:#f4a261;
+            border-bottom:1px solid #2a2a2a; padding-bottom:8px; margin:0 0 16px; }
+        .mode-btns { display:flex; gap:12px; justify-content:center; }
+        .mode-btn { background:rgba(255,255,255,0.06); border:2px solid rgba(255,255,255,0.14);
+            color:#bbb; border-radius:8px; padding:12px 24px;
+            font-family:'Courier New',monospace; font-size:13px; cursor:pointer;
+            transition:border-color 0.15s,color 0.15s; }
+        .mode-btn:hover,.mode-btn.active { border-color:#f4a261; color:#fff; }
+        .diff-row { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+        .diff-row label { font-family:'Courier New',monospace; font-size:11px; color:#888; }
+        #diff-slider { flex:1; accent-color:#f4a261; }
+        #diff-val { font-family:'Courier New',monospace; font-size:13px; color:#f4a261; min-width:14px; }
+        #pong-canvas-wrap {
+            position:relative; line-height:0; margin:12px auto;
+            border:2px solid #2a2a2a; border-radius:4px; overflow:hidden;
+            max-width:800px; background:#000;
+        }
+        #pong-canvas { display:block; max-width:100%; height:auto; }
+        .pong-score-row {
+            display:flex; justify-content:space-around; align-items:center;
+            font-family:'Courier New',monospace; font-size:22px; color:#f4a261;
+            padding:6px 0; }
+        .pong-ctrl-row { display:flex; gap:10px; justify-content:center; margin-top:10px; }
+        .ctrl-btn { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14);
+            color:#bbb; border-radius:6px; padding:8px 18px;
+            font-family:'Courier New',monospace; font-size:12px; cursor:pointer; }
+        .ctrl-btn:hover:not(:disabled) { border-color:#f4a261; color:#fff; }
+        .ctrl-btn.accent { background:#f4a261; border-color:#f4a261; color:#111; font-weight:bold; }
+        .ctrl-btn:disabled { opacity:0.35; cursor:default; }
+        #pong-msg { text-align:center; font-family:'Courier New',monospace;
+            font-size:13px; color:#888; min-height:1.4em; margin-top:6px; }
+        #hs-box { text-align:center; font-family:'Courier New',monospace;
+            font-size:11px; color:#666; margin-top:12px; }
+        #hs-box strong { color:#f4a261; }
+        .mp-row { display:flex; gap:8px; margin-bottom:8px; }
+        .mp-input { flex:1; background:rgba(255,255,255,0.07); border:1px solid #333;
+            border-radius:6px; color:#fff; font-family:'Courier New',monospace;
+            font-size:12px; padding:6px 10px; outline:none; text-transform:uppercase; }
+        .mp-input:focus { border-color:#f4a261; }
+        .mp-btn { background:#f4a261; border:none; border-radius:6px; color:#111;
+            font-family:'Courier New',monospace; font-size:12px; font-weight:bold;
+            padding:6px 14px; cursor:pointer; }
+        .mp-btn:hover { background:#e76f51; }
+        #mp-status { font-family:'Courier New',monospace; font-size:11px; color:#888; min-height:1.4em; }
+        #room-code-disp { color:#f4a261; font-weight:bold; letter-spacing:3px; }
+    </style>
+</head>
+<body class="notYetBody">
+    <h2>Zyxxyz, the Ball Wizard</h2>
+    <div class="navbar">
+        <a href="../index.html">Home</a>
+        <a href="../gamer/games.html">Games</a>
+    </div>
+
+    <div id="pong-page">
+        <div class="pong-panel">
+            <div class="pong-title">Pong</div>
+            <div class="mode-btns">
+                <button class="mode-btn active" id="btn-sp" onclick="setMode('sp')">&#129302; Single Player</button>
+                <button class="mode-btn"        id="btn-mp" onclick="setMode('mp')">&#127760; Multiplayer</button>
+            </div>
+        </div>
+
+        <!-- Single Player Panel -->
+        <div class="pong-panel" id="sp-panel">
+            <div class="pong-title">Single Player — <span id="user-label" style="color:#bbb;font-size:10px;letter-spacing:1px;"></span></div>
+            <div class="diff-row">
+                <label>AI Difficulty</label>
+                <input type="range" id="diff-slider" min="0" max="9" value="4">
+                <span id="diff-val">4</span>
+            </div>
+            <p style="font-family:'Courier New',monospace;font-size:11px;color:#555;margin:0 0 10px;">
+                Controls: W/S or ↑/↓ to move your paddle (left side)
+            </p>
+            <div class="pong-score-row">
+                <span id="score-left">0</span>
+                <span style="color:#333;font-size:14px;">VS</span>
+                <span id="score-right">0</span>
+            </div>
+            <div id="pong-canvas-wrap">
+                <canvas id="pong-canvas" width="800" height="500"></canvas>
+            </div>
+            <div id="pong-msg">Press Start to play.</div>
+            <div class="pong-ctrl-row">
+                <button class="ctrl-btn accent" id="btn-start" onclick="startGame()">&#9654; Start</button>
+                <button class="ctrl-btn" id="btn-pause" onclick="togglePause()" disabled>&#9646;&#9646; Pause</button>
+                <button class="ctrl-btn" id="btn-reset" onclick="resetGame()" disabled>&#8635; Reset</button>
+            </div>
+        </div>
+
+        <!-- Multiplayer Panel -->
+        <div class="pong-panel" id="mp-panel" style="display:none;">
+            <div class="pong-title">Multiplayer</div>
+            <div class="mp-row">
+                <button class="mp-btn" onclick="mpCreate()">Create Room</button>
+                <input class="mp-input" id="mp-join-code" placeholder="ROOM CODE" maxlength="6">
+                <button class="mp-btn" onclick="mpJoin()">Join</button>
+            </div>
+            <div id="mp-status">Not connected.</div>
+            <div id="room-code-disp"></div>
+            <div id="mp-game" style="display:none;">
+                <div class="pong-score-row">
+                    <span id="mp-score-left">0</span>
+                    <span style="color:#333;font-size:14px;">VS</span>
+                    <span id="mp-score-right">0</span>
+                </div>
+                <div id="pong-canvas-wrap-mp" style="position:relative;line-height:0;margin:12px auto;border:2px solid #2a2a2a;border-radius:4px;overflow:hidden;max-width:800px;background:#000;">
+                    <canvas id="pong-canvas-mp" width="800" height="500"></canvas>
+                </div>
+                <p style="font-family:'Courier New',monospace;font-size:11px;color:#555;text-align:center;">
+                    P1 controls left paddle (W/S), P2 controls right paddle (↑/↓)
+                </p>
+            </div>
+        </div>
+
+        <div id="hs-box">
+            🏆 High Score: <strong id="hs-val">—</strong> by <strong id="hs-user">—</strong>
+        </div>
+    </div>
+
+    <button type="button" onclick="navigateToPage('../gamer/games.html')">&#8592; Back to Games</button>
+    <script src="/js/gamer-chat.js"></script>
+    <script>
+        const myName = (typeof getOrCreateUsername === 'function') ? getOrCreateUsername() : 'Guest';
+        document.getElementById('user-label').textContent = myName;
+
+        const canvas  = document.getElementById('pong-canvas');
+        const ctx     = canvas.getContext('2d');
+        const FB_HS   = 'scores/pong';
+        const scaleX  = () => canvas.clientWidth / PONG_W;
+        const scaleY  = () => canvas.clientHeight / PONG_H;
+
+        let state     = newPongState();
+        let rafId     = null;
+        let paused    = false;
+        let running   = false;
+        let diff      = 4;
+        let keysDown  = {};
+
+        document.addEventListener('keydown', e => { keysDown[e.key] = true; });
+        document.addEventListener('keyup',   e => { keysDown[e.key] = false; });
+
+        document.getElementById('diff-slider').addEventListener('input', function() {
+            diff = +this.value;
+            document.getElementById('diff-val').textContent = this.value;
+        });
+
+        function setMode(m) {
+            document.getElementById('sp-panel').style.display = m==='sp' ? '' : 'none';
+            document.getElementById('mp-panel').style.display = m==='mp' ? '' : 'none';
+            document.getElementById('btn-sp').classList.toggle('active', m==='sp');
+            document.getElementById('btn-mp').classList.toggle('active', m==='mp');
+            if (running) { cancelAnimationFrame(rafId); running = false; }
+        }
+
+        function startGame() {
+            state   = newPongState();
+            paused  = false;
+            running = true;
+            document.getElementById('btn-start').disabled = true;
+            document.getElementById('btn-pause').disabled = false;
+            document.getElementById('btn-reset').disabled = false;
+            document.getElementById('pong-msg').textContent = '';
+            loop();
+        }
+
+        function togglePause() {
+            paused = !paused;
+            document.getElementById('btn-pause').textContent = paused ? '▶ Resume' : '⏸ Pause';
+            if (!paused) loop();
+        }
+
+        function resetGame() {
+            cancelAnimationFrame(rafId);
+            running = false; paused = false;
+            state = newPongState();
+            render(state);
+            document.getElementById('score-left').textContent  = 0;
+            document.getElementById('score-right').textContent = 0;
+            document.getElementById('btn-start').disabled  = false;
+            document.getElementById('btn-pause').disabled  = true;
+            document.getElementById('btn-reset').disabled  = true;
+            document.getElementById('btn-pause').textContent = '⏸ Pause';
+            document.getElementById('pong-msg').textContent = 'Press Start to play.';
+        }
+
+        function loop() {
+            if (!running || paused) return;
+            const speed = 4;
+            let leftY = state.left.y;
+            if (keysDown['w'] || keysDown['W'] || keysDown['ArrowUp'])    leftY -= speed;
+            if (keysDown['s'] || keysDown['S'] || keysDown['ArrowDown'])  leftY += speed;
+            const aiRightY = getAIPaddleY(state, 'right', diff);
+            state = pongTick(state, leftY, aiRightY);
+            document.getElementById('score-left').textContent  = state.score.left;
+            document.getElementById('score-right').textContent = state.score.right;
+            if (state.scored) checkHighScore(state.score.left);
+            render(state);
+            rafId = requestAnimationFrame(loop);
+        }
+
+        function render(s) {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, PONG_W, PONG_H);
+            ctx.setLineDash([8, 8]);
+            ctx.strokeStyle = '#222';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(PONG_W/2, 0); ctx.lineTo(PONG_W/2, PONG_H);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, s.left.y, PADDLE_W, PADDLE_H);
+            ctx.fillRect(PONG_W - PADDLE_W, s.right.y, PADDLE_W, PADDLE_H);
+            ctx.beginPath();
+            ctx.arc(s.ball.x, s.ball.y, BALL_R, 0, Math.PI*2);
+            ctx.fill();
+        }
+
+        function checkHighScore(score) {
+            if (!window.FIREBASE_READY || score <= 0) return;
+            const ref = firebase.database().ref(FB_HS);
+            ref.once('value', snap => {
+                const v = snap.val();
+                const cur = (v && Number.isFinite(v.score)) ? v.score : 0;
+                if (score > cur) ref.set({ score: Math.min(score, PONG_MAX_SCORE), username: String(myName).slice(0,40) });
+            });
+        }
+
+        if (window.FIREBASE_READY) {
+            firebase.database().ref(FB_HS).on('value', snap => {
+                const v = snap.val();
+                if (!v) return;
+                document.getElementById('hs-val').textContent  = Number.isFinite(v.score) ? v.score : '—';
+                document.getElementById('hs-user').textContent = typeof v.username === 'string' ? v.username.slice(0,40) : '—';
+            });
+        }
+
+        // ── Multiplayer ──────────────────────────────────────────────────────
+        const MP_BASE = 'pongRooms';
+        let mpRoomId=null, mpRole=null, mpRafId=null, mpState=null, mpRunning=false;
+        const mpCanvas = document.getElementById('pong-canvas-mp');
+        const mpCtx    = mpCanvas.getContext('2d');
+
+        function mpCreate() {
+            if (!window.FIREBASE_READY) { alert('Firebase not available.'); return; }
+            mpRoomId = Math.random().toString(36).slice(2,8).toUpperCase();
+            mpRole   = 'p1';
+            firebase.database().ref(`${MP_BASE}/${mpRoomId}`).set({
+                p1: myName, p2: null,
+                leftY: PONG_H/2 - PADDLE_H/2, rightY: PONG_H/2 - PADDLE_H/2,
+                ball: newPongState().ball,
+                scoreLeft: 0, scoreRight: 0, status: 'waiting'
+            });
+            document.getElementById('mp-status').textContent = 'Waiting for opponent. Code: ';
+            document.getElementById('room-code-disp').textContent = mpRoomId;
+            mpListen();
+        }
+
+        function mpJoin() {
+            const code = document.getElementById('mp-join-code').value.trim().toUpperCase().slice(0,6);
+            if (!code || !window.FIREBASE_READY) return;
+            mpRoomId = code; mpRole = 'p2';
+            firebase.database().ref(`${MP_BASE}/${mpRoomId}`).once('value', snap => {
+                if (!snap.val()) { document.getElementById('mp-status').textContent = 'Room not found.'; return; }
+                firebase.database().ref(`${MP_BASE}/${mpRoomId}`).update({ p2: myName, status: 'active' });
+                document.getElementById('mp-status').textContent = `Joined ${code}`;
+                document.getElementById('mp-game').style.display = '';
+                mpListen();
+                mpGameLoop();
+            });
+        }
+
+        function mpListen() {
+            firebase.database().ref(`${MP_BASE}/${mpRoomId}`).on('value', snap => {
+                const d = snap.val();
+                if (!d) return;
+                if (d.p2 && d.status === 'active') {
+                    document.getElementById('mp-game').style.display = '';
+                    document.getElementById('mp-status').textContent = `${d.p1} vs ${d.p2}`;
+                    if (mpRole === 'p1' && !mpRunning) { mpRunning = true; mpState = newPongState(); mpGameLoop(); }
+                }
+                if (d.scoreLeft !== undefined) document.getElementById('mp-score-left').textContent  = d.scoreLeft;
+                if (d.scoreRight!== undefined) document.getElementById('mp-score-right').textContent = d.scoreRight;
+                // Sync state from Firebase (p2 reads, p1 writes)
+                if (mpRole === 'p2' && d.ball && d.leftY !== undefined) {
+                    const s = { ball:{...d.ball}, left:{y:d.leftY}, right:{y:d.rightY||0},
+                                score:{left:d.scoreLeft||0,right:d.scoreRight||0}, paused:false };
+                    renderPong(mpCtx, s);
+                }
+            });
+        }
+
+        function mpGameLoop() {
+            if (mpRole !== 'p1' || !mpRunning) return;
+            const speed = 4;
+            let leftY  = mpState ? mpState.left.y : PONG_H/2-PADDLE_H/2;
+            let rightY = mpState ? mpState.right.y: PONG_H/2-PADDLE_H/2;
+            if (keysDown['w']||keysDown['W']) leftY -= speed;
+            if (keysDown['s']||keysDown['S']) leftY += speed;
+            if (keysDown['ArrowUp'])   rightY -= speed;
+            if (keysDown['ArrowDown']) rightY += speed;
+            mpState = pongTick(mpState || newPongState(), leftY, rightY);
+            firebase.database().ref(`${MP_BASE}/${mpRoomId}`).update({
+                ball: mpState.ball, leftY: mpState.left.y, rightY: mpState.right.y,
+                scoreLeft: mpState.score.left, scoreRight: mpState.score.right
+            });
+            renderPong(mpCtx, mpState);
+            mpRafId = requestAnimationFrame(mpGameLoop);
+        }
+
+        function renderPong(c, s) {
+            c.fillStyle = '#000'; c.fillRect(0,0,PONG_W,PONG_H);
+            c.setLineDash([8,8]); c.strokeStyle='#222'; c.lineWidth=2;
+            c.beginPath(); c.moveTo(PONG_W/2,0); c.lineTo(PONG_W/2,PONG_H); c.stroke();
+            c.setLineDash([]);
+            c.fillStyle='#fff';
+            c.fillRect(0,s.left.y,PADDLE_W,PADDLE_H);
+            c.fillRect(PONG_W-PADDLE_W,s.right.y,PADDLE_W,PADDLE_H);
+            c.beginPath(); c.arc(s.ball.x,s.ball.y,BALL_R,0,Math.PI*2); c.fill();
+        }
+
+        // Initial render
+        render(state);
+    </script>
+</body>
+</html>

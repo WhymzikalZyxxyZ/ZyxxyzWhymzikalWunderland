@@ -1,7 +1,17 @@
-const ADJS  = ['Cosmic','Neon','Velvet','Funky','Mystic','Jazzy','Quirky','Sneaky',
-                'Zesty','Fuzzy','Glitchy','Lunar','Tangy','Wobbly','Spiffy'];
-const NOUNS = ['Penguin','Wizard','Pickle','Comet','Noodle','Goblin','Muffin','Platypus',
-                'Biscuit','Cactus','Gnome','Waffle','Ferret','Pebble','Sprocket'];
+const ADJS  = [
+    'Velvet','Silken','Crimson','Midnight','Scarlet','Mystic','Ethereal',
+    'Obsidian','Amber','Ivory','Alluring','Bewitching','Enchanting','Elusive',
+    'Gossamer','Haunting','Languid','Luminous','Smoldering','Dreamy',
+    'Whimsical','Capricious','Shimmering','Radiant','Mesmerizing','Dazzling',
+    'Willowy','Gleaming','Fathomless','Starlit','Sapphire','Roseate','Dusky'
+];
+const NOUNS = [
+    'Siren','Phantom','Enchantress','Reverie','Whisper','Eclipse','Mirage',
+    'Temptress','Wanderer','Dreamer','Specter','Sylph','Wraith','Veil',
+    'Ember','Flame','Shadow','Stardust','Moonbeam','Cascade','Zephyr',
+    'Chimera','Oracle','Muse','Raven','Lotus','Orchid','Seraph','Nymph',
+    'Luminary','Belladonna','Solstice','Valkyrie','Circe','Selene'
+];
 
 function genUsername() {
     const adj  = ADJS[Math.floor(Math.random() * ADJS.length)];
@@ -24,3 +34,4 @@ function fmtTime(ts) {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { ADJS, NOUNS, genUsername, escHtml, fmtTime };
 }
+

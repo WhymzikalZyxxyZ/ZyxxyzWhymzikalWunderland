@@ -12,7 +12,11 @@
   },
   "overrides": [
     {
-      "files": ["js/tetris-engine.js", "js/snake-engine.js", "js/forum-utils.js"],
+      "files": [
+        "js/tetris-engine.js", "js/snake-engine.js", "js/forum-utils.js",
+        "js/username-gen.js",  "js/rps-engine.js",   "js/pong-engine.js",
+        "js/puzzle-engine.js", "js/chess-engine.js",  "js/checkers-engine.js"
+      ],
       "env": { "browser": false, "node": true }
     },
     {
