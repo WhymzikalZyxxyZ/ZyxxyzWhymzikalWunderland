@@ -74,8 +74,8 @@ describe('snakeTick', () => {
         const board = [
             { x: 5, y: 5 }, { x: 6, y: 5 }, { x: 6, y: 6 }, { x: 5, y: 6 }, { x: 4, y: 6 }
         ];
-        const up = { x: 0, y: -1 };
-        const r = snakeTick(board, up, up, { x: 15, y: 15 }, 0, 150);
+        const down = { x: 0, y: 1 };
+        const r = snakeTick(board, down, down, { x: 15, y: 15 }, 0, 150);
         expect(r.gameOver).toBe(true);
     });
     test('eating food increases score by 10', () => {

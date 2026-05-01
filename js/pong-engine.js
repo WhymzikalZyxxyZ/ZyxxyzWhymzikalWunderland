@@ -43,26 +43,7 @@ function pongTick(state, leftY, rightY) {
     if (b.y - BALL_R <= 0)         { b.y = BALL_R;          b.vy = Math.abs(b.vy); }
     if (b.y + BALL_R >= PONG_H)    { b.y = PONG_H - BALL_R; b.vy = -Math.abs(b.vy); }
 
-    // Left paddle collision
-    if (b.vx < 0 && b.x - BALL_R <= PADDLE_W && b.y >= lY && b.y <= lY + PADDLE_H) {
-        b.x  = PADDLE_W + BALL_R;
-        const off = hitOffset(b, lY);
-        const spd = Math.min(Math.sqrt(b.vx * b.vx + b.vy * b.vy) + 0.3, 18);
-        b.vx = Math.abs(spd * Math.cos(off * Math.PI / 4));
-        b.vy = spd * Math.sin(off * Math.PI / 3);
-    }
-
-    // Right paddle collision
-    if (b.vx > 0 && b.x + BALL_R >= PONG_W - PADDLE_W &&
-            b.y >= rY && b.y <= rY + PADDLE_H) {
-        b.x  = PONG_W - PADDLE_W - BALL_R;
-        const off = hitOffset(b, rY);
-        const spd = Math.min(Math.sqrt(b.vx * b.vx + b.vy * b.vy) + 0.3, 18);
-        b.vx = -Math.abs(spd * Math.cos(off * Math.PI / 4));
-        b.vy = spd * Math.sin(off * Math.PI / 3);
-    }
-
-    // Score: ball exits left or right
+    // Score: ball exits left or right — checked before paddle so a goal always counts
     let scored = null;
     if (b.x - BALL_R < 0) {
         scored = 'right';
@@ -72,6 +53,25 @@ function pongTick(state, leftY, rightY) {
         scored = 'left';
         sc.left = Math.min(sc.left + 1, PONG_MAX_SCORE);
         Object.assign(b, resetBall(1));
+    }
+
+    // Left paddle collision
+    if (!scored && b.vx < 0 && b.x - BALL_R <= PADDLE_W && b.y >= lY && b.y <= lY + PADDLE_H) {
+        b.x  = PADDLE_W + BALL_R;
+        const off = hitOffset(b, lY);
+        const spd = Math.min(Math.sqrt(b.vx * b.vx + b.vy * b.vy) + 0.3, 18);
+        b.vx = Math.abs(spd * Math.cos(off * Math.PI / 4));
+        b.vy = spd * Math.sin(off * Math.PI / 3);
+    }
+
+    // Right paddle collision
+    if (!scored && b.vx > 0 && b.x + BALL_R >= PONG_W - PADDLE_W &&
+            b.y >= rY && b.y <= rY + PADDLE_H) {
+        b.x  = PONG_W - PADDLE_W - BALL_R;
+        const off = hitOffset(b, rY);
+        const spd = Math.min(Math.sqrt(b.vx * b.vx + b.vy * b.vy) + 0.3, 18);
+        b.vx = -Math.abs(spd * Math.cos(off * Math.PI / 4));
+        b.vy = spd * Math.sin(off * Math.PI / 3);
     }
 
     return { ball: b, left: { y: lY }, right: { y: rY }, score: sc, paused: false, scored };

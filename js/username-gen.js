@@ -18,7 +18,7 @@ const SULTRY_NOUNS = [
     'Cascade','Zephyr','Tempest','Revenant','Chimera','Oracle','Muse',
     'Raven','Serpent','Panther','Lotus','Orchid','Dahlia','Seraph','Nymph',
     'Luminary','Stargazer','Belladonna','Solstice','Equinox','Amaranth',
-    'Foxglove','Wraith','Wanderlust','Specter','Valkyrie','Circe','Calypso',
+    'Foxglove','Elara','Wanderlust','Nimue','Valkyrie','Circe','Calypso',
     'Selene','Isolde','Ariadne','Thessaly'
 ];
 
