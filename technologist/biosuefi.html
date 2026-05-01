@@ -2,32 +2,940 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>About ZYXXYZ's Whymzykal Wunderland!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIOS &amp; UEFI — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
+    <style>
+        /* ── Page layout ── */
+        #bios-page { max-width:860px; margin:0 auto; padding:0 16px 80px; }
+
+        .section-panel {
+            background:rgba(0,0,0,0.75); border:1px solid #2a2a2a;
+            border-radius:12px; padding:22px; margin-bottom:18px;
+        }
+        .section-title {
+            font-family:'Courier New',monospace; font-size:11px; letter-spacing:3px;
+            text-transform:uppercase; color:#f4a261;
+            border-bottom:1px solid #2a2a2a; padding-bottom:8px; margin:0 0 18px;
+        }
+        .prose { font-family:'Courier New',monospace; font-size:13px; color:#bbb; line-height:1.7; }
+        .prose p  { margin:0 0 12px; }
+        .prose ul { margin:0 0 12px; padding-left:20px; }
+        .prose li { margin-bottom:5px; }
+
+        /* ── Glossary hover terms ── */
+        .term {
+            color:#f4a261; text-decoration:underline dotted; cursor:help;
+            position:relative; display:inline-block;
+        }
+        .term::after {
+            content: attr(data-def);
+            position:absolute; bottom:calc(100% + 6px); left:50%;
+            transform:translateX(-50%);
+            background:#0d1117; color:#ccc; padding:9px 13px;
+            border-radius:7px; border:1px solid #f4a261;
+            font-size:11px; line-height:1.5; width:280px; white-space:normal;
+            text-decoration:none; display:none; z-index:200;
+            font-family:'Courier New',monospace; pointer-events:none;
+            box-shadow:0 4px 16px rgba(0,0,0,0.7);
+        }
+        .term:hover::after { display:block; }
+
+        /* ── Code blocks ── */
+        .code-block {
+            background:#0d1117; border:1px solid #2a2a2a; border-radius:7px;
+            padding:14px 16px; margin:12px 0; overflow-x:auto;
+            font-family:'Courier New',monospace; font-size:12px; color:#8ec07c;
+            line-height:1.6; tab-size:4;
+        }
+        .code-block .comment { color:#5c6370; }
+        .code-block .kw  { color:#c678dd; }
+        .code-block .reg { color:#61afef; }
+        .code-block .num { color:#d19a66; }
+        .code-block .lbl { color:#e5c07b; }
+
+        /* ── Tutorial steps (accordion) ── */
+        .step-header {
+            display:flex; justify-content:space-between; align-items:center;
+            cursor:pointer; padding:10px 0; user-select:none;
+        }
+        .step-header:hover .step-num { color:#fff; }
+        .step-num {
+            font-family:'Courier New',monospace; font-size:11px; letter-spacing:2px;
+            color:#f4a261; text-transform:uppercase;
+        }
+        .step-arrow { color:#555; font-size:14px; transition:transform 0.2s; }
+        .step-arrow.open { transform:rotate(90deg); }
+        .step-body { display:none; padding-top:8px; }
+        .step-body.open { display:block; }
+        .step-divider { border:none; border-top:1px solid #1e1e1e; margin:4px 0; }
+
+        /* ── BIOS Emulator ── */
+        #emu-wrap {
+            background:#000; border:3px solid #444; border-radius:8px;
+            overflow:hidden; font-family:'Courier New',monospace; font-size:13px;
+            line-height:1.45; outline:none;
+        }
+        #emu-inner { min-height:340px; padding:0; position:relative; }
+
+        /* POST screen */
+        #post-screen {
+            background:#000; color:#aaa; padding:16px 20px;
+            min-height:340px;
+        }
+        #post-output { white-space:pre-wrap; }
+        .post-ok    { color:#4caf50; }
+        .post-warn  { color:#f4a261; }
+        .post-info  { color:#61afef; }
+        .post-blink { animation:blink 0.8s step-end infinite; }
+        @keyframes blink { 0%,100%{ opacity:1; } 50%{ opacity:0; } }
+
+        /* Setup screen */
+        #setup-screen {
+            display:none;
+            background:#00007f; color:#fff;
+            min-height:340px; padding:0;
+        }
+        #setup-header {
+            background:#00007f; color:#fff; text-align:center;
+            padding:4px 0; border-bottom:1px solid #5555ff; font-size:12px;
+            letter-spacing:1px;
+        }
+        .setup-tabs {
+            display:flex; background:#0000aa; border-bottom:1px solid #5555ff;
+        }
+        .setup-tab {
+            flex:1; text-align:center; padding:5px 0; font-size:12px;
+            cursor:pointer; color:#aaa; border-right:1px solid #5555ff;
+        }
+        .setup-tab.active { background:#00007f; color:#ffff55; font-weight:bold; }
+        .setup-body { padding:10px 20px; min-height:240px; }
+        .setup-row {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:4px 0; cursor:default;
+        }
+        .setup-row.focused { background:#00aaaa; color:#000; }
+        .setup-row .label { color:inherit; }
+        .setup-row .value { color:#ffff55; }
+        .setup-row.focused .value { color:#000; }
+        .setup-row.readonly .value { color:#aaa; }
+        .setup-row.readonly.focused .value { color:#555; }
+        .setup-section { color:#aaaaff; margin:8px 0 4px; font-size:11px;
+            letter-spacing:1px; border-bottom:1px solid #0000ff; }
+        .setup-footer {
+            background:#0000aa; border-top:1px solid #5555ff;
+            padding:5px 20px; font-size:11px; color:#aaa;
+            display:flex; gap:20px; flex-wrap:wrap;
+        }
+        .setup-key { color:#ffff55; }
+
+        /* Emulator controls */
+        .emu-controls {
+            display:flex; gap:8px; align-items:center; margin-bottom:10px;
+            flex-wrap:wrap;
+        }
+        .emu-btn {
+            background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15);
+            color:#bbb; border-radius:5px; padding:6px 14px;
+            font-family:'Courier New',monospace; font-size:11px; cursor:pointer;
+        }
+        .emu-btn:hover  { border-color:#f4a261; color:#fff; }
+        .emu-btn.accent { background:#f4a261; border-color:#f4a261; color:#111; font-weight:bold; }
+        .emu-hint {
+            font-family:'Courier New',monospace; font-size:11px; color:#555;
+        }
+
+        /* Info callout */
+        .callout {
+            background:rgba(97,175,239,0.08); border-left:3px solid #61afef;
+            border-radius:0 6px 6px 0; padding:10px 14px; margin:12px 0;
+            font-family:'Courier New',monospace; font-size:12px; color:#9ec8e8;
+            line-height:1.6;
+        }
+        .callout.warn {
+            background:rgba(244,162,97,0.08); border-color:#f4a261; color:#d4a96a;
+        }
+    </style>
 </head>
 <body class="notYetBody">
-
-    <h2>Zyxxyz, the firmest booty of the wares</h2>
-    <br />
-
-    <!-- Navigation Bar -->
+    <h2>Zyxxyz, the Firmest Booty of the Wares</h2>
     <div class="navbar">
-        <a href="../../index.html">Home</a>
-        <a href="../../technologist/apps.html">Apps</a>
-        <a href="../../technologist/bioseufi.html">BIOS/UEFI</a>
-        <a href="../../technologist/computerengineering.html">Computer Engineering</a>
-        <a href="../../technologist/software.html">Software</a>
-        <a href="../../technologist/systemoperator.html">System Operator</a>
+        <a href="../index.html">Home</a>
+        <a href="../technologist/apps.html">Apps</a>
+        <a href="../technologist/biosuefi.html">BIOS/UEFI</a>
+        <a href="../technologist/computerengineering.html">Computer Engineering</a>
+        <a href="../technologist/software.html">Software</a>
+        <a href="../technologist/systemoperator.html">System Operator</a>
     </div>
 
-    <!-- Removed the <img> tag here as it's no longer needed -->
-    <div class="banner"></div> <!-- Placeholder for your logo as background -->
+    <div id="bios-page">
 
-    <br>
-    <p id="demo">ZYXXYZ</p>
+        <!-- ── Introduction ─────────────────────────────────────────────────── -->
+        <div class="section-panel">
+            <div class="section-title">What is BIOS / UEFI?</div>
+            <div class="prose">
+                <p>
+                    <span class="term" data-def="Basic Input/Output System — the original firmware standard built into a PC's motherboard chip. It initializes hardware and loads the operating system.">BIOS</span>
+                    (Basic Input/Output System) is the first code that runs when you power on a computer.
+                    It lives in a small <span class="term" data-def="Read-Only Memory — a type of non-volatile storage whose contents survive a power-off. Firmware is burned into ROM (or flash ROM) on the motherboard.">ROM</span>
+                    chip on the <span class="term" data-def="The main circuit board of a computer. It connects the CPU, RAM, storage, and all other components.">motherboard</span>
+                    and handles three jobs before anything else can happen:
+                </p>
+                <ul>
+                    <li>
+                        <strong>Initialise</strong> every piece of hardware —
+                        <span class="term" data-def="Central Processing Unit — the main chip that executes instructions. It performs arithmetic, logic, and control operations.">CPU</span>,
+                        <span class="term" data-def="Random-Access Memory — fast, volatile memory used by the CPU to store running programs and data. Contents are lost when power is removed.">RAM</span>,
+                        storage controllers, USB, video.
+                    </li>
+                    <li>
+                        <strong>Run the <span class="term" data-def="Power-On Self Test — a diagnostic routine that checks CPU registers, RAM, keyboard, storage and other hardware are present and working before the OS loads.">POST</span></strong>
+                        to verify hardware is healthy.
+                    </li>
+                    <li>
+                        <strong>Hand control to the bootloader</strong> found on your storage device.
+                    </li>
+                </ul>
+                <p>
+                    Modern systems replace the old BIOS with
+                    <span class="term" data-def="Unified Extensible Firmware Interface — the modern replacement for BIOS. It supports drives larger than 2 TB, has a graphical menu, mouse support, Secure Boot, and loads much faster.">UEFI</span>,
+                    which adds a graphical menu, network stack, driver model, and
+                    <span class="term" data-def="A UEFI feature that only allows operating systems signed with a trusted cryptographic key to boot, preventing rootkits from loading before the OS.">Secure Boot</span>.
+                    Both serve the same fundamental purpose — just with very different implementations.
+                </p>
+            </div>
+        </div>
 
-    <button type="button" onclick="navigateToPage('../../index.html')">E.T. Phone Home!</button>
+        <!-- ── Tutorial ─────────────────────────────────────────────────────── -->
+        <div class="section-panel">
+            <div class="section-title">Tutorial — Building a Basic BIOS</div>
+            <div class="callout">
+                This guide walks through the actual mechanics of a minimal x86 BIOS in
+                <span class="term" data-def="A low-level programming language that uses human-readable mnemonics (like MOV, JMP, INT) to represent the exact machine instructions a CPU understands. Each line corresponds to roughly one CPU instruction.">assembly language</span>.
+                You do not need to compile or flash anything — use the emulator below to follow along interactively.
+            </div>
 
+            <!-- Step 1 -->
+            <div>
+                <div class="step-header" onclick="toggleStep('s1')">
+                    <span class="step-num">Step 1 — The Reset Vector</span>
+                    <span class="step-arrow" id="arrow-s1">&#9658;</span>
+                </div>
+                <hr class="step-divider">
+                <div class="step-body" id="s1">
+                    <div class="prose">
+                        <p>
+                            When power is applied, the
+                            <span class="term" data-def="Central Processing Unit. On x86 systems, the very first instruction executed after reset is always fetched from address 0xFFFFFFF0 (in 32-bit protected mode) or 0xFFFF0 in real mode.">CPU</span>
+                            always begins execution at a fixed address called the
+                            <strong>reset vector</strong>. On classic x86 this is
+                            <code>0xFFFF:0x0000</code> (physical address <code>0xFFFF0</code>),
+                            just 16 bytes before the top of the 1 MB address space. The BIOS ROM is
+                            mapped here so the very first instruction the CPU fetches is your code.
+                        </p>
+                        <p>
+                            That 16-byte gap is too small for real code, so the reset vector is
+                            always a far jump into the main body of the BIOS:
+                        </p>
+                    </div>
+                    <div class="code-block">
+<span class="comment">; Assembled to load at 0xF0000 in the ROM image</span>
+<span class="comment">; CPU starts in 16-bit Real Mode after reset</span>
+
+<span class="kw">BITS</span> <span class="num">16</span>
+<span class="kw">ORG</span>  <span class="num">0xFFFF0</span>            <span class="comment">; reset vector location</span>
+
+<span class="lbl">reset_vector:</span>
+    <span class="kw">jmp</span>  <span class="num">0xF000</span>:<span class="lbl">bios_main</span>  <span class="comment">; far jump to BIOS start</span>
+    <span class="kw">nop</span>
+
+<span class="comment">; ── Main BIOS entry point ──────────────────────────────────</span>
+<span class="kw">ORG</span> <span class="num">0xF0000</span>
+
+<span class="lbl">bios_main:</span>
+    <span class="kw">cli</span>                    <span class="comment">; disable interrupts while we initialise</span>
+    <span class="kw">cld</span>                    <span class="comment">; clear direction flag (string ops go forward)</span>
+
+    <span class="comment">; zero all segment registers</span>
+    <span class="kw">xor</span>  <span class="reg">ax</span>, <span class="reg">ax</span>
+    <span class="kw">mov</span>  <span class="reg">ds</span>, <span class="reg">ax</span>
+    <span class="kw">mov</span>  <span class="reg">es</span>, <span class="reg">ax</span>
+    <span class="kw">mov</span>  <span class="reg">ss</span>, <span class="reg">ax</span>
+    <span class="kw">mov</span>  <span class="reg">sp</span>, <span class="num">0x7C00</span>        <span class="comment">; temporary stack below the boot sector</span>
+                    </div>
+                    <div class="callout">
+                        <strong>Real Mode</strong> — after reset the CPU is in
+                        <span class="term" data-def="The default CPU mode after power-on. Memory is addressed as segment:offset giving a 20-bit (1 MB) address space. No memory protection, no virtual addressing. All early BIOS code runs here.">Real Mode</span>,
+                        a legacy compatibility state where only 1 MB of RAM is reachable and
+                        there is no memory protection. BIOS runs entirely in this mode; it hands
+                        <span class="term" data-def="Protected Mode — a CPU mode (introduced with the 80286) that enables a 32-bit address space, memory protection, virtual memory and multitasking. Modern OSes switch into this during boot.">Protected Mode</span>
+                        off to the operating system bootloader later.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div>
+                <div class="step-header" onclick="toggleStep('s2')">
+                    <span class="step-num">Step 2 — Initialise the PIT and PIC</span>
+                    <span class="step-arrow" id="arrow-s2">&#9658;</span>
+                </div>
+                <hr class="step-divider">
+                <div class="step-body" id="s2">
+                    <div class="prose">
+                        <p>
+                            Before any timed or interrupt-driven code can run, the BIOS must
+                            configure two essential chips:
+                        </p>
+                        <ul>
+                            <li>
+                                The <span class="term" data-def="Programmable Interval Timer (Intel 8253/8254 compatible). Generates periodic hardware interrupts (IRQ 0) at a configurable frequency. BIOS sets it to ~18.2 Hz for the system clock tick.">PIT</span>
+                                — generates the system clock tick (IRQ 0) and drives timing.
+                            </li>
+                            <li>
+                                The <span class="term" data-def="Programmable Interrupt Controller (Intel 8259A). Manages hardware interrupt requests (IRQs) from devices like keyboard (IRQ 1), disk (IRQ 6/14), and routes them to the CPU.">PIC</span>
+                                — routes hardware
+                                <span class="term" data-def="Interrupt Request — a signal a hardware device sends to the CPU to request immediate attention (e.g., a key was pressed, disk transfer finished). The PIC prioritises and delivers these.">IRQ</span>s
+                                from devices to the CPU.
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="code-block">
+<span class="lbl">init_pit:</span>
+    <span class="comment">; Channel 0, mode 3 (square wave), 18.2 Hz</span>
+    <span class="kw">mov</span>  <span class="reg">al</span>, <span class="num">0x36</span>          <span class="comment">; control word: ch0, lo/hi byte, mode 3</span>
+    <span class="kw">out</span>  <span class="num">0x43</span>, <span class="reg">al</span>          <span class="comment">; PIT command port</span>
+    <span class="kw">mov</span>  <span class="reg">ax</span>, <span class="num">0xFFFF</span>         <span class="comment">; divisor = 65535 → ~18.2 Hz</span>
+    <span class="kw">out</span>  <span class="num">0x40</span>, <span class="reg">al</span>          <span class="comment">; low byte → PIT channel 0</span>
+    <span class="kw">mov</span>  <span class="reg">al</span>, <span class="reg">ah</span>
+    <span class="kw">out</span>  <span class="num">0x40</span>, <span class="reg">al</span>          <span class="comment">; high byte</span>
+    <span class="kw">ret</span>
+
+<span class="lbl">init_pic:</span>
+    <span class="comment">; ICW1 — cascade mode, edge-triggered, ICW4 needed</span>
+    <span class="kw">mov</span>  <span class="reg">al</span>, <span class="num">0x11</span>
+    <span class="kw">out</span>  <span class="num">0x20</span>, <span class="reg">al</span>          <span class="comment">; master PIC command</span>
+    <span class="kw">out</span>  <span class="num">0xA0</span>, <span class="reg">al</span>          <span class="comment">; slave PIC command</span>
+    <span class="comment">; ICW2 — remap IRQ vectors (avoid conflict with CPU exceptions)</span>
+    <span class="kw">mov</span>  <span class="reg">al</span>, <span class="num">0x08</span>          <span class="comment">; master IRQ 0-7 → INT 0x08-0x0F</span>
+    <span class="kw">out</span>  <span class="num">0x21</span>, <span class="reg">al</span>
+    <span class="kw">mov</span>  <span class="reg">al</span>, <span class="num">0x70</span>          <span class="comment">; slave  IRQ 8-15 → INT 0x70-0x77</span>
+    <span class="kw">out</span>  <span class="num">0xA1</span>, <span class="reg">al</span>
+    <span class="comment">; ICW3, ICW4 (cascade wiring, 8086 mode) …</span>
+    <span class="kw">ret</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div>
+                <div class="step-header" onclick="toggleStep('s3')">
+                    <span class="step-num">Step 3 — Memory Test (POST)</span>
+                    <span class="step-arrow" id="arrow-s3">&#9658;</span>
+                </div>
+                <hr class="step-divider">
+                <div class="step-body" id="s3">
+                    <div class="prose">
+                        <p>
+                            The <span class="term" data-def="Power-On Self Test — the BIOS diagnostic that checks RAM, CPU, keyboard controller, and other hardware before handing off to the bootloader. A long beep sequence instead of normal boot usually means POST detected a fault.">POST</span>
+                            memory test writes a pattern to each memory cell and reads it back.
+                            Bad cells get flagged and subtracted from the usable total. The BIOS also
+                            establishes the
+                            <span class="term" data-def="BIOS Data Area — a 256-byte region at 0x0400–0x04FF in RAM reserved by the BIOS to store runtime data: keyboard buffer, number of drives, serial port addresses, and more.">BDA</span>
+                            (BIOS Data Area) at address <code>0x0400</code>.
+                        </p>
+                    </div>
+                    <div class="code-block">
+<span class="lbl">post_memory_test:</span>
+    <span class="kw">mov</span>  <span class="reg">cx</span>, <span class="num">0x0400</span>         <span class="comment">; start checking from 1 KB (skip IVT+BDA)</span>
+    <span class="kw">mov</span>  <span class="reg">bx</span>, <span class="num">0x9FFF</span>         <span class="comment">; end of conventional RAM (640 KB mark)</span>
+
+<span class="lbl">.loop:</span>
+    <span class="kw">mov</span>  <span class="reg">word</span> [<span class="reg">cx</span>], <span class="num">0xAA55</span>   <span class="comment">; write test pattern</span>
+    <span class="kw">cmp</span>  <span class="reg">word</span> [<span class="reg">cx</span>], <span class="num">0xAA55</span>   <span class="comment">; read it back</span>
+    <span class="kw">jne</span>  <span class="lbl">.bad_cell</span>
+    <span class="kw">add</span>  <span class="reg">cx</span>, <span class="num">2</span>
+    <span class="kw">cmp</span>  <span class="reg">cx</span>, <span class="reg">bx</span>
+    <span class="kw">jbe</span>  <span class="lbl">.loop</span>
+    <span class="kw">ret</span>                    <span class="comment">; all cells passed</span>
+
+<span class="lbl">.bad_cell:</span>
+    <span class="comment">; record faulty address in BDA, optionally beep</span>
+    <span class="kw">jmp</span>  <span class="lbl">halt_system</span>       <span class="comment">; fatal error</span>
+                    </div>
+                    <div class="callout warn">
+                        Real BIOSes also initialise the
+                        <span class="term" data-def="Interrupt Vector Table — the first 1 KB of RAM (0x0000–0x03FF). Stores 256 four-byte entries, each a segment:offset address pointing to the handler for that interrupt number.">IVT</span>
+                        before testing RAM so that fault handlers can produce beep codes during
+                        the test. The order matters: IVT → PIC → PIT → RAM test → hardware
+                        detection → set services → boot.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div>
+                <div class="step-header" onclick="toggleStep('s4')">
+                    <span class="step-num">Step 4 — The Interrupt Vector Table</span>
+                    <span class="step-arrow" id="arrow-s4">&#9658;</span>
+                </div>
+                <hr class="step-divider">
+                <div class="step-body" id="s4">
+                    <div class="prose">
+                        <p>
+                            The <span class="term" data-def="Interrupt Vector Table — the first 1 KB of RAM. 256 entries × 4 bytes = 1024 bytes at address 0x0000. Each entry is a segment:offset pair pointing to the interrupt handler.">IVT</span>
+                            at address <code>0x0000</code> maps interrupt numbers to handler routines.
+                            The BIOS populates it with its own service routines — for example:
+                        </p>
+                        <ul>
+                            <li><code>INT 0x10</code> — Video services (print character, set mode)</li>
+                            <li><code>INT 0x13</code> — Disk services (read/write sectors)</li>
+                            <li><code>INT 0x16</code> — Keyboard services (read key, check buffer)</li>
+                            <li><code>INT 0x1A</code> — <span class="term" data-def="Real-Time Clock — a battery-backed chip (typically Motorola MC146818) that keeps the current date and time even when the PC is powered off. The BIOS reads it at boot and stores values in the BDA.">RTC</span> / time services</li>
+                        </ul>
+                    </div>
+                    <div class="code-block">
+<span class="lbl">init_ivt:</span>
+    <span class="comment">; Each IVT entry = 4 bytes: offset (2) + segment (2)</span>
+    <span class="comment">; INT 0x10 lives at IVT[0x10] = address 0x0040</span>
+
+    <span class="kw">mov</span>  <span class="reg">word</span> [<span class="num">0x0040</span>], <span class="lbl">int10_handler</span>  <span class="comment">; offset</span>
+    <span class="kw">mov</span>  <span class="reg">word</span> [<span class="num">0x0042</span>], <span class="num">0xF000</span>          <span class="comment">; segment (BIOS ROM segment)</span>
+
+    <span class="kw">mov</span>  <span class="reg">word</span> [<span class="num">0x004C</span>], <span class="lbl">int13_handler</span>
+    <span class="kw">mov</span>  <span class="reg">word</span> [<span class="num">0x004E</span>], <span class="num">0xF000</span>
+
+    <span class="kw">mov</span>  <span class="reg">word</span> [<span class="num">0x0058</span>], <span class="lbl">int16_handler</span>
+    <span class="kw">mov</span>  <span class="reg">word</span> [<span class="num">0x005A</span>], <span class="num">0xF000</span>
+
+    <span class="kw">sti</span>                                 <span class="comment">; enable interrupts now IVT is ready</span>
+    <span class="kw">ret</span>
+
+<span class="comment">; ── Example: INT 0x10 AH=0x0E (teletype print) ──────────────</span>
+<span class="lbl">int10_handler:</span>
+    <span class="kw">cmp</span>  <span class="reg">ah</span>, <span class="num">0x0E</span>          <span class="comment">; teletype output?</span>
+    <span class="kw">jne</span>  <span class="lbl">.done</span>
+    <span class="kw">out</span>  <span class="num">0x3F8</span>, <span class="reg">al</span>         <span class="comment">; write char to first serial port (for debug)</span>
+    <span class="comment">; … real code writes to VGA framebuffer at 0xB8000 …</span>
+<span class="lbl">.done:</span>
+    <span class="kw">iret</span>                   <span class="comment">; Interrupt RETurn — restores flags, CS, IP</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5 -->
+            <div>
+                <div class="step-header" onclick="toggleStep('s5')">
+                    <span class="step-num">Step 5 — The A20 Line</span>
+                    <span class="step-arrow" id="arrow-s5">&#9658;</span>
+                </div>
+                <hr class="step-divider">
+                <div class="step-body" id="s5">
+                    <div class="prose">
+                        <p>
+                            One of the quirkiest parts of x86 history: the
+                            <span class="term" data-def="Address line 20 — the 21st bit of the physical memory address bus. On the original IBM PC the 8088 CPU had only 20 address lines, so addresses above 1 MB wrapped around to 0. When the 286 added a 24-bit bus, IBM wired line A20 through the keyboard controller to maintain backwards compatibility. Enabling A20 lets you address above 1 MB.">A20 gate</span>.
+                            Early PCs had only 20 address lines; addresses above 1 MB wrapped
+                            silently back to 0. When Intel added the 21st address line with the
+                            286, this wrap-around behaviour was controlled by toggling a bit in
+                            the keyboard controller, of all places.
+                        </p>
+                        <p>
+                            The BIOS must enable A20 before switching the CPU to
+                            <span class="term" data-def="Protected Mode — the 32-bit CPU mode that enables memory protection, larger address space, and multitasking. The OS switches into this mode. Requires a valid GDT and A20 enabled.">Protected Mode</span>,
+                            otherwise memory accesses above 1 MB silently fail.
+                        </p>
+                    </div>
+                    <div class="code-block">
+<span class="lbl">enable_a20:</span>
+    <span class="comment">; Fast A20 method (port 0x92, works on most modern hardware)</span>
+    <span class="kw">in</span>   <span class="reg">al</span>, <span class="num">0x92</span>
+    <span class="kw">or</span>   <span class="reg">al</span>, <span class="num">0x02</span>          <span class="comment">; set bit 1 = enable A20</span>
+    <span class="kw">and</span>  <span class="reg">al</span>, <span class="num">0xFE</span>          <span class="comment">; clear bit 0 (do not reset!)</span>
+    <span class="kw">out</span>  <span class="num">0x92</span>, <span class="reg">al</span>
+    <span class="kw">ret</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 6 -->
+            <div>
+                <div class="step-header" onclick="toggleStep('s6')">
+                    <span class="step-num">Step 6 — Boot Device Detection</span>
+                    <span class="step-arrow" id="arrow-s6">&#9658;</span>
+                </div>
+                <hr class="step-divider">
+                <div class="step-body" id="s6">
+                    <div class="prose">
+                        <p>
+                            After POST the BIOS checks each device in the configured boot order
+                            for a valid
+                            <span class="term" data-def="Master Boot Record — the first 512-byte sector of a bootable disk. Contains a small bootstrap program and the partition table. A valid MBR ends with the signature bytes 0x55 0xAA.">MBR</span>
+                            or
+                            <span class="term" data-def="GUID Partition Table — the modern partition format used by UEFI systems. Supports up to 128 partitions and drives larger than 2 TB. Replaces MBR on UEFI systems.">GPT</span>
+                            partition table. Classic BIOS looks for the two-byte signature
+                            <code>0x55 0xAA</code> at the end of the first sector:
+                        </p>
+                    </div>
+                    <div class="code-block">
+<span class="lbl">find_boot_device:</span>
+    <span class="comment">; Try each drive in the BIOS boot order (stored in CMOS)</span>
+    <span class="kw">mov</span>  <span class="reg">dl</span>, <span class="num">0x80</span>          <span class="comment">; first hard disk (0x80 = HDD, 0x00 = floppy)</span>
+
+<span class="lbl">.try_disk:</span>
+    <span class="comment">; INT 13h, AH=02h — read sector</span>
+    <span class="kw">mov</span>  <span class="reg">ah</span>, <span class="num">0x02</span>          <span class="comment">; function: read sectors</span>
+    <span class="kw">mov</span>  <span class="reg">al</span>, <span class="num">0x01</span>          <span class="comment">; sector count: 1 (512 bytes)</span>
+    <span class="kw">mov</span>  <span class="reg">ch</span>, <span class="num">0x00</span>          <span class="comment">; cylinder 0</span>
+    <span class="kw">mov</span>  <span class="reg">cl</span>, <span class="num">0x01</span>          <span class="comment">; sector 1 (1-indexed)</span>
+    <span class="kw">mov</span>  <span class="reg">dh</span>, <span class="num">0x00</span>          <span class="comment">; head 0</span>
+    <span class="kw">mov</span>  <span class="reg">bx</span>, <span class="num">0x7C00</span>        <span class="comment">; load to 0x0000:0x7C00</span>
+    <span class="kw">int</span>  <span class="num">0x13</span>              <span class="comment">; call BIOS disk service</span>
+    <span class="kw">jc</span>   <span class="lbl">.next_disk</span>        <span class="comment">; carry set = error, try next</span>
+
+    <span class="comment">; Verify MBR signature</span>
+    <span class="kw">cmp</span>  <span class="reg">word</span> [<span class="num">0x7DFE</span>], <span class="num">0xAA55</span>
+    <span class="kw">jne</span>  <span class="lbl">.next_disk</span>        <span class="comment">; no signature → not bootable</span>
+
+    <span class="comment">; Jump to bootloader</span>
+    <span class="kw">jmp</span>  <span class="num">0x0000</span>:<span class="num">0x7C00</span>
+
+<span class="lbl">.next_disk:</span>
+    <span class="kw">inc</span>  <span class="reg">dl</span>                <span class="comment">; try next drive number</span>
+    <span class="kw">cmp</span>  <span class="reg">dl</span>, <span class="num">0x82</span>          <span class="comment">; checked 2 hard disks?</span>
+    <span class="kw">jne</span>  <span class="lbl">.try_disk</span>
+    <span class="comment">; No bootable device found — print error and halt</span>
+    <span class="kw">jmp</span>  <span class="lbl">halt_system</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 7 -->
+            <div>
+                <div class="step-header" onclick="toggleStep('s7')">
+                    <span class="step-num">Step 7 — UEFI vs BIOS</span>
+                    <span class="step-arrow" id="arrow-s7">&#9658;</span>
+                </div>
+                <hr class="step-divider">
+                <div class="step-body" id="s7">
+                    <div class="prose">
+                        <p>
+                            <span class="term" data-def="Unified Extensible Firmware Interface. Developed by Intel in the early 2000s to replace BIOS. Written in C rather than assembly. Has a full driver model, network stack, and supports drives >2 TB via GPT.">UEFI</span>
+                            takes a fundamentally different approach. Instead of a tiny assembly stub
+                            crammed into a ROM chip, UEFI is a full software ecosystem written in C
+                            with a defined API called
+                            <span class="term" data-def="UEFI Boot Services and Runtime Services — the two sets of functions UEFI exposes. Boot Services (e.g., AllocatePool, LocateProtocol) are available until the OS calls ExitBootServices(). Runtime Services (GetTime, SetVariable) remain available after.">Boot/Runtime Services</span>.
+                        </p>
+                        <ul>
+                            <li>
+                                UEFI reads a
+                                <span class="term" data-def="GUID Partition Table — the partition scheme UEFI requires. Stores partition data in two places (header + backup) for redundancy, supports 128 partitions, and handles drives far larger than 2 TB.">GPT</span>
+                                partitioned disk and looks for an
+                                <span class="term" data-def="EFI System Partition — a FAT32-formatted partition containing OS bootloaders. On a UEFI machine each OS installs its .efi bootloader file here, and UEFI picks the right one from its NVRAM boot list.">ESP</span>
+                                (EFI System Partition) instead of an MBR.
+                            </li>
+                            <li>
+                                <span class="term" data-def="Secure Boot — a UEFI feature that verifies each loaded EFI binary is signed with a key in the firmware's allowed-key database. Prevents unsigned rootkits or bootloaders from executing before the OS.">Secure Boot</span>
+                                validates every
+                                <span class="term" data-def="EFI (Extensible Firmware Interface) executable — a portable binary format used by UEFI for firmware drivers and bootloaders. File extension .efi. Example: bootx64.efi is the default UEFI bootloader path on x86-64.">EFI binary</span>
+                                with a cryptographic signature before running it.
+                            </li>
+                            <li>
+                                Boot entries are stored in
+                                <span class="term" data-def="Non-Volatile RAM — flash memory on the motherboard that persists across reboots. UEFI stores boot entries (BootOrder, Boot0000, etc.) here so the firmware knows which EFI file to execute.">NVRAM</span>
+                                variables, so the firmware remembers which OS to boot without
+                                scanning every disk.
+                            </li>
+                            <li>
+                                <span class="term" data-def="Advanced Configuration and Power Interface — a standard that lets the OS and firmware cooperate on power management (sleep, hibernate, shutdown) and hardware discovery. UEFI exposes ACPI tables to the OS.">ACPI</span>
+                                tables expose hardware topology (CPU cores, power states, thermal
+                                sensors) to the operating system in a standardised way.
+                            </li>
+                        </ul>
+                        <p>
+                            The result: UEFI boots faster, supports modern hardware, and is far
+                            more extensible — but is also significantly more complex to implement
+                            from scratch.
+                        </p>
+                    </div>
+                    <div class="callout">
+                        Want to explore UEFI development?  The open-source
+                        <strong>EDK II</strong> (EFI Development Kit) from TianoCore is the
+                        reference implementation used by most motherboard vendors.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── BIOS Emulator ─────────────────────────────────────────────────── -->
+        <div class="section-panel">
+            <div class="section-title">Virtual BIOS — Interactive Emulator</div>
+            <div class="prose" style="margin-bottom:12px;">
+                <p>
+                    This emulator simulates a real BIOS setup utility. Click <strong>Power On</strong>
+                    to watch the
+                    <span class="term" data-def="Power-On Self Test — the boot-time diagnostic sequence. Checks CPU, RAM, and attached hardware. Press DEL or F2 during POST to enter the setup utility.">POST</span>
+                    sequence, then press <kbd>DEL</kbd> (or click the button) to enter the
+                    BIOS Setup menu. Use <kbd>↑↓</kbd> to navigate, <kbd>Enter</kbd> to edit,
+                    <kbd>F10</kbd> to save and exit.
+                </p>
+            </div>
+
+            <div class="emu-controls">
+                <button class="emu-btn accent" id="btn-power"   onclick="emuPower()">&#9654; Power On</button>
+                <button class="emu-btn"        id="btn-setup"   onclick="emuEnterSetup()" disabled>Enter Setup (DEL)</button>
+                <button class="emu-btn"        id="btn-restart" onclick="emuRestart()" style="display:none;">&#8635; Restart</button>
+                <span class="emu-hint" id="emu-hint">Click Power On to begin</span>
+            </div>
+
+            <div id="emu-wrap" tabindex="0" onkeydown="emuKey(event)">
+                <div id="emu-inner">
+                    <!-- POST screen -->
+                    <div id="post-screen">
+                        <div id="post-output">
+  <span style="color:#888;">── Power off. Press "Power On" to start. ──</span>
+                        </div>
+                    </div>
+
+                    <!-- Setup screen -->
+                    <div id="setup-screen">
+                        <div id="setup-header">UEFI BIOS Utility &nbsp;|&nbsp; Whymzykal Systems v1.0.0</div>
+                        <div class="setup-tabs" id="setup-tabs"></div>
+                        <div class="setup-body" id="setup-body"></div>
+                        <div class="setup-footer" id="setup-footer">
+                            <span><span class="setup-key">↑↓</span> Navigate</span>
+                            <span><span class="setup-key">Enter</span> Select/Modify</span>
+                            <span><span class="setup-key">+/–</span> Change Value</span>
+                            <span><span class="setup-key">F10</span> Save &amp; Exit</span>
+                            <span><span class="setup-key">ESC</span> Discard/Back</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <button type="button" onclick="navigateToPage('../index.html')">&#8592; Home</button>
+
+    <script>
+    // ── Tutorial accordion ──────────────────────────────────────────────────────
+    function toggleStep(id) {
+        const body  = document.getElementById(id);
+        const arrow = document.getElementById('arrow-' + id);
+        const open  = body.classList.toggle('open');
+        arrow.classList.toggle('open', open);
+    }
+
+    // ── BIOS Emulator ───────────────────────────────────────────────────────────
+    const POST_LINES = [
+        { text: '\n  UEFI BIOS v1.0.0 — Whymzykal Systems\n', cls: 'post-info', delay: 0 },
+        { text: '  Copyright (C) 2026 Whymzykal Systems. All rights reserved.\n\n', delay: 80 },
+        { text: '  CPU: Simulated x86-64 @ 3.60 GHz   Cores: 8   Threads: 16\n', cls: 'post-ok', delay: 200 },
+        { text: '  Checking RAM ', delay: 400 },
+        { text: '......', delay: 500, typing: true, typingDelay: 120 },
+        { text: '  1024 MB OK\n', cls: 'post-ok', delay: 1300 },
+        { text: '  Initialising PIC/PIT  ............  ', delay: 1500 },
+        { text: 'OK\n', cls: 'post-ok', delay: 1600 },
+        { text: '  Detecting storage:\n', delay: 1700 },
+        { text: '    NVME0: Whymzykal NVMe SSD  512 GB\n', cls: 'post-ok', delay: 1900 },
+        { text: '    SATA0: Whymzykal HDD       2 TB\n',   cls: 'post-ok', delay: 2100 },
+        { text: '    SATA1: BD-ROM Optical Drive\n',        cls: 'post-ok', delay: 2300 },
+        { text: '  Detecting USB ports  ..........  4 USB-A   2 USB-C   OK\n', cls: 'post-ok', delay: 2500 },
+        { text: '  Detecting PCIe devices:\n', delay: 2700 },
+        { text: '    Slot 1: Simulated GPU  8 GB VRAM\n',  cls: 'post-ok', delay: 2900 },
+        { text: '    Slot 2: Intel I225-V   2.5GbE NIC\n', cls: 'post-ok', delay: 3100 },
+        { text: '\n  POST complete. No errors.\n\n', cls: 'post-ok', delay: 3400 },
+        { text: '  Boot Order: 1. NVME0  2. SATA0  3. Optical  4. USB\n', delay: 3700 },
+        { text: '\n  Press [DEL] or [F2] to enter BIOS Setup\n', cls: 'post-warn', delay: 4000 },
+        { text: '  Press [F12] for one-time Boot Menu\n\n', delay: 4000 },
+        { text: '  Booting from NVME0: Whymzykal NVMe SSD', cls: 'post-info', delay: 5200 },
+        { text: '...', delay: 5300, typing: true, typingDelay: 400 },
+        { text: '\n  Loading OS bootloader...', cls: 'post-info', delay: 6600 },
+        { text: '  ✓ Handoff complete.\n', cls: 'post-ok', delay: 7200 },
+    ];
+
+    // BIOS settings model
+    const biosSettings = {
+        main: [
+            { label: 'System Time',     value: () => new Date().toTimeString().slice(0,8), editable: true, key: 'time' },
+            { label: 'System Date',     value: () => new Date().toISOString().slice(0,10),  editable: true, key: 'date' },
+            { label: '', type: 'sep' },
+            { label: 'BIOS Version',    value: () => 'v1.0.0', readonly: true },
+            { label: 'Processor',       value: () => 'Simulated x86-64 @ 3.60 GHz', readonly: true },
+            { label: 'Total Memory',    value: () => '1024 MB', readonly: true },
+            { label: '', type: 'sep' },
+            { label: 'Language',        value: () => biosState.lang,
+              options: ['English','Español','Français','Deutsch'], key: 'lang', editable: true },
+        ],
+        advanced: [
+            { label: '— CPU Configuration —', type: 'section' },
+            { label: 'Hyper-Threading',  value: () => biosState.hyperthreading, options: ['Enabled','Disabled'], key: 'hyperthreading', editable: true },
+            { label: 'Turbo Boost',      value: () => biosState.turbo,          options: ['Enabled','Disabled'], key: 'turbo', editable: true },
+            { label: '— Storage —', type: 'section' },
+            { label: 'SATA Mode',        value: () => biosState.sataMode,       options: ['AHCI','IDE','RAID'], key: 'sataMode', editable: true },
+            { label: 'NVMe Controller',  value: () => biosState.nvme,           options: ['Enabled','Disabled'], key: 'nvme', editable: true },
+            { label: '— USB —', type: 'section' },
+            { label: 'USB Legacy',       value: () => biosState.usbLegacy,      options: ['Enabled','Disabled'], key: 'usbLegacy', editable: true },
+            { label: 'USB 3.2 Gen2',     value: () => biosState.usb32,          options: ['Enabled','Disabled'], key: 'usb32', editable: true },
+        ],
+        boot: [
+            { label: '— Boot Priority —', type: 'section' },
+            { label: 'Boot Option #1',   value: () => biosState.boot1, options: ['NVME0','SATA0','Optical','USB','Disabled'], key: 'boot1', editable: true },
+            { label: 'Boot Option #2',   value: () => biosState.boot2, options: ['SATA0','NVME0','Optical','USB','Disabled'], key: 'boot2', editable: true },
+            { label: 'Boot Option #3',   value: () => biosState.boot3, options: ['Optical','SATA0','NVME0','USB','Disabled'], key: 'boot3', editable: true },
+            { label: '', type: 'sep' },
+            { label: 'Fast Boot',        value: () => biosState.fastBoot, options: ['Enabled','Disabled'], key: 'fastBoot', editable: true },
+            { label: 'POST Delay (sec)', value: () => String(biosState.postDelay), options: ['0','1','2','3','5'], key: 'postDelay', editable: true },
+        ],
+        security: [
+            { label: '— Password —', type: 'section' },
+            { label: 'Admin Password',  value: () => biosState.adminPass ? '****' : 'Not Set', editable: false, readonly: true },
+            { label: 'User Password',   value: () => biosState.userPass  ? '****' : 'Not Set', editable: false, readonly: true },
+            { label: '', type: 'sep' },
+            { label: '— Secure Boot —', type: 'section' },
+            { label: 'Secure Boot',     value: () => biosState.secureBoot, options: ['Enabled','Disabled'], key: 'secureBoot', editable: true },
+            { label: 'Key Management',  value: () => 'Standard', readonly: true },
+        ],
+        exit: [
+            { label: 'Save Changes & Exit',    type: 'action', action: 'save' },
+            { label: 'Discard Changes & Exit', type: 'action', action: 'discard' },
+            { label: '', type: 'sep' },
+            { label: 'Load Optimized Defaults',type: 'action', action: 'defaults' },
+        ],
+    };
+
+    const biosState = {
+        lang: 'English', hyperthreading: 'Enabled', turbo: 'Enabled',
+        sataMode: 'AHCI', nvme: 'Enabled', usbLegacy: 'Enabled', usb32: 'Enabled',
+        boot1: 'NVME0', boot2: 'SATA0', boot3: 'Optical',
+        fastBoot: 'Enabled', postDelay: '0',
+        adminPass: false, userPass: false, secureBoot: 'Enabled',
+    };
+
+    const TABS = ['main','advanced','boot','security','exit'];
+    const TAB_LABELS = { main:'Main', advanced:'Advanced', boot:'Boot', security:'Security', exit:'Exit' };
+
+    let emuPhase     = 'off';   // off | post | setup
+    let postTimeout  = null;
+    let activeTab    = 0;
+    let activeRow    = 0;
+    let editMode     = false;
+    let setupDirty   = false;
+
+    // ── Power on ───────────────────────────────────────────────────────────────
+    function emuPower() {
+        if (emuPhase !== 'off') return;
+        emuPhase = 'post';
+        document.getElementById('btn-power').disabled   = true;
+        document.getElementById('btn-setup').disabled   = false;
+        document.getElementById('btn-restart').style.display = '';
+        document.getElementById('emu-hint').textContent = 'POST running… press DEL to enter setup';
+        document.getElementById('post-screen').style.display  = '';
+        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('post-output').innerHTML = '';
+        runPost(0);
+    }
+
+    function runPost(idx) {
+        if (idx >= POST_LINES.length) {
+            document.getElementById('btn-setup').disabled = true;
+            document.getElementById('emu-hint').textContent = 'Boot complete.';
+            emuPhase = 'booted';
+            return;
+        }
+        if (emuPhase !== 'post') return;
+        const item = POST_LINES[idx];
+        postTimeout = setTimeout(() => {
+            if (emuPhase !== 'post') return;
+            appendPost(item.text, item.cls || '');
+            runPost(idx + 1);
+        }, item.delay);
+    }
+
+    function appendPost(text, cls) {
+        const out  = document.getElementById('post-output');
+        const span = document.createElement('span');
+        span.textContent = text;
+        if (cls) span.className = cls;
+        out.appendChild(span);
+        out.scrollTop = out.scrollHeight;
+    }
+
+    // ── Enter setup ────────────────────────────────────────────────────────────
+    function emuEnterSetup() {
+        if (emuPhase !== 'post' && emuPhase !== 'booted') return;
+        clearTimeout(postTimeout);
+        emuPhase = 'setup';
+        document.getElementById('btn-setup').disabled = true;
+        document.getElementById('emu-hint').textContent = 'BIOS Setup — use keyboard or click to navigate';
+        document.getElementById('post-screen').style.display  = 'none';
+        document.getElementById('setup-screen').style.display = '';
+        activeTab = 0; activeRow = 0; editMode = false;
+        renderSetup();
+        document.getElementById('emu-wrap').focus();
+    }
+
+    function emuRestart() {
+        clearTimeout(postTimeout);
+        emuPhase = 'off';
+        document.getElementById('btn-power').disabled = false;
+        document.getElementById('btn-setup').disabled = true;
+        document.getElementById('btn-restart').style.display = 'none';
+        document.getElementById('emu-hint').textContent = 'Click Power On to begin';
+        document.getElementById('post-screen').style.display  = '';
+        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('post-output').innerHTML =
+            '<span style="color:#888;">── Power off. Press "Power On" to start. ──</span>';
+    }
+
+    // ── Setup rendering ────────────────────────────────────────────────────────
+    function renderSetup() {
+        // Tabs
+        const tabBar = document.getElementById('setup-tabs');
+        tabBar.innerHTML = '';
+        TABS.forEach((t, i) => {
+            const d = document.createElement('div');
+            d.className = 'setup-tab' + (i === activeTab ? ' active' : '');
+            d.textContent = TAB_LABELS[t];
+            d.onclick = () => { activeTab = i; activeRow = 0; editMode = false; renderSetup(); };
+            tabBar.appendChild(d);
+        });
+
+        // Body rows
+        const body = document.getElementById('setup-body');
+        body.innerHTML = '';
+        const rows = biosSettings[TABS[activeTab]];
+        let rowIdx = 0;
+        rows.forEach(item => {
+            if (item.type === 'sep')     { body.appendChild(makeSep()); return; }
+            if (item.type === 'section') { body.appendChild(makeSection(item.label)); return; }
+
+            const ri = rowIdx++;
+            const div = document.createElement('div');
+            div.className = 'setup-row'
+                + (item.readonly ? ' readonly' : '')
+                + (ri === activeRow ? ' focused' : '');
+
+            const lbl = document.createElement('span');
+            lbl.className   = 'label';
+            lbl.textContent = item.label;
+
+            const val = document.createElement('span');
+            val.className   = 'value';
+            if (item.type === 'action') {
+                lbl.textContent = '► ' + item.label;
+                val.textContent = '';
+                div.onclick = () => doSetupAction(item.action);
+            } else {
+                val.textContent = '[' + item.value() + ']';
+                if (!item.readonly) div.onclick = () => { activeRow = ri; editMode = true; renderSetup(); cycleOption(item); };
+            }
+
+            div.appendChild(lbl);
+            div.appendChild(val);
+            body.appendChild(div);
+        });
+    }
+
+    function makeSep() {
+        const hr = document.createElement('hr');
+        hr.style.cssText = 'border:none;border-top:1px solid #0000cc;margin:4px 0;';
+        return hr;
+    }
+    function makeSection(text) {
+        const d = document.createElement('div');
+        d.className   = 'setup-section';
+        d.textContent = text;
+        return d;
+    }
+
+    function getEditableRows() {
+        return biosSettings[TABS[activeTab]].filter(r => r.type !== 'sep' && r.type !== 'section');
+    }
+
+    function cycleOption(item) {
+        if (!item.options || !item.key) return;
+        const opts = item.options;
+        const cur  = opts.indexOf(biosState[item.key]);
+        biosState[item.key] = opts[(cur + 1) % opts.length];
+        setupDirty = true;
+        renderSetup();
+    }
+
+    function doSetupAction(action) {
+        if (action === 'save') {
+            setupDirty = false;
+            appendPost('\n  [BIOS] Settings saved. Restarting…\n', 'post-ok');
+            setTimeout(() => emuRestart(), 800);
+        } else if (action === 'discard') {
+            setupDirty = false;
+            emuRestart();
+        } else if (action === 'defaults') {
+            Object.assign(biosState, {
+                hyperthreading:'Enabled', turbo:'Enabled', sataMode:'AHCI',
+                nvme:'Enabled', usbLegacy:'Enabled', usb32:'Enabled',
+                boot1:'NVME0', boot2:'SATA0', boot3:'Optical',
+                fastBoot:'Enabled', postDelay:'0', secureBoot:'Enabled',
+            });
+            setupDirty = true;
+            renderSetup();
+        }
+    }
+
+    // ── Keyboard handler ────────────────────────────────────────────────────────
+    function emuKey(e) {
+        if (emuPhase === 'post') {
+            if (e.key === 'Delete' || e.key === 'F2') { e.preventDefault(); emuEnterSetup(); }
+            return;
+        }
+        if (emuPhase !== 'setup') return;
+        e.preventDefault();
+
+        const editableRows = getEditableRows();
+        const nonReadonly  = editableRows.filter(r => !r.readonly && r.type !== 'action');
+
+        switch (e.key) {
+            case 'ArrowUp':
+                activeRow = Math.max(0, activeRow - 1);
+                renderSetup();
+                break;
+            case 'ArrowDown':
+                activeRow = Math.min(editableRows.length - 1, activeRow + 1);
+                renderSetup();
+                break;
+            case 'ArrowLeft':
+            case 'ArrowRight': {
+                activeTab = (activeTab + (e.key === 'ArrowRight' ? 1 : -1) + TABS.length) % TABS.length;
+                activeRow = 0; renderSetup();
+                break;
+            }
+            case 'Enter': case '+': {
+                const item = editableRows[activeRow];
+                if (!item) break;
+                if (item.type === 'action') { doSetupAction(item.action); break; }
+                if (!item.readonly && item.options) cycleOption(item);
+                break;
+            }
+            case '-': {
+                const item = editableRows[activeRow];
+                if (!item || item.readonly || !item.options) break;
+                const opts = item.options;
+                const cur  = opts.indexOf(biosState[item.key]);
+                biosState[item.key] = opts[(cur - 1 + opts.length) % opts.length];
+                setupDirty = true;
+                renderSetup();
+                break;
+            }
+            case 'F10':
+                doSetupAction('save');
+                break;
+            case 'Escape':
+                doSetupAction('discard');
+                break;
+        }
+    }
+    </script>
 </body>
-</html> 
+</html>

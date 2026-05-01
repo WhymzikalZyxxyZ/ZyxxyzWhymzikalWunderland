@@ -2,85 +2,62 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gamer — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="/js/firebase-config.js"></script>
+    <script src="/js/username-gen.js"></script>
     <style>
         .game-cards {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 24px;
-            margin: 40px auto;
-            max-width: 700px;
+            display: flex; flex-wrap: wrap; justify-content: center;
+            gap: 24px; margin: 40px auto; max-width: 960px;
         }
         .game-card {
-            background: rgba(0,0,0,0.5);
-            border: 2px solid #555;
-            border-radius: 12px;
-            padding: 32px 24px 20px;
-            width: 210px;
-            text-align: center;
-            text-decoration: none;
-            color: #fff;
+            background: rgba(0,0,0,0.69); border: 2px solid #555;
+            border-radius: 12px; padding: 32px 24px 20px; width: 200px;
+            text-align: center; text-decoration: none; color: #fff;
             transition: transform 0.2s, border-color 0.2s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            display: flex; flex-direction: column; align-items: center;
         }
-        .game-card:hover {
-            transform: translateY(-8px);
-            border-color: #f4a261;
-        }
-        .game-card-icon {
-            font-size: 3.5em;
-            display: block;
-            margin-bottom: 12px;
-        }
+        .game-card:hover { transform: translateY(-8px); border-color: #f4a261; }
+        .game-card-icon { font-size: 3em; display: block; margin-bottom: 12px; }
         .game-card h3 {
-            font-family: 'Courier New', monospace;
-            color: #f4a261;
-            margin: 0 0 8px;
-            font-size: 1.2em;
+            font-family: 'Courier New', monospace; color: #f4a261;
+            margin: 0 0 8px; font-size: 1.1em;
         }
         .game-card > p {
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            color: #aaa;
-            margin: 0 0 16px;
+            font-family: 'Courier New', monospace; font-size: 11px;
+            color: #aaa; margin: 0 0 12px; flex: 1;
         }
         .world-score-box {
-            width: 100%;
-            background: rgba(0,0,0,0.5);
-            border: 1px solid #2a2a2a;
-            border-radius: 8px;
-            padding: 8px 10px;
-            margin-top: auto;
+            width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #2a2a2a;
+            border-radius: 8px; padding: 8px 10px; margin-top: auto;
         }
         .world-score-box label {
-            display: block;
-            font-family: 'Courier New', monospace;
-            font-size: 9px;
-            letter-spacing: 2px;
-            color: #555;
-            margin-bottom: 3px;
+            display: block; font-family: 'Courier New', monospace;
+            font-size: 9px; letter-spacing: 2px; color: #555; margin-bottom: 2px;
         }
-        .world-score-box span {
-            display: block;
-            font-family: 'Courier New', monospace;
-            font-size: 22px;
-            font-weight: bold;
-            color: #4caf50;
+        .world-score-box .score-num {
+            display: block; font-family: 'Courier New', monospace;
+            font-size: 20px; font-weight: bold; color: #4caf50;
         }
+        .world-score-box .score-user {
+            display: block; font-family: 'Courier New', monospace;
+            font-size: 9px; color: #888; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis;
+        }
+        #identity-bar {
+            text-align: center; font-family: 'Courier New', monospace;
+            font-size: 11px; color: #666; margin-bottom: 8px;
+        }
+        #identity-bar span { color: #f4a261; }
     </style>
 </head>
 <body class="notYetBody">
-
     <h2>Zyxxyz, the pro-gamer</h2>
-
     <div class="navbar">
         <a href="../index.html">Home</a>
         <a href="../about.html">About</a>
@@ -90,38 +67,155 @@
         <a href="../community/forum.html">Community</a>
     </div>
 
+    <div id="identity-bar">Playing as <span id="username-display">—</span></div>
+
     <div class="game-cards">
         <a href="tetris.html" class="game-card">
             <span class="game-card-icon">🧱</span>
             <h3>Tetris</h3>
-            <p>Stack the blocks, clear the lines. Speed up over time.</p>
+            <p>Stack the blocks, clear the lines.</p>
             <div class="world-score-box">
                 <label>ALL-TIME BEST</label>
-                <span id="world-tetris">—</span>
+                <span class="score-num" id="world-tetris">—</span>
+                <span class="score-user" id="user-tetris">—</span>
             </div>
         </a>
         <a href="snake.html" class="game-card">
             <span class="game-card-icon">🐍</span>
             <h3>Snake</h3>
-            <p>Eat the food, grow longer, don't bite yourself.</p>
+            <p>Eat, grow, don't bite yourself.</p>
             <div class="world-score-box">
                 <label>ALL-TIME BEST</label>
-                <span id="world-snake">—</span>
+                <span class="score-num" id="world-snake">—</span>
+                <span class="score-user" id="user-snake">—</span>
+            </div>
+        </a>
+        <a href="chess.html" class="game-card">
+            <span class="game-card-icon">♟️</span>
+            <h3>Chess</h3>
+            <p>Classic strategy. Play vs AI or a friend online.</p>
+            <div class="world-score-box">
+                <label>MOST WINS</label>
+                <span class="score-num" id="world-chess">—</span>
+                <span class="score-user" id="user-chess">—</span>
+            </div>
+        </a>
+        <a href="checkers.html" class="game-card">
+            <span class="game-card-icon">🔴</span>
+            <h3>Checkers</h3>
+            <p>Jump your way to victory. SP or online MP.</p>
+            <div class="world-score-box">
+                <label>MOST WINS</label>
+                <span class="score-num" id="world-checkers">—</span>
+                <span class="score-user" id="user-checkers">—</span>
+            </div>
+        </a>
+        <a href="pong.html" class="game-card">
+            <span class="game-card-icon">🏓</span>
+            <h3>Pong</h3>
+            <p>The original arcade classic. VS AI or a friend.</p>
+            <div class="world-score-box">
+                <label>ALL-TIME BEST</label>
+                <span class="score-num" id="world-pong">—</span>
+                <span class="score-user" id="user-pong">—</span>
+            </div>
+        </a>
+        <a href="rps.html" class="game-card">
+            <span class="game-card-icon">✂️</span>
+            <h3>Rock Paper Scissors</h3>
+            <p>Beat the AI's pattern. Best win streak wins.</p>
+            <div class="world-score-box">
+                <label>BEST STREAK</label>
+                <span class="score-num" id="world-rps">—</span>
+                <span class="score-user" id="user-rps">—</span>
+            </div>
+        </a>
+        <a href="puzzle.html" class="game-card">
+            <span class="game-card-icon">🧩</span>
+            <h3>Puzzle</h3>
+            <p>9–420 pieces. Fastest completion per piece wins.</p>
+            <div class="world-score-box">
+                <label>BEST SCORE</label>
+                <span class="score-num" id="world-puzzle">—</span>
+                <span class="score-user" id="user-puzzle">—</span>
+            </div>
+        </a>
+        <a href="blackjack.html" class="game-card">
+            <span class="game-card-icon">🃏</span>
+            <h3>Blackjack</h3>
+            <p>Beat the dealer to 21. SP or online MP with friends.</p>
+            <div class="world-score-box">
+                <label>MOST CHIPS</label>
+                <span class="score-num" id="world-blackjack">—</span>
+                <span class="score-user" id="user-blackjack">—</span>
+            </div>
+        </a>
+        <a href="solitaire.html" class="game-card">
+            <span class="game-card-icon">♠</span>
+            <h3>Solitaire</h3>
+            <p>Klondike SP or race mode — same deck, first to solve wins.</p>
+            <div class="world-score-box">
+                <label>BEST SCORE</label>
+                <span class="score-num" id="world-solitaire">—</span>
+                <span class="score-user" id="user-solitaire">—</span>
+            </div>
+        </a>
+        <a href="poker.html" class="game-card">
+            <span class="game-card-icon">♥</span>
+            <h3>Texas Hold'em</h3>
+            <p>No-limit Hold'em vs AI opponents or friends online.</p>
+            <div class="world-score-box">
+                <label>MOST CHIPS</label>
+                <span class="score-num" id="world-poker">—</span>
+                <span class="score-user" id="user-poker">—</span>
+            </div>
+        </a>
+        <a href="five-card-draw.html" class="game-card">
+            <span class="game-card-icon">♦</span>
+            <h3>Five Card Draw</h3>
+            <p>Classic draw poker SP or multiplayer. Click cards to discard.</p>
+            <div class="world-score-box">
+                <label>MOST CHIPS</label>
+                <span class="score-num" id="world-fivecarddraw">—</span>
+                <span class="score-user" id="user-fivecarddraw">—</span>
             </div>
         </a>
     </div>
 
     <button type="button" onclick="navigateToPage('../index.html')">E.T. Phone Home!</button>
 
+    <script src="/js/gamer-chat.js"></script>
     <script>
-        if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY) {
-            firebase.database().ref('scores/tetris').on('value', snap => {
-                document.getElementById('world-tetris').textContent = snap.val() || 0;
-            });
-            firebase.database().ref('scores/snake').on('value', snap => {
-                document.getElementById('world-snake').textContent = snap.val() || 0;
+        if (typeof getOrCreateUsername === 'function') {
+            document.getElementById('username-display').textContent = getOrCreateUsername();
+        }
+
+        function bindScore(fbPath, numId, userId) {
+            if (!window.FIREBASE_READY) return;
+            firebase.database().ref(fbPath).on('value', snap => {
+                const v = snap.val();
+                if (v === null || v === undefined) return;
+                // Support both old (plain number) and new ({score, username}) formats
+                if (typeof v === 'object' && v !== null) {
+                    const sc = (Number.isFinite(v.score) && v.score >= 0) ? v.score : 0;
+                    document.getElementById(numId).textContent  = sc;
+                    document.getElementById(userId).textContent =
+                        typeof v.username === 'string' ? v.username.slice(0,30) : '—';
+                } else {
+                    const sc = (Number.isFinite(v) && v >= 0) ? v : 0;
+                    document.getElementById(numId).textContent  = sc;
+                    document.getElementById(userId).textContent = '—';
+                }
             });
         }
+
+        bindScore('scores/tetris',   'world-tetris',   'user-tetris');
+        bindScore('scores/snake',    'world-snake',    'user-snake');
+        bindScore('scores/chess',    'world-chess',    'user-chess');
+        bindScore('scores/checkers', 'world-checkers', 'user-checkers');
+        bindScore('scores/pong',     'world-pong',     'user-pong');
+        bindScore('scores/rps',      'world-rps',      'user-rps');
+        bindScore('scores/puzzle',   'world-puzzle',   'user-puzzle');
     </script>
 </body>
 </html>

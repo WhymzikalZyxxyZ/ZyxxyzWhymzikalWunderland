@@ -1,0 +1,49 @@
+{
+  "name": "zyxxyz-whymzykal-wunderland",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "lint:js":   "eslint \"js/*.js\" \"tests/**/*.js\"",
+    "lint:css":  "stylelint \"css/*.css\"",
+    "lint:html": "htmlhint \"**/*.html\" --ignore \"node_modules/**\"",
+    "lint":      "npm run lint:js && npm run lint:css && npm run lint:html",
+    "test":      "jest --coverage"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coverageProvider": "v8",
+    "testTimeout": 30000,
+    "collectCoverageFrom": [
+      "js/tetris-engine.js",
+      "js/snake-engine.js",
+      "js/forum-utils.js",
+      "js/script.js",
+      "js/username-gen.js",
+      "js/rps-engine.js",
+      "js/pong-engine.js",
+      "js/puzzle-engine.js",
+      "js/chess-engine.js",
+      "js/checkers-engine.js",
+      "js/card-engine.js",
+      "js/blackjack-engine.js",
+      "js/solitaire-engine.js",
+      "js/poker-engine.js",
+      "js/five-card-draw-engine.js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines":      90,
+        "functions":  90,
+        "branches":   90,
+        "statements": 90
+      }
+    }
+  },
+  "devDependencies": {
+    "eslint":                    "^8.57.0",
+    "htmlhint":                  "^1.1.4",
+    "jest":                      "^29.7.0",
+    "stylelint":                 "^16.3.0",
+    "stylelint-config-standard": "^36.0.0"
+  }
+}
