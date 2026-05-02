@@ -122,6 +122,18 @@
                 document.getElementById('world-snake').textContent = snap.val() || 0;
             });
         }
+
+        bindScore('scores/tetris',       'world-tetris',       'user-tetris');
+        bindScore('scores/snake',        'world-snake',        'user-snake');
+        bindScore('scores/chess',        'world-chess',        'user-chess');
+        bindScore('scores/checkers',     'world-checkers',     'user-checkers');
+        bindScore('scores/pong',         'world-pong',         'user-pong');
+        bindScore('scores/rps',          'world-rps',          'user-rps');
+        bindScore('scores/puzzle',       'world-puzzle',       'user-puzzle');
+        bindScore('scores/blackjack',    'world-blackjack',    'user-blackjack');
+        bindScore('scores/solitaire',    'world-solitaire',    'user-solitaire');
+        bindScore('scores/poker',        'world-poker',        'user-poker');
+        bindScore('scores/fivecarddraw', 'world-fivecarddraw', 'user-fivecarddraw');
     </script>
 </body>
 </html>
