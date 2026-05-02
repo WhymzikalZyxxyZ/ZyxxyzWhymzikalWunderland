@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/username-gen.js"></script>
+    <script src="/js/puzzle-engine.js"></script>
+    <style>
+        #puz-page { max-width: 700px; margin: 0 auto; padding: 0 16px 80px; }
+        .puz-panel { background:rgba(0,0,0,0.75); border:1px solid #2a2a2a;
+            border-radius:12px; padding:20px; margin-bottom:16px; }
+        .puz-title { font-family:'Courier New',monospace; font-size:11px; letter-spacing:3px;
+            text-transform:uppercase; color:#f4a261;
+            border-bottom:1px solid #2a2a2a; padding-bottom:8px; margin:0 0 16px; }
+        .setup-row { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+        .setup-row label { font-family:'Courier New',monospace; font-size:11px; color:#888; white-space:nowrap; }
+        #piece-count-slider { flex:1; accent-color:#f4a261; }
+        #piece-count-val { font-family:'Courier New',monospace; font-size:13px;
+            color:#f4a261; min-width:36px; }
+        .ctrl-btn { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14);
+            color:#bbb; border-radius:6px; padding:8px 18px;
+            font-family:'Courier New',monospace; font-size:12px; cursor:pointer; }
+        .ctrl-btn:hover { border-color:#f4a261; color:#fff; }
+        .ctrl-btn.accent { background:#f4a261; border-color:#f4a261; color:#111; font-weight:bold; }
+        #puz-board-wrap {
+            position:relative; margin:0 auto;
+            border:2px solid #2a2a2a; border-radius:4px; overflow:hidden;
+            touch-action:none; user-select:none;
+            background:#111;
+        }
+        #puz-source { margin-top:12px; }
+        #source-title { font-family:'Courier New',monospace; font-size:9px;
+            letter-spacing:2px; color:#555; margin-bottom:6px; }
+        #puz-tray { display:flex; flex-wrap:wrap; gap:4px; }
+        .puz-piece {
+            cursor:grab; border:2px solid #333; border-radius:3px;
+            transition:border-color 0.1s; flex-shrink:0;
+        }
+        .puz-piece:hover { border-color:#f4a261; }
+        .puz-piece.dragging { opacity:0.5; border-color:#f4a261; cursor:grabbing; }
+        #timer-row { display:flex; gap:20px; align-items:center; margin-top:8px; }
+        #puz-timer { font-family:'Courier New',monospace; font-size:18px; color:#f4a261; }
+        #puz-progress { font-family:'Courier New',monospace; font-size:11px; color:#888; }
+        #puz-done-msg { text-align:center; font-family:'Courier New',monospace;
+            font-size:1.4em; color:#4caf50; min-height:1.5em; margin-top:8px; }
+        #hs-box { text-align:center; font-family:'Courier New',monospace;
+            font-size:11px; color:#666; margin-top:12px; }
+        #hs-box strong { color:#f4a261; }
+    </style>
+</head>
+<body class="notYetBody">
+    <h2>Zyxxyz, the Puzzler</h2>
+    <div class="navbar">
+        <a href="../index.html">Home</a>
+        <a href="../gamer/games.html">Games</a>
+    </div>
+
+    <div id="puz-page">
+        <div class="puz-panel">
+            <div class="puz-title">Jigsaw Puzzle</div>
+            <div class="setup-row">
+                <label>Pieces</label>
+                <input type="range" id="piece-count-slider" min="9" max="420" value="25" step="1">
+                <span id="piece-count-val">25</span>
+            </div>
+            <button class="ctrl-btn accent" onclick="startPuzzle()">&#9654; New Puzzle</button>
+        </div>
+
+        <div class="puz-panel" id="game-panel" style="display:none;">
+            <div class="puz-title">Playing — <span id="user-label" style="color:#bbb;font-size:10px;"></span></div>
+            <div class="timer-row" id="timer-row">
+                <span style="font-family:'Courier New',monospace;font-size:11px;color:#555;">Time:</span>
+                <span id="puz-timer">0:00</span>
+                <span id="puz-progress"></span>
+            </div>
+            <div id="puz-done-msg"></div>
+
+            <!-- Board where pieces snap into place -->
+            <div id="puz-board-wrap">
+                <canvas id="puz-board" style="display:block;"></canvas>
+            </div>
+
+            <!-- Tray of unplaced pieces -->
+            <div id="puz-source">
+                <div id="source-title">PIECES — drag to board</div>
+                <div id="puz-tray"></div>
+            </div>
+        </div>
+
+        <div id="hs-box">
+            🏆 Best Score: <strong id="hs-val">—</strong> by <strong id="hs-user">—</strong>
+            <span style="color:#555;"> (pieces × 1000 / seconds)</span>
+        </div>
+    </div>
+
+    <button type="button" onclick="navigateToPage('../gamer/games.html')">&#8592; Back to Games</button>
+    <script src="/js/gamer-chat.js"></script>
+    <script>
+        const myName   = (typeof getOrCreateUsername === 'function') ? getOrCreateUsername() : 'Guest';
+        const FB_HS    = 'scores/puzzle';
+        const BOARD_PX = 480;  // display size of board
+        let puzzle = null, timerInterval = null, elapsedSec = 0;
+
+        document.getElementById('user-label').textContent = myName;
+
+        document.getElementById('piece-count-slider').addEventListener('input', function() {
+            document.getElementById('piece-count-val').textContent = this.value;
+        });
+
+        // ── Image generation (blues/reds/purples) ───────────────────────────
+        function generatePuzzleImage(widthPx, heightPx) {
+            const offscreen = document.createElement('canvas');
+            offscreen.width = widthPx; offscreen.height = heightPx;
+            const c = offscreen.getContext('2d');
+
+            // Base gradient
+            const g = c.createLinearGradient(0, 0, widthPx, heightPx);
+            g.addColorStop(0,   '#1a0050');
+            g.addColorStop(0.3, '#550066');
+            g.addColorStop(0.6, '#002866');
+            g.addColorStop(1,   '#3d006e');
+            c.fillStyle = g;
+            c.fillRect(0, 0, widthPx, heightPx);
+
+            // Decorative circles — purples and reds
+            const circles = [
+                { cx:0.2, cy:0.2, r:0.25, color:'rgba(180,0,100,0.45)' },
+                { cx:0.75,cy:0.3, r:0.2,  color:'rgba(0,80,200,0.4)' },
+                { cx:0.5, cy:0.7, r:0.3,  color:'rgba(120,0,180,0.5)' },
+                { cx:0.9, cy:0.8, r:0.18, color:'rgba(200,30,60,0.4)' },
+                { cx:0.1, cy:0.75,r:0.22, color:'rgba(80,0,160,0.5)' },
+                { cx:0.6, cy:0.15,r:0.15, color:'rgba(160,0,40,0.35)' },
+            ];
+            for (const { cx, cy, r, color } of circles) {
+                const rg = c.createRadialGradient(
+                    cx*widthPx, cy*heightPx, 0,
+                    cx*widthPx, cy*heightPx, r * Math.max(widthPx, heightPx));
+                rg.addColorStop(0,   color);
+                rg.addColorStop(1,   'rgba(0,0,0,0)');
+                c.fillStyle = rg;
+                c.fillRect(0, 0, widthPx, heightPx);
+            }
+
+            // Grid lines for structure
+            c.strokeStyle = 'rgba(255,255,255,0.06)';
+            c.lineWidth   = 1;
+            const step = widthPx / 8;
+            for (let x = step; x < widthPx; x += step) {
+                c.beginPath(); c.moveTo(x,0); c.lineTo(x,heightPx); c.stroke();
+            }
+            for (let y = step; y < heightPx; y += step) {
+                c.beginPath(); c.moveTo(0,y); c.lineTo(widthPx,y); c.stroke();
+            }
+
+            return offscreen;
+        }
+
+        // ── Puzzle setup ────────────────────────────────────────────────────
+        function startPuzzle() {
+            const requested = Math.max(9, Math.min(420, parseInt(document.getElementById('piece-count-slider').value, 10) || 25));
+            puzzle = shufflePuzzle(newPuzzle(requested));
+            document.getElementById('game-panel').style.display = '';
+            document.getElementById('puz-done-msg').textContent = '';
+
+            clearInterval(timerInterval);
+            elapsedSec = 0;
+            updateTimer();
+            timerInterval = setInterval(() => {
+                elapsedSec++;
+                updateTimer();
+            }, 1000);
+
+            buildBoard();
+            buildTray();
+        }
+
+        function updateTimer() {
+            const m = Math.floor(elapsedSec / 60), s = elapsedSec % 60;
+            document.getElementById('puz-timer').textContent =
+                m + ':' + String(s).padStart(2,'0');
+        }
+
+        // ── Board rendering ──────────────────────────────────────────────────
+        let boardCanvas, boardCtx, sourceImage;
+        let pieceW, pieceH, boardW, boardH;
+
+        function buildBoard() {
+            const { cols, rows } = puzzle;
+            pieceW = Math.floor(BOARD_PX / cols);
+            pieceH = Math.floor(BOARD_PX / rows);
+            boardW = pieceW * cols;
+            boardH = pieceH * rows;
+
+            sourceImage = generatePuzzleImage(boardW, boardH);
+
+            const wrap = document.getElementById('puz-board-wrap');
+            wrap.style.width  = boardW + 'px';
+            wrap.style.height = boardH + 'px';
+
+            boardCanvas = document.getElementById('puz-board');
+            boardCanvas.width  = boardW;
+            boardCanvas.height = boardH;
+            boardCtx = boardCanvas.getContext('2d');
+            drawBoard();
+        }
+
+        function drawBoard() {
+            boardCtx.fillStyle = '#111';
+            boardCtx.fillRect(0, 0, boardW, boardH);
+            // Grid overlay
+            boardCtx.strokeStyle = 'rgba(255,255,255,0.12)';
+            boardCtx.lineWidth   = 1;
+            for (let c = 0; c <= puzzle.cols; c++) {
+                boardCtx.beginPath(); boardCtx.moveTo(c*pieceW,0); boardCtx.lineTo(c*pieceW,boardH); boardCtx.stroke();
+            }
+            for (let r = 0; r <= puzzle.rows; r++) {
+                boardCtx.beginPath(); boardCtx.moveTo(0,r*pieceH); boardCtx.lineTo(boardW,r*pieceH); boardCtx.stroke();
+            }
+            // Draw placed pieces
+            for (const p of puzzle.pieces) {
+                if (p.placed) drawPieceOnBoard(p);
+            }
+            updateProgress();
+        }
+
+        function drawPieceOnBoard(p) {
+            boardCtx.drawImage(
+                sourceImage,
+                p.correctCol * pieceW, p.correctRow * pieceH, pieceW, pieceH,
+                p.correctCol * pieceW, p.correctRow * pieceH, pieceW, pieceH
+            );
+            boardCtx.strokeStyle = 'rgba(244,162,97,0.4)';
+            boardCtx.lineWidth   = 1;
+            boardCtx.strokeRect(p.correctCol*pieceW+0.5, p.correctRow*pieceH+0.5, pieceW-1, pieceH-1);
+        }
+
+        function updateProgress() {
+            const placed = puzzle.pieces.filter(p => p.placed).length;
+            document.getElementById('puz-progress').textContent =
+                `${placed} / ${puzzle.count} placed`;
+        }
+
+        // ── Tray of unplaced pieces ──────────────────────────────────────────
+        let dragPieceId = null;
+
+        function buildTray() {
+            const tray = document.getElementById('puz-tray');
+            tray.innerHTML = '';
+            for (const p of puzzle.pieces) {
+                if (p.placed) continue;
+                const c = document.createElement('canvas');
+                c.width  = pieceW;
+                c.height = pieceH;
+                c.className = 'puz-piece';
+                c.dataset.id = p.id;
+                c.title = `Piece ${p.id + 1}`;
+                const tc = c.getContext('2d');
+                tc.drawImage(sourceImage,
+                    p.correctCol*pieceW, p.correctRow*pieceH, pieceW, pieceH,
+                    0, 0, pieceW, pieceH);
+                c.addEventListener('dragstart', e => {
+                    dragPieceId = +e.target.dataset.id;
+                    e.target.classList.add('dragging');
+                });
+                c.addEventListener('dragend',   e => e.target.classList.remove('dragging'));
+                c.draggable = true;
+                tray.appendChild(c);
+            }
+        }
+
+        document.getElementById('puz-board-wrap').addEventListener('dragover', e => { e.preventDefault(); });
+        document.getElementById('puz-board-wrap').addEventListener('drop', e => {
+            e.preventDefault();
+            if (dragPieceId === null || !puzzle) return;
+            const wrap  = document.getElementById('puz-board-wrap');
+            const rect  = wrap.getBoundingClientRect();
+            const dropX = e.clientX - rect.left;
+            const dropY = e.clientY - rect.top;
+            const col   = Math.floor(dropX / pieceW);
+            const row   = Math.floor(dropY / pieceH);
+            if (col < 0 || col >= puzzle.cols || row < 0 || row >= puzzle.rows) return;
+            // Check nothing already placed there
+            const occupant = puzzle.pieces.find(p => p.placed && p.correctCol===col && p.correctRow===row);
+            if (occupant) return;
+            puzzle = placePiece(puzzle, dragPieceId, col, row);
+            dragPieceId = null;
+            drawBoard();
+            buildTray();
+            if (puzzle.solved) onSolved();
+        });
+
+        function onSolved() {
+            clearInterval(timerInterval);
+            const score = calcPuzzleScore(puzzle.count, elapsedSec);
+            document.getElementById('puz-done-msg').textContent =
+                `🎉 Solved in ${document.getElementById('puz-timer').textContent}! Score: ${score}`;
+            // Draw the full image
+            boardCtx.drawImage(sourceImage, 0, 0, boardW, boardH);
+            maybeUpdateHighScore(score);
+        }
+
+        function maybeUpdateHighScore(score) {
+            if (!window.FIREBASE_READY) return;
+            const ref = firebase.database().ref(FB_HS);
+            ref.once('value', snap => {
+                const v   = snap.val();
+                const cur = (v && Number.isFinite(v.score)) ? v.score : 0;
+                if (score > cur) ref.set({ score: Math.min(score, 999999), username: String(myName).slice(0,40) });
+            });
+        }
+
+        if (window.FIREBASE_READY) {
+            firebase.database().ref(FB_HS).on('value', snap => {
+                const v = snap.val();
+                if (!v) return;
+                document.getElementById('hs-val').textContent  = Number.isFinite(v.score) ? v.score : '—';
+                document.getElementById('hs-user').textContent = typeof v.username === 'string' ? v.username.slice(0,40) : '—';
+            });
+        }
+    </script>
+</body>
+</html>

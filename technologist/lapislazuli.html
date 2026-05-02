@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lapis Lazuli - Trading Monitor</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js"></script>
+    <style>
+        /* ── Reset global site styles inside the app ── */
+        #lapis-app * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        #lapis-app h1, #lapis-app h2, #lapis-app h3 {
+            font-size: unset;
+            font-style: normal;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: left;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: unset;
+        }
+        #lapis-app p { color: unset; }
+        #lapis-app button {
+            display: inline-block;
+            margin: 0;
+            font-size: 14px;
+        }
+        #lapis-app table { width: 100%; border-collapse: collapse; }
+
+        /* ── Design tokens ── */
+        #lapis-app {
+            --lapis:   #1E3A8A;
+            --night:   #0F172A;
+            --gold:    #D4AF37;
+            --emerald: #10B981;
+            --ruby:    #EF4444;
+            --cyan:    #06B6D4;
+            --text:    #E2E8F0;
+            --muted:   #94A3B8;
+            --border:  rgba(30,58,138,0.4);
+            --surface: rgba(15,23,42,0.85);
+            background: var(--night);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── Back link ── */
+        #lapis-app .back {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 13px;
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        #lapis-app .back:hover { color: var(--gold); }
+
+        /* ── Demo banner ── */
+        #lapis-app .demo-banner {
+            margin: 0 20px 4px;
+            padding: 8px 16px;
+            background: rgba(212,175,55,0.1);
+            border: 1px solid rgba(212,175,55,0.35);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--gold);
+            text-align: center;
+        }
+
+        /* ── Header ── */
+        #lapis-app header {
+            padding: 32px 20px 24px;
+            text-align: center;
+            border-bottom: 1px solid var(--gold);
+        }
+        #lapis-app header h1 {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--gold);
+            text-shadow: 0 0 24px rgba(212,175,55,0.35);
+            letter-spacing: 2px;
+        }
+        #lapis-app header p {
+            margin-top: 6px;
+            font-size: 14px;
+            color: var(--muted);
+            letter-spacing: 1px;
+        }
+
+        /* ── Controls bar ── */
+        #lapis-app .controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 20px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+        #lapis-app .btn {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.18s;
+            color: white;
+        }
+        #lapis-app .btn-primary { background: var(--lapis); }
+        #lapis-app .btn-primary:hover { background: #2D4FB8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(30,58,138,0.45); }
+        #lapis-app .btn-success { background: var(--emerald); }
+        #lapis-app .btn-success:hover { background: #0EA571; transform: translateY(-1px); }
+        #lapis-app .btn-danger  { background: var(--ruby); }
+        #lapis-app .btn-danger:hover  { background: #DC2626; transform: translateY(-1px); }
+
+        #lapis-app .status-box {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(30,58,138,0.2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+        }
+        #lapis-app .dot {
+            width: 9px; height: 9px;
+            border-radius: 50%;
+            background: var(--muted);
+            animation: pulse 2s infinite;
+        }
+        #lapis-app .dot.active  { background: var(--emerald); }
+        #lapis-app .dot.stopped { background: var(--ruby); }
+        @keyframes pulse {
+            0%,100% { transform: scale(1); }
+            50%      { transform: scale(1.15); }
+        }
+        #lapis-app #status-text  { font-size: 12px; color: var(--muted); }
+        #lapis-app #last-update  { font-size: 11px; color: var(--muted); padding-left: 10px; border-left: 1px solid var(--border); }
+
+        /* ── Main grid ── */
+        #lapis-app main {
+            padding: 20px;
+            display: grid;
+            gap: 20px;
+        }
+
+        /* ── Section cards ── */
+        #lapis-app .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        #lapis-app .panel-header {
+            padding: 12px 20px;
+            background: linear-gradient(90deg, rgba(30,58,138,0.4), transparent);
+            border-bottom: 1px solid var(--border);
+        }
+        #lapis-app .panel-header h2 {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--gold);
+        }
+
+        /* ── Tables ── */
+        #lapis-app thead th {
+            padding: 10px 16px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: var(--muted);
+            background: linear-gradient(90deg, rgba(30,58,138,0.2), transparent);
+            border-bottom: 1px solid var(--border);
+        }
+        #lapis-app tbody td {
+            padding: 11px 16px;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(30,58,138,0.15);
+        }
+        #lapis-app tbody tr:last-child td { border-bottom: none; }
+        #lapis-app tbody tr:hover { background: rgba(30,58,138,0.12); }
+
+        #lapis-app .sym  { font-weight: 700; color: var(--cyan); font-size: 14px; }
+        #lapis-app .mono { font-family: 'Courier New', monospace; }
+        #lapis-app .up   { color: var(--emerald); }
+        #lapis-app .dn   { color: var(--ruby); }
+        #lapis-app .gold { color: var(--gold); }
+
+        /* ── Signal badges ── */
+        #lapis-app .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        #lapis-app tr.sig-buy  .badge { background: rgba(16,185,129,0.18); color: var(--emerald); border: 1px solid var(--emerald); }
+        #lapis-app tr.sig-sell .badge { background: rgba(239,68,68,0.18);  color: var(--ruby);    border: 1px solid var(--ruby); }
+        #lapis-app tr.sig-hold .badge { background: rgba(212,175,55,0.18); color: var(--gold);    border: 1px solid var(--gold); }
+
+        /* ── Confidence bars ── */
+        #lapis-app .conf {
+            display: flex; align-items: center; gap: 8px;
+        }
+        #lapis-app .track {
+            flex: 1; height: 6px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 3px; overflow: hidden;
+        }
+        #lapis-app .fill { height: 100%; border-radius: 3px; }
+        #lapis-app tr.sig-buy  .fill { background: linear-gradient(90deg, #10B981, #34D399); }
+        #lapis-app tr.sig-sell .fill { background: linear-gradient(90deg, #EF4444, #F87171); }
+        #lapis-app tr.sig-hold .fill { background: linear-gradient(90deg, var(--gold), #F0CC5A); }
+        #lapis-app .pct { font-size: 11px; color: var(--muted); min-width: 30px; }
+
+        /* ── RSI / trend colours ── */
+        #lapis-app .rsi-hot  { color: var(--ruby); }
+        #lapis-app .rsi-cold { color: var(--emerald); }
+
+        /* ── Footer ── */
+        #lapis-app footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 11px;
+            color: var(--muted);
+            border-top: 1px solid var(--border);
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            #lapis-app header h1 { font-size: 26px; }
+            #lapis-app main { padding: 12px; gap: 12px; }
+            #lapis-app thead th, #lapis-app tbody td { padding: 8px 10px; font-size: 12px; }
+            #lapis-app .status-box { margin-left: 0; width: 100%; justify-content: center; }
+        }
+        @media (max-width: 480px) {
+            #lapis-app .controls { gap: 6px; }
+        }
+    </style>
+</head>
+<body>
+<div id="lapis-app">
+
+    <a class="back" href="/technologist/apps.html">← Back to Apps</a>
+
+    <div class="demo-banner">
+        ⚠ Demo mode — displaying simulated market data. The full application runs locally with live data feeds.
+        <a href="https://github.com/WhymzikalZyxxyZ/lapis-lazuli" style="color:inherit;margin-left:8px;" target="_blank">View on GitHub ↗</a>
+    </div>
+
+    <header>
+        <h1>💎 Lapis Lazuli</h1>
+        <p>Sophisticated Trading Monitor</p>
+    </header>
+
+    <div class="controls">
+        <button class="btn btn-primary" onclick="refresh()">⟳ Refresh</button>
+        <button class="btn btn-success" onclick="start()">▶ Start Monitoring</button>
+        <button class="btn btn-danger"  onclick="stop()">■ Stop</button>
+        <div class="status-box">
+            <div class="dot" id="dot"></div>
+            <span id="status-text">Ready</span>
+            <span id="last-update"></span>
+        </div>
+    </div>
+
+    <main>
+        <!-- Price Data -->
+        <div class="panel">
+            <div class="panel-header"><h2>Price Data</h2></div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Current Price</th>
+                        <th>Open</th>
+                        <th>High</th>
+                        <th>Low</th>
+                        <th>Volume</th>
+                    </tr>
+                </thead>
+                <tbody id="price-tbody"></tbody>
+            </table>
+        </div>
+
+        <!-- Trading Signals -->
+        <div class="panel">
+            <div class="panel-header"><h2>Trading Signals</h2></div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Signal</th>
+                        <th>Confidence</th>
+                        <th>Strength</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody id="signal-tbody"></tbody>
+            </table>
+        </div>
+
+        <!-- Technical Indicators -->
+        <div class="panel">
+            <div class="panel-header"><h2>Technical Indicators</h2></div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>RSI</th>
+                        <th>MACD</th>
+                        <th>Price</th>
+                        <th>EMA Trend</th>
+                        <th>Volume Trend</th>
+                    </tr>
+                </thead>
+                <tbody id="indicator-tbody"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer>Lapis Lazuli v0.1.0 &nbsp;·&nbsp; For educational purposes only &nbsp;·&nbsp; Not financial advice</footer>
+</div>
+
+<script>
+    const BASE = {
+        prices: [
+            { symbol:'AAPL',  current:189.43, open:187.10, high:190.21, low:186.55, volume:52341200 },
+            { symbol:'GOOGL', current:175.28, open:173.90, high:176.44, low:172.85, volume:18203400 },
+            { symbol:'MSFT',  current:420.55, open:418.22, high:422.10, low:417.80, volume:21450800 },
+            { symbol:'TSLA',  current:248.12, open:251.40, high:253.75, low:245.30, volume:89341100 },
+        ],
+        signals: [
+            { symbol:'AAPL',  signal:'buy',  confidence:78, strength:'Strong',   time:'14:32:01' },
+            { symbol:'GOOGL', signal:'hold', confidence:54, strength:'Moderate', time:'14:31:47' },
+            { symbol:'MSFT',  signal:'buy',  confidence:85, strength:'Strong',   time:'14:32:10' },
+            { symbol:'TSLA',  signal:'sell', confidence:67, strength:'Moderate', time:'14:31:55' },
+        ],
+        indicators: [
+            { symbol:'AAPL',  rsi:58.3, macd: 1.24, price:189.43, ema:'Up',      vol:'Rising'  },
+            { symbol:'GOOGL', rsi:44.1, macd:-0.87, price:175.28, ema:'Neutral', vol:'Falling' },
+            { symbol:'MSFT',  rsi:62.7, macd: 2.15, price:420.55, ema:'Up',      vol:'Rising'  },
+            { symbol:'TSLA',  rsi:71.4, macd:-1.63, price:248.12, ema:'Down',    vol:'Rising'  },
+        ]
+    };
+
+    let live = JSON.parse(JSON.stringify(BASE));
+    let prevPrices = {};
+    let monitoring = false;
+    let monitorInterval = null;
+
+    function fmt(n)    { return n.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 }); }
+    function fmtVol(n) { return n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n.toLocaleString(); }
+    function jitter(v, pct=0.002) { return v * (1 + (Math.random()-0.5)*2*pct); }
+    function now()     { return new Date().toLocaleTimeString(); }
+
+    function tick() {
+        live.prices.forEach(r => { r.current = jitter(r.current, 0.003); });
+        live.indicators.forEach(r => {
+            r.rsi  = Math.max(10, Math.min(90, r.rsi  + (Math.random()-0.5)*1.2));
+            r.macd = r.macd + (Math.random()-0.5)*0.08;
+            const p = live.prices.find(p => p.symbol === r.symbol);
+            if (p) r.price = p.current;
+        });
+        live.signals.forEach(r => {
+            r.time = now();
+            r.confidence = Math.max(30, Math.min(99, r.confidence + Math.round((Math.random()-0.5)*4)));
+        });
+    }
+
+    function updatePrices() {
+        document.getElementById('price-tbody').innerHTML = live.prices.map(r => {
+            const prev = prevPrices[r.symbol] ?? r.open;
+            const up   = r.current >= prev;
+            prevPrices[r.symbol] = r.current;
+            return `<tr>
+                <td class="sym">${r.symbol}</td>
+                <td class="mono ${up?'up':'dn'}">${up?'▲':'▼'} $${fmt(r.current)}</td>
+                <td class="mono">$${fmt(r.open)}</td>
+                <td class="mono up">$${fmt(r.high)}</td>
+                <td class="mono dn">$${fmt(r.low)}</td>
+                <td>${fmtVol(r.volume)}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    function updateSignals() {
+        document.getElementById('signal-tbody').innerHTML = live.signals.map(r => {
+            return `<tr class="sig-${r.signal}">
+                <td class="sym">${r.symbol}</td>
+                <td><span class="badge">${r.signal.toUpperCase()}</span></td>
+                <td>
+                    <div class="conf">
+                        <div class="track"><div class="fill" style="width:${r.confidence}%"></div></div>
+                        <span class="pct">${r.confidence}%</span>
+                    </div>
+                </td>
+                <td>${r.strength}</td>
+                <td>${r.time}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    function updateIndicators() {
+        document.getElementById('indicator-tbody').innerHTML = live.indicators.map(r => {
+            const rsiCls  = r.rsi > 70 ? 'rsi-hot' : r.rsi < 30 ? 'rsi-cold' : '';
+            const emaCls  = r.ema === 'Up' ? 'up' : r.ema === 'Down' ? 'dn' : 'gold';
+            const volCls  = r.vol === 'Rising' ? 'up' : 'dn';
+            const macdCls = r.macd >= 0 ? 'up' : 'dn';
+            return `<tr>
+                <td class="sym">${r.symbol}</td>
+                <td class="${rsiCls}">${r.rsi.toFixed(1)}</td>
+                <td class="mono ${macdCls}">${r.macd>=0?'+':''}${r.macd.toFixed(2)}</td>
+                <td class="mono">$${fmt(r.price)}</td>
+                <td class="${emaCls}">${r.ema}</td>
+                <td class="${volCls}">${r.vol}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    function setStatus(text, state) {
+        document.getElementById('status-text').textContent = text;
+        const dot = document.getElementById('dot');
+        dot.className = 'dot' + (state === 'active' ? ' active' : state === 'stopped' ? ' stopped' : '');
+        document.getElementById('last-update').textContent = 'Updated: ' + now();
+    }
+
+    function refresh() {
+        updatePrices();
+        updateSignals();
+        updateIndicators();
+        setStatus(monitoring ? 'Monitoring' : 'Idle', monitoring ? 'active' : '');
+    }
+
+    function start() {
+        if (monitoring) return;
+        monitoring = true;
+        setStatus('Monitoring', 'active');
+        monitorInterval = setInterval(() => { tick(); refresh(); }, 2500);
+    }
+
+    function stop() {
+        if (!monitoring) return;
+        monitoring = false;
+        clearInterval(monitorInterval);
+        setStatus('Stopped', 'stopped');
+    }
+
+    document.addEventListener('keydown', e => {
+        if ((e.ctrlKey||e.metaKey) && e.key==='r') { e.preventDefault(); refresh(); }
+        if ((e.ctrlKey||e.metaKey) && e.key==='s') { e.preventDefault(); start(); }
+        if ((e.ctrlKey||e.metaKey) && e.key==='e') { e.preventDefault(); stop(); }
+    });
+
+    window.addEventListener('beforeunload', stop);
+    window.addEventListener('load', () => {
+        refresh();
+        setStatus('Ready — click Start Monitoring to begin', '');
+    });
+</script>
+</body>
+</html>

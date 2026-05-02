@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackjack — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/username-gen.js"></script>
+    <script src="/js/card-engine.js"></script>
+    <script src="/js/blackjack-engine.js"></script>
+    <style>
+        #bj-page { max-width:680px; margin:0 auto; padding:0 16px 80px; }
+        .bj-panel { background:rgba(0,0,0,0.75); border:1px solid #2a2a2a;
+            border-radius:12px; padding:20px; margin-bottom:16px; }
+        .bj-title { font-family:'Courier New',monospace; font-size:11px; letter-spacing:3px;
+            text-transform:uppercase; color:#f4a261;
+            border-bottom:1px solid #2a2a2a; padding-bottom:8px; margin:0 0 16px; }
+        /* Card styles */
+        .card { display:inline-flex; flex-direction:column; justify-content:space-between;
+            width:54px; height:80px; background:#f8f8f0; border:1px solid #bbb;
+            border-radius:7px; padding:4px 5px; font-family:'Courier New',monospace;
+            font-size:13px; font-weight:bold; color:#111; user-select:none; flex-shrink:0; }
+        .card.red { color:#c0392b; }
+        .card.back { background:repeating-linear-gradient(45deg,#1a237e,#1a237e 5px,#283593 5px,#283593 10px);
+            border-color:#0d1b6e; }
+        .card-b { transform:rotate(180deg); }
+        .hand-area { display:flex; gap:6px; flex-wrap:wrap; min-height:86px; align-items:center; }
+        .hand-label { font-family:'Courier New',monospace; font-size:11px; color:#888;
+            letter-spacing:2px; margin-bottom:6px; }
+        .hand-value { font-family:'Courier New',monospace; font-size:18px; color:#f4a261;
+            margin-left:8px; }
+        .bj-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+        .bj-btn { background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15);
+            color:#bbb; border-radius:6px; padding:8px 18px;
+            font-family:'Courier New',monospace; font-size:12px; cursor:pointer; }
+        .bj-btn:hover { border-color:#f4a261; color:#fff; }
+        .bj-btn:disabled { opacity:0.3; cursor:default; }
+        .bj-btn.accent { background:#f4a261; border-color:#f4a261; color:#111; font-weight:bold; }
+        #bet-input { width:70px; background:rgba(255,255,255,0.07); border:1px solid #444;
+            color:#f4a261; font-family:'Courier New',monospace; font-size:14px;
+            border-radius:5px; padding:4px 8px; text-align:center; }
+        #bj-msg { font-family:'Courier New',monospace; font-size:1.2em; min-height:1.4em;
+            margin-top:10px; text-align:center; }
+        #bj-msg.win  { color:#4caf50; }
+        #bj-msg.lose { color:#e74c3c; }
+        #bj-msg.push { color:#f4a261; }
+        .chip-row { font-family:'Courier New',monospace; font-size:13px; color:#888; }
+        .chip-val { color:#f4a261; font-size:16px; }
+        /* Mode tabs */
+        .mode-tabs { display:flex; gap:8px; margin-bottom:14px; }
+        .mode-tab { flex:1; padding:8px; background:rgba(255,255,255,0.05);
+            border:1px solid #333; border-radius:6px; cursor:pointer;
+            font-family:'Courier New',monospace; font-size:11px; letter-spacing:2px;
+            text-transform:uppercase; color:#888; text-align:center; }
+        .mode-tab.active { border-color:#f4a261; color:#f4a261; background:rgba(244,162,97,0.08); }
+        #mp-setup input { background:rgba(255,255,255,0.07); border:1px solid #444;
+            color:#ccc; border-radius:5px; padding:5px 10px;
+            font-family:'Courier New',monospace; font-size:13px; }
+        #hs-box { text-align:center; font-family:'Courier New',monospace;
+            font-size:11px; color:#666; margin-top:12px; }
+        #hs-box strong { color:#f4a261; }
+        .mp-players { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+        .mp-player-row { display:flex; justify-content:space-between; align-items:center;
+            padding:6px 10px; background:rgba(255,255,255,0.04); border-radius:6px;
+            font-family:'Courier New',monospace; font-size:12px; }
+    </style>
+</head>
+<body class="notYetBody">
+    <h2>Zyxxyz, the Card Shark</h2>
+    <div class="navbar">
+        <a href="../index.html">Home</a>
+        <a href="../gamer/games.html">Games</a>
+    </div>
+
+    <div id="bj-page">
+        <div class="bj-panel">
+            <div class="bj-title">Blackjack</div>
+            <div class="mode-tabs">
+                <div class="mode-tab active" id="tab-sp" onclick="setMode('sp')">Single Player</div>
+                <div class="mode-tab"        id="tab-mp" onclick="setMode('mp')">Multiplayer</div>
+            </div>
+
+            <!-- SP setup -->
+            <div id="sp-setup">
+                <button class="bj-btn accent" onclick="spStart()">&#9654; New Game</button>
+            </div>
+
+            <!-- MP setup -->
+            <div id="mp-setup" style="display:none;">
+                <div class="bj-row" style="gap:10px;margin-bottom:10px;">
+                    <button class="bj-btn accent" onclick="mpCreate()">Create Room</button>
+                    <input id="mp-join-id" placeholder="Room ID" maxlength="6" style="width:90px;">
+                    <button class="bj-btn" onclick="mpJoin()">Join</button>
+                </div>
+                <div id="mp-room-info" style="font-family:'Courier New',monospace;font-size:12px;color:#888;"></div>
+            </div>
+        </div>
+
+        <div class="bj-panel" id="game-panel" style="display:none;">
+            <div class="bj-title">Playing — <span id="user-label" style="color:#bbb;font-size:10px;"></span></div>
+            <div class="chip-row">Chips: <span class="chip-val" id="chips-display">500</span>
+                &nbsp;|&nbsp; Pot: <span class="chip-val" id="pot-display">0</span></div>
+
+            <!-- Dealer hand -->
+            <div style="margin-top:14px;">
+                <div class="hand-label">DEALER <span class="hand-value" id="dealer-val"></span></div>
+                <div class="hand-area" id="dealer-hand"></div>
+            </div>
+
+            <!-- Player hand -->
+            <div style="margin-top:14px;">
+                <div class="hand-label">YOUR HAND <span class="hand-value" id="player-val"></span></div>
+                <div class="hand-area" id="player-hand"></div>
+            </div>
+
+            <div id="bj-msg"></div>
+
+            <!-- Bet phase -->
+            <div id="bet-phase" style="margin-top:12px;display:none;">
+                <div class="bj-row">
+                    <label style="font-family:'Courier New',monospace;font-size:11px;color:#888;">BET</label>
+                    <input type="number" id="bet-input" min="1" max="500" value="20">
+                    <button class="bj-btn accent" onclick="doDeal()">Deal</button>
+                </div>
+                <div style="display:flex;gap:6px;margin-top:8px;">
+                    <button class="bj-btn" onclick="quickBet(10)">+10</button>
+                    <button class="bj-btn" onclick="quickBet(25)">+25</button>
+                    <button class="bj-btn" onclick="quickBet(50)">+50</button>
+                    <button class="bj-btn" onclick="quickBet(100)">+100</button>
+                    <button class="bj-btn" onclick="maxBet()">MAX</button>
+                </div>
+            </div>
+
+            <!-- Play phase -->
+            <div id="play-phase" style="margin-top:12px;display:none;">
+                <div class="bj-row">
+                    <button class="bj-btn accent" id="btn-hit"    onclick="doHit()">Hit</button>
+                    <button class="bj-btn"        id="btn-stand"  onclick="doStand()">Stand</button>
+                    <button class="bj-btn"        id="btn-double" onclick="doDouble()">Double Down</button>
+                </div>
+            </div>
+
+            <!-- Result phase -->
+            <div id="result-phase" style="margin-top:12px;display:none;">
+                <button class="bj-btn accent" onclick="nextHand()">Next Hand</button>
+            </div>
+
+            <!-- MP players list -->
+            <div id="mp-players" class="mp-players" style="display:none;margin-top:12px;"></div>
+        </div>
+
+        <div id="hs-box">
+            &#127942; Best Score: <strong id="hs-val">—</strong> chips by <strong id="hs-user">—</strong>
+        </div>
+    </div>
+
+    <button type="button" onclick="navigateToPage('../gamer/games.html')">&#8592; Back to Games</button>
+    <script src="/js/gamer-chat.js"></script>
+    <script>
+        const myName = (typeof getOrCreateUsername === 'function') ? getOrCreateUsername() : 'Guest';
+        const FB_HS  = 'scores/blackjack';
+        document.getElementById('user-label').textContent = myName;
+
+        let game = null, mode = 'sp', roomId = null, roomRef = null;
+
+        // ── Card rendering ─────────────────────────────────────────────────────
+        function cardEl(card, faceDown) {
+            const d = document.createElement('div');
+            if (faceDown) { d.className = 'card back'; return d; }
+            const red = (card.suit === 'H' || card.suit === 'D');
+            d.className = 'card' + (red ? ' red' : '');
+            const lbl = rankLabel(card.rank) + suitSymbol(card.suit);
+            d.innerHTML = `<span>${lbl}</span><span class="card-b">${lbl}</span>`;
+            return d;
+        }
+
+        function renderHand(id, hand, hideSecond) {
+            const el = document.getElementById(id);
+            el.innerHTML = '';
+            hand.forEach((c, i) => el.appendChild(cardEl(c, hideSecond && i === 1)));
+        }
+
+        // ── Mode switching ──────────────────────────────────────────────────────
+        function setMode(m) {
+            mode = m;
+            document.getElementById('tab-sp').classList.toggle('active', m === 'sp');
+            document.getElementById('tab-mp').classList.toggle('active', m === 'mp');
+            document.getElementById('sp-setup').style.display = m === 'sp' ? '' : 'none';
+            document.getElementById('mp-setup').style.display = m === 'mp' ? '' : 'none';
+            document.getElementById('game-panel').style.display = 'none';
+        }
+
+        // ── SP ──────────────────────────────────────────────────────────────────
+        function spStart() {
+            game = newBJGame();
+            document.getElementById('game-panel').style.display = '';
+            document.getElementById('mp-players').style.display = 'none';
+            showPhase('bet');
+            updateHUD();
+        }
+
+        function doDeal() {
+            const bet = Math.max(1, Math.min(game.chips, +document.getElementById('bet-input').value || 20));
+            game = bjDeal(game, bet);
+            renderHand('dealer-hand', game.dealer, true);
+            renderHand('player-hand', game.player, false);
+            document.getElementById('dealer-val').textContent = '';
+            document.getElementById('player-val').textContent = bjHandValue(game.player);
+            document.getElementById('btn-double').disabled = !game.canDouble;
+            document.getElementById('bj-msg').textContent = '';
+            document.getElementById('bj-msg').className = '';
+            updateHUD();
+            if (bjIsBlackjack(game.player)) { doStand(); return; }
+            showPhase('playing');
+        }
+
+        function doHit() {
+            game = bjHit(game);
+            renderHand('player-hand', game.player, false);
+            document.getElementById('player-val').textContent = bjHandValue(game.player);
+            if (game.phase === 'result') showResult();
+        }
+
+        function doStand() { game = bjStand(game); showResult(); }
+        function doDouble() { game = bjDouble(game); renderHand('player-hand', game.player, false); showResult(); }
+
+        function showResult() {
+            renderHand('dealer-hand', game.dealer, false);
+            document.getElementById('dealer-val').textContent = bjHandValue(game.dealer);
+            document.getElementById('player-val').textContent = bjHandValue(game.player);
+            const msgs = { blackjack:'Blackjack! 3:2 payout!', win:'You win!', push:'Push — bet returned.', lose:'Bust!' };
+            const cls  = { blackjack:'win', win:'win', push:'push', lose:'lose' };
+            const msg  = document.getElementById('bj-msg');
+            msg.textContent = msgs[game.result] || game.result;
+            msg.className   = cls[game.result] || '';
+            updateHUD();
+            showPhase('result');
+            if (mode === 'mp' && roomRef) syncMPResult();
+            maybeUpdateHighScore(game.chips);
+        }
+
+        function nextHand() {
+            if (game.chips <= 0) { game = newBJGame(); }
+            document.getElementById('bj-msg').textContent = '';
+            document.getElementById('bj-msg').className = '';
+            document.getElementById('dealer-hand').innerHTML = '';
+            document.getElementById('player-hand').innerHTML = '';
+            document.getElementById('dealer-val').textContent = '';
+            document.getElementById('player-val').textContent = '';
+            document.getElementById('bet-input').max = game.chips;
+            showPhase('bet');
+            updateHUD();
+        }
+
+        function showPhase(ph) {
+            document.getElementById('bet-phase').style.display    = ph === 'bet'     ? '' : 'none';
+            document.getElementById('play-phase').style.display   = ph === 'playing' ? '' : 'none';
+            document.getElementById('result-phase').style.display = ph === 'result'  ? '' : 'none';
+        }
+
+        function updateHUD() {
+            document.getElementById('chips-display').textContent = game ? game.chips : 0;
+            document.getElementById('pot-display').textContent   = game ? game.bet   : 0;
+        }
+
+        function quickBet(n) {
+            const inp = document.getElementById('bet-input');
+            inp.value = Math.min(game.chips, (+inp.value || 0) + n);
+        }
+        function maxBet() { document.getElementById('bet-input').value = game.chips; }
+
+        // ── MP ─────────────────────────────────────────────────────────────────
+        function mpRoomPath(id) { return 'blackjackRooms/' + id; }
+
+        function mpCreate() {
+            if (!window.FIREBASE_READY) { alert('Firebase not available.'); return; }
+            roomId  = Math.random().toString(36).slice(2,8).toUpperCase();
+            roomRef = firebase.database().ref(mpRoomPath(roomId));
+            game    = newBJGame();
+            roomRef.set({
+                host: myName, players: { [myName]: { chips: game.chips, result: null } },
+                deck: game.deck, dealer: [], dealerDone: false, phase: 'waiting',
+            });
+            document.getElementById('mp-room-info').textContent = 'Room: ' + roomId + ' — share this with friends';
+            listenMPRoom();
+            document.getElementById('game-panel').style.display = '';
+            document.getElementById('mp-players').style.display = '';
+            showPhase('bet');
+            updateHUD();
+        }
+
+        function mpJoin() {
+            if (!window.FIREBASE_READY) { alert('Firebase not available.'); return; }
+            roomId  = (document.getElementById('mp-join-id').value || '').toUpperCase();
+            if (!roomId) return;
+            roomRef = firebase.database().ref(mpRoomPath(roomId));
+            roomRef.once('value', snap => {
+                if (!snap.val()) { alert('Room not found.'); return; }
+                game = newBJGame();
+                roomRef.child('players/' + myName).set({ chips: game.chips, result: null });
+                document.getElementById('game-panel').style.display = '';
+                document.getElementById('mp-players').style.display = '';
+                listenMPRoom();
+                showPhase('bet');
+                updateHUD();
+            });
+        }
+
+        function listenMPRoom() {
+            if (!roomRef) return;
+            roomRef.on('value', snap => {
+                const v = snap.val();
+                if (!v) return;
+                if (v.dealer && v.dealer.length && v.dealerDone) {
+                    game.dealer = v.dealer;
+                    renderHand('dealer-hand', v.dealer, false);
+                    document.getElementById('dealer-val').textContent = bjHandValue(v.dealer);
+                }
+                // Show all players
+                const mp = document.getElementById('mp-players');
+                mp.innerHTML = '';
+                Object.entries(v.players || {}).forEach(([name, data]) => {
+                    const row = document.createElement('div');
+                    row.className = 'mp-player-row';
+                    row.textContent = name + ': ' + data.chips + ' chips' + (data.result ? ' — ' + data.result : '');
+                    mp.appendChild(row);
+                });
+            });
+        }
+
+        function syncMPResult() {
+            if (!roomRef || !game) return;
+            roomRef.child('players/' + myName).update({ chips: game.chips, result: game.result });
+            // If we're the host, run the dealer and broadcast
+            roomRef.once('value', snap => {
+                const v = snap.val();
+                if (v && v.host === myName && !v.dealerDone) {
+                    roomRef.update({ dealer: game.dealer, dealerDone: true });
+                }
+            });
+        }
+
+        // ── High scores ──────────────────────────────────────────────────────────
+        function maybeUpdateHighScore(chips) {
+            if (!window.FIREBASE_READY) return;
+            const ref = firebase.database().ref(FB_HS);
+            ref.once('value', snap => {
+                const v   = snap.val();
+                const cur = (v && Number.isFinite(v.score)) ? v.score : 0;
+                if (chips > cur) ref.set({ score: Math.min(chips, 999999), username: String(myName).slice(0,40) });
+            });
+        }
+
+        if (window.FIREBASE_READY) {
+            firebase.database().ref(FB_HS).on('value', snap => {
+                const v = snap.val();
+                if (!v) return;
+                document.getElementById('hs-val').textContent  = Number.isFinite(v.score) ? v.score : '—';
+                document.getElementById('hs-user').textContent = typeof v.username === 'string' ? v.username.slice(0,40) : '—';
+            });
+        }
+    </script>
+</body>
+</html>
