@@ -183,6 +183,7 @@
         #anim-overlay {
             position: absolute; top: 0; left: 0;
             width: 100%; height: 100%; cursor: crosshair;
+            touch-action: none;
         }
 
         /* palette */
@@ -755,23 +756,10 @@
         // ── Drawing utilities ────────────────────────────────────────────────
 
         function getPos(e) {
-            if (e.touches && e.touches.length) {
-                const r = overlay.getBoundingClientRect();
-                return {
-                    x: (e.touches[0].clientX - r.left) * (CANVAS_W / r.width),
-                    y: (e.touches[0].clientY - r.top)  * (CANVAS_H / r.height)
-                };
-            }
-            if (e.changedTouches && e.changedTouches.length) {
-                const r = overlay.getBoundingClientRect();
-                return {
-                    x: (e.changedTouches[0].clientX - r.left) * (CANVAS_W / r.width),
-                    y: (e.changedTouches[0].clientY - r.top)  * (CANVAS_H / r.height)
-                };
-            }
+            const r = overlay.getBoundingClientRect();
             return {
-                x: e.offsetX * (CANVAS_W / overlay.offsetWidth),
-                y: e.offsetY * (CANVAS_H / overlay.offsetHeight)
+                x: (e.clientX - r.left) * (CANVAS_W / r.width),
+                y: (e.clientY - r.top)  * (CANVAS_H / r.height)
             };
         }
 
@@ -822,6 +810,7 @@
         function onDown(e) {
             e.preventDefault();
             if (edPlaying) return;
+            overlay.setPointerCapture(e.pointerId);
             const { x, y } = getPos(e);
             isDrawing = true; startX = x; startY = y;
             startSnap = ctx.getImageData(0, 0, CANVAS_W, CANVAS_H);
@@ -860,13 +849,10 @@
             ctx.beginPath();
         }
 
-        overlay.addEventListener('mousedown',  onDown);
-        overlay.addEventListener('mousemove',  onMove);
-        overlay.addEventListener('mouseup',    onUp);
-        overlay.addEventListener('mouseleave', onUp);
-        overlay.addEventListener('touchstart', onDown, { passive: false });
-        overlay.addEventListener('touchmove',  onMove, { passive: false });
-        overlay.addEventListener('touchend',   onUp,   { passive: false });
+        overlay.addEventListener('pointerdown',   onDown);
+        overlay.addEventListener('pointermove',   onMove);
+        overlay.addEventListener('pointerup',     onUp);
+        overlay.addEventListener('pointercancel', onUp);
 
         // ── Tool selection ───────────────────────────────────────────────────
 
