@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Architect — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js"></script>
+    <style>
+        #arch-app {
+            --bg: #09090f;
+            --surface: #111118;
+            --surface2: #18181f;
+            --border: #252532;
+            --blue: #2563eb;
+            --blue-light: #60a5fa;
+            --teal: #0891b2;
+            --teal-light: #67e8f9;
+            --amber: #f59e0b;
+            --green: #10b981;
+            --red: #ef4444;
+            --muted: #6b7280;
+            --text: #e2e8f0;
+            --text-dim: #94a3b8;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            font-family: 'Courier New', monospace;
+        }
+        #arch-app .arch-header {
+            padding: 20px 28px 14px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        #arch-app .back { color: var(--blue-light); text-decoration: none; font-size: 13px; opacity: 0.8; transition: opacity 0.2s; }
+        #arch-app .back:hover { opacity: 1; }
+        #arch-app .arch-title { display: flex; align-items: baseline; gap: 10px; }
+        #arch-app .arch-title h1 { font-size: 20px; font-weight: bold; color: var(--blue-light); margin: 0; letter-spacing: 0.05em; }
+        #arch-app .arch-badge { font-size: 10px; padding: 2px 7px; border: 1px solid var(--blue); border-radius: 4px; color: var(--blue-light); opacity: 0.65; }
+        #arch-app .arch-tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 28px; }
+        #arch-app .arch-tab {
+            padding: 11px 18px; cursor: pointer; font-size: 13px; color: var(--muted);
+            border-bottom: 2px solid transparent; margin-bottom: -1px;
+            transition: color 0.2s, border-color 0.2s; user-select: none;
+        }
+        #arch-app .arch-tab:hover { color: var(--text); }
+        #arch-app .arch-tab.active { color: var(--blue-light); border-bottom-color: var(--blue); }
+        #arch-app .arch-panel { display: none; }
+        #arch-app .arch-panel.active { display: block; }
+
+        /* ── Diagram layout ── */
+        #arch-app .diagram-layout {
+            display: flex;
+            height: calc(100vh - 112px);
+            min-height: 520px;
+        }
+        #arch-app .sidebar {
+            width: 154px;
+            flex-shrink: 0;
+            border-right: 1px solid var(--border);
+            background: var(--surface);
+            padding: 12px 8px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        #arch-app .sidebar-label {
+            font-size: 9px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            padding: 6px 4px 4px;
+            margin-top: 6px;
+        }
+        #arch-app .sidebar-label:first-child { margin-top: 0; }
+        #arch-app .shape-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            color: var(--text-dim);
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+        #arch-app .shape-item:hover { background: var(--surface2); border-color: var(--blue); color: var(--blue-light); }
+        #arch-app .shape-item.active { background: rgba(37,99,235,0.15); border-color: var(--blue); color: var(--blue-light); }
+        #arch-app .shape-preview { flex-shrink: 0; }
+        #arch-app .arch-btn {
+            width: 100%;
+            padding: 7px 8px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-dim);
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+        #arch-app .arch-btn:hover { background: var(--surface); border-color: var(--blue); color: var(--blue-light); }
+        #arch-app .arch-btn.active { background: rgba(37,99,235,0.15); border-color: var(--blue); color: var(--blue-light); }
+        #arch-app .arch-btn.danger:hover { border-color: var(--red); color: var(--red); }
+
+        /* ── Canvas ── */
+        #arch-app .canvas-wrap {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg);
+        }
+        #arch-app #arch-svg { width: 100%; height: 100%; display: block; cursor: default; }
+        #arch-app #arch-svg.placing { cursor: crosshair; }
+        #arch-app #arch-svg.connecting { cursor: cell; }
+        #arch-app #label-input {
+            position: absolute;
+            display: none;
+            background: var(--surface2);
+            border: 1.5px solid var(--blue);
+            border-radius: 4px;
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            padding: 3px 7px;
+            outline: none;
+            text-align: center;
+            transform: translate(-50%, -50%);
+            min-width: 80px;
+            max-width: 160px;
+            z-index: 10;
+        }
+        #arch-app .arch-status {
+            padding: 6px 16px;
+            font-size: 10px;
+            color: var(--muted);
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+            min-height: 26px;
+        }
+
+        /* ── Glossary (reuse same accordion pattern) ── */
+        #arch-app .gl-outer { padding: 20px 28px 40px; }
+        #arch-app .gl-section { margin-bottom: 26px; }
+        #arch-app .gl-section-title {
+            font-size: 12px; font-weight: bold; color: var(--blue-light);
+            letter-spacing: 0.06em; text-transform: uppercase;
+            margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+        }
+        #arch-app .gl-term { border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px; overflow: hidden; }
+        #arch-app .gl-q {
+            padding: 9px 14px; cursor: pointer; display: flex;
+            justify-content: space-between; align-items: center;
+            background: var(--surface2); font-size: 12px; font-weight: bold;
+            color: var(--text); user-select: none; transition: background 0.15s, color 0.15s;
+        }
+        #arch-app .gl-q:hover { background: var(--surface); color: var(--blue-light); }
+        #arch-app .gl-q .gl-arr { font-size: 10px; color: var(--muted); transition: transform 0.2s; }
+        #arch-app .gl-q.open .gl-arr { transform: rotate(90deg); }
+        #arch-app .gl-a {
+            display: none; padding: 10px 14px; font-size: 12px;
+            line-height: 1.75; color: var(--text-dim);
+            border-top: 1px solid var(--border); background: var(--surface);
+        }
+        #arch-app .gl-a.open { display: block; }
+        #arch-app .gl-a code { background: var(--surface2); padding: 1px 5px; border-radius: 3px; color: var(--amber); font-size: 11px; }
+    </style>
+</head>
+<body>
+<div id="arch-app">
+
+    <div class="arch-header">
+        <a class="back" href="/technologist/apps.html">← Back to Apps</a>
+        <div class="arch-title">
+            <h1>The Architect</h1>
+            <span class="arch-badge">DEMO</span>
+        </div>
+    </div>
+
+    <div class="arch-tabs">
+        <div class="arch-tab active" data-tab="diagram">Diagram</div>
+        <div class="arch-tab" data-tab="glossary">Glossary</div>
+    </div>
+
+    <!-- ═══════ DIAGRAM ═══════ -->
+    <div class="arch-panel active" id="tab-diagram">
+        <div class="diagram-layout">
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-label">Shapes</div>
+
+                <div class="shape-item" data-type="process">
+                    <svg class="shape-preview" width="36" height="22" viewBox="0 0 36 22">
+                        <rect x="1" y="1" width="34" height="20" rx="2" fill="#1a1a26" stroke="#2563eb" stroke-width="1.5"/>
+                    </svg>
+                    Process
+                </div>
+                <div class="shape-item" data-type="decision">
+                    <svg class="shape-preview" width="36" height="26" viewBox="0 0 36 26">
+                        <polygon points="18,1 35,13 18,25 1,13" fill="#1a1a26" stroke="#2563eb" stroke-width="1.5"/>
+                    </svg>
+                    Decision
+                </div>
+                <div class="shape-item" data-type="terminal">
+                    <svg class="shape-preview" width="36" height="22" viewBox="0 0 36 22">
+                        <ellipse cx="18" cy="11" rx="17" ry="10" fill="#1a1a26" stroke="#2563eb" stroke-width="1.5"/>
+                    </svg>
+                    Terminal
+                </div>
+                <div class="shape-item" data-type="database">
+                    <svg class="shape-preview" width="36" height="26" viewBox="0 0 36 26">
+                        <rect x="3" y="8" width="30" height="17" fill="#1a1a26" stroke="#2563eb" stroke-width="1.5"/>
+                        <ellipse cx="18" cy="8" rx="15" ry="6" fill="#1a1a26" stroke="#2563eb" stroke-width="1.5"/>
+                    </svg>
+                    Database
+                </div>
+                <div class="shape-item" data-type="io">
+                    <svg class="shape-preview" width="36" height="22" viewBox="0 0 36 22">
+                        <polygon points="8,1 35,1 28,21 1,21" fill="#1a1a26" stroke="#2563eb" stroke-width="1.5"/>
+                    </svg>
+                    I / O
+                </div>
+
+                <div class="sidebar-label">Actions</div>
+                <button class="arch-btn" id="btn-connect">⟶ Connect</button>
+                <button class="arch-btn danger" id="btn-delete">✕ Delete</button>
+                <button class="arch-btn" id="btn-undo">↩ Undo</button>
+                <button class="arch-btn danger" id="btn-clear">⊘ Clear All</button>
+
+                <div class="sidebar-label">Export</div>
+                <button class="arch-btn" id="btn-export-svg">↓ SVG</button>
+                <button class="arch-btn" id="btn-export-png">↓ PNG</button>
+            </div>
+
+            <!-- Canvas -->
+            <div class="canvas-wrap" id="canvas-wrap">
+                <svg id="arch-svg" viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg"
+                     preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <marker id="arch-arrow" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+                            <polygon points="0 0, 9 3.5, 0 7" fill="#60a5fa"/>
+                        </marker>
+                        <marker id="arch-arrow-sel" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+                            <polygon points="0 0, 9 3.5, 0 7" fill="#f59e0b"/>
+                        </marker>
+                        <pattern id="arch-dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+                            <circle cx="12" cy="12" r="0.9" fill="#1e1e2e"/>
+                        </pattern>
+                    </defs>
+                    <rect id="arch-bg" width="960" height="600" fill="url(#arch-dots)"/>
+                </svg>
+                <input type="text" id="label-input" maxlength="32" autocomplete="off">
+            </div>
+        </div>
+        <div class="arch-status" id="arch-status">Click a shape on the left to begin placing, or click existing nodes to select and move them. Double-click a node to rename it.</div>
+    </div>
+
+    <!-- ═══════ GLOSSARY ═══════ -->
+    <div class="arch-panel" id="tab-glossary">
+        <div class="gl-outer">
+
+            <div class="gl-section">
+                <div class="gl-section-title">Diagram Types</div>
+                <div class="gl-term"><div class="gl-q">Flowchart <span class="gl-arr">▶</span></div><div class="gl-a">A diagram that maps out a process or workflow using standardised symbols connected by arrows. Rectangles represent actions or steps, diamonds represent decisions with branching Yes/No paths, ovals mark start and end points. Flowcharts are language-agnostic and understood across disciplines — from software engineering to operations management.</div></div>
+                <div class="gl-term"><div class="gl-q">UML — Unified Modeling Language <span class="gl-arr">▶</span></div><div class="gl-a">A standardised visual language for describing software systems. UML has 14 diagram types divided into structural (<em>class, component, deployment</em>) and behavioural (<em>use case, sequence, state machine, activity</em>). In practice, class diagrams and sequence diagrams are the most commonly used. Defined by the OMG (Object Management Group).</div></div>
+                <div class="gl-term"><div class="gl-q">Entity-Relationship Diagram (ERD) <span class="gl-arr">▶</span></div><div class="gl-a">Models the data entities in a system, their attributes, and how they relate to each other. Entities become database tables; relationships become foreign key constraints or join tables. Crow's foot notation shows cardinality: a single line means "one", a forked triple line means "many". ERDs are created before or alongside database schema design.</div></div>
+                <div class="gl-term"><div class="gl-q">Sequence Diagram <span class="gl-arr">▶</span></div><div class="gl-a">A UML diagram that shows how objects interact in a particular scenario over time. Participants appear as vertical "lifelines" and messages flow left-to-right as horizontal arrows between them, ordered top-to-bottom chronologically. Essential for documenting API call chains, authentication flows, and microservice interactions.</div></div>
+                <div class="gl-term"><div class="gl-q">Architecture Diagram <span class="gl-arr">▶</span></div><div class="gl-a">A high-level diagram showing the major components of a system (services, databases, clients, external APIs) and how they communicate. Less standardised than UML — notation varies by team and tool. Common elements: boxes for components, arrows for data flow or network connections, clouds for external systems, cylinders for databases. This app produces architecture diagrams.</div></div>
+                <div class="gl-term"><div class="gl-q">Data Flow Diagram (DFD) <span class="gl-arr">▶</span></div><div class="gl-a">Shows how data moves through a system — inputs, transformations, storage, and outputs. DFDs have four symbols: rectangles (external entities), rounded rectangles or circles (processes), open-ended rectangles (data stores), and arrows (data flows with labels). Level 0 (Context Diagram) shows the whole system as one process; Level 1 breaks it into sub-processes.</div></div>
+            </div>
+
+            <div class="gl-section">
+                <div class="gl-section-title">Flowchart Symbols</div>
+                <div class="gl-term"><div class="gl-q">Process — Rectangle <span class="gl-arr">▶</span></div><div class="gl-a">The most common flowchart symbol. Represents a single action, operation, or step in the process — anything that transforms input into output. Examples: "Validate user credentials", "Calculate total price", "Write record to database". Each rectangle should describe one discrete action and have exactly one entry and one exit arrow.</div></div>
+                <div class="gl-term"><div class="gl-q">Decision — Diamond <span class="gl-arr">▶</span></div><div class="gl-a">Represents a branching point where a Yes/No or True/False question is asked. Has one input and two (or more) outputs, each labelled with the condition they represent. Nested decisions create complex logic — if you find yourself nesting more than two or three diamonds, it's often a sign the logic should be refactored into a separate subprocess.</div></div>
+                <div class="gl-term"><div class="gl-q">Terminal — Oval / Rounded Rectangle <span class="gl-arr">▶</span></div><div class="gl-a">Marks the start or end of a process. Every flowchart has exactly one Start terminal (at the top) and one or more End/Stop terminals. When a process can terminate in multiple ways (success, error, timeout), each termination path ends in its own terminal with a descriptive label. Also used to indicate a call to a separate sub-process flowchart.</div></div>
+                <div class="gl-term"><div class="gl-q">Database — Cylinder <span class="gl-arr">▶</span></div><div class="gl-a">Represents a data store — a database, file, or any persistent storage medium. The cylinder shape comes from the physical appearance of old magnetic disk drives. In architecture diagrams, annotate the cylinder with the type of database (SQL, MongoDB, Redis, S3 bucket) and what entity or domain it stores. A single service should ideally own its own data store (database-per-service pattern).</div></div>
+                <div class="gl-term"><div class="gl-q">I/O — Parallelogram <span class="gl-arr">▶</span></div><div class="gl-a">Represents an input or output operation — reading from a user, a file, an API, or writing to an output stream. The slanted sides visually suggest data moving in or out. In process flows, it marks the boundary where the system interacts with the outside world. In data flow diagrams, this boundary would instead be represented by an external entity rectangle.</div></div>
+                <div class="gl-term"><div class="gl-q">Arrow — Control Flow <span class="gl-arr">▶</span></div><div class="gl-a">Arrows show the direction of flow — where control goes next after each step. Every shape except the Terminal must have at least one outgoing arrow. Avoid crossing arrows; reroute the layout instead. In data flow diagrams, arrows carry data rather than control — they are labelled with the name of the data being passed.</div></div>
+            </div>
+
+            <div class="gl-section">
+                <div class="gl-section-title">System Architecture Concepts</div>
+                <div class="gl-term"><div class="gl-q">Monolith vs Microservices <span class="gl-arr">▶</span></div><div class="gl-a">A <em>monolith</em> packages all application modules (auth, billing, notifications, etc.) into one deployable unit — one codebase, one process, one database. Simple to develop and debug initially; becomes harder to scale and release independently as the codebase grows. <em>Microservices</em> splits those modules into independently deployable services that communicate over a network, enabling each to be scaled, deployed, and rewritten independently at the cost of distributed systems complexity.</div></div>
+                <div class="gl-term"><div class="gl-q">API — Application Programming Interface <span class="gl-arr">▶</span></div><div class="gl-a">A defined contract through which one component exposes its capabilities for another to consume, without exposing internal implementation. In web systems, APIs typically communicate over HTTP using JSON. A REST API treats resources as nouns addressed by URLs (<code>GET /users/42</code>). A GraphQL API lets the client specify exactly which fields to fetch in a single query. APIs are the arrows between boxes in an architecture diagram.</div></div>
+                <div class="gl-term"><div class="gl-q">Load Balancer <span class="gl-arr">▶</span></div><div class="gl-a">A component that distributes incoming requests across multiple instances of a service, preventing any single instance from becoming a bottleneck. Strategies include round-robin (distribute evenly in order), least-connections (route to the least-busy instance), and IP hash (route the same client to the same instance for session affinity). In diagrams, the load balancer sits in front of a service cluster.</div></div>
+                <div class="gl-term"><div class="gl-q">Message Queue / Event Bus <span class="gl-arr">▶</span></div><div class="gl-a">A component that decouples services by holding messages in transit. A <em>producer</em> pushes a message to the queue; a <em>consumer</em> reads and processes it asynchronously. This decoupling means the producer does not need to wait for the consumer and the system is resilient to consumer downtime. Common implementations: Kafka (high-throughput event streaming), RabbitMQ (task queues), AWS SQS. In diagrams, queues sit between services as intermediary nodes.</div></div>
+                <div class="gl-term"><div class="gl-q">CDN — Content Delivery Network <span class="gl-arr">▶</span></div><div class="gl-a">A geographically distributed network of servers that cache and serve static assets (images, CSS, JS, video) from locations close to the end user. Reduces latency (content is served from nearby nodes rather than your origin server) and reduces origin load. In architecture diagrams, the CDN sits in front of the origin server and intercepts cacheable requests.</div></div>
+                <div class="gl-term"><div class="gl-q">Pub / Sub Pattern <span class="gl-arr">▶</span></div><div class="gl-a">Publishers emit events to named <em>topics</em> without knowing who will receive them. Subscribers register interest in a topic and receive all events published to it. This many-to-many broadcast pattern enables loose coupling — adding a new subscriber (e.g., an analytics service) requires no change to the publisher. Compare with point-to-point queues, where each message has exactly one consumer.</div></div>
+            </div>
+
+            <div class="gl-section">
+                <div class="gl-section-title">Database &amp; Data Modeling</div>
+                <div class="gl-term"><div class="gl-q">Entity, Attribute, Relationship <span class="gl-arr">▶</span></div><div class="gl-a">In data modeling, an <em>entity</em> is a real-world object or concept you want to track (User, Order, Product). An <em>attribute</em> is a property of that entity (email, created_at, price). A <em>relationship</em> describes how entities associate — "a User places many Orders" is a one-to-many relationship, mapped in SQL with a foreign key on the Orders table pointing to Users.</div></div>
+                <div class="gl-term"><div class="gl-q">Primary Key &amp; Foreign Key <span class="gl-arr">▶</span></div><div class="gl-a">A <em>primary key</em> uniquely identifies each row in a table — often an auto-incrementing integer or a UUID. A <em>foreign key</em> is a column in one table that references the primary key of another, enforcing referential integrity (you cannot insert an Order for a User that doesn't exist). In an ERD, foreign keys represent the "many" side of a relationship.</div></div>
+                <div class="gl-term"><div class="gl-q">Normalization <span class="gl-arr">▶</span></div><div class="gl-a">The process of structuring a relational database to reduce redundancy and improve data integrity. <em>1NF</em>: each column holds atomic values, no repeating groups. <em>2NF</em>: every non-key attribute depends on the <em>whole</em> primary key (matters for composite keys). <em>3NF</em>: every non-key attribute depends <em>only</em> on the primary key, not on other non-key columns (no transitive dependencies). Most production schemas target 3NF.</div></div>
+                <div class="gl-term"><div class="gl-q">ACID Properties <span class="gl-arr">▶</span></div><div class="gl-a"><em>Atomicity</em>: a transaction either fully succeeds or fully rolls back — no partial writes. <em>Consistency</em>: a transaction takes the database from one valid state to another, honouring all constraints. <em>Isolation</em>: concurrent transactions behave as if they ran serially. <em>Durability</em>: once committed, a transaction survives crashes. ACID is the guarantee offered by traditional SQL databases; many NoSQL databases relax some guarantees in exchange for availability and partition tolerance (CAP theorem).</div></div>
+                <div class="gl-term"><div class="gl-q">SQL vs NoSQL <span class="gl-arr">▶</span></div><div class="gl-a"><em>SQL</em> (relational) databases store data in tables with a fixed schema, enforce relationships, and provide ACID guarantees. Optimal when data relationships are well-understood and consistency is critical. <em>NoSQL</em> covers document stores (MongoDB), key-value stores (Redis), column-family stores (Cassandra), and graph databases (Neo4j). NoSQL trades relational integrity for flexible schemas, horizontal scalability, and high write throughput. Choose based on access patterns, not just popularity.</div></div>
+                <div class="gl-term"><div class="gl-q">CRUD <span class="gl-arr">▶</span></div><div class="gl-a">The four fundamental data operations: <em>Create</em> (INSERT), <em>Read</em> (SELECT), <em>Update</em> (UPDATE), <em>Delete</em> (DELETE). Most application features map onto CRUD — a "user profile editor" is Read + Update; a "delete account" button is Delete. REST APIs map CRUD to HTTP verbs: <code>POST</code> = Create, <code>GET</code> = Read, <code>PUT/PATCH</code> = Update, <code>DELETE</code> = Delete.</div></div>
+            </div>
+
+            <div class="gl-section">
+                <div class="gl-section-title">Design Patterns</div>
+                <div class="gl-term"><div class="gl-q">MVC — Model, View, Controller <span class="gl-arr">▶</span></div><div class="gl-a">A structural pattern that separates concerns into three roles: the <em>Model</em> manages data and business logic; the <em>View</em> renders the UI; the <em>Controller</em> handles user input, orchestrates the Model, and selects which View to render. Popularised by Rails and Django web frameworks. Variants include MVP (Model-View-Presenter) and MVVM (Model-View-ViewModel, common in React and Angular).</div></div>
+                <div class="gl-term"><div class="gl-q">Repository Pattern <span class="gl-arr">▶</span></div><div class="gl-a">Abstracts data access behind an interface so that business logic does not directly depend on the database technology. A <code>UserRepository</code> interface might define <code>findById</code>, <code>save</code>, and <code>delete</code>; the concrete implementation handles SQL queries. This makes it trivial to swap databases, add caching, or mock the repository in tests without touching business logic.</div></div>
+                <div class="gl-term"><div class="gl-q">Singleton Pattern <span class="gl-arr">▶</span></div><div class="gl-a">Ensures a class has only one instance and provides a global access point to it. Common uses: database connection pools, configuration registries, logging services. In modern dependency injection frameworks the pattern is largely replaced by registering a class as a singleton in the DI container rather than coding it explicitly — which avoids the testability problems of global mutable state.</div></div>
+                <div class="gl-term"><div class="gl-q">Observer / Event-Driven Pattern <span class="gl-arr">▶</span></div><div class="gl-a">An object (the <em>subject</em> or <em>emitter</em>) maintains a list of dependents (<em>observers</em>) and notifies them automatically when its state changes. The DOM event system is the canonical example: <code>addEventListener</code> registers an observer; dispatching a click event notifies all registered listeners. At system scale, this pattern becomes the Pub/Sub or Event Bus architecture.</div></div>
+                <div class="gl-term"><div class="gl-q">Dependency Injection (DI) <span class="gl-arr">▶</span></div><div class="gl-a">A technique where a component receives its dependencies from the outside rather than constructing them itself. Instead of <code>const db = new PostgresClient()</code> inside a service, the service declares <code>constructor(db: Database)</code> and the DI container provides the right implementation at runtime. This decoupling enables easy testing (inject a mock) and configuration (inject a different database for staging vs production).</div></div>
+                <div class="gl-term"><div class="gl-q">Factory Pattern <span class="gl-arr">▶</span></div><div class="gl-a">Delegates object creation to a dedicated factory function or class rather than using <code>new</code> directly. The factory decides which concrete class to instantiate based on runtime parameters. Useful when the exact type to create depends on configuration or user input, or when construction is complex. A <code>NotificationFactory.create('email' | 'sms' | 'push')</code> returns the appropriate notifier without the caller needing to know the class names.</div></div>
+            </div>
+
+            <div class="gl-section">
+                <div class="gl-section-title">Graph &amp; Network Theory</div>
+                <div class="gl-term"><div class="gl-q">Node / Vertex and Edge <span class="gl-arr">▶</span></div><div class="gl-a">The two fundamental building blocks of a graph. A <em>node</em> (or vertex) represents an entity — a service, a person, a router, a webpage. An <em>edge</em> represents a relationship or connection between two nodes. In a network diagram: nodes are servers and edges are network links. In a social graph: nodes are users and edges are friendships.</div></div>
+                <div class="gl-term"><div class="gl-q">Directed vs Undirected Graph <span class="gl-arr">▶</span></div><div class="gl-a">In an <em>undirected</em> graph, edges have no direction — if A is connected to B, B is also connected to A (friendships, physical cables). In a <em>directed</em> graph (digraph), edges are arrows — A → B does not imply B → A. API call graphs, dependency trees, and data pipelines are directed graphs because data flows one way.</div></div>
+                <div class="gl-term"><div class="gl-q">DAG — Directed Acyclic Graph <span class="gl-arr">▶</span></div><div class="gl-a">A directed graph with no cycles — you cannot follow edges and return to a node you've already visited. DAGs model dependencies naturally: task scheduling (you can't start task B before A finishes), build systems (Makefile targets), and version control history. Topological sort — ordering nodes so all edges point forward — is only possible on a DAG.</div></div>
+                <div class="gl-term"><div class="gl-q">Weighted Graph <span class="gl-arr">▶</span></div><div class="gl-a">A graph where each edge carries a numeric <em>weight</em> representing cost, distance, latency, bandwidth, or any other metric. Shortest-path algorithms like Dijkstra and A* require weighted graphs. In network diagrams, edge weights might represent latency (ms), bandwidth (Gbps), or financial cost. An unweighted graph can be treated as a weighted graph where every edge has weight 1.</div></div>
+                <div class="gl-term"><div class="gl-q">Degree, Path, and Cycle <span class="gl-arr">▶</span></div><div class="gl-a">The <em>degree</em> of a node is the number of edges connected to it (in-degree and out-degree for directed graphs). A <em>path</em> is a sequence of nodes connected by edges with no repeated nodes. A <em>cycle</em> is a path that returns to its starting node. Detecting cycles is important for dependency resolution — a circular dependency (A needs B needs A) is a cycle and prevents proper initialisation order.</div></div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+<script>
+// ─── Tab switching ─────────────────────────────────────────────────────────────
+document.querySelectorAll('#arch-app .arch-tab').forEach(t => {
+    t.addEventListener('click', () => {
+        document.querySelectorAll('#arch-app .arch-tab').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('#arch-app .arch-panel').forEach(x => x.classList.remove('active'));
+        t.classList.add('active');
+        document.getElementById('tab-' + t.dataset.tab).classList.add('active');
+    });
+});
+
+// ─── Glossary accordion ────────────────────────────────────────────────────────
+document.querySelectorAll('#arch-app .gl-q').forEach(q => {
+    q.addEventListener('click', () => {
+        q.classList.toggle('open');
+        q.nextElementSibling.classList.toggle('open');
+    });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  DIAGRAM ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const VB_W = 960, VB_H = 600;
+
+const NODE_DIMS = {
+    process:  {w:140, h:50},
+    decision: {w:140, h:72},
+    terminal: {w:120, h:48},
+    database: {w:110, h:62},
+    io:       {w:140, h:50},
+};
+
+let nodes = [], edges = [], nextId = 1;
+let selected = null;          // {kind:'node'|'edge', id}
+let mode = 'select';          // 'select' | 'place:type' | 'connect'
+let connSrc = null;           // node id when connecting
+let dragging = null;          // {id, ox, oy, mx, my}
+let history = [];             // undo stack (snapshots)
+
+const archSVG  = document.getElementById('arch-svg');
+const statusEl = document.getElementById('arch-status');
+const labelIn  = document.getElementById('label-input');
+
+// ── SVG helpers ───────────────────────────────────────────────────────────────
+function svgE(tag, attrs = {}) {
+    const el = document.createElementNS(SVG_NS, tag);
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    return el;
+}
+
+function svgPt(e) {
+    const rect = archSVG.getBoundingClientRect();
+    return [
+        (e.clientX - rect.left) / rect.width  * VB_W,
+        (e.clientY - rect.top)  / rect.height * VB_H,
+    ];
+}
+
+// ── Connection point: nearest border point of node toward (tx, ty) ────────────
+function connPt(node, tx, ty) {
+    const cx = node.x + node.w / 2, cy = node.y + node.h / 2;
+    const dx = tx - cx, dy = ty - cy;
+    if (!dx && !dy) return [cx, cy];
+
+    if (node.type === 'terminal') {
+        const rx = node.w / 2, ry = node.h / 2;
+        const ang = Math.atan2(dy * rx, dx * ry);
+        return [cx + rx * Math.cos(ang), cy + ry * Math.sin(ang)];
+    }
+    if (node.type === 'decision') {
+        const hw = node.w / 2, hh = node.h / 2;
+        const adx = Math.abs(dx), ady = Math.abs(dy);
+        const t = 1 / (adx / hw + ady / hh + 1e-9);
+        return [cx + dx * t, cy + dy * t];
+    }
+    // rect / database / io: bounding box
+    const hw = node.w / 2, hh = node.h / 2;
+    const adx = Math.abs(dx), ady = Math.abs(dy);
+    if (adx * hh >= ady * hw) {
+        return [cx + Math.sign(dx) * hw, cy + dy * (hw / (adx + 1e-9))];
+    }
+    return [cx + dx * (hh / (ady + 1e-9)), cy + Math.sign(dy) * hh];
+}
+
+// ── Build SVG shape for a node ─────────────────────────────────────────────────
+function buildNodeShapes(node, fill, stroke, sw) {
+    const {x, y, w, h, type} = node;
+    const cx = x + w / 2, cy = y + h / 2;
+    const els = [];
+
+    if (type === 'process') {
+        els.push(svgE('rect', {x, y, width:w, height:h, rx:4, fill, stroke, 'stroke-width':sw}));
+    } else if (type === 'decision') {
+        els.push(svgE('polygon', {
+            points: `${cx},${y} ${x+w},${cy} ${cx},${y+h} ${x},${cy}`,
+            fill, stroke, 'stroke-width':sw,
+        }));
+    } else if (type === 'terminal') {
+        els.push(svgE('ellipse', {cx, cy, rx:w/2, ry:h/2, fill, stroke, 'stroke-width':sw}));
+    } else if (type === 'database') {
+        const ery = 10;
+        els.push(svgE('rect',    {x, y:y+ery, width:w, height:h-ery, fill, stroke, 'stroke-width':sw}));
+        els.push(svgE('ellipse', {cx, cy:y+ery, rx:w/2, ry:ery, fill, stroke, 'stroke-width':sw}));
+        // bottom arc to close cylinder
+        const arc = svgE('path', {
+            d: `M ${x} ${y+h-ery} A ${w/2} ${ery} 0 0 0 ${x+w} ${y+h-ery}`,
+            fill:'none', stroke, 'stroke-width':sw,
+        });
+        els.push(arc);
+    } else if (type === 'io') {
+        const off = 14;
+        els.push(svgE('polygon', {
+            points: `${x+off},${y} ${x+w},${y} ${x+w-off},${y+h} ${x},${y+h}`,
+            fill, stroke, 'stroke-width':sw,
+        }));
+    }
+    return els;
+}
+
+// ── Full render ────────────────────────────────────────────────────────────────
+function render() {
+    // Remove all children except <defs> and background rect
+    const children = Array.from(archSVG.children);
+    children.forEach(c => {
+        if (c.tagName !== 'defs' && c.id !== 'arch-bg') archSVG.removeChild(c);
+    });
+
+    // Edges first (underneath nodes)
+    edges.forEach(edge => {
+        const src = nodes.find(n => n.id === edge.src);
+        const dst = nodes.find(n => n.id === edge.dst);
+        if (!src || !dst) return;
+
+        const scx = src.x + src.w / 2, scy = src.y + src.h / 2;
+        const dcx = dst.x + dst.w / 2, dcy = dst.y + dst.h / 2;
+        const [x1, y1] = connPt(src, dcx, dcy);
+        const [x2, y2] = connPt(dst, scx, scy);
+
+        const isSel = selected?.kind === 'edge' && selected.id === edge.id;
+        const edgePath = svgE('path', {
+            d: `M ${x1} ${y1} L ${x2} ${y2}`,
+            stroke: isSel ? '#f59e0b' : '#60a5fa',
+            'stroke-width': isSel ? 2.5 : 1.8,
+            fill: 'none',
+            'marker-end': isSel ? 'url(#arch-arrow-sel)' : 'url(#arch-arrow)',
+            'stroke-dasharray': isSel ? '6 3' : 'none',
+            'data-edge-id': edge.id,
+            style: 'cursor:pointer',
+        });
+        edgePath.dataset.edgeId = edge.id;
+        archSVG.appendChild(edgePath);
+    });
+
+    // Nodes on top
+    nodes.forEach(node => {
+        const isSel     = selected?.kind === 'node' && selected.id === node.id;
+        const isConnSrc = connSrc === node.id;
+        const stroke    = isConnSrc ? '#10b981' : isSel ? '#f59e0b' : '#2563eb';
+        const sw        = isSel || isConnSrc ? '2.5' : '1.8';
+        const fill      = '#1a1a26';
+
+        const g = svgE('g', {style:'cursor:grab'});
+        g.dataset.nodeId = node.id;
+
+        buildNodeShapes(node, fill, stroke, sw).forEach(s => g.appendChild(s));
+
+        if (isSel) {
+            // subtle glow highlight
+            const halo = svgE('rect', {
+                x: node.x - 4, y: node.y - 4,
+                width: node.w + 8, height: node.h + 8,
+                rx: 6, fill: 'none',
+                stroke: '#f59e0b', 'stroke-width': '1', opacity: '0.35',
+            });
+            g.insertBefore(halo, g.firstChild);
+        }
+
+        const cx = node.x + node.w / 2, cy = node.y + node.h / 2;
+        const text = svgE('text', {
+            x: cx, y: cy,
+            'text-anchor': 'middle',
+            'dominant-baseline': 'central',
+            'font-family': 'Courier New, monospace',
+            'font-size': '12',
+            fill: '#e2e8f0',
+            style: 'pointer-events:none; user-select:none;',
+        });
+        text.textContent = node.label;
+        g.appendChild(text);
+
+        archSVG.appendChild(g);
+    });
+
+    // SVG cursor
+    archSVG.className = mode.startsWith('place') ? 'placing' : mode === 'connect' ? 'connecting' : '';
+}
+
+// ── Mode management ───────────────────────────────────────────────────────────
+function setMode(m) {
+    mode = m;
+    connSrc = null;
+    document.querySelectorAll('#arch-app .shape-item, #arch-app .arch-btn').forEach(el => el.classList.remove('active'));
+    if (m.startsWith('place:')) {
+        document.querySelector(`[data-type="${m.slice(6)}"]`)?.classList.add('active');
+        statusEl.textContent = `Click on the canvas to place a ${m.slice(6)} node. Press Escape to cancel.`;
+    } else if (m === 'connect') {
+        document.getElementById('btn-connect').classList.add('active');
+        statusEl.textContent = 'Click the source node, then the destination node to draw an arrow. Press Escape to cancel.';
+    } else {
+        statusEl.textContent = 'Click a shape to place it, or click existing nodes to select and move them. Double-click a node to rename it.';
+    }
+    render();
+}
+
+// ── Snapshot for undo ─────────────────────────────────────────────────────────
+function snapshot() {
+    history.push({
+        nodes: nodes.map(n => ({...n})),
+        edges: edges.map(e => ({...e})),
+    });
+    if (history.length > 40) history.shift();
+}
+
+// ── Place a node ──────────────────────────────────────────────────────────────
+function placeNode(e, type) {
+    const [px, py] = svgPt(e);
+    const {w, h} = NODE_DIMS[type];
+    const labels = {process:'Process', decision:'Decision', terminal:'Start/End', database:'Database', io:'Input/Output'};
+    snapshot();
+    nodes.push({id: 'n'+(nextId++), type, x: px - w/2, y: py - h/2, w, h, label: labels[type]});
+    setMode('select');
+    render();
+}
+
+// ── Mouse events ──────────────────────────────────────────────────────────────
+archSVG.addEventListener('mousedown', e => {
+    if (e.target === labelIn) return;
+    commitLabel();
+
+    const nodeEl = e.target.closest('[data-node-id]');
+    const edgeEl = e.target.closest('[data-edge-id]');
+
+    if (nodeEl) {
+        const id = nodeEl.dataset.nodeId;
+        if (mode === 'connect') {
+            if (!connSrc) {
+                connSrc = id;
+                statusEl.textContent = 'Now click the destination node.';
+                render();
+            } else if (connSrc === id) {
+                connSrc = null;
+                statusEl.textContent = 'Click the source node, then the destination node to draw an arrow.';
+                render();
+            } else {
+                snapshot();
+                edges.push({id:'e'+(nextId++), src:connSrc, dst:id});
+                connSrc = null;
+                statusEl.textContent = 'Arrow created. Click another source node to continue, or press Escape.';
+                render();
+            }
+        } else if (mode === 'select') {
+            selected = {kind:'node', id};
+            const [mx, my] = svgPt(e);
+            const node = nodes.find(n => n.id === id);
+            dragging = {id, ox:node.x, oy:node.y, mx, my};
+            render();
+        }
+        e.stopPropagation();
+
+    } else if (edgeEl) {
+        if (mode === 'select') {
+            selected = {kind:'edge', id: edgeEl.dataset.edgeId};
+            render();
+        }
+        e.stopPropagation();
+
+    } else {
+        // background click
+        if (mode.startsWith('place:')) {
+            placeNode(e, mode.slice(6));
+        } else {
+            selected = null;
+            render();
+        }
+    }
+});
+
+document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const [mx, my] = svgPt(e);
+    const node = nodes.find(n => n.id === dragging.id);
+    if (!node) return;
+    node.x = Math.max(0, Math.min(VB_W - node.w, dragging.ox + mx - dragging.mx));
+    node.y = Math.max(0, Math.min(VB_H - node.h, dragging.oy + my - dragging.my));
+    render();
+});
+
+document.addEventListener('mouseup', () => {
+    if (dragging) { snapshot(); dragging = null; }
+});
+
+// ── Double-click: edit label ──────────────────────────────────────────────────
+archSVG.addEventListener('dblclick', e => {
+    const nodeEl = e.target.closest('[data-node-id]');
+    if (!nodeEl) return;
+    const node = nodes.find(n => n.id === nodeEl.dataset.nodeId);
+    if (!node) return;
+    startEdit(node);
+});
+
+function startEdit(node) {
+    const rect = archSVG.getBoundingClientRect();
+    const sx = rect.left + (node.x + node.w / 2) / VB_W * rect.width;
+    const sy = rect.top  + (node.y + node.h / 2) / VB_H * rect.height;
+    labelIn.dataset.nodeId = node.id;
+    labelIn.value = node.label;
+    labelIn.style.left = sx + 'px';
+    labelIn.style.top  = sy + 'px';
+    labelIn.style.display = 'block';
+    labelIn.style.width = Math.max(80, node.w * rect.width / VB_W - 16) + 'px';
+    labelIn.focus();
+    labelIn.select();
+}
+
+function commitLabel() {
+    if (labelIn.style.display === 'none') return;
+    const id = labelIn.dataset.nodeId;
+    const node = nodes.find(n => n.id === id);
+    if (node && labelIn.value.trim()) {
+        snapshot();
+        node.label = labelIn.value.trim();
+        render();
+    }
+    labelIn.style.display = 'none';
+}
+
+labelIn.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); commitLabel(); }
+    if (e.key === 'Escape') { labelIn.style.display = 'none'; }
+});
+labelIn.addEventListener('blur', commitLabel);
+
+// ── Keyboard ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+    if (document.activeElement === labelIn) return;
+    if (e.key === 'Escape') { setMode('select'); }
+    if ((e.key === 'Delete' || e.key === 'Backspace') && selected) {
+        e.preventDefault(); deleteSelected();
+    }
+});
+
+// ── Toolbar buttons ───────────────────────────────────────────────────────────
+document.querySelectorAll('#arch-app .shape-item').forEach(item => {
+    item.addEventListener('click', () => setMode('place:' + item.dataset.type));
+});
+
+document.getElementById('btn-connect').addEventListener('click', () => {
+    setMode(mode === 'connect' ? 'select' : 'connect');
+});
+
+document.getElementById('btn-delete').addEventListener('click', deleteSelected);
+
+function deleteSelected() {
+    if (!selected) { statusEl.textContent = 'Nothing selected to delete.'; return; }
+    snapshot();
+    if (selected.kind === 'node') {
+        const id = selected.id;
+        nodes = nodes.filter(n => n.id !== id);
+        edges = edges.filter(e => e.src !== id && e.dst !== id);
+    } else {
+        edges = edges.filter(e => e.id !== selected.id);
+    }
+    selected = null;
+    render();
+}
+
+document.getElementById('btn-undo').addEventListener('click', () => {
+    if (!history.length) { statusEl.textContent = 'Nothing to undo.'; return; }
+    const prev = history.pop();
+    nodes = prev.nodes; edges = prev.edges;
+    selected = null; render();
+});
+
+document.getElementById('btn-clear').addEventListener('click', () => {
+    if (!nodes.length && !edges.length) return;
+    snapshot(); nodes = []; edges = []; selected = null; render();
+    statusEl.textContent = 'Canvas cleared.';
+});
+
+// ── Export ────────────────────────────────────────────────────────────────────
+function exportSVG() {
+    const clone = archSVG.cloneNode(true);
+    clone.setAttribute('xmlns', SVG_NS);
+    // embed font hint
+    const style = svgE('style');
+    style.textContent = 'text{font-family:"Courier New",monospace;}';
+    clone.insertBefore(style, clone.firstChild);
+    const data = new XMLSerializer().serializeToString(clone);
+    const blob = new Blob([data], {type:'image/svg+xml'});
+    const url  = URL.createObjectURL(blob);
+    const a    = Object.assign(document.createElement('a'), {download:'diagram.svg', href:url});
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function exportPNG() {
+    const clone = archSVG.cloneNode(true);
+    clone.setAttribute('xmlns', SVG_NS);
+    // add background fill for PNG
+    const bg = clone.querySelector('#arch-bg');
+    if (bg) bg.setAttribute('fill', '#09090f');
+    // remove dot pattern for clean export
+    const pat = clone.querySelector('#arch-dots');
+    if (pat) pat.parentNode.removeChild(pat);
+
+    const data = new XMLSerializer().serializeToString(clone);
+    const blob = new Blob([data], {type:'image/svg+xml;charset=utf-8'});
+    const url  = URL.createObjectURL(blob);
+    const img  = new Image();
+    img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width  = VB_W * 2; canvas.height = VB_H * 2;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#09090f';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        const a = Object.assign(document.createElement('a'), {download:'diagram.png', href:canvas.toDataURL('image/png')});
+        a.click();
+    };
+    img.onerror = () => {
+        // fallback to SVG if PNG fails (cross-origin font restriction)
+        URL.revokeObjectURL(url);
+        exportSVG();
+        statusEl.textContent = 'PNG export not available in this browser — downloaded SVG instead.';
+    };
+    img.src = url;
+}
+
+document.getElementById('btn-export-svg').addEventListener('click', exportSVG);
+document.getElementById('btn-export-png').addEventListener('click', exportPNG);
+
+// ─── Init ──────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>

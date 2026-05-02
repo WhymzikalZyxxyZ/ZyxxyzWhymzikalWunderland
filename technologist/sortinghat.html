@@ -215,6 +215,47 @@
         #sh-app .bst-info { font-size: 11px; color: var(--muted); margin-top: 8px; min-height: 18px; }
         #sh-app .bst-trav { font-size: 11px; color: var(--text-dim); margin-top: 6px; word-break: break-all; }
         #sh-app .bst-trav strong { color: var(--amber); }
+
+        /* ── Glossary ── */
+        #sh-app .gl-section { margin-bottom: 26px; }
+        #sh-app .gl-section-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--purple-light);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+        }
+        #sh-app .gl-term { border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px; overflow: hidden; }
+        #sh-app .gl-q {
+            padding: 9px 14px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface2);
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--text);
+            user-select: none;
+            transition: background 0.15s, color 0.15s;
+        }
+        #sh-app .gl-q:hover { background: var(--surface); color: var(--purple-light); }
+        #sh-app .gl-q .gl-arr { font-size: 10px; color: var(--muted); transition: transform 0.2s; }
+        #sh-app .gl-q.open .gl-arr { transform: rotate(90deg); }
+        #sh-app .gl-a {
+            display: none;
+            padding: 10px 14px;
+            font-size: 12px;
+            line-height: 1.75;
+            color: var(--text-dim);
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+        }
+        #sh-app .gl-a.open { display: block; }
+        #sh-app .gl-a code { background: var(--surface2); padding: 1px 5px; border-radius: 3px; color: var(--amber); font-size: 11px; }
     </style>
 </head>
 <body>
@@ -232,6 +273,7 @@
         <div class="sh-tab active" data-tab="sorting">Sorting</div>
         <div class="sh-tab" data-tab="pathfinding">Pathfinding</div>
         <div class="sh-tab" data-tab="bst">Binary Search Tree</div>
+        <div class="sh-tab" data-tab="glossary">Glossary</div>
     </div>
 
     <!-- SORTING -->
@@ -319,6 +361,56 @@
         </div>
         <div class="bst-info" id="bst-info">Enter a value and click Insert to begin.</div>
         <div class="bst-trav" id="bst-trav"></div>
+    </div>
+
+    <!-- GLOSSARY -->
+    <div class="sh-panel" id="tab-glossary">
+
+        <div class="gl-section">
+            <div class="gl-section-title">Complexity &amp; Big-O Notation</div>
+            <div class="gl-term"><div class="gl-q">Time Complexity <span class="gl-arr">▶</span></div><div class="gl-a">A measure of how the running time of an algorithm grows as the input size <code>n</code> grows. It does not measure wall-clock time — it measures the number of operations. A nested loop over <code>n</code> items has time complexity <code>O(n²)</code> because you perform roughly n × n comparisons.</div></div>
+            <div class="gl-term"><div class="gl-q">Space Complexity <span class="gl-arr">▶</span></div><div class="gl-a">A measure of how much additional memory an algorithm uses relative to its input size. An algorithm that creates a copy of the input array uses <code>O(n)</code> extra space. One that works entirely with a fixed number of variables is <code>O(1)</code> — called constant or in-place.</div></div>
+            <div class="gl-term"><div class="gl-q">Big-O — O(n) <span class="gl-arr">▶</span></div><div class="gl-a">The upper bound on an algorithm's growth rate in the worst case. When we say Merge Sort is <code>O(n log n)</code>, we mean it will never perform more than roughly <code>n × log₂(n)</code> operations. Common classes from fastest to slowest: <code>O(1)</code> → <code>O(log n)</code> → <code>O(n)</code> → <code>O(n log n)</code> → <code>O(n²)</code> → <code>O(2ⁿ)</code>.</div></div>
+            <div class="gl-term"><div class="gl-q">Big-Ω and Big-Θ <span class="gl-arr">▶</span></div><div class="gl-a"><code>Ω(n)</code> (Omega) is the <em>lower bound</em> — the best case. <code>Θ(n)</code> (Theta) means best and worst grow at the same rate, giving an exact characterisation. Insertion Sort on an already-sorted array runs in <code>Ω(n)</code>; its worst case is <code>O(n²)</code>; therefore Insertion Sort is <em>not</em> <code>Θ</code> in anything other than specific cases.</div></div>
+            <div class="gl-term"><div class="gl-q">Stable Sort <span class="gl-arr">▶</span></div><div class="gl-a">A sorting algorithm is <em>stable</em> if equal elements preserve their original relative order after sorting. This matters when you sort objects by one field and then by another — a stable second sort keeps the first sort's ordering intact within tied groups. Merge Sort and Insertion Sort are stable; Quick Sort and Heap Sort typically are not.</div></div>
+            <div class="gl-term"><div class="gl-q">In-Place Sorting <span class="gl-arr">▶</span></div><div class="gl-a">An algorithm sorts in-place when it rearranges elements within the original array using at most <code>O(log n)</code> extra memory (the call stack). Heap Sort is fully in-place. Merge Sort is not — it allocates temporary arrays proportional to the input size, giving <code>O(n)</code> space.</div></div>
+            <div class="gl-term"><div class="gl-q">Divide and Conquer <span class="gl-arr">▶</span></div><div class="gl-a">A problem-solving strategy that recursively splits a problem into smaller subproblems, solves each independently, then combines the results. Both Merge Sort (split → sort → merge) and Quick Sort (pivot → partition → recurse) follow this pattern. The recursion tree is why their complexity includes the <code>log n</code> factor.</div></div>
+        </div>
+
+        <div class="gl-section">
+            <div class="gl-section-title">Sorting Algorithms</div>
+            <div class="gl-term"><div class="gl-q">Bubble Sort <span class="gl-arr">▶</span></div><div class="gl-a">Repeatedly walks through the array comparing adjacent pairs and swapping them if out of order. After each full pass, the largest unsorted element "bubbles" to its correct position at the end. Simple to understand but inefficient for large inputs — <code>O(n²)</code> average. Useful mainly as a teaching tool or for nearly-sorted tiny arrays.</div></div>
+            <div class="gl-term"><div class="gl-q">Selection Sort <span class="gl-arr">▶</span></div><div class="gl-a">Finds the minimum element in the unsorted region and swaps it to the front, then repeats for the remaining unsorted region. Always performs exactly <code>O(n²)</code> comparisons regardless of input order, but only <code>O(n)</code> swaps — making it useful when write operations are expensive (e.g., flash memory).</div></div>
+            <div class="gl-term"><div class="gl-q">Insertion Sort <span class="gl-arr">▶</span></div><div class="gl-a">Builds the sorted array one element at a time by inserting each new element into its correct position among the already-sorted prefix. Behaves like sorting a hand of playing cards. Excellent for small arrays or nearly-sorted data — <code>O(n)</code> best case. Most standard libraries use it as the base case when input size drops below ~10-16 elements.</div></div>
+            <div class="gl-term"><div class="gl-q">Merge Sort <span class="gl-arr">▶</span></div><div class="gl-a">Recursively splits the array in half, sorts each half, then merges the two sorted halves into one. The merge step is the key: scanning two sorted lists simultaneously to produce one sorted list runs in <code>O(n)</code>. Guaranteed <code>O(n log n)</code> in all cases and is stable, at the cost of <code>O(n)</code> auxiliary space.</div></div>
+            <div class="gl-term"><div class="gl-q">Quick Sort <span class="gl-arr">▶</span></div><div class="gl-a">Chooses a <em>pivot</em> element, partitions the array so all smaller elements are left of the pivot and all larger are right, then recurses on both sides. On average <code>O(n log n)</code> and in-place, making it the fastest general-purpose sort in practice. Worst case is <code>O(n²)</code> if the pivot repeatedly lands at an extreme — mitigated by randomising pivot selection.</div></div>
+            <div class="gl-term"><div class="gl-q">Heap Sort <span class="gl-arr">▶</span></div><div class="gl-a">Converts the array into a max-heap (a complete binary tree where each parent ≥ children), then repeatedly extracts the maximum and places it at the end. Guaranteed <code>O(n log n)</code> and in-place, but poor cache performance (accesses memory non-sequentially) makes it slower in practice than Quick Sort despite identical asymptotic complexity.</div></div>
+            <div class="gl-term"><div class="gl-q">Binary Heap / Heapify <span class="gl-arr">▶</span></div><div class="gl-a">A <em>binary heap</em> is a complete binary tree stored as an array where the parent of index <code>i</code> is at <code>⌊(i-1)/2⌋</code> and children are at <code>2i+1</code> and <code>2i+2</code>. <em>Heapify</em> is the operation that fixes heap order at a node by comparing with its children and swapping downwards. Building a heap from scratch using heapify bottom-up takes <code>O(n)</code>, not <code>O(n log n)</code>.</div></div>
+        </div>
+
+        <div class="gl-section">
+            <div class="gl-section-title">Pathfinding &amp; Graph Theory</div>
+            <div class="gl-term"><div class="gl-q">Graph, Vertex, Edge <span class="gl-arr">▶</span></div><div class="gl-a">A <em>graph</em> is a set of <em>vertices</em> (also called nodes) connected by <em>edges</em>. A grid is a graph where each cell is a vertex and adjacency (up/down/left/right) defines the edges. Graphs can be <em>directed</em> (edges have direction) or <em>undirected</em>, and <em>weighted</em> (edges carry a cost) or <em>unweighted</em>.</div></div>
+            <div class="gl-term"><div class="gl-q">BFS — Breadth-First Search <span class="gl-arr">▶</span></div><div class="gl-a">Explores all neighbours of the current node before moving deeper. Implemented with a <em>queue</em> (FIFO). On an unweighted graph, BFS always finds the <em>shortest path</em> in terms of number of edges. It visits cells in expanding rings outward from the start, which is why the visited pattern looks like a growing circle.</div></div>
+            <div class="gl-term"><div class="gl-q">DFS — Depth-First Search <span class="gl-arr">▶</span></div><div class="gl-a">Explores as far as possible down one branch before backtracking. Implemented with a <em>stack</em> (LIFO) — either an explicit stack or the call stack via recursion. DFS does not guarantee the shortest path; it may find a path that meanders far from optimal. Useful for maze generation, cycle detection, and topological sort.</div></div>
+            <div class="gl-term"><div class="gl-q">Dijkstra's Algorithm <span class="gl-arr">▶</span></div><div class="gl-a">Finds the shortest path in a <em>weighted</em> graph where all edge costs are non-negative. Maintains a priority queue sorted by current known distance from the source, always expanding the lowest-cost frontier node. On an unweighted grid, Dijkstra and BFS are equivalent. Named after computer scientist Edsger W. Dijkstra (1959).</div></div>
+            <div class="gl-term"><div class="gl-q">A* (A-Star) <span class="gl-arr">▶</span></div><div class="gl-a">An extension of Dijkstra that adds a <em>heuristic</em> — an estimate of how far the current node is from the goal. The priority queue sorts by <code>g(n) + h(n)</code>, where <code>g(n)</code> is the actual cost from start and <code>h(n)</code> is the heuristic estimate to the goal. With an admissible heuristic (never overestimates), A* guarantees the optimal path while typically visiting far fewer nodes than Dijkstra.</div></div>
+            <div class="gl-term"><div class="gl-q">Heuristic &amp; Manhattan Distance <span class="gl-arr">▶</span></div><div class="gl-a">A <em>heuristic</em> is a best-guess estimate used to guide search. For grid pathfinding, <em>Manhattan distance</em> — <code>|Δrow| + |Δcol|</code> — is the standard admissible heuristic when movement is restricted to 4 directions (no diagonals). It counts the minimum number of steps as if there were no walls. Euclidean distance is used when diagonal movement is allowed.</div></div>
+            <div class="gl-term"><div class="gl-q">Visited, Frontier, Closed Set <span class="gl-arr">▶</span></div><div class="gl-a">The <em>frontier</em> (also called the open set) contains nodes discovered but not yet fully explored. The <em>visited</em> or <em>closed</em> set contains nodes whose shortest path has been confirmed. Once a node moves from frontier to closed, it is never re-processed. This ensures each node is expanded at most once, keeping complexity manageable.</div></div>
+            <div class="gl-term"><div class="gl-q">Recursive Division (Maze) <span class="gl-arr">▶</span></div><div class="gl-a">A maze generation algorithm that works by repeatedly dividing a rectangular chamber with a wall containing one passage, then recursively dividing each sub-chamber. The result is a "perfect maze" — there is exactly one path between any two cells. The direction of the dividing wall (horizontal or vertical) alternates or is chosen randomly each recursion.</div></div>
+        </div>
+
+        <div class="gl-section">
+            <div class="gl-section-title">Binary Search Trees</div>
+            <div class="gl-term"><div class="gl-q">Binary Tree &amp; BST Property <span class="gl-arr">▶</span></div><div class="gl-a">A <em>binary tree</em> is a tree where each node has at most two children: left and right. A <em>Binary Search Tree</em> adds the ordering invariant: every value in a node's left subtree is less than the node's value, and every value in the right subtree is greater. This property enables <code>O(log n)</code> search on a balanced tree.</div></div>
+            <div class="gl-term"><div class="gl-q">Root, Leaf, Parent, Child <span class="gl-arr">▶</span></div><div class="gl-a">The <em>root</em> is the topmost node with no parent. A <em>leaf</em> is a node with no children. Every non-root node has exactly one <em>parent</em>; each node may have a <em>left child</em>, a <em>right child</em>, both, or neither. The root is the starting point for all traversals and operations.</div></div>
+            <div class="gl-term"><div class="gl-q">Height &amp; Depth <span class="gl-arr">▶</span></div><div class="gl-a">The <em>depth</em> of a node is its distance from the root (root = depth 0). The <em>height</em> of a node is the length of the longest path from it down to a leaf. The <em>height of the tree</em> is the height of the root. A balanced BST with <code>n</code> nodes has height <code>O(log n)</code>; a degenerate (linked-list shaped) BST has height <code>O(n)</code>.</div></div>
+            <div class="gl-term"><div class="gl-q">In-Order Traversal <span class="gl-arr">▶</span></div><div class="gl-a">Visit the left subtree, then the current node, then the right subtree. On a BST, in-order traversal always yields elements in <em>sorted ascending order</em> — this is the unique property that defines the BST and makes it useful as a sorted container. The Glossary display at the bottom of this app shows the in-order sequence.</div></div>
+            <div class="gl-term"><div class="gl-q">Pre-Order &amp; Post-Order Traversal <span class="gl-arr">▶</span></div><div class="gl-a"><em>Pre-order</em>: visit the node, then left, then right — useful for copying or serialising the tree structure. <em>Post-order</em>: visit left, then right, then the node — useful for deletion (you process children before parents) and evaluating expression trees. Neither produces a sorted sequence like in-order does.</div></div>
+            <div class="gl-term"><div class="gl-q">BST Deletion &amp; Successor <span class="gl-arr">▶</span></div><div class="gl-a">Deleting a node with two children requires finding its <em>in-order successor</em> — the smallest node in its right subtree (the leftmost node of the right child). The successor's value replaces the deleted node's value, then the successor (which has at most one child) is removed from its original position. This preserves the BST property.</div></div>
+            <div class="gl-term"><div class="gl-q">Balanced vs Degenerate BST <span class="gl-arr">▶</span></div><div class="gl-a">If you insert values in sorted order into a plain BST (e.g., 1, 2, 3, 4…), each node has only a right child — the tree degenerates into a linked list with <code>O(n)</code> height. Self-balancing variants like AVL Trees and Red-Black Trees automatically restructure (rotate) after insertions and deletions to keep height <code>O(log n)</code>, guaranteeing fast operations regardless of insertion order.</div></div>
+        </div>
+
     </div>
 
 </div>
@@ -937,6 +1029,14 @@ document.getElementById('bst-val').addEventListener('keydown',e=>{
 // ─── Init ─────────────────────────────────────────────────────────────────────
 initSort();
 initGrid(); renderGrid();
+
+// ─── Glossary accordion ───────────────────────────────────────────────────────
+document.querySelectorAll('#sh-app .gl-q').forEach(q => {
+    q.addEventListener('click', () => {
+        q.classList.toggle('open');
+        q.nextElementSibling.classList.toggle('open');
+    });
+});
 </script>
 </body>
 </html>
