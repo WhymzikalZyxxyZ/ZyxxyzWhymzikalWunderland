@@ -109,6 +109,27 @@
         #arch-app .arch-btn.active { background: rgba(37,99,235,0.15); border-color: var(--blue); color: var(--blue-light); }
         #arch-app .arch-btn.danger:hover { border-color: var(--red); color: var(--red); }
 
+        /* ── Sidebar label editor ── */
+        #arch-app #sidebar-label-wrap { display: none; padding: 0 0 2px; }
+        #arch-app #sidebar-lbl-inp {
+            width: 100%;
+            box-sizing: border-box;
+            background: var(--surface2);
+            border: 1.5px solid var(--blue);
+            border-radius: 6px;
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            padding: 7px 8px;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        #arch-app #sidebar-lbl-inp:focus {
+            border-color: var(--blue-light);
+            box-shadow: 0 0 0 2px rgba(96,165,250,0.18);
+        }
+        #arch-app #sidebar-lbl-inp::placeholder { color: var(--muted); }
+
         /* ── Canvas ── */
         #arch-app .canvas-wrap {
             flex: 1;
@@ -228,6 +249,11 @@
                     I / O
                 </div>
 
+                <div class="sidebar-label" id="lbl-sec-head" style="display:none;">Label</div>
+                <div id="sidebar-label-wrap">
+                    <input type="text" id="sidebar-lbl-inp" maxlength="40" autocomplete="off" placeholder="Type label…">
+                </div>
+
                 <div class="sidebar-label">Actions</div>
                 <button class="arch-btn" id="btn-connect">⟶ Connect</button>
                 <button class="arch-btn danger" id="btn-delete">✕ Delete</button>
@@ -259,7 +285,7 @@
                 <input type="text" id="label-input" maxlength="32" autocomplete="off">
             </div>
         </div>
-        <div class="arch-status" id="arch-status">Click a shape on the left to begin placing, or click existing nodes to select and move them. Double-click a node to rename it.</div>
+        <div class="arch-status" id="arch-status">Click a shape on the left to place it — type the label immediately after. Click a node to select it and edit its label in the sidebar. Drag to move.</div>
     </div>
 
     <!-- ═══════ GLOSSARY ═══════ -->
@@ -369,9 +395,28 @@ let connSrc = null;           // node id when connecting
 let dragging = null;          // {id, ox, oy, mx, my}
 let history = [];             // undo stack (snapshots)
 
-const archSVG  = document.getElementById('arch-svg');
-const statusEl = document.getElementById('arch-status');
-const labelIn  = document.getElementById('label-input');
+const archSVG     = document.getElementById('arch-svg');
+const statusEl    = document.getElementById('arch-status');
+const labelIn     = document.getElementById('label-input');
+const sidebarInp  = document.getElementById('sidebar-lbl-inp');
+const sidebarWrap = document.getElementById('sidebar-label-wrap');
+const sidebarHead = document.getElementById('lbl-sec-head');
+
+// ── Sidebar label sync ────────────────────────────────────────────────────────
+function syncSidebarLabel() {
+    if (selected?.kind === 'node') {
+        const node = nodes.find(n => n.id === selected.id);
+        if (node) {
+            sidebarWrap.style.display = 'block';
+            sidebarHead.style.display = 'block';
+            // Only update value if the input isn't actively being edited
+            if (document.activeElement !== sidebarInp) sidebarInp.value = node.label;
+            return;
+        }
+    }
+    sidebarWrap.style.display = 'none';
+    sidebarHead.style.display = 'none';
+}
 
 // ── SVG helpers ───────────────────────────────────────────────────────────────
 function svgE(tag, attrs = {}) {
@@ -525,6 +570,8 @@ function render() {
 
     // SVG cursor
     archSVG.className = mode.startsWith('place') ? 'placing' : mode === 'connect' ? 'connecting' : '';
+
+    syncSidebarLabel();
 }
 
 // ── Mode management ───────────────────────────────────────────────────────────
@@ -559,9 +606,14 @@ function placeNode(e, type) {
     const {w, h} = NODE_DIMS[type];
     const labels = {process:'Process', decision:'Decision', terminal:'Start/End', database:'Database', io:'Input/Output'};
     snapshot();
-    nodes.push({id: 'n'+(nextId++), type, x: px - w/2, y: py - h/2, w, h, label: labels[type]});
+    const newNode = {id: 'n'+(nextId++), type, x: px - w/2, y: py - h/2, w, h, label: labels[type]};
+    nodes.push(newNode);
+    selected = {kind:'node', id: newNode.id};
     setMode('select');
     render();
+    // Auto-focus sidebar label input so the user can immediately type the label
+    sidebarInp.focus();
+    sidebarInp.select();
 }
 
 // ── Mouse events ──────────────────────────────────────────────────────────────
@@ -672,12 +724,41 @@ labelIn.addEventListener('keydown', e => {
 });
 labelIn.addEventListener('blur', commitLabel);
 
+// ── Sidebar label input ───────────────────────────────────────────────────────
+sidebarInp.addEventListener('input', () => {
+    if (!selected || selected.kind !== 'node') return;
+    const node = nodes.find(n => n.id === selected.id);
+    if (!node) return;
+    node.label = sidebarInp.value;
+    render();
+});
+
+sidebarInp.addEventListener('keydown', e => {
+    // Prevent canvas-level shortcuts (Delete, Escape) while editing label
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+        snapshot();
+        sidebarInp.blur();
+        archSVG.focus();
+    }
+});
+
 // ── Keyboard ──────────────────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
-    if (document.activeElement === labelIn) return;
-    if (e.key === 'Escape') { setMode('select'); }
+    const active = document.activeElement;
+    const inInput = active === labelIn || active === sidebarInp || active.tagName === 'INPUT';
+    if (inInput) return;
+
+    if (e.key === 'Escape') { setMode('select'); return; }
+
     if ((e.key === 'Delete' || e.key === 'Backspace') && selected) {
-        e.preventDefault(); deleteSelected();
+        e.preventDefault(); deleteSelected(); return;
+    }
+
+    // Any printable character while a node is selected → redirect to sidebar input
+    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && selected?.kind === 'node') {
+        sidebarInp.focus();
+        // The character will land naturally in the now-focused input
     }
 });
 
