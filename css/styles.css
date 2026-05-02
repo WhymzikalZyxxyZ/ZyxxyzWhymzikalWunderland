@@ -45,12 +45,22 @@ banner {
 }
 
 .notYetBody {
-    background-image: url('../images/comebacklater.png'); /* Background image */
+    background-image: url('../images/comebacklater.png');
     background-size: contain;
-    background-position: center; /* Centers the background image */
-    background-repeat: no-repeat; /* Prevents the background from repeating */
-    background-attachment: scroll; /* Makes the background fixed when scrolling */
-    min-height: 100vh; /* Ensure the body takes full viewport height */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+    min-height: 100vh;
+}
+
+.wunderBody {
+    background:
+        radial-gradient(ellipse 80% 55% at 58% 32%, rgba(210, 70, 120, 0.22) 0%, transparent 62%),
+        radial-gradient(ellipse 60% 75% at 22% 72%, rgba(110, 35, 155, 0.18) 0%, transparent 58%),
+        radial-gradient(ellipse 90% 50% at 82% 78%, rgba(185, 95, 30, 0.12) 0%, transparent 52%),
+        linear-gradient(155deg, #0e0818 0%, #160c28 38%, #0c1018 68%, #09080e 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
 }
 
 .banner {
