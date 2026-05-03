@@ -24,7 +24,8 @@
       "Bash(npm test *)",
       "Bash(npx jest *)",
       "Bash(node_modules/.bin/jest)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(npm run *)"
     ]
   }
 }
