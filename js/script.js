@@ -59,6 +59,11 @@ function buildNavbar() {
     el.className = 'navbar';
     el.innerHTML = '';
 
+    // Always place the navbar as the very first child of body
+    if (el !== document.body.firstElementChild) {
+        document.body.insertBefore(el, document.body.firstChild);
+    }
+
     const burger = document.createElement('button');
     burger.className = 'nav-burger';
     burger.setAttribute('aria-label', 'Toggle navigation');
@@ -126,7 +131,6 @@ function navigateToPage(url) {
 if (typeof document !== 'undefined') {
     document.addEventListener('DOMContentLoaded', () => {
         buildNavbar();
-        document.body.classList.add('page-ready');
 
         document.addEventListener('click', e => {
             const a = e.target.closest('a[href]');
