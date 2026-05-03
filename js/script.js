@@ -11,6 +11,7 @@ const NAV_STRUCTURE = [
             { label: 'Handmade',        href: '/virtuoso/crafts/handmade.html' },
             { label: 'Doodles',         href: '/virtuoso/drawings/doodles.html' },
             { label: 'Stories',         href: '/virtuoso/writings/stories.html' },
+            { label: 'Adagio',          href: '/virtuoso/audio/adagio.html' },
         ],
     },
     {
