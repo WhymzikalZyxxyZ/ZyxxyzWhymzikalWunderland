@@ -278,7 +278,7 @@ describe('getFCDAIAction', () => {
     });
 
     test('bet phase, toCall=0, weak hand → check', () => {
-        const hand = [c(2),c(5),c(9),c(11),c(3)]; // high card
+        const hand = [c(2),c(5,'H'),c(9,'D'),c(11,'C'),c(3)]; // high card
         const s = {
             phase:'bet1', players:[makePlayer(0, hand, 490, 10)],
             currentBet:10, pot:20, deck:[], dealerIdx:0, actedThisRound:[],
@@ -289,7 +289,7 @@ describe('getFCDAIAction', () => {
     });
 
     test('bet phase, toCall>0, very weak → fold', () => {
-        const hand = [c(2),c(5),c(9),c(11),c(3)]; // high card (rank 1)
+        const hand = [c(2),c(5,'H'),c(9,'D'),c(11,'C'),c(3)]; // high card (rank 1)
         const s = {
             phase:'bet1', players:[makePlayer(0, hand, 490, 0)],
             currentBet:30, pot:40, deck:[], dealerIdx:0, actedThisRound:[],

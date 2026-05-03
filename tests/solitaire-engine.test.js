@@ -216,7 +216,7 @@ describe('tableauToTableau', () => {
     test('moves a single face-up card', () => {
         const s = {
             stock:[], waste:[], foundations:{S:0,H:0,D:0,C:0},
-            tableau:[[card(13,'S'), card(12,'H')], []], moves:0, solved:false,
+            tableau:[[card(13,'S'), card(13,'H')], []], moves:0, solved:false,
         };
         const r = tableauToTableau(s, 0, 1, 1); // move card at index 1 of col0 to col1
         expect(r.tableau[0]).toHaveLength(1);
@@ -229,7 +229,7 @@ describe('tableauToTableau', () => {
         const blackJ = card(11,'C');
         const s = {
             stock:[], waste:[], foundations:{S:0,H:0,D:0,C:0},
-            tableau:[[blackK, redQ, blackJ], [card(13,'H')]], moves:0, solved:false,
+            tableau:[[blackK, redQ, blackJ], [card(13,'C')]], moves:0, solved:false,
         };
         const r = tableauToTableau(s, 0, 1, 1); // move redQ+blackJ (from idx 1) to col1
         expect(r.tableau[0]).toHaveLength(1);
@@ -246,7 +246,7 @@ describe('tableauToTableau', () => {
     test('invalid placement returns same state', () => {
         const s = {
             stock:[], waste:[], foundations:{S:0,H:0,D:0,C:0},
-            tableau:[[card(12,'H')], [card(13,'S')]], moves:0, solved:false,
+            tableau:[[card(12,'H')], [card(13,'H')]], moves:0, solved:false,
         };
         // Try to place red Q on red K — wrong color
         expect(tableauToTableau(s, 0, 0, 1)).toBe(s);
