@@ -135,6 +135,8 @@
     <button type="button" onclick="navigateToPage('../gamer/games.html')">&#8592; Back to Games</button>
     <script src="/js/gamer-chat.js"></script>
     <script>
+        function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
         const myName = (typeof getOrCreateUsername === 'function') ? getOrCreateUsername() : 'Guest';
         const FB_HS  = 'scores/solitaire';
         document.getElementById('user-label') && (document.getElementById('user-label').textContent = myName);
@@ -384,7 +386,7 @@
                 const players = snap.val() || {};
                 const list    = document.getElementById('mp-players-list');
                 list.innerHTML = Object.entries(players).map(([name, data]) =>
-                    name + ': ' + (data.solved ? '✓ solved in ' + fmtTime(data.time || 0) + ' ('+data.moves+' moves)' : 'playing…')
+                    escHtml(name) + ': ' + (data.solved ? '✓ solved in ' + fmtTime(data.time || 0) + ' ('+data.moves+' moves)' : 'playing…')
                 ).join('<br>');
             });
         }
