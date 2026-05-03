@@ -1,4 +1,4 @@
-name: Deploy Website to Porkbun
+name: Deploy Website to GitHub Pages
 
 on:
   push:
@@ -35,6 +35,12 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: lint-and-test
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout repository
@@ -66,27 +72,17 @@ jobs:
           }
           EOF
 
-      - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
-        with:
-          server:     ${{ secrets.FTP_SERVER }}
-          username:   ${{ secrets.FTP_USERNAME }}
-          password:   ${{ secrets.FTP_PASSWORD }}
-          local-dir:  ./
-          server-dir: /public_html/
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            .github/**
-            tests/**
-            package.json
-            package-lock.json
-            CODEOWNERS
-            README.md
-            .eslintrc*
-            .stylelintrc*
-            .htmlhintrc
+      - name: Remove non-web files
+        run: rm -rf node_modules tests coverage package.json package-lock.json CODEOWNERS README.md .eslintrc* .stylelintrc* .htmlhintrc .github
 
-      - name: Deployment confirmation
-        run: echo "Deployment to Porkbun successful!"
+      - name: Configure Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
