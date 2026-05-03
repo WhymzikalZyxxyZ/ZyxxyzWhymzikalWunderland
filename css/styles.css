@@ -100,9 +100,7 @@ button:hover {
 /* ── Navigation ─────────────────────────────────────────────────────────── */
 .navbar {
     width: 100%;
-    background-color: rgba(14, 8, 24, 0.93);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background-color: rgba(14, 8, 24, 0.95);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -308,19 +306,10 @@ a.nav-link.nav-active {
 }
 
 /* ── Page transitions ───────────────────────────────────────────────────── */
-body.page-ready {
-    animation: page-fade-in 0.28s ease-out both;
-}
-
 body.page-fade-out {
     opacity: 0 !important;
     transition: opacity 0.2s ease !important;
     pointer-events: none;
-}
-
-@keyframes page-fade-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
 }
 
 .hero {
