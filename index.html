@@ -10,11 +10,15 @@
         /* ── WORD OF THE DAY BANNER ── */
         .wotd-banner {
             width: 100%;
-            background: rgba(6, 4, 14, 0.92);
+            background: rgba(6, 4, 14, 0.93);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border-top: 1px solid rgba(244, 162, 97, 0.22);
             padding: 28px 0 24px;
-            margin-top: 48px;
             box-sizing: border-box;
+            position: sticky;
+            bottom: 0;
+            z-index: 1000;
         }
         .wotd-inner {
             max-width: 760px;
