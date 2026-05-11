@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daedalus — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js"></script>
+    <style>
+        :root { --gold: #d4a853; --red: #e05050; --teal: #80cbc4; }
+
+        #daeWrap {
+            display: flex; flex-direction: column; align-items: center;
+            min-height: calc(100vh - 60px); padding: 20px 16px 60px;
+        }
+
+        /* ── Title screen ───────────────────────────────────────────────── */
+        #titleScreen {
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center; padding: 48px 20px; max-width: 480px;
+        }
+        .dae-wordmark {
+            font-size: clamp(2.4rem, 8vw, 4rem); font-weight: 900;
+            letter-spacing: 0.35em; color: var(--gold);
+            text-shadow: 0 0 40px rgba(212,168,83,0.45);
+            margin: 0 0 6px;
+        }
+        .dae-sub {
+            font-size: 0.78rem; color: #555; letter-spacing: 0.2em;
+            text-transform: uppercase; margin: 0 0 36px;
+        }
+        .dae-lore {
+            font-size: 0.87rem; color: #777; line-height: 1.75; margin: 0 0 28px;
+        }
+        #bestBox {
+            background: #0d0d0d; border: 1px solid #1e1e1e; border-radius: 8px;
+            padding: 10px 28px; margin-bottom: 32px; font-size: 0.82rem; color: #555;
+        }
+        #bestBox strong { color: var(--gold); font-size: 1.05rem; }
+        .dae-btn {
+            padding: 13px 38px; border: 2px solid var(--gold); border-radius: 8px;
+            background: transparent; color: var(--gold);
+            font-size: 0.95rem; font-weight: 700; letter-spacing: 0.1em;
+            cursor: pointer; transition: all .2s;
+        }
+        .dae-btn:hover { background: var(--gold); color: #000; }
+        .dae-btn.sec { border-color: #333; color: #666; margin-top: 10px; }
+        .dae-btn.sec:hover { background: #1a1a1a; color: #aaa; }
+        .key-hint { font-size: 0.72rem; color: #333; margin-top: 16px; line-height: 1.6; }
+
+        /* ── Game area ──────────────────────────────────────────────────── */
+        #gameArea { display: none; flex-direction: column; align-items: center; width: 100%; }
+
+        #levelDots {
+            display: flex; gap: 6px; align-items: center; margin-bottom: 10px;
+        }
+        .ldot {
+            width: 8px; height: 8px; border-radius: 50%; background: #1e1e1e;
+            transition: background .3s, box-shadow .3s;
+        }
+        .ldot.done    { background: var(--gold); }
+        .ldot.current { background: #fff; box-shadow: 0 0 6px rgba(255,255,255,0.6); }
+
+        #hud {
+            display: flex; align-items: center; justify-content: space-between;
+            width: 100%; max-width: 600px; margin-bottom: 8px;
+            padding: 8px 14px; box-sizing: border-box;
+            background: #080808; border: 1px solid #181818; border-radius: 8px;
+        }
+        .hud-lbl { font-size: 0.78rem; color: #555; }
+        .hud-lbl strong { color: #bbb; }
+        #hudTimer {
+            font-size: 1.5rem; font-weight: 700; font-family: monospace;
+            color: var(--gold); letter-spacing: 0.04em;
+        }
+        #hudTimer.penalty { animation: timerFlash .35s ease; }
+        @keyframes timerFlash { 0%,100% { color: var(--gold); } 50% { color: var(--red); } }
+
+        #mazeCanvas { display: block; border-radius: 4px; outline: none; }
+
+        /* Mobile D-pad */
+        #dpad {
+            display: none; flex-direction: column; align-items: center;
+            gap: 5px; margin-top: 14px;
+        }
+        .dpad-row { display: flex; gap: 5px; }
+        .dpad-btn {
+            width: 56px; height: 56px; border-radius: 10px;
+            border: 1px solid #2a2a2a; background: #0e0e0e;
+            color: #777; font-size: 1.3rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            touch-action: manipulation; user-select: none; -webkit-user-select: none;
+            transition: background .1s;
+        }
+        .dpad-btn:active { background: #1a1a1a; color: var(--gold); }
+        @media (hover: none) { #dpad { display: flex; } }
+        @media (width <= 640px) { #dpad { display: flex; } }
+
+        .esc-hint { font-size: 0.7rem; color: #2a2a2a; margin-top: 10px; }
+
+        /* ── Overlays ───────────────────────────────────────────────────── */
+        .dae-overlay {
+            position: fixed; inset: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(4,2,8,0.9); backdrop-filter: blur(10px);
+            z-index: 500; text-align: center; padding: 32px;
+        }
+        .ovl-eyebrow {
+            font-size: 0.72rem; color: #555; text-transform: uppercase;
+            letter-spacing: 1.5px; margin-bottom: 6px;
+        }
+        .ovl-head {
+            font-size: clamp(1.6rem, 6vw, 2.4rem); font-weight: 900;
+            letter-spacing: 0.15em; color: var(--gold); margin: 0 0 4px;
+        }
+        .ovl-time {
+            font-size: clamp(2rem, 8vw, 3rem); font-family: monospace;
+            font-weight: 700; color: #fff; margin: 8px 0 6px;
+        }
+        .ovl-detail { font-size: 0.82rem; color: #555; margin: 3px 0; }
+        .ovl-newbest {
+            font-size: 0.95rem; font-weight: 700; color: var(--gold);
+            margin: 8px 0; display: none;
+        }
+        .ovl-btns { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 24px; }
+
+        /* Penalty flash */
+        #catchFlash {
+            position: fixed; inset: 0; background: rgba(224,80,80,0.28);
+            pointer-events: none; z-index: 400; opacity: 0;
+            transition: opacity 0s;
+        }
+        #catchFlash.show { opacity: 1; transition: opacity 0s; }
+        #catchFlash.hide { opacity: 0; transition: opacity 0.5s; }
+
+        /* Penalty label */
+        #penaltyLabel {
+            position: fixed; left: 50%; top: 40%;
+            transform: translate(-50%, -50%);
+            font-size: 1.6rem; font-weight: 900; color: var(--red);
+            font-family: monospace; pointer-events: none; z-index: 401;
+            opacity: 0; text-shadow: 0 0 20px rgba(224,80,80,0.7);
+            transition: opacity 0s;
+        }
+        #penaltyLabel.show { opacity: 1; transition: opacity 0s; }
+        #penaltyLabel.hide { opacity: 0; transition: opacity 0.5s; }
+    </style>
+</head>
+<body class="wunderBody">
+<div class="navbar"></div>
+<div id="daeWrap">
+
+    <!-- Title -->
+    <div id="titleScreen">
+        <div class="dae-wordmark">DAEDALUS</div>
+        <div class="dae-sub">The Labyrinth of Ten</div>
+        <p class="dae-lore">
+            Ten mazes. One unbroken run. Escape every level before the Minotaur finds you.<br>
+            Your score is the total time to clear all ten — lowest wins.
+        </p>
+        <div id="bestBox">Best Run: <strong id="bestTitle">—</strong></div>
+        <button class="dae-btn" id="startBtn">Enter the Labyrinth</button>
+        <p class="key-hint">
+            Arrow keys or WASD to move &nbsp;·&nbsp; Levels 7–10 have enemies<br>
+            Caught = +10 s penalty &amp; level restart &nbsp;·&nbsp; ESC to quit
+        </p>
+    </div>
+
+    <!-- Game -->
+    <div id="gameArea">
+        <div id="levelDots"></div>
+        <div id="hud">
+            <div class="hud-lbl">Level <strong id="hudLevel">1</strong><span style="color:#333;">/10</span></div>
+            <div id="hudTimer">00:00.0</div>
+            <div class="hud-lbl">Best <strong id="hudBest">—</strong></div>
+        </div>
+        <canvas id="mazeCanvas" tabindex="0"></canvas>
+        <div id="dpad">
+            <div class="dpad-row"><button class="dpad-btn" id="dUp">▲</button></div>
+            <div class="dpad-row">
+                <button class="dpad-btn" id="dLeft">◀</button>
+                <button class="dpad-btn" id="dDown">▼</button>
+                <button class="dpad-btn" id="dRight">▶</button>
+            </div>
+        </div>
+        <p class="esc-hint">ESC — quit to title</p>
+    </div>
+</div>
+
+<!-- Level complete overlay -->
+<div id="lcOverlay" class="dae-overlay" style="display:none;">
+    <div class="ovl-eyebrow">Level <span id="lcNum">1</span> / 10 complete</div>
+    <div class="ovl-head">ESCAPED!</div>
+    <div class="ovl-time" id="lcTime">00:00.0</div>
+    <p class="ovl-detail" id="lcPenalty"></p>
+    <p class="ovl-detail" style="color:#333;">Running total · tap to continue</p>
+    <div class="ovl-btns">
+        <button class="dae-btn" id="nextBtn">Level <span id="lcNext">2</span> &rarr;</button>
+    </div>
+</div>
+
+<!-- Game complete overlay -->
+<div id="gcOverlay" class="dae-overlay" style="display:none;">
+    <div class="ovl-eyebrow">All 10 levels conquered</div>
+    <div class="ovl-head">LABYRINTH<br>CONQUERED</div>
+    <div class="ovl-time" id="gcTime">00:00.0</div>
+    <p class="ovl-newbest" id="gcNewBest">✦ NEW BEST TIME ✦</p>
+    <p class="ovl-detail" id="gcPrev"></p>
+    <div class="ovl-btns">
+        <button class="dae-btn" id="playAgainBtn">Play Again</button>
+        <button class="dae-btn sec" id="quitBtn">Return to Games</button>
+    </div>
+</div>
+
+<!-- Effects -->
+<div id="catchFlash"></div>
+<div id="penaltyLabel">+10s</div>
+
+<script>
+'use strict';
+
+// ── Direction constants ──────────────────────────────────────────────────────
+const N = 1, S = 2, E = 4, W = 8;
+const OPP  = { [N]: S, [S]: N, [E]: W, [W]: E };
+const DR   = { [N]: -1, [S]: 1, [E]: 0,  [W]: 0  };
+const DC   = { [N]: 0,  [S]: 0, [E]: 1,  [W]: -1 };
+const DIRS = [N, S, E, W];
+
+// ── Level configs ────────────────────────────────────────────────────────────
+//   fog: vision radius in cells (0 = none)
+//   speed: enemy move interval ms (0 = no enemies)
+const LEVELS = [
+    { rows:  9, cols:  9, fog: 0, nEnemies: 0, speed: 0   },
+    { rows: 11, cols: 11, fog: 0, nEnemies: 0, speed: 0   },
+    { rows: 13, cols: 13, fog: 0, nEnemies: 0, speed: 0   },
+    { rows: 15, cols: 15, fog: 0, nEnemies: 0, speed: 0   },
+    { rows: 17, cols: 17, fog: 0, nEnemies: 0, speed: 0   },
+    { rows: 19, cols: 19, fog: 5, nEnemies: 0, speed: 0   },
+    { rows: 21, cols: 21, fog: 5, nEnemies: 1, speed: 650 },
+    { rows: 23, cols: 23, fog: 4, nEnemies: 2, speed: 540 },
+    { rows: 25, cols: 25, fog: 4, nEnemies: 3, speed: 470 },
+    { rows: 29, cols: 29, fog: 3, nEnemies: 4, speed: 410 },
+];
+
+const PENALTY_MS  = 10000;
+const ENEMY_SPAWN = [[1,0],[0,1],[1,1],[0,0.5]]; // fractional positions (row,col factor)
+
+// ── Canvas & rendering ───────────────────────────────────────────────────────
+const canvas  = document.getElementById('mazeCanvas');
+const ctx     = canvas.getContext('2d');
+const dpr     = window.devicePixelRatio || 1;
+let cellSize  = 28;
+let fogCanvas = null, fogCtx = null;
+
+function resizeCanvas(rows, cols) {
+    const pad = 48;
+    const navH = 60;
+    const maxW = Math.min(window.innerWidth - pad, 600);
+    const maxH = Math.min(window.innerHeight - navH - 160, 600);
+    const cs = Math.max(8, Math.floor(Math.min(maxW / cols, maxH / rows)));
+    const w  = cs * cols, h = cs * rows;
+    canvas.width  = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width  = w + 'px';
+    canvas.style.height = h + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cellSize = cs;
+
+    fogCanvas = document.createElement('canvas');
+    fogCanvas.width  = w;
+    fogCanvas.height = h;
+    fogCtx = fogCanvas.getContext('2d');
+}
+
+function drawMaze(grid, rows, cols, pR, pC, exitR, exitC, enemies, fogCells) {
+    const w = cols * cellSize, h = rows * cellSize;
+
+    // Background
+    ctx.fillStyle = '#080808';
+    ctx.fillRect(0, 0, w, h);
+
+    // Floor
+    ctx.fillStyle = '#0f0f0f';
+    for (let r = 0; r < rows; r++)
+        for (let c = 0; c < cols; c++)
+            ctx.fillRect(c * cellSize + 1, r * cellSize + 1, cellSize - 2, cellSize - 2);
+
+    // Start & exit tints
+    fillCell(0, 0, 'rgba(80,180,80,0.14)');
+    fillCell(exitR, exitC, 'rgba(128,203,196,0.22)');
+
+    // Walls
+    const wc = ctx.lineWidth = Math.max(1.5, cellSize / 14);
+    ctx.strokeStyle = '#5c4a34';
+    ctx.lineCap = 'square';
+    ctx.strokeRect(wc / 2, wc / 2, w - wc, h - wc);
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const x = c * cellSize, y = r * cellSize;
+            if ((grid[r][c] & S) && r < rows - 1) seg(x, y + cellSize, x + cellSize, y + cellSize);
+            if ((grid[r][c] & E) && c < cols - 1) seg(x + cellSize, y, x + cellSize, y + cellSize);
+        }
+    }
+
+    // Exit glow
+    const t    = Date.now() / 700;
+    const pulse = 0.55 + 0.45 * Math.sin(t);
+    const ex   = exitC * cellSize + cellSize / 2;
+    const ey   = exitR * cellSize + cellSize / 2;
+    glowDot(ex, ey, cellSize * 0.42, `rgba(128,203,196,${pulse})`, '#80cbc4', 0.18);
+
+    // Enemies
+    enemies.forEach(en => {
+        const p2 = 0.65 + 0.35 * Math.sin(Date.now() / 280 + en.r + en.c);
+        glowDot(
+            en.c * cellSize + cellSize / 2,
+            en.r * cellSize + cellSize / 2,
+            cellSize * 0.38, `rgba(224,80,80,${p2})`, '#e05050', 0.2
+        );
+    });
+
+    // Player
+    glowDot(
+        pC * cellSize + cellSize / 2,
+        pR * cellSize + cellSize / 2,
+        cellSize * 0.42, 'rgba(212,168,83,0.85)', '#d4a853', 0.22
+    );
+
+    // Fog
+    if (fogCells > 0) {
+        const px = pC * cellSize + cellSize / 2;
+        const py = pR * cellSize + cellSize / 2;
+        const fr = fogCells * cellSize;
+
+        fogCtx.clearRect(0, 0, fogCanvas.width, fogCanvas.height);
+        fogCtx.fillStyle = 'rgba(0,0,0,0.94)';
+        fogCtx.fillRect(0, 0, fogCanvas.width, fogCanvas.height);
+        fogCtx.globalCompositeOperation = 'destination-out';
+        const g = fogCtx.createRadialGradient(px, py, 0, px, py, fr);
+        g.addColorStop(0,    'rgba(0,0,0,1)');
+        g.addColorStop(0.55, 'rgba(0,0,0,0.9)');
+        g.addColorStop(1,    'rgba(0,0,0,0)');
+        fogCtx.fillStyle = g;
+        fogCtx.beginPath();
+        fogCtx.arc(px, py, fr, 0, Math.PI * 2);
+        fogCtx.fill();
+        fogCtx.globalCompositeOperation = 'source-over';
+        ctx.drawImage(fogCanvas, 0, 0);
+    }
+}
+
+function seg(x1, y1, x2, y2) {
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+}
+
+function fillCell(r, c, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(c * cellSize + 1, r * cellSize + 1, cellSize - 2, cellSize - 2);
+}
+
+function glowDot(x, y, r, glowColor, coreColor, coreR) {
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, glowColor);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = coreColor;
+    ctx.beginPath(); ctx.arc(x, y, r * coreR, 0, Math.PI * 2); ctx.fill();
+}
+
+// ── Maze generation (iterative DFS / recursive backtracker) ──────────────────
+function generateMaze(rows, cols) {
+    const grid = Array.from({length: rows}, () => new Array(cols).fill(N | S | E | W));
+    const vis  = Array.from({length: rows}, () => new Array(cols).fill(false));
+    const stk  = [[0, 0]];
+    vis[0][0]  = true;
+    while (stk.length) {
+        const [r, c] = stk[stk.length - 1];
+        const nbrs   = DIRS.filter(d => {
+            const nr = r + DR[d], nc = c + DC[d];
+            return nr >= 0 && nr < rows && nc >= 0 && nc < cols && !vis[nr][nc];
+        });
+        if (!nbrs.length) { stk.pop(); continue; }
+        const d  = nbrs[Math.floor(Math.random() * nbrs.length)];
+        const nr = r + DR[d], nc = c + DC[d];
+        grid[r][c]   &= ~d;
+        grid[nr][nc] &= ~OPP[d];
+        vis[nr][nc]   = true;
+        stk.push([nr, nc]);
+    }
+    return grid;
+}
+
+// ── BFS: first step toward target ────────────────────────────────────────────
+function bfsStep(grid, rows, cols, sr, sc, tr, tc) {
+    if (sr === tr && sc === tc) return null;
+    const prev = Array.from({length: rows}, () => new Array(cols).fill(null));
+    const q    = [[sr, sc]];
+    prev[sr][sc] = [-1, -1];
+    let found    = false;
+    outer: while (q.length) {
+        const [r, c] = q.shift();
+        for (const d of DIRS) {
+            if (grid[r][c] & d) continue;
+            const nr = r + DR[d], nc = c + DC[d];
+            if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+            if (prev[nr][nc] !== null) continue;
+            prev[nr][nc] = [r, c];
+            if (nr === tr && nc === tc) { found = true; break outer; }
+            q.push([nr, nc]);
+        }
+    }
+    if (!found) return null;
+    let [r, c] = [tr, tc];
+    while (prev[r][c][0] !== sr || prev[r][c][1] !== sc) {
+        [r, c] = prev[r][c];
+    }
+    return [r, c];
+}
+
+// ── Timer ────────────────────────────────────────────────────────────────────
+let runStart  = 0;
+let pauseAt   = 0;
+let pausedAcc = 0;
+let penaltyAcc = 0;
+let timerRunning = false;
+let finalMs   = null;
+
+function timerStart() {
+    runStart = Date.now();
+    pausedAcc = 0;
+    penaltyAcc = 0;
+    finalMs = null;
+    timerRunning = true;
+}
+
+function timerPause() {
+    if (!timerRunning) return;
+    pauseAt = Date.now();
+    timerRunning = false;
+}
+
+function timerResume() {
+    if (timerRunning) return;
+    pausedAcc += Date.now() - pauseAt;
+    timerRunning = true;
+}
+
+function timerAddPenalty() { penaltyAcc += PENALTY_MS; }
+
+function timerGet() {
+    if (finalMs !== null) return finalMs;
+    const now = timerRunning ? Date.now() : pauseAt;
+    return Math.max(0, (now - runStart) - pausedAcc + penaltyAcc);
+}
+
+function timerFinish() { finalMs = timerGet(); return finalMs; }
+
+function fmtMs(ms) {
+    const s   = Math.floor(ms / 100) / 10;
+    const m   = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${String(m).padStart(2,'0')}:${sec.toFixed(1).padStart(4,'0')}`;
+}
+
+// ── Game state ────────────────────────────────────────────────────────────────
+let STATE       = 'title';
+let levelIdx    = 0;
+let grid        = null;
+let pR = 0, pC = 0;
+let exitR, exitC;
+let enemies     = [];
+let enemyTimer  = null;
+let penaltyCount = 0;
+let rafId       = null;
+
+function resetEnemies(cfg) {
+    enemies = [];
+    for (let i = 0; i < cfg.nEnemies; i++) {
+        const rf = ENEMY_SPAWN[i][0], cf = ENEMY_SPAWN[i][1];
+        const er = Math.min(cfg.rows - 1, Math.round(rf * (cfg.rows - 1)));
+        const ec = Math.min(cfg.cols - 1, Math.round(cf * (cfg.cols - 1)));
+        // Don't spawn on player start or exit
+        const safe = !(er === 0 && ec === 0) && !(er === exitR && ec === exitC);
+        enemies.push({ r: safe ? er : Math.floor(cfg.rows / 2), c: safe ? ec : Math.floor(cfg.cols / 2) });
+    }
+}
+
+function startLevel(idx) {
+    levelIdx     = idx;
+    penaltyCount = 0;
+    const cfg    = LEVELS[idx];
+    resizeCanvas(cfg.rows, cfg.cols);
+    grid  = generateMaze(cfg.rows, cfg.cols);
+    pR    = 0; pC = 0;
+    exitR = cfg.rows - 1; exitC = cfg.cols - 1;
+    resetEnemies(cfg);
+
+    clearInterval(enemyTimer);
+    if (cfg.nEnemies > 0) {
+        enemyTimer = setInterval(stepEnemies, cfg.speed);
+    }
+
+    updateDots(idx);
+    document.getElementById('hudLevel').textContent = idx + 1;
+    updateHudBest();
+
+    STATE = 'playing';
+    document.getElementById('titleScreen').style.display = 'none';
+    document.getElementById('gameArea').style.display    = 'flex';
+    document.getElementById('lcOverlay').style.display   = 'none';
+    canvas.focus();
+}
+
+function updateDots(current) {
+    document.getElementById('levelDots').innerHTML =
+        Array.from({length: 10}, (_, i) =>
+            `<div class="ldot ${i < current ? 'done' : i === current ? 'current' : ''}"></div>`
+        ).join('');
+}
+
+function updateHudBest() {
+    const b = localStorage.getItem('dae_best');
+    document.getElementById('hudBest').textContent  = b ? fmtMs(+b) : '—';
+    document.getElementById('bestTitle').textContent = b ? fmtMs(+b) : '—';
+}
+
+// ── Enemy AI ──────────────────────────────────────────────────────────────────
+function stepEnemies() {
+    if (STATE !== 'playing') return;
+    const cfg = LEVELS[levelIdx];
+    enemies.forEach(en => {
+        let next = null;
+        if (Math.random() < 0.65) {
+            next = bfsStep(grid, cfg.rows, cfg.cols, en.r, en.c, pR, pC);
+        }
+        if (!next) {
+            const opts = DIRS.filter(d => {
+                if (grid[en.r][en.c] & d) return false;
+                const nr = en.r + DR[d], nc = en.c + DC[d];
+                return nr >= 0 && nr < cfg.rows && nc >= 0 && nc < cfg.cols;
+            });
+            if (opts.length) {
+                const d = opts[Math.floor(Math.random() * opts.length)];
+                next = [en.r + DR[d], en.c + DC[d]];
+            }
+        }
+        if (next) { en.r = next[0]; en.c = next[1]; }
+    });
+    checkCatch();
+}
+
+function checkCatch() {
+    if (enemies.some(en => en.r === pR && en.c === pC)) onCaught();
+}
+
+function onCaught() {
+    timerAddPenalty();
+    penaltyCount++;
+    // Flash
+    const fl = document.getElementById('catchFlash');
+    const pl = document.getElementById('penaltyLabel');
+    fl.className = 'show'; pl.className = 'show';
+    setTimeout(() => { fl.className = 'hide'; pl.className = 'hide'; }, 80);
+
+    // Restart level positions only (keep maze, keep timer)
+    pR = 0; pC = 0;
+    resetEnemies(LEVELS[levelIdx]);
+    document.getElementById('hudTimer').classList.add('penalty');
+    setTimeout(() => document.getElementById('hudTimer').classList.remove('penalty'), 350);
+}
+
+// ── Player movement ───────────────────────────────────────────────────────────
+function tryMove(dr, dc) {
+    if (STATE !== 'playing') return;
+    const cfg = LEVELS[levelIdx];
+    const nr = pR + dr, nc = pC + dc;
+    if (nr < 0 || nr >= cfg.rows || nc < 0 || nc >= cfg.cols) return;
+
+    let wallDir;
+    if      (dr === -1) wallDir = N;
+    else if (dr ===  1) wallDir = S;
+    else if (dc ===  1) wallDir = E;
+    else                wallDir = W;
+
+    if (grid[pR][pC] & wallDir) return; // wall blocks
+
+    pR = nr; pC = nc;
+    checkCatch();
+    if (pR === exitR && pC === exitC) onLevelComplete();
+}
+
+// ── Level complete ─────────────────────────────────────────────────────────────
+function onLevelComplete() {
+    STATE = 'lc';
+    clearInterval(enemyTimer);
+    timerPause();
+
+    const total = timerGet();
+    document.getElementById('lcNum').textContent   = levelIdx + 1;
+    document.getElementById('lcTime').textContent  = fmtMs(total);
+    document.getElementById('lcNext').textContent  = levelIdx + 2;
+    document.getElementById('lcPenalty').textContent =
+        penaltyCount > 0 ? `${penaltyCount} catch${penaltyCount > 1 ? 'es' : ''} (+${penaltyCount * 10}s)` : 'No penalties';
+
+    if (levelIdx < 9) {
+        document.getElementById('lcOverlay').style.display = 'flex';
+    } else {
+        onGameComplete();
+    }
+}
+
+// ── Game complete ──────────────────────────────────────────────────────────────
+function onGameComplete() {
+    STATE = 'gc';
+    const total   = timerFinish();
+    const prev    = localStorage.getItem('dae_best');
+    const isNew   = !prev || total < +prev;
+    if (isNew) localStorage.setItem('dae_best', total);
+
+    document.getElementById('gcTime').textContent  = fmtMs(total);
+    document.getElementById('gcNewBest').style.display = isNew ? 'block' : 'none';
+    document.getElementById('gcPrev').textContent  = prev
+        ? (isNew ? 'Previous best: ' + fmtMs(+prev) : 'Best: ' + fmtMs(+prev))
+        : '';
+    document.getElementById('lcOverlay').style.display = 'none';
+    document.getElementById('gcOverlay').style.display = 'flex';
+    updateHudBest();
+}
+
+// ── Quit ───────────────────────────────────────────────────────────────────────
+function quitToTitle() {
+    STATE = 'title';
+    clearInterval(enemyTimer);
+    timerPause();
+    document.getElementById('gameArea').style.display  = 'none';
+    document.getElementById('lcOverlay').style.display = 'none';
+    document.getElementById('gcOverlay').style.display = 'none';
+    document.getElementById('titleScreen').style.display = 'flex';
+    updateHudBest();
+}
+
+// ── Game loop (RAF) ────────────────────────────────────────────────────────────
+function loop() {
+    if (STATE === 'playing' || STATE === 'lc') {
+        const cfg = LEVELS[levelIdx];
+        drawMaze(grid, cfg.rows, cfg.cols, pR, pC, exitR, exitC, enemies, cfg.fog);
+    }
+    if (STATE === 'playing') {
+        document.getElementById('hudTimer').textContent = fmtMs(timerGet());
+    }
+    rafId = requestAnimationFrame(loop);
+}
+
+// ── Input ─────────────────────────────────────────────────────────────────────
+const KEY = {
+    ArrowUp:[-1,0], ArrowDown:[1,0], ArrowLeft:[0,-1], ArrowRight:[0,1],
+    w:[-1,0], s:[1,0], a:[0,-1], d:[0,1],
+    W:[-1,0], S:[1,0], A:[0,-1], D:[0,1],
+};
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { quitToTitle(); return; }
+    const mv = KEY[e.key];
+    if (mv) { e.preventDefault(); tryMove(...mv); }
+});
+
+document.getElementById('dUp').addEventListener('click',    () => tryMove(-1,  0));
+document.getElementById('dDown').addEventListener('click',  () => tryMove( 1,  0));
+document.getElementById('dLeft').addEventListener('click',  () => tryMove( 0, -1));
+document.getElementById('dRight').addEventListener('click', () => tryMove( 0,  1));
+
+// Touch swipe on canvas
+let swipeStart = null;
+canvas.addEventListener('touchstart', e => {
+    swipeStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    e.preventDefault();
+}, { passive: false });
+canvas.addEventListener('touchend', e => {
+    if (!swipeStart) return;
+    const dx = e.changedTouches[0].clientX - swipeStart.x;
+    const dy = e.changedTouches[0].clientY - swipeStart.y;
+    swipeStart = null;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 18) return;
+    if (Math.abs(dx) > Math.abs(dy)) tryMove(0, dx > 0 ? 1 : -1);
+    else                             tryMove(dy > 0 ? 1 : -1, 0);
+    e.preventDefault();
+}, { passive: false });
+
+// ── Button wiring ──────────────────────────────────────────────────────────────
+document.getElementById('startBtn').addEventListener('click', () => {
+    timerStart();
+    startLevel(0);
+    if (!rafId) loop();
+});
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+    timerResume();
+    startLevel(levelIdx + 1);
+});
+
+document.getElementById('playAgainBtn').addEventListener('click', () => {
+    document.getElementById('gcOverlay').style.display = 'none';
+    timerStart();
+    startLevel(0);
+});
+
+document.getElementById('quitBtn').addEventListener('click', () => {
+    navigateToPage('/gamer/games.html');
+});
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+updateHudBest();
+loop();
+</script>
+</body>
+</html>
