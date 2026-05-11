@@ -78,6 +78,12 @@ function buildNavbar() {
         document.body.insertBefore(el, document.body.firstChild);
     }
 
+    const brand = document.createElement('a');
+    brand.className = 'nav-brand';
+    brand.href = '/index.html';
+    brand.textContent = 'ZYXXYZ';
+    el.appendChild(brand);
+
     const burger = document.createElement('button');
     burger.className = 'nav-burger';
     burger.setAttribute('aria-label', 'Toggle navigation');

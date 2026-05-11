@@ -111,6 +111,25 @@ button:hover {
     border-bottom: 1px solid rgba(244, 162, 97, 0.2);
 }
 
+.nav-brand {
+    font-family: 'Courier New', monospace;
+    font-size: 17px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    color: #f4a261;
+    text-decoration: none;
+    padding: 15px 20px 15px 16px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: color 0.2s ease, text-shadow 0.2s ease;
+    margin-right: 4px;
+    border-right: 1px solid rgba(244, 162, 97, 0.2);
+}
+.nav-brand:hover {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(244, 162, 97, 0.7);
+}
+
 .nav-links {
     display: flex;
     align-items: stretch;
