@@ -30,6 +30,7 @@ const NAV_STRUCTURE = [
             { label: 'Pong',                href: '/gamer/pong.html' },
             { label: 'Puzzle',              href: '/gamer/puzzle.html' },
             { label: 'Rock Paper Scissors', href: '/gamer/rps.html' },
+            { label: 'Daedalus',           href: '/gamer/daedalus.html' },
         ],
     },
     {
