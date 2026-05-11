@@ -406,6 +406,89 @@
         }
         .clip-btn-del:hover { color: #f66; border-color: rgba(255,102,102,0.3); }
 
+        /* ══ FX PANEL ══ */
+        .fx-panel {
+            border-top: 1px solid #1a1a1a;
+            padding: 10px 12px 8px;
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            background: rgba(0,0,0,0.35);
+        }
+        .fx-panel.open { display: flex; }
+        .fx-section-lbl {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #555;
+            margin-bottom: 2px;
+        }
+        .eq-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .eq-band-lbl {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            color: #666;
+            width: 32px;
+            flex-shrink: 0;
+        }
+        .eq-slider {
+            flex: 1;
+            accent-color: #80cbc4;
+            cursor: pointer;
+            min-width: 0;
+        }
+        .eq-val {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            color: #555;
+            width: 36px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .fx-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+        .fx-toggle {
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid #333;
+            background: rgba(255,255,255,0.04);
+            color: #666;
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            cursor: pointer;
+            transition: all 0.12s;
+        }
+        .fx-toggle:hover { border-color: #80cbc4; color: #80cbc4; }
+        .fx-toggle.on { border-color: #80cbc4; color: #80cbc4; background: rgba(128,203,196,0.12); }
+        .fx-normalize-btn {
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid #333;
+            background: rgba(255,255,255,0.04);
+            color: #777;
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            cursor: pointer;
+            transition: border-color 0.12s, color 0.12s;
+        }
+        .fx-normalize-btn:hover { border-color: #f4a261; color: #f4a261; }
+
+        /* ══ RECORD ══ */
+        .tbtn.looping { background: rgba(76,175,80,0.22); border-color: #4caf50; color: #4caf50; }
+        .tbtn.looping:hover { background: rgba(76,175,80,0.35); }
+        .tbtn.recording { background: rgba(239,83,80,0.22); border-color: #ef5350; color: #ef5350; animation: rec-pulse 1s ease-in-out infinite; }
+        @keyframes rec-pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
+
         /* ══ RESPONSIVE ══ */
         @media (max-width: 640px) {
             .track { flex-direction: column; }
@@ -424,7 +507,7 @@
 
     <div id="adagio-app">
 
-        <p class="adagio-subtitle">Multi-track · Clip Library · WAV Export</p>
+        <p class="adagio-subtitle">Multi-track · EQ · Loop · Record · Clip Library · WAV Export</p>
 
         <!-- ══ TRANSPORT ══ -->
         <div class="transport-bar">
@@ -432,6 +515,8 @@
                 <button class="tbtn" id="btn-rtz"  onclick="returnToZero()" title="Return to zero">&#9198;</button>
                 <button class="tbtn active" id="btn-play" onclick="togglePlay()" title="Play / Pause">&#9654;</button>
                 <button class="tbtn" id="btn-stop" onclick="stopAll()" title="Stop &amp; rewind">&#9632;</button>
+                <button class="tbtn" id="btn-loop" onclick="toggleLoop()" title="Toggle loop">&#9854;</button>
+                <button class="tbtn" id="btn-rec"  onclick="toggleRecord()" title="Record from microphone">&#9679;</button>
             </div>
 
             <div class="transport-time" id="position-display">00:00.00</div>
@@ -498,6 +583,12 @@
         let playOffset   = 0;
         let rafId        = null;
         let actx         = null;
+
+        let loopEnabled  = false;
+        let isRecording  = false;
+        let micStream    = null;
+        let micRecorder  = null;
+        let micChunks    = [];
 
         // ════════════════════════════════════════════════════════════════════
         //  AUDIO CONTEXT
@@ -762,6 +853,8 @@
                 activeSource: null,
                 activeGain:   null,
                 activePan:    null,
+                eq: { low: 0, mid: 0, high: 0 },
+                fxOpen: false,
             };
             tracks.push(track);
             renderTrack(track);
@@ -860,6 +953,15 @@
                 applySolo();
             });
 
+            const fxBtn = document.createElement('button');
+            fxBtn.className = 'tk-btn'; fxBtn.textContent = 'EQ';
+            fxBtn.title = 'Show / hide EQ & FX';
+            fxBtn.addEventListener('click', () => {
+                track.fxOpen = !track.fxOpen;
+                fxBtn.classList.toggle('soloed', track.fxOpen);
+                if (track._fxPanel) track._fxPanel.classList.toggle('open', track.fxOpen);
+            });
+
             const removeBtn = document.createElement('button');
             removeBtn.className = 'tk-btn remove-btn'; removeBtn.textContent = '×';
             removeBtn.title = 'Remove track';
@@ -867,7 +969,7 @@
                 if (confirm('Remove this track?')) removeTrack(track.id);
             });
 
-            btnRow.appendChild(muteBtn); btnRow.appendChild(soloBtn); btnRow.appendChild(removeBtn);
+            btnRow.appendChild(muteBtn); btnRow.appendChild(soloBtn); btnRow.appendChild(fxBtn); btnRow.appendChild(removeBtn);
             sidebar.appendChild(btnRow);
             el.appendChild(sidebar);
 
@@ -983,6 +1085,69 @@
             waveArea.appendChild(actionsRow);
             main.appendChild(waveArea);
 
+            // FX / EQ panel
+            const fxPanel = document.createElement('div');
+            fxPanel.className = 'fx-panel' + (track.fxOpen ? ' open' : '');
+            track._fxPanel = fxPanel;
+
+            const fxLbl = document.createElement('div');
+            fxLbl.className = 'fx-section-lbl'; fxLbl.textContent = 'Equalizer';
+            fxPanel.appendChild(fxLbl);
+
+            const eqBands = [
+                { key: 'low',  label: 'Low',  freq: '200 Hz',  color: '#4fc3f7' },
+                { key: 'mid',  label: 'Mid',  freq: '1 kHz',   color: '#81c784' },
+                { key: 'high', label: 'High', freq: '8 kHz',   color: '#ffb74d' },
+            ];
+            eqBands.forEach(band => {
+                const row = document.createElement('div');
+                row.className = 'eq-row';
+                const lbl = document.createElement('span');
+                lbl.className = 'eq-band-lbl';
+                lbl.textContent = band.label;
+                lbl.title = band.freq;
+                const slider = document.createElement('input');
+                slider.type = 'range'; slider.className = 'eq-slider';
+                slider.min = -12; slider.max = 12; slider.step = 0.5;
+                slider.value = track.eq[band.key];
+                slider.style.accentColor = band.color;
+                const val = document.createElement('span');
+                val.className = 'eq-val';
+                const formatGain = g => g === 0 ? '0 dB' : (g > 0 ? '+' : '') + g.toFixed(1) + ' dB';
+                val.textContent = formatGain(track.eq[band.key]);
+                slider.addEventListener('input', () => {
+                    track.eq[band.key] = parseFloat(slider.value);
+                    val.textContent = formatGain(track.eq[band.key]);
+                    if (track['_eq_' + band.key])
+                        track['_eq_' + band.key].gain.value = track.eq[band.key];
+                });
+                row.appendChild(lbl); row.appendChild(slider); row.appendChild(val);
+                fxPanel.appendChild(row);
+            });
+
+            const fxActionsRow = document.createElement('div');
+            fxActionsRow.className = 'fx-row';
+            const resetEqBtn = document.createElement('button');
+            resetEqBtn.className = 'fx-toggle';
+            resetEqBtn.textContent = 'Reset EQ';
+            resetEqBtn.addEventListener('click', () => {
+                ['low','mid','high'].forEach(k => {
+                    track.eq[k] = 0;
+                    if (track['_eq_' + k]) track['_eq_' + k].gain.value = 0;
+                });
+                fxPanel.querySelectorAll('.eq-slider').forEach(s => { s.value = 0; });
+                fxPanel.querySelectorAll('.eq-val').forEach(v => { v.textContent = '0 dB'; });
+            });
+            const normBtn = document.createElement('button');
+            normBtn.className = 'fx-normalize-btn';
+            normBtn.textContent = 'Normalize';
+            normBtn.title = 'Boost track to peak at -1 dBFS';
+            normBtn.addEventListener('click', () => normalizeTrack(track));
+            fxActionsRow.appendChild(resetEqBtn);
+            fxActionsRow.appendChild(normBtn);
+            fxPanel.appendChild(fxActionsRow);
+            main.appendChild(fxPanel);
+
             el.appendChild(main);
             document.getElementById('track-list').appendChild(el);
 
@@ -1041,8 +1206,11 @@
                 try { track.activeSource.stop(); } catch (_) {}
                 track.activeSource = null;
             }
-            track.activeGain = null;
-            track.activePan  = null;
+            track.activeGain  = null;
+            track.activePan   = null;
+            track._eq_low     = null;
+            track._eq_mid     = null;
+            track._eq_high    = null;
         }
 
         function startPlayback() {
@@ -1062,7 +1230,20 @@
                 panner.pan.value = t.pan;
                 const src = ctx.createBufferSource();
                 src.buffer = t.buffer;
-                src.connect(gain); gain.connect(panner); panner.connect(ctx.destination);
+
+                // EQ chain: low shelf → mid peak → high shelf
+                const eqLow  = ctx.createBiquadFilter();
+                eqLow.type  = 'lowshelf';  eqLow.frequency.value  = 200;  eqLow.gain.value  = t.eq.low;
+                const eqMid  = ctx.createBiquadFilter();
+                eqMid.type  = 'peaking';   eqMid.frequency.value  = 1000; eqMid.gain.value  = t.eq.mid; eqMid.Q.value = 1.0;
+                const eqHigh = ctx.createBiquadFilter();
+                eqHigh.type = 'highshelf'; eqHigh.frequency.value = 8000; eqHigh.gain.value = t.eq.high;
+                t._eq_low  = eqLow;
+                t._eq_mid  = eqMid;
+                t._eq_high = eqHigh;
+
+                src.connect(eqLow); eqLow.connect(eqMid); eqMid.connect(eqHigh);
+                eqHigh.connect(gain); gain.connect(panner); panner.connect(ctx.destination);
                 const offset = Math.min(playOffset, t.buffer.duration);
                 src.start(0, offset);
                 t.activeSource = src;
@@ -1115,6 +1296,12 @@
 
             const maxDur = tracks.reduce((m, t) => t.buffer ? Math.max(m, t.buffer.duration) : m, 0);
             if (maxDur > 0 && playPosition >= maxDur) {
+                if (loopEnabled) {
+                    pausePlayback();
+                    playPosition = 0;
+                    startPlayback();
+                    return;
+                }
                 pausePlayback();
                 playPosition = 0;
                 document.getElementById('position-display').textContent = fmtTime(0);
@@ -1302,7 +1489,14 @@
                     pan.pan.value = t.pan;
                     const src = offCtx.createBufferSource();
                     src.buffer = t.buffer;
-                    src.connect(gain); gain.connect(pan); pan.connect(offCtx.destination);
+                    const eqLow  = offCtx.createBiquadFilter();
+                    eqLow.type  = 'lowshelf';  eqLow.frequency.value  = 200;  eqLow.gain.value  = t.eq.low;
+                    const eqMid  = offCtx.createBiquadFilter();
+                    eqMid.type  = 'peaking';   eqMid.frequency.value  = 1000; eqMid.gain.value  = t.eq.mid; eqMid.Q.value = 1.0;
+                    const eqHigh = offCtx.createBiquadFilter();
+                    eqHigh.type = 'highshelf'; eqHigh.frequency.value = 8000; eqHigh.gain.value = t.eq.high;
+                    src.connect(eqLow); eqLow.connect(eqMid); eqMid.connect(eqHigh);
+                    eqHigh.connect(gain); gain.connect(pan); pan.connect(offCtx.destination);
                     src.start(0);
                 });
 
@@ -1314,6 +1508,94 @@
                 exportBtn.disabled = false;
                 exportBtn.textContent = '↓ Export WAV';
             }
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        //  LOOP
+        // ════════════════════════════════════════════════════════════════════
+
+        function toggleLoop() {
+            loopEnabled = !loopEnabled;
+            document.getElementById('btn-loop').classList.toggle('looping', loopEnabled);
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        //  MICROPHONE RECORDING
+        // ════════════════════════════════════════════════════════════════════
+
+        async function toggleRecord() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                await startRecording();
+            }
+        }
+
+        async function startRecording() {
+            try {
+                micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            } catch (err) {
+                alert('Microphone access denied: ' + err.message);
+                return;
+            }
+
+            if (tracks.length >= MAX_TRACKS) addTrack();
+            const recTrack = tracks[tracks.length - 1];
+            if (recTrack.buffer) addTrack();
+            const targetTrack = tracks[tracks.length - 1];
+
+            micChunks = [];
+            micRecorder = new MediaRecorder(micStream);
+            micRecorder.ondataavailable = e => { if (e.data.size > 0) micChunks.push(e.data); };
+            micRecorder.onstop = async () => {
+                micStream.getTracks().forEach(t => t.stop());
+                const blob = new Blob(micChunks, { type: 'audio/webm' });
+                const file = new File([blob], 'recording-' + Date.now() + '.webm', { type: 'audio/webm' });
+                await loadAudioFile(targetTrack, file);
+                isRecording = false;
+                document.getElementById('btn-rec').classList.remove('recording');
+            };
+            micRecorder.start(100);
+            isRecording = true;
+            document.getElementById('btn-rec').classList.add('recording');
+            if (!isPlaying) startPlayback();
+        }
+
+        function stopRecording() {
+            if (micRecorder && micRecorder.state !== 'inactive') micRecorder.stop();
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        //  NORMALIZE
+        // ════════════════════════════════════════════════════════════════════
+
+        function normalizeTrack(track) {
+            if (!track.buffer) { alert('Load audio first.'); return; }
+            const nc  = track.buffer.numberOfChannels;
+            const len = track.buffer.length;
+            const sr  = track.buffer.sampleRate;
+            const ctx = getActx();
+            const newBuf = ctx.createBuffer(nc, len, sr);
+            let peak = 0;
+            for (let c = 0; c < nc; c++) {
+                const data = track.buffer.getChannelData(c);
+                for (let i = 0; i < len; i++) {
+                    const abs = Math.abs(data[i]);
+                    if (abs > peak) peak = abs;
+                }
+            }
+            if (peak < 0.0001) { alert('Track is silent.'); return; }
+            const target = 0.891; // -1 dBFS
+            const gain   = target / peak;
+            for (let c = 0; c < nc; c++) {
+                const src = track.buffer.getChannelData(c);
+                const dst = newBuf.getChannelData(c);
+                for (let i = 0; i < len; i++) dst[i] = src[i] * gain;
+            }
+            track.buffer = newBuf;
+            track.peaks  = computePeaks(newBuf, WAVE_W);
+            drawWaveform(track);
+            track._fileDurEl.textContent = fmtTime(newBuf.duration) + ' (normalized)';
         }
 
         // ════════════════════════════════════════════════════════════════════
