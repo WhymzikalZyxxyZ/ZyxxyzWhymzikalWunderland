@@ -12,6 +12,7 @@ const NAV_STRUCTURE = [
             { label: 'Doodles',         href: '/virtuoso/drawings/doodles.html' },
             { label: 'Stories',         href: '/virtuoso/writings/stories.html' },
             { label: 'Adagio',          href: '/virtuoso/audio/adagio.html' },
+            { label: 'Melody',          href: '/virtuoso/audio/melody.html' },
         ],
     },
     {
@@ -42,6 +43,8 @@ const NAV_STRUCTURE = [
             { label: 'System Operator',      href: '/technologist/systemoperator.html' },
             { label: 'Sorting Hat',          href: '/technologist/sortinghat.html' },
             { label: 'Architect',            href: '/technologist/architect.html' },
+            { label: 'Prism',                href: '/technologist/prism.html' },
+            { label: 'The Investor',         href: '/technologist/investor.html' },
         ],
     },
     {
