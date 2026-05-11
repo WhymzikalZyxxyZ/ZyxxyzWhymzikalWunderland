@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipeline — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js"></script>
+    <style>
+        :root { --acc: #56c98a; --acc2: #3aaa6e; }
+
+        .pl-wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px 60px; }
+
+        .pl-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 24px 0 20px; }
+        .pl-tab {
+            padding: 8px 20px; border-radius: 6px; border: 1px solid #333;
+            background: #111; color: #aaa; cursor: pointer; font-size: 0.9rem;
+            transition: all .18s;
+        }
+        .pl-tab.active, .pl-tab:hover { background: var(--acc); color: #000; border-color: var(--acc); }
+
+        .pl-panel { display: none; }
+        .pl-panel.active { display: block; }
+
+        /* Builder */
+        .builder-grid { display: grid; grid-template-columns: 260px 1fr; gap: 20px; }
+        @media (width <= 768px) { .builder-grid { grid-template-columns: 1fr; } }
+
+        .sidebar-box {
+            background: #0e0e0e; border: 1px solid #222; border-radius: 10px; padding: 16px;
+        }
+        .sidebar-box h4 { margin: 0 0 12px; color: var(--acc); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        .pl-field { margin-bottom: 12px; }
+        .pl-field label { display: block; font-size: 0.8rem; color: #aaa; margin-bottom: 4px; }
+        .pl-field input, .pl-field select {
+            width: 100%; box-sizing: border-box;
+            background: #1a1a1a; border: 1px solid #333; border-radius: 6px;
+            color: #f0f0f0; padding: 7px 10px; font-size: 0.88rem;
+        }
+
+        .btn-sm {
+            padding: 7px 14px; border-radius: 6px; border: none;
+            background: var(--acc); color: #000; font-weight: 700;
+            font-size: 0.82rem; cursor: pointer;
+        }
+        .btn-sm.secondary { background: #222; color: #ccc; border: 1px solid #333; }
+        .btn-sm:hover { filter: brightness(1.15); }
+
+        .stage-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+        .stage-chip {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px;
+            padding: 8px 12px; font-size: 0.85rem;
+        }
+        .stage-chip span { color: #ccc; }
+        .stage-chip button { background: none; border: none; color: #666; cursor: pointer; font-size: 1rem; }
+        .stage-chip button:hover { color: #ef5350; }
+
+        /* Pipeline canvas area */
+        .pipeline-canvas-wrap {
+            background: #080808; border: 1px solid #222; border-radius: 10px;
+            padding: 20px; overflow-x: auto;
+        }
+        .pipeline-vis { display: flex; gap: 0; align-items: flex-start; min-height: 200px; }
+        .stage-col { display: flex; flex-direction: column; align-items: center; }
+        .stage-header {
+            padding: 6px 18px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; white-space: nowrap;
+        }
+        .stage-connector {
+            width: 36px; height: 2px; background: #333; margin-top: 20px; flex-shrink: 0;
+        }
+
+        .job-card {
+            background: #111; border: 1px solid #2a2a2a; border-radius: 8px;
+            padding: 8px 14px; margin: 4px 0; min-width: 130px; max-width: 160px;
+            font-size: 0.82rem; color: #ccc; position: relative; cursor: default;
+            transition: border-color .2s;
+        }
+        .job-card .job-name { font-weight: 600; margin-bottom: 4px; }
+        .job-card .job-meta { color: #666; font-size: 0.75rem; }
+        .job-card.status-idle { border-left: 3px solid #444; }
+        .job-card.status-running { border-left: 3px solid #f4a261; animation: pulse-border 1s infinite alternate; }
+        .job-card.status-passed { border-left: 3px solid var(--acc); }
+        .job-card.status-failed { border-left: 3px solid #ef5350; }
+        .job-card.status-skipped { border-left: 3px solid #555; opacity: 0.5; }
+
+        @keyframes pulse-border { from { border-left-color: #f4a261; } to { border-left-color: #ffd580; } }
+
+        .job-status-dot {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+            margin-right: 6px;
+        }
+        .status-idle .job-status-dot { background: #444; }
+        .status-running .job-status-dot { background: #f4a261; }
+        .status-passed .job-status-dot { background: var(--acc); }
+        .status-failed .job-status-dot { background: #ef5350; }
+        .status-skipped .job-status-dot { background: #555; }
+
+        /* Run controls */
+        .run-controls {
+            display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .run-btn {
+            padding: 9px 22px; border-radius: 8px; border: none;
+            background: var(--acc); color: #000; font-weight: 700; font-size: 0.9rem;
+            cursor: pointer; transition: all .18s;
+        }
+        .run-btn:disabled { background: #333; color: #666; cursor: not-allowed; }
+        .run-btn:not(:disabled):hover { filter: brightness(1.15); }
+        .run-btn.stop { background: #ef5350; color: #fff; }
+
+        .run-status-badge {
+            padding: 5px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 700;
+        }
+        .run-status-badge.idle { background: #1a1a1a; color: #666; }
+        .run-status-badge.running { background: rgba(244,162,97,0.15); color: #f4a261; }
+        .run-status-badge.passed { background: rgba(86,201,138,0.15); color: var(--acc); }
+        .run-status-badge.failed { background: rgba(239,83,80,0.15); color: #ef5350; }
+
+        /* Log */
+        .run-log {
+            background: #080808; border: 1px solid #1a1a1a; border-radius: 8px;
+            padding: 14px; font-family: monospace; font-size: 0.8rem; color: #888;
+            max-height: 220px; overflow-y: auto; margin-top: 16px;
+        }
+        .run-log .log-pass { color: var(--acc); }
+        .run-log .log-fail { color: #ef5350; }
+        .run-log .log-info { color: #aaa; }
+        .run-log .log-time { color: #555; margin-right: 8px; }
+
+        /* Metrics */
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
+        .metric-card {
+            background: #0e0e0e; border: 1px solid #1e1e1e; border-radius: 10px;
+            padding: 16px; text-align: center;
+        }
+        .metric-val { font-size: 2rem; font-weight: 700; color: var(--acc); }
+        .metric-lbl { font-size: 0.78rem; color: #666; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; }
+
+        /* Duration bar chart */
+        .duration-chart { background: #0a0a0a; border: 1px solid #1e1e1e; border-radius: 10px; padding: 20px; }
+        .duration-chart h4 { margin: 0 0 16px; color: #ccc; font-size: 0.9rem; }
+        .dur-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+        .dur-label { width: 140px; font-size: 0.8rem; color: #888; text-align: right; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dur-bar-wrap { flex: 1; background: #1a1a1a; border-radius: 4px; height: 18px; position: relative; }
+        .dur-bar { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+        .dur-ms { font-size: 0.78rem; color: #666; width: 55px; text-align: right; flex-shrink: 0; }
+
+        /* History */
+        .history-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .history-table th { text-align: left; padding: 8px 12px; color: #666; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #1e1e1e; }
+        .history-table td { padding: 9px 12px; border-bottom: 1px solid #111; color: #bbb; }
+        .history-table tr:hover td { background: #0e0e0e; }
+        .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
+        .badge-pass { background: rgba(86,201,138,0.15); color: var(--acc); }
+        .badge-fail { background: rgba(239,83,80,0.15); color: #ef5350; }
+        .badge-running { background: rgba(244,162,97,0.15); color: #f4a261; }
+
+        /* Concepts */
+        .concept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .concept-card {
+            background: #0e0e0e; border: 1px solid #1e1e1e; border-radius: 10px; padding: 18px;
+        }
+        .concept-card h4 { color: var(--acc); margin: 0 0 8px; font-size: 0.95rem; }
+        .concept-card p { color: #999; font-size: 0.85rem; line-height: 1.6; margin: 0; }
+        .yaml-block {
+            background: #070707; border: 1px solid #1a1a1a; border-radius: 6px;
+            padding: 14px; font-family: monospace; font-size: 0.8rem; color: #a8d8a0;
+            white-space: pre; overflow-x: auto; margin-top: 12px;
+        }
+        .yaml-key { color: #6eb5ff; }
+        .yaml-str { color: #a8d8a0; }
+        .yaml-comment { color: #555; }
+    </style>
+</head>
+<body class="wunderBody">
+    <div class="navbar"></div>
+
+    <div class="pl-wrap">
+        <h2 style="margin-bottom:4px;">Pipeline Dashboard</h2>
+        <p style="color:#888;margin-top:0;">Build and simulate CI/CD pipelines — define stages and jobs, watch them run, analyse duration and failure patterns.</p>
+
+        <div class="pl-tabs">
+            <button class="pl-tab active" onclick="switchTab('build')">Build</button>
+            <button class="pl-tab" onclick="switchTab('run')">Run</button>
+            <button class="pl-tab" onclick="switchTab('metrics')">Metrics</button>
+            <button class="pl-tab" onclick="switchTab('concepts')">Concepts</button>
+        </div>
+
+        <!-- BUILD TAB -->
+        <div id="tab-build" class="pl-panel active">
+            <div class="builder-grid">
+                <div>
+                    <div class="sidebar-box">
+                        <h4>Add Stage</h4>
+                        <div class="pl-field">
+                            <label>Stage name</label>
+                            <input id="stageName" type="text" placeholder="e.g. test" />
+                        </div>
+                        <div class="pl-field">
+                            <label>Colour</label>
+                            <select id="stageColor">
+                                <option value="#6eb5ff">Blue</option>
+                                <option value="#56c98a">Green</option>
+                                <option value="#f4a261">Orange</option>
+                                <option value="#c9a0e8">Purple</option>
+                                <option value="#ef5350">Red</option>
+                                <option value="#ffd580">Yellow</option>
+                            </select>
+                        </div>
+                        <button class="btn-sm" onclick="addStage()">+ Add Stage</button>
+
+                        <h4 style="margin-top:20px;">Add Job</h4>
+                        <div class="pl-field">
+                            <label>Stage</label>
+                            <select id="jobStage"></select>
+                        </div>
+                        <div class="pl-field">
+                            <label>Job name</label>
+                            <input id="jobName" type="text" placeholder="e.g. unit-tests" />
+                        </div>
+                        <div class="pl-field">
+                            <label>Duration (ms)</label>
+                            <input id="jobDuration" type="number" value="1200" min="200" max="8000" />
+                        </div>
+                        <div class="pl-field">
+                            <label>Failure rate (%)</label>
+                            <input id="jobFailRate" type="number" value="5" min="0" max="100" />
+                        </div>
+                        <button class="btn-sm" onclick="addJob()">+ Add Job</button>
+                    </div>
+
+                    <div class="sidebar-box" style="margin-top:14px;">
+                        <h4>Stages</h4>
+                        <div class="stage-list" id="stageList"></div>
+                        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+                            <button class="btn-sm secondary" onclick="loadPreset('basic')">Basic CI</button>
+                            <button class="btn-sm secondary" onclick="loadPreset('full')">Full CD</button>
+                            <button class="btn-sm secondary" onclick="clearPipeline()">Clear</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="pipeline-canvas-wrap">
+                        <div id="pipelineVis" class="pipeline-vis"></div>
+                        <p id="emptyMsg" style="color:#444;text-align:center;padding:40px 0;">No stages yet — add a stage and some jobs, or load a preset.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RUN TAB -->
+        <div id="tab-run" class="pl-panel">
+            <div class="run-controls">
+                <button class="run-btn" id="runBtn" onclick="startRun()">&#9654; Run Pipeline</button>
+                <button class="run-btn stop" id="stopBtn" onclick="stopRun()" style="display:none;">&#9632; Stop</button>
+                <span class="run-status-badge idle" id="runBadge">Idle</span>
+                <span style="color:#555;font-size:0.82rem;" id="runTime"></span>
+            </div>
+
+            <div class="pipeline-canvas-wrap" style="margin-bottom:16px;">
+                <div id="runVis" class="pipeline-vis"></div>
+                <p id="runEmptyMsg" style="color:#444;text-align:center;padding:40px 0;">Define pipeline stages in the Build tab first.</p>
+            </div>
+
+            <div class="run-log" id="runLog">
+                <span class="log-info">Pipeline log will appear here...</span>
+            </div>
+        </div>
+
+        <!-- METRICS TAB -->
+        <div id="tab-metrics" class="pl-panel">
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-val" id="mTotalRuns">0</div>
+                    <div class="metric-lbl">Total Runs</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-val" id="mPassRate" style="color:var(--acc)">—</div>
+                    <div class="metric-lbl">Pass Rate</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-val" id="mAvgDuration">—</div>
+                    <div class="metric-lbl">Avg Duration</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-val" id="mFastestRun">—</div>
+                    <div class="metric-lbl">Fastest Run</div>
+                </div>
+            </div>
+
+            <div class="duration-chart" id="durationChart">
+                <h4>Average Job Duration</h4>
+                <div id="durationBars"><p style="color:#444;font-size:0.85rem;">No run data yet — run the pipeline first.</p></div>
+            </div>
+
+            <div style="margin-top:20px;background:#0e0e0e;border:1px solid #1e1e1e;border-radius:10px;padding:16px;">
+                <h4 style="margin:0 0 12px;color:#ccc;font-size:0.9rem;">Run History</h4>
+                <div style="overflow-x:auto;">
+                    <table class="history-table">
+                        <thead><tr><th>#</th><th>Status</th><th>Duration</th><th>Failed Jobs</th><th>Timestamp</th></tr></thead>
+                        <tbody id="historyBody"><tr><td colspan="5" style="color:#444;text-align:center;padding:20px;">No runs yet.</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONCEPTS TAB -->
+        <div id="tab-concepts" class="pl-panel">
+            <div class="concept-grid">
+                <div class="concept-card">
+                    <h4>CI vs CD vs CD</h4>
+                    <p><strong style="color:#ccc;">Continuous Integration</strong> merges developer changes frequently and runs automated builds/tests. <strong style="color:#ccc;">Continuous Delivery</strong> ensures the build is always deployable. <strong style="color:#ccc;">Continuous Deployment</strong> auto-deploys every passing build to production.</p>
+                </div>
+                <div class="concept-card">
+                    <h4>Stages &amp; Jobs</h4>
+                    <p>A <strong style="color:#ccc;">stage</strong> is a logical phase (build, test, deploy). Stages run sequentially; a failed stage blocks later ones. <strong style="color:#ccc;">Jobs</strong> within a stage run in parallel, each in its own isolated environment (container, VM, or runner).</p>
+                </div>
+                <div class="concept-card">
+                    <h4>Artifacts</h4>
+                    <p>Build outputs (compiled binaries, docker images, test reports) passed between stages. Good pipelines produce <strong style="color:#ccc;">immutable artifacts</strong> — the same binary tested in staging is deployed to production, never rebuilt.</p>
+                </div>
+                <div class="concept-card">
+                    <h4>Caching</h4>
+                    <p>Reuse expensive downloads (npm modules, pip packages, Maven deps) across runs. Cache keys are typically hashed from lock files (<code style="color:var(--acc);">package-lock.json</code>) so a changed dep busts the cache automatically.</p>
+                </div>
+                <div class="concept-card">
+                    <h4>Environments</h4>
+                    <p>Named deployment targets (dev, staging, prod). Production environments typically require <strong style="color:#ccc;">manual approval gates</strong> and have <strong style="color:#ccc;">protection rules</strong> restricting who can trigger deploys.</p>
+                </div>
+                <div class="concept-card">
+                    <h4>Rollback Strategy</h4>
+                    <p>Options include: redeploy previous artifact, <code style="color:var(--acc);">git revert</code> + redeploy, blue/green swap, canary weight reset. The fastest rollback is a feature flag flip — no redeploy needed.</p>
+                </div>
+                <div class="concept-card">
+                    <h4>Parallelism</h4>
+                    <p>Split test suites across N runners to reduce wall-clock time. Most CI systems support <code style="color:var(--acc);">strategy.matrix</code> (GitHub Actions) or <code style="color:var(--acc);">parallel:</code> (GitLab) for fan-out. Critical path analysis shows which job limits overall speed.</p>
+                </div>
+                <div class="concept-card">
+                    <h4>Secret Management</h4>
+                    <p>Credentials injected at runtime as env vars — never hardcoded or committed. Stored in the CI platform's secret store or external vaults (HashiCorp Vault, AWS Secrets Manager). Secrets are masked in logs automatically.</p>
+                </div>
+            </div>
+
+            <div style="margin-top:24px;background:#0e0e0e;border:1px solid #1e1e1e;border-radius:10px;padding:20px;">
+                <h4 style="margin:0 0 14px;color:var(--acc);">Example: GitHub Actions Workflow</h4>
+                <div class="yaml-block"><span class="yaml-comment"># .github/workflows/ci.yml</span>
+<span class="yaml-key">name:</span> <span class="yaml-str">CI/CD Pipeline</span>
+
+<span class="yaml-key">on:</span>
+  <span class="yaml-key">push:</span>
+    <span class="yaml-key">branches:</span> <span class="yaml-str">[ main ]</span>
+  <span class="yaml-key">pull_request:</span>
+
+<span class="yaml-key">jobs:</span>
+  <span class="yaml-key">lint:</span>
+    <span class="yaml-key">runs-on:</span> <span class="yaml-str">ubuntu-latest</span>
+    <span class="yaml-key">steps:</span>
+      <span class="yaml-key">- uses:</span> <span class="yaml-str">actions/checkout@v4</span>
+      <span class="yaml-key">- run:</span> <span class="yaml-str">npm ci && npm run lint</span>
+
+  <span class="yaml-key">test:</span>
+    <span class="yaml-key">needs:</span> <span class="yaml-str">lint</span>
+    <span class="yaml-key">runs-on:</span> <span class="yaml-str">ubuntu-latest</span>
+    <span class="yaml-key">strategy:</span>
+      <span class="yaml-key">matrix:</span>
+        <span class="yaml-key">node:</span> <span class="yaml-str">[ 18, 20, 22 ]</span>
+    <span class="yaml-key">steps:</span>
+      <span class="yaml-key">- uses:</span> <span class="yaml-str">actions/checkout@v4</span>
+      <span class="yaml-key">- uses:</span> <span class="yaml-str">actions/setup-node@v4</span>
+        <span class="yaml-key">with:</span> <span class="yaml-str">{ node-version: '${{ matrix.node }}' }</span>
+      <span class="yaml-key">- run:</span> <span class="yaml-str">npm ci && npm test</span>
+
+  <span class="yaml-key">build:</span>
+    <span class="yaml-key">needs:</span> <span class="yaml-str">test</span>
+    <span class="yaml-key">runs-on:</span> <span class="yaml-str">ubuntu-latest</span>
+    <span class="yaml-key">steps:</span>
+      <span class="yaml-key">- uses:</span> <span class="yaml-str">actions/checkout@v4</span>
+      <span class="yaml-key">- run:</span> <span class="yaml-str">docker build -t myapp:${{ github.sha }} .</span>
+      <span class="yaml-key">- run:</span> <span class="yaml-str">docker push myapp:${{ github.sha }}</span>
+
+  <span class="yaml-key">deploy:</span>
+    <span class="yaml-key">needs:</span> <span class="yaml-str">build</span>
+    <span class="yaml-key">environment:</span> <span class="yaml-str">production</span>  <span class="yaml-comment"># requires manual approval</span>
+    <span class="yaml-key">runs-on:</span> <span class="yaml-str">ubuntu-latest</span>
+    <span class="yaml-key">steps:</span>
+      <span class="yaml-key">- run:</span> <span class="yaml-str">kubectl set image deployment/myapp app=myapp:${{ github.sha }}</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    'use strict';
+
+    let stages = [];
+    let jobs = {};
+    let runInterval = null;
+    let runState = null;
+    let history = [];
+    let runCount = 0;
+    let allDurations = {};
+
+    const STAGE_COLORS = {
+        '#6eb5ff': '#000', '#56c98a': '#000', '#f4a261': '#000',
+        '#c9a0e8': '#000', '#ef5350': '#fff', '#ffd580': '#000'
+    };
+
+    function switchTab(name) {
+        document.querySelectorAll('.pl-tab').forEach((t, i) => {
+            const tabs = ['build','run','metrics','concepts'];
+            t.classList.toggle('active', tabs[i] === name);
+        });
+        document.querySelectorAll('.pl-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+        if (name === 'run') renderRunVis();
+        if (name === 'metrics') renderMetrics();
+    }
+
+    function addStage() {
+        const name = document.getElementById('stageName').value.trim();
+        if (!name) return;
+        if (stages.find(s => s.name === name)) { alert('Stage already exists'); return; }
+        const color = document.getElementById('stageColor').value;
+        stages.push({ name, color });
+        jobs[name] = [];
+        document.getElementById('stageName').value = '';
+        renderAll();
+    }
+
+    function removeStage(name) {
+        stages = stages.filter(s => s.name !== name);
+        delete jobs[name];
+        renderAll();
+    }
+
+    function addJob() {
+        const stageName = document.getElementById('jobStage').value;
+        const name = document.getElementById('jobName').value.trim();
+        const duration = parseInt(document.getElementById('jobDuration').value) || 1200;
+        const failRate = parseInt(document.getElementById('jobFailRate').value) || 0;
+        if (!stageName || !name) return;
+        jobs[stageName] = jobs[stageName] || [];
+        jobs[stageName].push({ name, duration, failRate });
+        document.getElementById('jobName').value = '';
+        renderAll();
+    }
+
+    function renderAll() {
+        renderStageList();
+        renderJobStageSelect();
+        renderBuildVis();
+    }
+
+    function renderStageList() {
+        const el = document.getElementById('stageList');
+        if (!stages.length) { el.innerHTML = '<span style="color:#444;font-size:0.82rem;">No stages yet.</span>'; return; }
+        el.innerHTML = stages.map(s => `
+            <div class="stage-chip">
+                <span style="color:${s.color};">&#9632;</span>
+                <span style="flex:1;margin-left:8px;">${s.name}</span>
+                <span style="color:#555;font-size:0.75rem;margin-right:8px;">${(jobs[s.name]||[]).length} jobs</span>
+                <button onclick="removeStage('${s.name}')" title="Remove stage">&times;</button>
+            </div>
+        `).join('');
+    }
+
+    function renderJobStageSelect() {
+        const sel = document.getElementById('jobStage');
+        sel.innerHTML = stages.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+    }
+
+    function renderBuildVis() {
+        const vis = document.getElementById('pipelineVis');
+        const empty = document.getElementById('emptyMsg');
+        if (!stages.length) { vis.innerHTML = ''; empty.style.display = 'block'; return; }
+        empty.style.display = 'none';
+        vis.innerHTML = stages.map((s, i) => `
+            ${i > 0 ? '<div class="stage-connector"></div>' : ''}
+            <div class="stage-col">
+                <div class="stage-header" style="background:${s.color};color:${STAGE_COLORS[s.color]||'#000'}">${s.name}</div>
+                ${(jobs[s.name]||[]).map(j => `
+                    <div class="job-card status-idle">
+                        <div class="job-name"><span class="job-status-dot"></span>${j.name}</div>
+                        <div class="job-meta">${j.duration}ms &bull; ${j.failRate}% fail</div>
+                    </div>
+                `).join('')}
+                ${!(jobs[s.name]||[]).length ? '<div style="color:#333;font-size:0.78rem;padding:8px 0;">No jobs</div>' : ''}
+            </div>
+        `).join('');
+    }
+
+    function renderRunVis(statuses) {
+        const vis = document.getElementById('runVis');
+        const empty = document.getElementById('runEmptyMsg');
+        if (!stages.length) { vis.innerHTML = ''; empty.style.display = 'block'; return; }
+        empty.style.display = 'none';
+        vis.innerHTML = stages.map((s, i) => `
+            ${i > 0 ? '<div class="stage-connector"></div>' : ''}
+            <div class="stage-col">
+                <div class="stage-header" style="background:${s.color};color:${STAGE_COLORS[s.color]||'#000'}">${s.name}</div>
+                ${(jobs[s.name]||[]).map(j => {
+                    const key = s.name + '/' + j.name;
+                    const st = (statuses && statuses[key]) || 'idle';
+                    return `
+                        <div class="job-card status-${st}" id="rjob-${key.replace(/[^a-z0-9]/gi,'_')}">
+                            <div class="job-name"><span class="job-status-dot"></span>${j.name}</div>
+                            <div class="job-meta">${j.duration}ms</div>
+                        </div>
+                    `;
+                }).join('')}
+                ${!(jobs[s.name]||[]).length ? '<div style="color:#333;font-size:0.78rem;padding:8px 0;">No jobs</div>' : ''}
+            </div>
+        `).join('');
+    }
+
+    function logLine(html) {
+        const log = document.getElementById('runLog');
+        const ts = new Date().toLocaleTimeString('en-GB', { hour12: false });
+        log.innerHTML += `<div><span class="log-time">${ts}</span>${html}</div>`;
+        log.scrollTop = log.scrollHeight;
+    }
+
+    async function startRun() {
+        if (!stages.length) { alert('Build a pipeline first.'); switchTab('build'); return; }
+        document.getElementById('runBtn').style.display = 'none';
+        document.getElementById('stopBtn').style.display = '';
+        document.getElementById('runLog').innerHTML = '';
+        const badge = document.getElementById('runBadge');
+        badge.className = 'run-status-badge running';
+        badge.textContent = 'Running';
+
+        const statuses = {};
+        const runStart = Date.now();
+        let failed = false;
+        const failedJobs = [];
+        const runDurations = {};
+
+        runState = { running: true };
+        const self = runState;
+
+        logLine('<span class="log-info">Pipeline started</span>');
+        renderRunVis(statuses);
+
+        for (const stage of stages) {
+            if (!self.running) break;
+            const stageJobs = jobs[stage.name] || [];
+            if (!stageJobs.length) continue;
+
+            logLine(`<span class="log-info">Stage <strong>${stage.name}</strong> — running ${stageJobs.length} job(s) in parallel</span>`);
+
+            // Run all jobs in stage concurrently
+            await Promise.all(stageJobs.map(j => new Promise(resolve => {
+                const key = stage.name + '/' + j.name;
+                statuses[key] = 'running';
+                renderRunVis(statuses);
+
+                const t = setTimeout(() => {
+                    if (!self.running) { statuses[key] = 'skipped'; resolve(); return; }
+                    const didFail = Math.random() * 100 < j.failRate;
+                    statuses[key] = didFail ? 'failed' : 'passed';
+                    runDurations[key] = j.duration;
+                    if (didFail) { failed = true; failedJobs.push(key); }
+                    const cls = didFail ? 'log-fail' : 'log-pass';
+                    const icon = didFail ? '✗' : '✓';
+                    logLine(`<span class="${cls}">${icon} ${key} (${j.duration}ms)</span>`);
+                    renderRunVis(statuses);
+                    resolve();
+                }, j.duration / 4);
+
+                if (!self.running) { clearTimeout(t); statuses[key] = 'skipped'; resolve(); }
+            })));
+
+            if (failed) {
+                logLine(`<span class="log-fail">✗ Stage <strong>${stage.name}</strong> failed — stopping pipeline</span>`);
+                // Mark remaining jobs as skipped
+                for (let si = stages.indexOf(stage) + 1; si < stages.length; si++) {
+                    (jobs[stages[si].name] || []).forEach(j => {
+                        statuses[stages[si].name + '/' + j.name] = 'skipped';
+                    });
+                }
+                renderRunVis(statuses);
+                break;
+            } else {
+                logLine(`<span class="log-pass">✓ Stage <strong>${stage.name}</strong> passed</span>`);
+            }
+        }
+
+        const elapsed = Date.now() - runStart;
+        runCount++;
+
+        if (self.running) {
+            badge.className = 'run-status-badge ' + (failed ? 'failed' : 'passed');
+            badge.textContent = failed ? 'Failed' : 'Passed';
+            document.getElementById('runTime').textContent = `${(elapsed / 1000).toFixed(1)}s`;
+            logLine(`<span class="${failed ? 'log-fail' : 'log-pass'}">${failed ? '✗ Pipeline FAILED' : '✓ Pipeline PASSED'} in ${(elapsed/1000).toFixed(1)}s</span>`);
+
+            history.unshift({ id: runCount, status: failed ? 'fail' : 'pass', duration: elapsed, failedJobs, ts: new Date().toLocaleTimeString() });
+            if (history.length > 20) history.pop();
+
+            // Accumulate durations for metrics
+            Object.entries(runDurations).forEach(([k, v]) => {
+                allDurations[k] = allDurations[k] || [];
+                allDurations[k].push(v);
+            });
+        }
+
+        document.getElementById('runBtn').style.display = '';
+        document.getElementById('stopBtn').style.display = 'none';
+        runState = null;
+    }
+
+    function stopRun() {
+        if (runState) runState.running = false;
+        document.getElementById('runBadge').className = 'run-status-badge idle';
+        document.getElementById('runBadge').textContent = 'Stopped';
+        document.getElementById('runBtn').style.display = '';
+        document.getElementById('stopBtn').style.display = 'none';
+        logLine('<span class="log-info">Pipeline stopped by user.</span>');
+    }
+
+    function renderMetrics() {
+        const total = history.length;
+        document.getElementById('mTotalRuns').textContent = total;
+        if (!total) {
+            document.getElementById('mPassRate').textContent = '—';
+            document.getElementById('mAvgDuration').textContent = '—';
+            document.getElementById('mFastestRun').textContent = '—';
+        } else {
+            const passed = history.filter(h => h.status === 'pass').length;
+            document.getElementById('mPassRate').textContent = Math.round(passed / total * 100) + '%';
+            const avg = history.reduce((a, h) => a + h.duration, 0) / total;
+            document.getElementById('mAvgDuration').textContent = (avg / 1000).toFixed(1) + 's';
+            const fastest = Math.min(...history.map(h => h.duration));
+            document.getElementById('mFastestRun').textContent = (fastest / 1000).toFixed(1) + 's';
+        }
+
+        // Duration bars
+        const barsEl = document.getElementById('durationBars');
+        if (!Object.keys(allDurations).length) {
+            barsEl.innerHTML = '<p style="color:#444;font-size:0.85rem;">No run data yet.</p>';
+        } else {
+            const maxAvg = Math.max(...Object.values(allDurations).map(arr => arr.reduce((a,b)=>a+b,0)/arr.length));
+            barsEl.innerHTML = Object.entries(allDurations).map(([k, arr]) => {
+                const avg = arr.reduce((a,b)=>a+b,0)/arr.length;
+                const pct = maxAvg ? (avg / maxAvg * 100) : 0;
+                const color = avg < 1000 ? '#56c98a' : avg < 3000 ? '#f4a261' : '#ef5350';
+                return `
+                    <div class="dur-row">
+                        <div class="dur-label" title="${k}">${k}</div>
+                        <div class="dur-bar-wrap"><div class="dur-bar" style="width:${pct}%;background:${color};"></div></div>
+                        <div class="dur-ms">${Math.round(avg)}ms</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // History table
+        const tbody = document.getElementById('historyBody');
+        if (!history.length) {
+            tbody.innerHTML = '<tr><td colspan="5" style="color:#444;text-align:center;padding:20px;">No runs yet.</td></tr>';
+        } else {
+            tbody.innerHTML = history.map(h => `
+                <tr>
+                    <td>#${h.id}</td>
+                    <td><span class="badge badge-${h.status === 'pass' ? 'pass' : 'fail'}">${h.status === 'pass' ? 'Passed' : 'Failed'}</span></td>
+                    <td>${(h.duration/1000).toFixed(1)}s</td>
+                    <td>${h.failedJobs.length ? h.failedJobs.join(', ') : '—'}</td>
+                    <td>${h.ts}</td>
+                </tr>
+            `).join('');
+        }
+    }
+
+    function loadPreset(type) {
+        clearPipeline();
+        if (type === 'basic') {
+            stages = [
+                { name: 'lint', color: '#6eb5ff' },
+                { name: 'test', color: '#56c98a' },
+                { name: 'build', color: '#f4a261' },
+            ];
+            jobs = {
+                lint: [
+                    { name: 'eslint', duration: 800, failRate: 8 },
+                    { name: 'stylelint', duration: 600, failRate: 4 },
+                ],
+                test: [
+                    { name: 'unit', duration: 2000, failRate: 10 },
+                    { name: 'integration', duration: 3200, failRate: 6 },
+                ],
+                build: [
+                    { name: 'compile', duration: 1500, failRate: 3 },
+                    { name: 'docker-build', duration: 2800, failRate: 2 },
+                ],
+            };
+        } else {
+            stages = [
+                { name: 'validate', color: '#6eb5ff' },
+                { name: 'test', color: '#56c98a' },
+                { name: 'build', color: '#f4a261' },
+                { name: 'security', color: '#c9a0e8' },
+                { name: 'staging', color: '#ffd580' },
+                { name: 'deploy', color: '#ef5350' },
+            ];
+            jobs = {
+                validate: [
+                    { name: 'lint', duration: 700, failRate: 5 },
+                    { name: 'type-check', duration: 1100, failRate: 7 },
+                ],
+                test: [
+                    { name: 'unit', duration: 2000, failRate: 10 },
+                    { name: 'e2e', duration: 4000, failRate: 8 },
+                    { name: 'coverage', duration: 1500, failRate: 3 },
+                ],
+                build: [
+                    { name: 'webpack', duration: 2200, failRate: 2 },
+                    { name: 'docker', duration: 3000, failRate: 2 },
+                ],
+                security: [
+                    { name: 'sast-scan', duration: 1800, failRate: 5 },
+                    { name: 'dep-audit', duration: 1000, failRate: 4 },
+                ],
+                staging: [
+                    { name: 'deploy-staging', duration: 2500, failRate: 4 },
+                    { name: 'smoke-tests', duration: 1800, failRate: 6 },
+                ],
+                deploy: [
+                    { name: 'prod-deploy', duration: 3000, failRate: 1 },
+                    { name: 'healthcheck', duration: 800, failRate: 2 },
+                ],
+            };
+        }
+        renderAll();
+    }
+
+    function clearPipeline() {
+        stages = [];
+        jobs = {};
+        renderAll();
+    }
+
+    loadPreset('basic');
+    </script>
+</body>
+</html>
