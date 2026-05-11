@@ -12,6 +12,7 @@ const NAV_STRUCTURE = [
             { label: 'Doodles',         href: '/virtuoso/drawings/doodles.html' },
             { label: 'Stories',         href: '/virtuoso/writings/stories.html' },
             { label: 'Adagio',          href: '/virtuoso/audio/adagio.html' },
+            { label: 'Melody',          href: '/virtuoso/audio/melody.html' },
         ],
     },
     {
