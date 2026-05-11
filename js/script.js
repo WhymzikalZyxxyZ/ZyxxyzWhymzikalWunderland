@@ -43,6 +43,7 @@ const NAV_STRUCTURE = [
             { label: 'Sorting Hat',          href: '/technologist/sortinghat.html' },
             { label: 'Architect',            href: '/technologist/architect.html' },
             { label: 'Prism',                href: '/technologist/prism.html' },
+            { label: 'The Investor',         href: '/technologist/investor.html' },
         ],
     },
     {
