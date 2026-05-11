@@ -125,6 +125,7 @@ button:hover {
     margin-right: 4px;
     border-right: 1px solid rgba(244, 162, 97, 0.2);
 }
+
 .nav-brand:hover {
     color: #fff;
     text-shadow: 0 0 10px rgba(244, 162, 97, 0.7);
