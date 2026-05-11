@@ -240,7 +240,7 @@ a.nav-link.nav-active {
 .navbar.nav-open .nav-burger span:nth-child(2) { opacity: 0; }
 .navbar.nav-open .nav-burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-@media (max-width: 768px) {
+@media (width <= 768px) {
     .navbar {
         flex-direction: column;
         align-items: stretch;
@@ -285,7 +285,7 @@ a.nav-link.nav-active {
         border-left: 2px solid rgba(244, 162, 97, 0.2);
         border-radius: 0;
         box-shadow: none;
-        padding: 0 0 4px 0;
+        padding: 0 0 4px;
         min-width: unset;
     }
 
