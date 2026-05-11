@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate Limiter — Technologist</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js"></script>
+    <style>
+        #app { max-width: 960px; margin: 0 auto; padding: 0 16px 80px; }
+        .subtitle { text-align:center; font-family:'Courier New',monospace; font-size:11px; letter-spacing:4px; text-transform:uppercase; color:#555; margin:0 0 28px; }
+
+        .tab-bar { display:flex; gap:4px; background:rgba(0,0,0,0.5); border:1px solid rgba(100,180,255,0.15); border-radius:10px; padding:5px; margin-bottom:26px; flex-wrap:wrap; }
+        .tab { flex:1; min-width:130px; padding:10px 12px; border:1px solid transparent; border-radius:7px; background:transparent; color:#666; font-family:'Courier New',monospace; font-size:13px; cursor:pointer; transition:background 0.16s,color 0.16s; text-align:center; }
+        .tab:hover  { color:#64b4ff; background:rgba(100,180,255,0.07); }
+        .tab.active { background:rgba(100,180,255,0.14); color:#64b4ff; border-color:rgba(100,180,255,0.28); }
+        .panel { display:none; } .panel.active { display:block; }
+
+        .sec { font-family:'Courier New',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:#64b4ff; border-bottom:1px solid rgba(100,180,255,0.18); padding-bottom:6px; margin:28px 0 16px; }
+
+        .controls { display:flex; flex-wrap:wrap; gap:16px; background:rgba(0,0,0,0.5); border:1px solid #1a2a3a; border-radius:10px; padding:20px; margin-bottom:20px; }
+        .ctrl-group { display:flex; flex-direction:column; gap:6px; min-width:140px; }
+        .ctrl-label { font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#64b4ff; }
+        .ctrl-val   { font-family:'Courier New',monospace; font-size:13px; color:#c8e0ff; }
+        input[type=range] { width:100%; accent-color:#64b4ff; cursor:pointer; }
+        select { background:rgba(255,255,255,0.05); border:1px solid #333; border-radius:6px; padding:6px 10px; color:#c8e0ff; font-family:'Courier New',monospace; font-size:12px; outline:none; }
+        select:focus { border-color:#64b4ff; }
+
+        .fire-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; }
+        .btn { padding:9px 20px; border-radius:7px; border:1px solid rgba(100,180,255,0.35); background:rgba(100,180,255,0.1); color:#64b4ff; font-family:'Courier New',monospace; font-size:13px; cursor:pointer; transition:background 0.15s; }
+        .btn:hover { background:rgba(100,180,255,0.22); }
+        .btn.danger { border-color:rgba(239,83,80,0.35); background:rgba(239,83,80,0.1); color:#ef5350; }
+        .btn.danger:hover { background:rgba(239,83,80,0.22); }
+
+        .viz-wrap { background:rgba(0,0,0,0.5); border:1px solid #1a2a3a; border-radius:10px; padding:16px; margin-bottom:20px; }
+        canvas { display:block; width:100%; border-radius:6px; }
+
+        .stats-row { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:20px; }
+        .stat-box { flex:1; min-width:120px; background:rgba(0,0,0,0.5); border:1px solid #1a2a3a; border-radius:8px; padding:14px 16px; text-align:center; }
+        .stat-num  { font-family:'Courier New',monospace; font-size:24px; font-weight:bold; color:#64b4ff; }
+        .stat-lbl  { font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#555; margin-top:4px; }
+
+        .log { background:rgba(0,0,0,0.6); border:1px solid #1a2a3a; border-radius:8px; padding:12px; height:200px; overflow-y:auto; font-family:'Courier New',monospace; font-size:11px; line-height:1.7; }
+        .log::-webkit-scrollbar { width:4px; }
+        .log::-webkit-scrollbar-thumb { background:#333; border-radius:2px; }
+        .log-pass { color:#4caf50; }
+        .log-deny { color:#ef5350; }
+        .log-info { color:#555; }
+
+        .explain { background:rgba(100,180,255,0.05); border:1px solid rgba(100,180,255,0.15); border-radius:9px; padding:16px 18px; font-family:'Courier New',monospace; font-size:12px; color:#888; line-height:1.75; margin-bottom:16px; }
+        .explain strong { color:#c8e0ff; }
+        .explain code { background:rgba(100,180,255,0.1); border-radius:3px; padding:1px 5px; color:#64b4ff; }
+    </style>
+</head>
+<body class="wunderBody">
+    <h2>Rate Limiter</h2>
+    <div class="navbar"></div>
+    <div class="banner"></div>
+    <div id="app">
+        <p class="subtitle">Distributed Systems · Token Bucket · Sliding Window</p>
+
+        <div class="tab-bar">
+            <button class="tab active" onclick="showTab('sim')">Simulator</button>
+            <button class="tab"        onclick="showTab('token')">Token Bucket</button>
+            <button class="tab"        onclick="showTab('sliding')">Sliding Window</button>
+            <button class="tab"        onclick="showTab('compare')">Compare</button>
+        </div>
+
+        <!-- SIMULATOR -->
+        <div id="tab-sim" class="panel active">
+            <div class="controls">
+                <div class="ctrl-group">
+                    <div class="ctrl-label">Algorithm</div>
+                    <select id="algo" onchange="resetSim()">
+                        <option value="token">Token Bucket</option>
+                        <option value="sliding">Sliding Window</option>
+                        <option value="fixed">Fixed Window</option>
+                        <option value="leaky">Leaky Bucket</option>
+                    </select>
+                </div>
+                <div class="ctrl-group">
+                    <div class="ctrl-label">Rate limit (req/s)</div>
+                    <input type="range" id="rate" min="1" max="20" value="5" oninput="updateLabels()">
+                    <div class="ctrl-val" id="rate-val">5 req/s</div>
+                </div>
+                <div class="ctrl-group">
+                    <div class="ctrl-label">Burst size</div>
+                    <input type="range" id="burst" min="1" max="30" value="10" oninput="updateLabels()">
+                    <div class="ctrl-val" id="burst-val">10 tokens</div>
+                </div>
+                <div class="ctrl-group">
+                    <div class="ctrl-label">Auto-fire rate</div>
+                    <input type="range" id="autoRate" min="1" max="30" value="8" oninput="updateLabels()">
+                    <div class="ctrl-val" id="autoRate-val">8 req/s</div>
+                </div>
+            </div>
+
+            <div class="fire-row">
+                <button class="btn" onclick="fireRequest()">Fire 1 Request</button>
+                <button class="btn" onclick="fireBurst(5)">Fire Burst ×5</button>
+                <button class="btn" onclick="fireBurst(20)">Fire Burst ×20</button>
+                <button class="btn" id="auto-btn" onclick="toggleAuto()">▶ Auto Fire</button>
+                <button class="btn danger" onclick="resetSim()">Reset</button>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-box"><div class="stat-num" id="stat-pass">0</div><div class="stat-lbl">Allowed</div></div>
+                <div class="stat-box"><div class="stat-num" id="stat-deny" style="color:#ef5350">0</div><div class="stat-lbl">Denied</div></div>
+                <div class="stat-box"><div class="stat-num" id="stat-tokens">—</div><div class="stat-lbl">Tokens / State</div></div>
+                <div class="stat-box"><div class="stat-num" id="stat-rate">—</div><div class="stat-lbl">Allow Rate</div></div>
+            </div>
+
+            <div class="viz-wrap">
+                <canvas id="viz" height="160"></canvas>
+            </div>
+
+            <div class="log" id="log"></div>
+        </div>
+
+        <!-- TOKEN BUCKET -->
+        <div id="tab-token" class="panel">
+            <div class="explain">
+                <strong>Token Bucket Algorithm</strong><br><br>
+                A bucket holds up to <code>burst</code> tokens. Tokens refill at a constant rate of <code>rate</code> tokens per second. Each request consumes one token. If no tokens are available, the request is denied.<br><br>
+                <strong>Properties:</strong>
+                <ul style="margin:8px 0;padding-left:16px;">
+                    <li>Allows bursts up to <code>burst</code> size as long as tokens are available.</li>
+                    <li>Long-term average is bounded by <code>rate</code> req/s regardless of burst behaviour.</li>
+                    <li>Simple to implement — state is just <code>(tokens, last_refill_time)</code>.</li>
+                    <li>Used by: AWS API Gateway, Stripe, Nginx (<code>limit_req</code>).</li>
+                </ul>
+                <strong>Pseudocode:</strong><br>
+                <code>refill = (now - last) * rate</code><br>
+                <code>tokens = min(burst, tokens + refill)</code><br>
+                <code>if tokens >= 1: tokens -= 1; allow else: deny</code>
+            </div>
+            <div class="viz-wrap" style="padding:20px;">
+                <canvas id="token-anim" height="120"></canvas>
+            </div>
+            <div class="fire-row">
+                <button class="btn" onclick="tokenDemo()">▶ Animate</button>
+            </div>
+        </div>
+
+        <!-- SLIDING WINDOW -->
+        <div id="tab-sliding" class="panel">
+            <div class="explain">
+                <strong>Sliding Window Log Algorithm</strong><br><br>
+                Maintains a log of timestamps for each request. On each new request, remove all entries older than <code>windowSize</code> seconds, then check if the count is below <code>limit</code>.<br><br>
+                <strong>Properties:</strong>
+                <ul style="margin:8px 0;padding-left:16px;">
+                    <li>Precise — no boundary spikes unlike Fixed Window.</li>
+                    <li>Memory proportional to traffic volume (stores all timestamps in window).</li>
+                    <li>Sliding Window Counter is a hybrid — divides window into sub-windows for memory efficiency.</li>
+                    <li>Used by: Redis (ZADD + ZREMRANGEBYSCORE pattern), Cloudflare.</li>
+                </ul>
+                <strong>Pseudocode:</strong><br>
+                <code>log.removeOlderThan(now - window)</code><br>
+                <code>if log.count &lt; limit: log.add(now); allow else: deny</code>
+            </div>
+            <div class="viz-wrap" style="padding:20px;">
+                <canvas id="sliding-anim" height="120"></canvas>
+            </div>
+            <div class="fire-row">
+                <button class="btn" onclick="slidingDemo()">▶ Animate</button>
+            </div>
+        </div>
+
+        <!-- COMPARE -->
+        <div id="tab-compare" class="panel">
+            <div class="sec">Algorithm Comparison</div>
+            <table style="width:100%;border-collapse:collapse;font-family:'Courier New',monospace;font-size:12px;">
+                <thead>
+                    <tr>
+                        <th style="background:rgba(100,180,255,0.08);color:#64b4ff;padding:8px 12px;text-align:left;font-size:10px;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid rgba(100,180,255,0.18);">Algorithm</th>
+                        <th style="background:rgba(100,180,255,0.08);color:#64b4ff;padding:8px 12px;text-align:left;font-size:10px;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid rgba(100,180,255,0.18);">Burst</th>
+                        <th style="background:rgba(100,180,255,0.08);color:#64b4ff;padding:8px 12px;text-align:left;font-size:10px;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid rgba(100,180,255,0.18);">Memory</th>
+                        <th style="background:rgba(100,180,255,0.08);color:#64b4ff;padding:8px 12px;text-align:left;font-size:10px;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid rgba(100,180,255,0.18);">Precision</th>
+                        <th style="background:rgba(100,180,255,0.08);color:#64b4ff;padding:8px 12px;text-align:left;font-size:10px;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid rgba(100,180,255,0.18);">Complexity</th>
+                        <th style="background:rgba(100,180,255,0.08);color:#64b4ff;padding:8px 12px;text-align:left;font-size:10px;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid rgba(100,180,255,0.18);">Used By</th>
+                    </tr>
+                </thead>
+                <tbody id="compare-body"></tbody>
+            </table>
+            <div class="sec">Trade-off Analysis</div>
+            <div class="explain">
+                <strong>When to pick each:</strong><br>
+                <ul style="margin:8px 0;padding-left:16px;">
+                    <li><strong>Token Bucket</strong> — Best general-purpose choice. Simple state, tolerates bursts, enforces long-term rate. Use when clients legitimately need short bursts (e.g. API SDK retries).</li>
+                    <li><strong>Sliding Window Log</strong> — When precision matters and memory is acceptable. Prevents boundary exploits. Use at low-to-moderate traffic where per-key memory is bounded.</li>
+                    <li><strong>Fixed Window</strong> — Simplest implementation. Risk: 2× burst at window boundary. Acceptable for coarse limits (e.g. 1000 req/hour).</li>
+                    <li><strong>Leaky Bucket</strong> — Enforces a smooth output rate regardless of input burst. Ideal for downstream protection (e.g. API calling a third-party with strict SLA).</li>
+                </ul>
+                <strong>Distributed considerations:</strong><br>
+                In a multi-node environment, state must live in a shared store (Redis). Use Redis Lua scripts for atomic check-and-update to prevent race conditions. Token Bucket in Redis: <code>GET tokens; SET tokens = min(burst, tokens + refill) - 1</code> wrapped in a MULTI/EXEC transaction.
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ── State ────────────────────────────────────────────────────────────────────
+    let tokens = 10, lastRefill = Date.now();
+    let windowLog = [];
+    let fixedWindowStart = Date.now(), fixedCount = 0;
+    let leakyQueue = 0, lastLeak = Date.now();
+    let passed = 0, denied = 0;
+    let history = []; // {t, result} for canvas
+    let autoTimer = null;
+    let autoRunning = false;
+    const MAX_HISTORY = 120;
+
+    function cfg() {
+        return {
+            rate:     parseFloat(document.getElementById('rate').value),
+            burst:    parseFloat(document.getElementById('burst').value),
+            autoRate: parseFloat(document.getElementById('autoRate').value),
+            algo:     document.getElementById('algo').value,
+        };
+    }
+
+    function updateLabels() {
+        const c = cfg();
+        document.getElementById('rate-val').textContent     = c.rate + ' req/s';
+        document.getElementById('burst-val').textContent    = c.burst + ' tokens';
+        document.getElementById('autoRate-val').textContent = c.autoRate + ' req/s';
+    }
+
+    function resetSim() {
+        const c = cfg();
+        tokens = c.burst; lastRefill = Date.now();
+        windowLog = []; fixedWindowStart = Date.now(); fixedCount = 0;
+        leakyQueue = 0; lastLeak = Date.now();
+        passed = 0; denied = 0; history = [];
+        document.getElementById('log').innerHTML = '';
+        updateStats(); drawViz();
+    }
+
+    function fireRequest() {
+        const c   = cfg();
+        const now = Date.now();
+        let allow = false;
+
+        if (c.algo === 'token') {
+            const elapsed = (now - lastRefill) / 1000;
+            tokens = Math.min(c.burst, tokens + elapsed * c.rate);
+            lastRefill = now;
+            if (tokens >= 1) { tokens -= 1; allow = true; }
+        } else if (c.algo === 'sliding') {
+            const window = 1000;
+            windowLog = windowLog.filter(t => now - t < window);
+            if (windowLog.length < c.rate) { windowLog.push(now); allow = true; }
+        } else if (c.algo === 'fixed') {
+            if (now - fixedWindowStart >= 1000) { fixedWindowStart = now; fixedCount = 0; }
+            if (fixedCount < c.rate) { fixedCount++; allow = true; }
+        } else if (c.algo === 'leaky') {
+            const elapsed = (now - lastLeak) / 1000;
+            leakyQueue = Math.max(0, leakyQueue - elapsed * c.rate);
+            lastLeak = now;
+            if (leakyQueue < c.burst) { leakyQueue++; allow = true; }
+        }
+
+        if (allow) passed++; else denied++;
+        history.push({ t: now, result: allow });
+        if (history.length > MAX_HISTORY) history.shift();
+
+        addLog(allow, now);
+        updateStats();
+        drawViz();
+    }
+
+    function fireBurst(n) { for (let i = 0; i < n; i++) fireRequest(); }
+
+    function toggleAuto() {
+        autoRunning = !autoRunning;
+        const btn = document.getElementById('auto-btn');
+        if (autoRunning) {
+            btn.textContent = '⏹ Stop Auto';
+            scheduleAuto();
+        } else {
+            btn.textContent = '▶ Auto Fire';
+            if (autoTimer) clearTimeout(autoTimer);
+        }
+    }
+
+    function scheduleAuto() {
+        if (!autoRunning) return;
+        fireRequest();
+        const delay = 1000 / cfg().autoRate;
+        autoTimer = setTimeout(scheduleAuto, delay);
+    }
+
+    function addLog(allow, now) {
+        const log = document.getElementById('log');
+        const d = new Date(now);
+        const ts = d.toLocaleTimeString([], { hour12: false }) + '.' + String(d.getMilliseconds()).padStart(3,'0');
+        const algo = cfg().algo;
+        const stateDesc = algo === 'token'   ? ` [tokens: ${tokens.toFixed(2)}]`
+                        : algo === 'sliding' ? ` [window: ${windowLog.length}]`
+                        : algo === 'fixed'   ? ` [count: ${fixedCount}]`
+                        : ` [queue: ${leakyQueue.toFixed(2)}]`;
+        const el = document.createElement('div');
+        el.className = allow ? 'log-pass' : 'log-deny';
+        el.textContent = `${ts}  ${allow ? '✓ ALLOW' : '✗ DENY '}${stateDesc}`;
+        log.appendChild(el);
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function updateStats() {
+        const c    = cfg();
+        const total = passed + denied;
+        document.getElementById('stat-pass').textContent  = passed;
+        document.getElementById('stat-deny').textContent  = denied;
+        document.getElementById('stat-rate').textContent  = total ? Math.round(passed / total * 100) + '%' : '—';
+        const state = c.algo === 'token'   ? tokens.toFixed(1)
+                    : c.algo === 'sliding' ? windowLog.length
+                    : c.algo === 'fixed'   ? fixedCount
+                    : leakyQueue.toFixed(1);
+        document.getElementById('stat-tokens').textContent = state;
+    }
+
+    function drawViz() {
+        const canvas = document.getElementById('viz');
+        const W = canvas.offsetWidth || 600;
+        canvas.width  = W * window.devicePixelRatio;
+        canvas.height = 160 * window.devicePixelRatio;
+        const ctx = canvas.getContext('2d');
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        ctx.clearRect(0, 0, W, 160);
+
+        // Background
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.roundRect(0, 0, W, 160, 6);
+        ctx.fill();
+
+        if (!history.length) return;
+
+        const now    = Date.now();
+        const span   = 10000; // 10 second window
+        const xFor   = t => ((t - (now - span)) / span) * (W - 32) + 16;
+        const barW   = Math.max(3, (W - 32) / MAX_HISTORY * 0.8);
+
+        // Grid lines
+        ctx.strokeStyle = 'rgba(100,180,255,0.08)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 10; i++) {
+            const x = 16 + i * ((W - 32) / 10);
+            ctx.beginPath(); ctx.moveTo(x, 20); ctx.lineTo(x, 140); ctx.stroke();
+        }
+
+        // Axis label
+        ctx.fillStyle = '#333';
+        ctx.font = '10px Courier New';
+        ctx.fillText('−10s', 16, 155);
+        ctx.fillText('now', W - 30, 155);
+
+        // Bars
+        history.forEach(h => {
+            const x = xFor(h.t);
+            if (x < 0 || x > W) return;
+            ctx.fillStyle = h.result ? 'rgba(76,175,80,0.7)' : 'rgba(239,83,80,0.7)';
+            ctx.fillRect(x - barW / 2, 30, barW, 100);
+        });
+
+        // Token level line (token bucket only)
+        if (cfg().algo === 'token') {
+            const pct = tokens / cfg().burst;
+            const y   = 130 - pct * 90;
+            ctx.strokeStyle = 'rgba(100,180,255,0.6)';
+            ctx.lineWidth   = 2;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath(); ctx.moveTo(16, y); ctx.lineTo(W - 16, y); ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#64b4ff';
+            ctx.font = '10px Courier New';
+            ctx.fillText(`tokens: ${tokens.toFixed(1)}`, 20, y - 4);
+        }
+    }
+
+    // ── Compare table ────────────────────────────────────────────────────────────
+    const COMPARE = [
+        { name:'Token Bucket',      burst:'Yes (up to burst)', mem:'O(1) per key', prec:'High',   complexity:'Low',    usedBy:'AWS, Stripe, Nginx' },
+        { name:'Sliding Window Log',burst:'No',                mem:'O(N) per key', prec:'Exact',  complexity:'Medium', usedBy:'Redis pattern, Cloudflare' },
+        { name:'Fixed Window',      burst:'Boundary spike ×2', mem:'O(1) per key', prec:'Low',    complexity:'Lowest', usedBy:'Simple APIs, legacy systems' },
+        { name:'Leaky Bucket',      burst:'Smoothed output',   mem:'O(1) per key', prec:'High',   complexity:'Low',    usedBy:'Network QoS, VOIP' },
+    ];
+
+    function buildCompare() {
+        const tbody = document.getElementById('compare-body');
+        COMPARE.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td style="padding:7px 12px;color:#c8e0ff;font-weight:bold;border-bottom:1px solid rgba(255,255,255,0.04);">${r.name}</td>
+                <td style="padding:7px 12px;color:#888;border-bottom:1px solid rgba(255,255,255,0.04);">${r.burst}</td>
+                <td style="padding:7px 12px;color:#888;border-bottom:1px solid rgba(255,255,255,0.04);">${r.mem}</td>
+                <td style="padding:7px 12px;color:#888;border-bottom:1px solid rgba(255,255,255,0.04);">${r.prec}</td>
+                <td style="padding:7px 12px;color:#888;border-bottom:1px solid rgba(255,255,255,0.04);">${r.complexity}</td>
+                <td style="padding:7px 12px;color:#888;border-bottom:1px solid rgba(255,255,255,0.04);">${r.usedBy}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // ── Token Bucket animation ───────────────────────────────────────────────────
+    function tokenDemo() {
+        const canvas = document.getElementById('token-anim');
+        const W = canvas.offsetWidth || 500;
+        canvas.width = W * devicePixelRatio;
+        canvas.height = 120 * devicePixelRatio;
+        const ctx = canvas.getContext('2d');
+        ctx.scale(devicePixelRatio, devicePixelRatio);
+
+        let t = 0, tok = 8, max = 10, rate = 2, requests = [0.5,1.0,1.2,2.0,2.1,2.2,2.3,4.0,4.5,5.0,5.1,5.2,5.3,5.4,5.5,5.6,7.0,8.0,9.0];
+        let reqIdx = 0, results = [];
+
+        function frame() {
+            t += 0.05;
+            tok = Math.min(max, tok + rate * 0.05);
+            while (reqIdx < requests.length && requests[reqIdx] <= t) {
+                if (tok >= 1) { tok -= 1; results.push({x: requests[reqIdx]/10*W, ok:true}); }
+                else           { results.push({x: requests[reqIdx]/10*W, ok:false}); }
+                reqIdx++;
+            }
+
+            ctx.clearRect(0,0,W,120);
+            ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(0,0,W,120);
+
+            // bucket
+            const bx=20, by=20, bw=60, bh=80, fill=tok/max*bh;
+            ctx.strokeStyle='rgba(100,180,255,0.4)'; ctx.lineWidth=2;
+            ctx.strokeRect(bx,by,bw,bh);
+            ctx.fillStyle='rgba(100,180,255,0.25)';
+            ctx.fillRect(bx, by+bh-fill, bw, fill);
+            ctx.fillStyle='#64b4ff'; ctx.font='10px Courier New';
+            ctx.fillText(`${tok.toFixed(1)}/${max}`,bx+4,by+bh+14);
+            ctx.fillText('bucket',bx+8,by-4);
+
+            // timeline
+            const tx=100, ty=60, tlen=W-120;
+            ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=1;
+            ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(tx+tlen,ty); ctx.stroke();
+            ctx.fillStyle='#333'; ctx.font='10px Courier New';
+            ctx.fillText('0s',tx,ty+20); ctx.fillText('10s',tx+tlen-20,ty+20);
+
+            const cx = tx + (t/10)*tlen;
+            ctx.strokeStyle='rgba(100,180,255,0.5)'; ctx.lineWidth=1.5;
+            ctx.setLineDash([3,3]);
+            ctx.beginPath(); ctx.moveTo(cx,ty-20); ctx.lineTo(cx,ty+20); ctx.stroke();
+            ctx.setLineDash([]);
+
+            results.forEach(r => {
+                ctx.fillStyle = r.ok ? '#4caf50' : '#ef5350';
+                ctx.beginPath(); ctx.arc(r.x+tx, ty, 5, 0, Math.PI*2); ctx.fill();
+            });
+
+            if (t < 10) requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+    }
+
+    // ── Sliding Window animation ─────────────────────────────────────────────────
+    function slidingDemo() {
+        const canvas = document.getElementById('sliding-anim');
+        const W = canvas.offsetWidth || 500;
+        canvas.width = W * devicePixelRatio;
+        canvas.height = 120 * devicePixelRatio;
+        const ctx = canvas.getContext('2d');
+        ctx.scale(devicePixelRatio, devicePixelRatio);
+
+        let t=0, limit=5, window=2, log=[], requests=[0.2,0.5,0.8,1.0,1.5,1.6,1.7,2.2,2.3,2.4,2.5,4.0,4.2,4.4,4.6,4.8,5.0,7.0,8.5,9.0];
+        let reqIdx=0, results=[];
+
+        function frame() {
+            t += 0.04;
+            log = log.filter(x => t - x < window);
+            while (reqIdx < requests.length && requests[reqIdx] <= t) {
+                const allow = log.length < limit;
+                if (allow) log.push(requests[reqIdx]);
+                results.push({x: requests[reqIdx]/10*W, ok:allow});
+                reqIdx++;
+            }
+
+            ctx.clearRect(0,0,W,120);
+            ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(0,0,W,120);
+
+            const tx=20, ty=60, tlen=W-40;
+            ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=1;
+            ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(tx+tlen,ty); ctx.stroke();
+
+            // sliding window rect
+            const wx1 = tx + Math.max(0, (t-window)/10) * tlen;
+            const wx2 = tx + (t/10) * tlen;
+            ctx.fillStyle='rgba(100,180,255,0.08)';
+            ctx.fillRect(wx1, ty-30, wx2-wx1, 60);
+            ctx.strokeStyle='rgba(100,180,255,0.25)';
+            ctx.lineWidth=1; ctx.setLineDash([4,4]);
+            ctx.strokeRect(wx1, ty-30, wx2-wx1, 60);
+            ctx.setLineDash([]);
+
+            ctx.fillStyle='#444'; ctx.font='10px Courier New';
+            ctx.fillText(`window (${window}s)`, wx1+4, ty-34);
+            ctx.fillText(`count: ${log.length}/${limit}`, wx1+4, ty+44);
+
+            results.forEach(r => {
+                ctx.fillStyle = r.ok ? '#4caf50' : '#ef5350';
+                ctx.beginPath(); ctx.arc(tx + r.x + 0, ty, 5, 0, Math.PI*2); ctx.fill();
+            });
+
+            ctx.fillStyle='#333'; ctx.font='10px Courier New';
+            ctx.fillText('0s',tx,ty+20); ctx.fillText('10s',tx+tlen-20,ty+20);
+
+            if (t < 10) requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+    }
+
+    function showTab(id) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + id).classList.add('active');
+        const labels = ['sim','token','sliding','compare'];
+        document.querySelectorAll('.tab')[labels.indexOf(id)].classList.add('active');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateLabels(); resetSim(); buildCompare();
+        setInterval(() => { if (document.getElementById('tab-sim').classList.contains('active')) drawViz(); }, 200);
+    });
+    </script>
+</body>
+</html>
