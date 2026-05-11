@@ -3,6 +3,9 @@
     "browser": true,
     "es2021":  true
   },
+  "globals": {
+    "firebase": "readonly"
+  },
   "extends": "eslint:recommended",
   "parserOptions": {
     "ecmaVersion": 2021
@@ -14,12 +17,16 @@
     {
       "files": [
         "js/tetris-engine.js", "js/snake-engine.js", "js/forum-utils.js",
-        "js/username-gen.js",  "js/rps-engine.js",   "js/pong-engine.js",
+        "js/rps-engine.js",   "js/pong-engine.js",
         "js/puzzle-engine.js", "js/chess-engine.js",  "js/checkers-engine.js",
         "js/card-engine.js",   "js/blackjack-engine.js", "js/solitaire-engine.js",
         "js/poker-engine.js",  "js/five-card-draw-engine.js"
       ],
       "env": { "browser": false, "node": true }
+    },
+    {
+      "files": ["js/script.js", "js/username-gen.js"],
+      "env": { "node": true }
     },
     {
       "files": ["tests/**/*.js"],

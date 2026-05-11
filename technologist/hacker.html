@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Hacker — Cybersecurity Guide</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js"></script>
+    <style>
+        #hacker-app {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 0 16px 80px;
+        }
+        .hkr-subtitle {
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #555;
+            margin: 0 0 28px;
+        }
+
+        /* ── TABS ── */
+        .hkr-tab-bar {
+            display: flex;
+            gap: 4px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(76,175,80,0.15);
+            border-radius: 10px;
+            padding: 5px;
+            margin-bottom: 26px;
+            flex-wrap: wrap;
+        }
+        .hkr-tab {
+            flex: 1;
+            min-width: 110px;
+            padding: 10px 12px;
+            border: 1px solid transparent;
+            border-radius: 7px;
+            background: transparent;
+            color: #666;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.16s, color 0.16s;
+            text-align: center;
+        }
+        .hkr-tab:hover  { color: #4caf50; background: rgba(76,175,80,0.07); }
+        .hkr-tab.active { background: rgba(76,175,80,0.14); color: #4caf50; border-color: rgba(76,175,80,0.28); }
+        .hkr-tab-panel  { display: none; }
+        .hkr-tab-panel.active { display: block; }
+
+        /* ── SECTION LABEL ── */
+        .sec-lbl {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #4caf50;
+            border-bottom: 1px solid rgba(76,175,80,0.18);
+            padding-bottom: 6px;
+            margin: 28px 0 14px;
+        }
+
+        /* ── DISCLAIMER ── */
+        .disclaimer {
+            background: rgba(76,175,80,0.06);
+            border: 1px solid rgba(76,175,80,0.22);
+            border-radius: 9px;
+            padding: 14px 18px;
+            margin-bottom: 24px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #7ab87c;
+            line-height: 1.7;
+        }
+        .disclaimer strong { color: #4caf50; }
+
+        /* ── LEARN MODULES ── */
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 10px;
+        }
+        .lesson-card {
+            background: rgba(0,0,0,0.55);
+            border: 1px solid #1a2a1a;
+            border-radius: 9px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: border-color 0.15s;
+        }
+        .lesson-card:hover { border-color: rgba(76,175,80,0.3); }
+        .lesson-card.open  { border-color: rgba(76,175,80,0.5); }
+        .lesson-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 15px;
+        }
+        .lesson-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            width: 36px;
+            text-align: center;
+        }
+        .lesson-title {
+            flex: 1;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            font-weight: bold;
+            color: #c8e6c9;
+        }
+        .lesson-toggle {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #4caf50;
+            transition: transform 0.2s;
+        }
+        .lesson-card.open .lesson-toggle { transform: rotate(90deg); }
+        .lesson-body {
+            display: none;
+            padding: 0 15px 14px 63px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #888;
+            line-height: 1.75;
+            border-top: 1px solid rgba(76,175,80,0.08);
+        }
+        .lesson-card.open .lesson-body { display: block; }
+        .lesson-body ul { margin: 8px 0; padding-left: 16px; }
+        .lesson-body li { margin-bottom: 4px; }
+        .lesson-body strong { color: #a5d6a7; }
+        .lesson-body code {
+            background: rgba(76,175,80,0.1);
+            border-radius: 3px;
+            padding: 1px 5px;
+            color: #81c784;
+            font-size: 11px;
+        }
+        .lesson-module-tag {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #2d5a2d;
+            background: rgba(76,175,80,0.08);
+            border-radius: 3px;
+            padding: 2px 7px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        /* ── GLOSSARY ── */
+        .gls-search-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .gls-search {
+            flex: 1;
+            min-width: 180px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 9px 14px;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .gls-search:focus { border-color: #4caf50; }
+        .gls-search::placeholder { color: #444; }
+        .gls-cat-bar {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .gls-cat-btn {
+            padding: 5px 12px;
+            border: 1px solid #222;
+            border-radius: 20px;
+            background: transparent;
+            color: #555;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .gls-cat-btn:hover  { border-color: #4caf50; color: #4caf50; }
+        .gls-cat-btn.active { border-color: #4caf50; background: rgba(76,175,80,0.1); color: #4caf50; }
+        .gls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 10px;
+        }
+        .gls-card {
+            background: rgba(0,0,0,0.55);
+            border: 1px solid #1a2a1a;
+            border-radius: 9px;
+            padding: 14px 16px;
+            transition: border-color 0.15s;
+        }
+        .gls-card:hover { border-color: rgba(76,175,80,0.3); }
+        .gls-term {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            font-weight: bold;
+            color: #4caf50;
+            margin-bottom: 2px;
+        }
+        .gls-cat-tag {
+            display: inline-block;
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #2d5a2d;
+            background: rgba(76,175,80,0.08);
+            border-radius: 3px;
+            padding: 1px 6px;
+            margin-bottom: 6px;
+        }
+        .gls-def {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #888;
+            line-height: 1.65;
+        }
+        .gls-none {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #444;
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        /* ── TOOLS ── */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 12px;
+        }
+        .tool-card {
+            background: rgba(0,0,0,0.55);
+            border: 1px solid #1a2a1a;
+            border-radius: 10px;
+            padding: 16px 18px;
+            transition: border-color 0.15s;
+        }
+        .tool-card:hover { border-color: rgba(76,175,80,0.3); }
+        .tool-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .tool-name {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            color: #81c784;
+        }
+        .tool-badge {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 2px 7px;
+            border-radius: 3px;
+        }
+        .tool-badge.free    { background: rgba(76,175,80,0.12); color: #4caf50; border: 1px solid rgba(76,175,80,0.2); }
+        .tool-badge.paid    { background: rgba(244,162,97,0.1); color: #f4a261; border: 1px solid rgba(244,162,97,0.2); }
+        .tool-badge.freemium{ background: rgba(100,150,255,0.1); color: #90b8ff; border: 1px solid rgba(100,150,255,0.2); }
+        .tool-category {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #2d5a2d;
+            margin-bottom: 8px;
+        }
+        .tool-desc {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #888;
+            line-height: 1.65;
+            margin-bottom: 8px;
+        }
+        .tool-use {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #4caf50;
+        }
+        .tool-use span { color: #555; }
+
+        /* ── ROADMAP ── */
+        .roadmap-spine {
+            position: relative;
+            padding-left: 32px;
+        }
+        .roadmap-spine::before {
+            content: '';
+            position: absolute;
+            left: 9px;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            background: linear-gradient(to bottom, #4caf50, rgba(76,175,80,0.1));
+        }
+        .roadmap-step {
+            position: relative;
+            margin-bottom: 24px;
+        }
+        .roadmap-step::before {
+            content: '';
+            position: absolute;
+            left: -27px;
+            top: 8px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4caf50;
+            box-shadow: 0 0 8px rgba(76,175,80,0.5);
+        }
+        .roadmap-step-title {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            color: #a5d6a7;
+            margin-bottom: 6px;
+        }
+        .roadmap-step-body {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #777;
+            line-height: 1.7;
+        }
+        .roadmap-step-body ul { margin: 6px 0; padding-left: 16px; }
+        .roadmap-step-body li { margin-bottom: 3px; }
+        .roadmap-step-body strong { color: #81c784; }
+        .cert-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .cert-badge {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 5px;
+            background: rgba(76,175,80,0.1);
+            border: 1px solid rgba(76,175,80,0.25);
+            color: #81c784;
+        }
+
+        /* ── REFERENCE TABLE ── */
+        .ref-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin-bottom: 24px;
+        }
+        .ref-table th {
+            background: rgba(76,175,80,0.08);
+            color: #4caf50;
+            padding: 8px 12px;
+            text-align: left;
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(76,175,80,0.18);
+        }
+        .ref-table td {
+            padding: 7px 12px;
+            color: #888;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .ref-table tr:hover td { background: rgba(76,175,80,0.03); }
+        .ref-table td:first-child { color: #a5d6a7; font-weight: bold; }
+    </style>
+</head>
+<body class="wunderBody">
+    <h2>The Hacker</h2>
+
+    <div class="navbar"></div>
+    <div class="banner"></div>
+
+    <div id="hacker-app">
+        <p class="hkr-subtitle">Ethical Hacking · Cybersecurity · Penetration Testing</p>
+
+        <div class="disclaimer">
+            <strong>Ethical Use Only.</strong> This guide covers cybersecurity concepts for educational purposes — penetration testing with authorisation, CTF competitions, security research, and building defensive skills. Always obtain written permission before testing any system you do not own. Unauthorised access to computer systems is illegal under laws such as the Computer Fraud and Abuse Act (CFAA) and the Computer Misuse Act.
+        </div>
+
+        <div class="hkr-tab-bar">
+            <button class="hkr-tab active" onclick="showTab('learn')">Learn</button>
+            <button class="hkr-tab"        onclick="showTab('glossary')">Glossary</button>
+            <button class="hkr-tab"        onclick="showTab('tools')">Tools</button>
+            <button class="hkr-tab"        onclick="showTab('roadmap')">Roadmap</button>
+        </div>
+
+        <!-- ══════════════════════════════ LEARN ══════════════════════════════ -->
+        <div id="tab-learn" class="hkr-tab-panel active">
+            <div class="sec-lbl">Foundations</div>
+            <div class="module-grid" id="learn-foundations"></div>
+
+            <div class="sec-lbl">Offensive Techniques</div>
+            <div class="module-grid" id="learn-offensive"></div>
+
+            <div class="sec-lbl">Defensive Security</div>
+            <div class="module-grid" id="learn-defensive"></div>
+
+            <div class="sec-lbl">Specialist Domains</div>
+            <div class="module-grid" id="learn-specialist"></div>
+        </div>
+
+        <!-- ══════════════════════════════ GLOSSARY ══════════════════════════════ -->
+        <div id="tab-glossary" class="hkr-tab-panel">
+            <div class="gls-search-row">
+                <input class="gls-search" id="gls-search" type="text" placeholder="Search terms..." oninput="filterGls()">
+            </div>
+            <div class="gls-cat-bar" id="gls-cats"></div>
+            <div class="gls-grid" id="gls-grid"></div>
+        </div>
+
+        <!-- ══════════════════════════════ TOOLS ══════════════════════════════ -->
+        <div id="tab-tools" class="hkr-tab-panel">
+            <div id="tools-container"></div>
+        </div>
+
+        <!-- ══════════════════════════════ ROADMAP ══════════════════════════════ -->
+        <div id="tab-roadmap" class="hkr-tab-panel">
+            <div class="sec-lbl">Learning Path</div>
+            <div class="roadmap-spine" id="roadmap-steps"></div>
+
+            <div class="sec-lbl">Practice Platforms</div>
+            <table class="ref-table">
+                <thead><tr><th>Platform</th><th>Style</th><th>Best For</th><th>Cost</th></tr></thead>
+                <tbody>
+                    <tr><td>TryHackMe</td><td>Guided learning paths</td><td>Absolute beginners, structured labs</td><td>Free / £10/mo</td></tr>
+                    <tr><td>HackTheBox</td><td>Real-world machines</td><td>Intermediate–advanced hands-on hacking</td><td>Free / €14/mo</td></tr>
+                    <tr><td>PicoCTF</td><td>CTF competitions</td><td>Students, beginner–intermediate CTF</td><td>Free</td></tr>
+                    <tr><td>OverTheWire</td><td>Wargames (CLI)</td><td>Linux skills, binary exploitation basics</td><td>Free</td></tr>
+                    <tr><td>VulnHub</td><td>Downloadable VMs</td><td>Offline practice, OSCP prep</td><td>Free</td></tr>
+                    <tr><td>DVWA</td><td>Self-hosted web app</td><td>Web application testing practice</td><td>Free</td></tr>
+                    <tr><td>Root Me</td><td>Challenges</td><td>Wide range of categories, no subscription</td><td>Free</td></tr>
+                    <tr><td>CTFtime</td><td>CTF event tracker</td><td>Finding live competitions</td><td>Free</td></tr>
+                </tbody>
+            </table>
+
+            <div class="sec-lbl">Legal Lab Setup</div>
+            <table class="ref-table">
+                <thead><tr><th>Setup</th><th>How</th><th>Use</th></tr></thead>
+                <tbody>
+                    <tr><td>Virtual Machines</td><td>VirtualBox or VMware + Kali Linux ISO</td><td>Isolated attack environment — safe to break things</td></tr>
+                    <tr><td>Metasploitable</td><td>Vulnerable VM by Rapid7</td><td>Practice exploitation against intentionally weak target</td></tr>
+                    <tr><td>FLARE VM</td><td>Windows-based analysis VM by Mandiant</td><td>Malware analysis and reverse engineering</td></tr>
+                    <tr><td>Docker labs</td><td>docker pull vulnerables/web-dvwa</td><td>Quick spin-up of vulnerable web apps locally</td></tr>
+                    <tr><td>Home network segment</td><td>Separate VLAN / router for lab devices</td><td>Hardware device testing without risking main network</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+    // ── DATA ─────────────────────────────────────────────────────────────────────
+
+    const MODULES = {
+        foundations: [
+            {
+                icon: '🖥️', title: 'How the Internet Works',
+                module: 'Foundations',
+                body: `Understanding the infrastructure you are testing is essential before touching any tool.
+                <ul>
+                    <li><strong>IP addressing:</strong> IPv4 (e.g. 192.168.1.1) and IPv6. Public vs private ranges (RFC 1918: 10.x, 172.16–31.x, 192.168.x).</li>
+                    <li><strong>Subnetting:</strong> CIDR notation — /24 = 256 addresses, /32 = single host.</li>
+                    <li><strong>DNS:</strong> Resolves hostnames to IPs. A record, MX, CNAME, TXT. DNS is often a rich source of information during recon.</li>
+                    <li><strong>TCP/IP model:</strong> Application → Transport (TCP/UDP) → Network (IP) → Link. Know which layer each attack targets.</li>
+                    <li><strong>Ports:</strong> 0–1023 well-known (HTTP:80, HTTPS:443, SSH:22, FTP:21, SMB:445). 1024–49151 registered. 49152+ dynamic.</li>
+                    <li><strong>HTTP lifecycle:</strong> Request → DNS → TCP handshake → TLS → HTTP headers → Response. Every step is an attack surface.</li>
+                </ul>`
+            },
+            {
+                icon: '🐧', title: 'Linux for Hackers',
+                module: 'Foundations',
+                body: `Most hacking tools run on Linux. Kali Linux is the standard pentesting distribution.
+                <ul>
+                    <li><strong>Navigation:</strong> <code>ls -la</code>, <code>cd</code>, <code>pwd</code>, <code>find / -name flag.txt 2>/dev/null</code></li>
+                    <li><strong>Permissions:</strong> <code>chmod 777</code>, <code>chown</code>, SUID bit (<code>ls -la /usr/bin | grep rws</code>).</li>
+                    <li><strong>Networking:</strong> <code>ip a</code>, <code>netstat -tulnp</code>, <code>ss -tulnp</code>, <code>ifconfig</code>.</li>
+                    <li><strong>Processes:</strong> <code>ps aux</code>, <code>top</code>, <code>kill</code>, <code>cron</code> (check <code>/etc/crontab</code> for privesc).</li>
+                    <li><strong>Piping and redirection:</strong> <code>cat /etc/passwd | grep root</code>, <code>nmap scan > results.txt</code>.</li>
+                    <li><strong>Key files:</strong> <code>/etc/passwd</code>, <code>/etc/shadow</code>, <code>/etc/hosts</code>, <code>~/.bash_history</code>, <code>/var/log/</code>.</li>
+                </ul>`
+            },
+            {
+                icon: '🔐', title: 'Cryptography Basics',
+                module: 'Foundations',
+                body: `Cryptography underpins most security — and breaking it is a major category of attack.
+                <ul>
+                    <li><strong>Symmetric encryption:</strong> Same key encrypts and decrypts. Fast. AES-256 is the modern standard. Weakness: key distribution.</li>
+                    <li><strong>Asymmetric encryption:</strong> Public key encrypts, private key decrypts. RSA, ECC. Used in TLS, SSH, PGP.</li>
+                    <li><strong>Hashing:</strong> One-way function. MD5 and SHA-1 are broken. Use SHA-256+. Passwords should be stored as salted hashes (bcrypt, Argon2).</li>
+                    <li><strong>Common attacks:</strong> Brute force, dictionary attack, rainbow tables (defeated by salting), hash length extension.</li>
+                    <li><strong>TLS/SSL:</strong> Encrypts web traffic. Common misconfigs: expired certs, self-signed certs, weak cipher suites (RC4, DES), SSLv3/TLS 1.0 enabled.</li>
+                    <li><strong>Tools:</strong> <code>hashcat</code> and <code>john</code> for cracking, <code>CyberChef</code> for encoding/decoding.</li>
+                </ul>`
+            },
+            {
+                icon: '🎯', title: 'The Penetration Testing Methodology',
+                module: 'Foundations',
+                body: `Professional pentesters follow a structured process to ensure thorough, repeatable, legal engagements.
+                <ul>
+                    <li><strong>1. Scoping & Rules of Engagement:</strong> Define targets, time windows, out-of-scope systems. Get written authorisation.</li>
+                    <li><strong>2. Reconnaissance:</strong> Passive (OSINT, no direct contact) and active (scanning, direct contact) information gathering.</li>
+                    <li><strong>3. Scanning & Enumeration:</strong> Identify open ports, services, versions, users, shares — build a detailed target picture.</li>
+                    <li><strong>4. Exploitation:</strong> Use discovered vulnerabilities to gain access. Aim for the lowest reliable footprint.</li>
+                    <li><strong>5. Post-Exploitation:</strong> Privilege escalation, lateral movement, persistence, data exfil simulation.</li>
+                    <li><strong>6. Reporting:</strong> Document every finding with CVSS severity, reproduction steps, and remediation advice.</li>
+                    <li><strong>Frameworks:</strong> PTES (Penetration Testing Execution Standard), OWASP Testing Guide, NIST SP 800-115.</li>
+                </ul>`
+            },
+        ],
+        offensive: [
+            {
+                icon: '🔍', title: 'Reconnaissance & OSINT',
+                module: 'Offensive',
+                body: `Recon is the first and often most valuable phase — understanding the target without touching it.
+                <ul>
+                    <li><strong>Passive recon:</strong> No direct contact. Search engines, WHOIS, DNS records, LinkedIn, GitHub, job postings.</li>
+                    <li><strong>Google dorks:</strong> <code>site:target.com filetype:pdf</code>, <code>intitle:"index of"</code>, <code>inurl:admin</code>, <code>"password" filetype:txt site:target.com</code>.</li>
+                    <li><strong>DNS enumeration:</strong> <code>dig any target.com</code>, zone transfers (<code>dig axfr @ns1.target.com target.com</code>), subdomain brute-forcing with <code>subfinder</code> or <code>amass</code>.</li>
+                    <li><strong>WHOIS:</strong> Registrar, creation date, name servers, sometimes registrant contact details.</li>
+                    <li><strong>Shodan:</strong> Search engine for internet-connected devices. Find exposed services, banners, default credentials.</li>
+                    <li><strong>theHarvester:</strong> Gathers emails, subdomains, IPs from public sources.</li>
+                    <li><strong>Maltego:</strong> Graph-based OSINT tool for visualising relationships between entities.</li>
+                </ul>`
+            },
+            {
+                icon: '📡', title: 'Scanning & Enumeration',
+                module: 'Offensive',
+                body: `Active information gathering — directly contacting the target to map its attack surface.
+                <ul>
+                    <li><strong>Nmap basics:</strong> <code>nmap -sV -sC -p- 10.10.10.1</code> — version detection, default scripts, all ports.</li>
+                    <li><strong>Scan types:</strong> SYN scan (-sS, stealthy), TCP connect (-sT), UDP (-sU, slower), OS detection (-O).</li>
+                    <li><strong>Service enumeration:</strong> Banner grabbing with <code>nc target.com 80</code> or <code>curl -I</code>. Reveals software versions.</li>
+                    <li><strong>SMB enumeration:</strong> <code>smbclient -L //target -N</code>, <code>enum4linux -a target</code> — lists shares, users, OS info.</li>
+                    <li><strong>Web enumeration:</strong> <code>gobuster dir -u http://target -w /usr/share/wordlists/dirb/common.txt</code> — finds hidden paths.</li>
+                    <li><strong>SNMP:</strong> UDP port 161. Community strings often default to "public". <code>snmpwalk -c public -v1 target</code>.</li>
+                    <li><strong>Output:</strong> Always save scan results — <code>nmap -oA scan_results target</code>.</li>
+                </ul>`
+            },
+            {
+                icon: '💥', title: 'Exploitation Fundamentals',
+                module: 'Offensive',
+                body: `Using identified vulnerabilities to gain unauthorised access — the core skill of offensive security.
+                <ul>
+                    <li><strong>CVEs:</strong> Common Vulnerabilities and Exposures. Search NVD, Exploit-DB, and GitHub for public exploits against identified software versions.</li>
+                    <li><strong>Metasploit:</strong> <code>use exploit/multi/handler</code> → <code>set PAYLOAD</code> → <code>set LHOST/LPORT</code> → <code>exploit</code>. The most widely used exploitation framework.</li>
+                    <li><strong>Shells:</strong> Reverse shell (target connects back to attacker), bind shell (attacker connects to port opened on target). <code>netcat -lvnp 4444</code> to catch a reverse shell.</li>
+                    <li><strong>Payload types:</strong> Staged (small stager fetches main payload) vs stageless (entire payload in one). Meterpreter is the most feature-rich Metasploit payload.</li>
+                    <li><strong>Manual exploitation:</strong> Understand the vulnerability, not just run scripts. Read the CVE advisory, understand the root cause.</li>
+                    <li><strong>searchsploit:</strong> Offline Exploit-DB search — <code>searchsploit vsftpd 2.3.4</code>.</li>
+                </ul>`
+            },
+            {
+                icon: '🌐', title: 'Web Application Attacks',
+                module: 'Offensive',
+                body: `Web apps are the most common attack surface in modern engagements. OWASP Top 10 is the standard reference.
+                <ul>
+                    <li><strong>SQL Injection:</strong> Insert SQL into input fields. <code>' OR 1=1--</code> in a login bypasses auth. <code>sqlmap -u "http://target/page?id=1" --dbs</code> automates discovery.</li>
+                    <li><strong>XSS (Cross-Site Scripting):</strong> Inject JavaScript into pages viewed by other users. Steal cookies, redirect, keylog. Reflected, stored, DOM-based variants.</li>
+                    <li><strong>CSRF:</strong> Trick an authenticated user's browser into making unintended requests. Mitigated by CSRF tokens.</li>
+                    <li><strong>IDOR:</strong> Insecure Direct Object Reference — change <code>user_id=123</code> to <code>user_id=124</code> in a request to access another user's data.</li>
+                    <li><strong>File upload bypass:</strong> Upload a PHP web shell disguised as an image. Test MIME type and extension validation separately.</li>
+                    <li><strong>Directory traversal:</strong> <code>../../etc/passwd</code> in file parameters to read arbitrary files.</li>
+                    <li><strong>Burp Suite:</strong> The essential proxy — intercept, modify, and replay HTTP requests. Use Intruder for fuzzing, Repeater for manual testing.</li>
+                </ul>`
+            },
+            {
+                icon: '📶', title: 'Network Attacks',
+                module: 'Offensive',
+                body: `Attacking network infrastructure and protocols rather than applications.
+                <ul>
+                    <li><strong>ARP Spoofing:</strong> Send fake ARP replies to associate attacker MAC with victim IP — enables Man-in-the-Middle. Tool: <code>arpspoof</code> or <code>bettercap</code>.</li>
+                    <li><strong>Man-in-the-Middle (MitM):</strong> Position between two communicating parties to intercept or modify traffic.</li>
+                    <li><strong>Password sniffing:</strong> Capture credentials sent over unencrypted protocols (Telnet, FTP, HTTP). Tool: <code>Wireshark</code>, <code>tcpdump</code>.</li>
+                    <li><strong>DNS Spoofing:</strong> Respond to DNS queries with forged IPs to redirect users to attacker-controlled servers.</li>
+                    <li><strong>VLAN hopping:</strong> Switch spoofing or double-tagging to access VLANs the attacker shouldn't reach.</li>
+                    <li><strong>Wi-Fi attacks:</strong> WPA2 handshake capture + offline crack (<code>aircrack-ng</code>), Evil Twin AP (rogue access point).</li>
+                    <li><strong>Pass-the-Hash:</strong> Use an NTLM hash directly for authentication without cracking it.</li>
+                </ul>`
+            },
+            {
+                icon: '⬆️', title: 'Privilege Escalation',
+                module: 'Offensive',
+                body: `Elevating from a low-privilege foothold to administrator or root — often the critical step in an engagement.
+                <ul>
+                    <li><strong>Linux privesc vectors:</strong> SUID binaries (<code>find / -perm -4000 2>/dev/null</code>), writable cron jobs, weak sudo rules (<code>sudo -l</code>), kernel exploits, PATH injection.</li>
+                    <li><strong>Windows privesc vectors:</strong> Unquoted service paths, weak registry ACLs, AlwaysInstallElevated, token impersonation, SeImpersonatePrivilege (Potato exploits).</li>
+                    <li><strong>GTFOBins:</strong> Catalogue of Unix binaries that can be abused to escalate privileges or escape restricted shells — gtfobins.github.io.</li>
+                    <li><strong>LOLBAS:</strong> Living Off The Land Binaries And Scripts — Windows equivalent of GTFOBins.</li>
+                    <li><strong>Automated tools:</strong> <code>LinPEAS</code> / <code>WinPEAS</code> enumerate hundreds of privesc vectors automatically.</li>
+                    <li><strong>Password hunting:</strong> Search for plaintext creds in config files, environment variables, bash history, database files.</li>
+                </ul>`
+            },
+            {
+                icon: '↔️', title: 'Lateral Movement & Persistence',
+                module: 'Offensive',
+                body: `Moving between systems in a network and maintaining access for the duration of an engagement.
+                <ul>
+                    <li><strong>Lateral movement:</strong> Use credentials/tokens from one compromised host to access others. Pass-the-Hash, Pass-the-Ticket (Kerberos), WMI, PsExec.</li>
+                    <li><strong>Pivoting:</strong> Route traffic through a compromised host to reach otherwise inaccessible network segments. <code>ssh -D</code> SOCKS proxy, <code>chisel</code>, <code>ligolo-ng</code>.</li>
+                    <li><strong>Persistence mechanisms — Linux:</strong> Cron jobs, systemd services, SSH authorised_keys, bashrc modification, LD_PRELOAD.</li>
+                    <li><strong>Persistence mechanisms — Windows:</strong> Registry Run keys, scheduled tasks, service installation, DLL hijacking, startup folder.</li>
+                    <li><strong>Active Directory:</strong> Domain environments are common targets. Golden/Silver Ticket attacks, DCSync, Kerberoasting, AS-REP Roasting.</li>
+                    <li><strong>BloodHound:</strong> Graphs AD relationships to find attack paths to Domain Admin.</li>
+                </ul>`
+            },
+            {
+                icon: '🔑', title: 'Password Attacks',
+                module: 'Offensive',
+                body: `Credentials are the most commonly exploited vector in real-world breaches.
+                <ul>
+                    <li><strong>Brute force:</strong> Try every possible combination. Only viable for short or weak passwords.</li>
+                    <li><strong>Dictionary attack:</strong> Try words from a wordlist. <code>rockyou.txt</code> (14 million passwords) is the standard starting point.</li>
+                    <li><strong>Credential stuffing:</strong> Use leaked username/password pairs from breaches against other services. Effective because of password reuse.</li>
+                    <li><strong>Hashcat:</strong> GPU-accelerated hash cracking. <code>hashcat -m 0 hash.txt rockyou.txt</code> for MD5. Supports 300+ hash types.</li>
+                    <li><strong>John the Ripper:</strong> CPU-based cracker. Good for cracking /etc/shadow, ZIP, PDF, SSH key passwords.</li>
+                    <li><strong>Hydra:</strong> Online brute-force tool. <code>hydra -l admin -P rockyou.txt ssh://target</code>.</li>
+                    <li><strong>Default credentials:</strong> Always try admin/admin, admin/password, root/root. Many devices ship with unchanged defaults.</li>
+                </ul>`
+            },
+        ],
+        defensive: [
+            {
+                icon: '🛡️', title: 'Defence in Depth',
+                module: 'Defensive',
+                body: `Security is most effective when multiple independent layers must each be defeated.
+                <ul>
+                    <li><strong>Principle of least privilege:</strong> Grant only the minimum access required. Every excess permission is an attack surface.</li>
+                    <li><strong>Network segmentation:</strong> VLANs, firewalls, and DMZs limit lateral movement after a breach.</li>
+                    <li><strong>Patch management:</strong> Most exploited vulnerabilities have patches available. Unpatched systems are low-hanging fruit.</li>
+                    <li><strong>MFA:</strong> Multi-factor authentication stops credential theft in its tracks. Prioritise privileged accounts and external-facing systems.</li>
+                    <li><strong>Zero trust:</strong> Never trust, always verify. Authenticate every request regardless of network location.</li>
+                    <li><strong>Hardening guides:</strong> CIS Benchmarks provide step-by-step configuration guidance for every major OS and application.</li>
+                </ul>`
+            },
+            {
+                icon: '📋', title: 'Logging & Monitoring',
+                module: 'Defensive',
+                body: `You cannot defend what you cannot see. Comprehensive logging is the foundation of threat detection.
+                <ul>
+                    <li><strong>What to log:</strong> Authentication events, privilege use, process creation, network connections, file access, DNS queries.</li>
+                    <li><strong>Windows event IDs:</strong> 4624 (logon), 4625 (failed logon), 4720 (account created), 4688 (process creation), 7045 (service installed).</li>
+                    <li><strong>Syslog:</strong> Linux standard logging. Forward to a centralised SIEM so logs can't be deleted by an attacker on the local host.</li>
+                    <li><strong>SIEM:</strong> Security Information and Event Management. Correlates events across systems. Splunk, Elastic/ELK, Microsoft Sentinel.</li>
+                    <li><strong>Retention:</strong> Retain logs for at least 90 days (many compliance frameworks require 12 months).</li>
+                    <li><strong>Alerting:</strong> Alert on impossible travel, off-hours admin activity, mass file access, lateral movement indicators.</li>
+                </ul>`
+            },
+            {
+                icon: '🦠', title: 'Malware Analysis',
+                module: 'Defensive',
+                body: `Understanding how malware works allows defenders to build better detections and respond to incidents.
+                <ul>
+                    <li><strong>Static analysis:</strong> Inspect the file without running it. Check strings, imports, PE headers, entropy (high entropy = packed/encrypted).</li>
+                    <li><strong>Dynamic analysis:</strong> Run the sample in a sandbox and observe behaviour. Network connections, registry changes, file writes, process injection.</li>
+                    <li><strong>Tools:</strong> <code>strings</code>, <code>file</code>, <code>binwalk</code>, PEStudio, Ghidra (free, by NSA), IDA Pro (industry standard), Cuckoo Sandbox, AnyRun.</li>
+                    <li><strong>YARA:</strong> Write rules to match patterns in files. Used by AV engines and threat hunting.</li>
+                    <li><strong>IOCs:</strong> Indicators of Compromise — file hashes, IPs, domains, registry keys. Shared via MISP, OpenCTI, ThreatFox.</li>
+                    <li><strong>MITRE ATT&CK:</strong> Framework mapping adversary tactics, techniques, and procedures (TTPs). Essential for threat hunting and detection engineering.</li>
+                </ul>`
+            },
+            {
+                icon: '🚨', title: 'Incident Response',
+                module: 'Defensive',
+                body: `A structured process for handling security breaches that minimises damage and recovery time.
+                <ul>
+                    <li><strong>IR lifecycle (NIST SP 800-61):</strong> Preparation → Detection & Analysis → Containment, Eradication & Recovery → Post-Incident Activity.</li>
+                    <li><strong>Triage:</strong> Confirm the incident is real, classify severity, notify stakeholders. Time is critical.</li>
+                    <li><strong>Containment:</strong> Isolate affected systems (network block, pull cable, snapshot VM) without destroying evidence.</li>
+                    <li><strong>Forensic preservation:</strong> Collect memory dump, disk image, and logs before touching anything. Chain of custody matters for legal proceedings.</li>
+                    <li><strong>Eradication:</strong> Remove malware, close the initial access vector, reset compromised credentials.</li>
+                    <li><strong>Lessons learned:</strong> Post-mortem within 2 weeks. What was the root cause? What detection failed? What would have caught it sooner?</li>
+                </ul>`
+            },
+        ],
+        specialist: [
+            {
+                icon: '📱', title: 'Mobile Security',
+                module: 'Specialist',
+                body: `Android and iOS present unique attack surfaces distinct from traditional web and network testing.
+                <ul>
+                    <li><strong>Android:</strong> APK reverse engineering with <code>jadx</code> or <code>apktool</code>. Inspect AndroidManifest.xml for exported activities, permissions, backup flags.</li>
+                    <li><strong>iOS:</strong> IPA analysis, plist inspection, Frida for dynamic instrumentation and bypassing jailbreak detection.</li>
+                    <li><strong>Common issues:</strong> Insecure data storage (SQLite, SharedPreferences, Keychain misuse), hardcoded API keys, weak certificate pinning, insecure deeplinks.</li>
+                    <li><strong>OWASP Mobile Top 10:</strong> Covers improper platform usage, insecure data storage, insecure communication, insecure authentication.</li>
+                    <li><strong>Proxying:</strong> Route mobile traffic through Burp Suite using a proxy certificate installed on device.</li>
+                    <li><strong>Tools:</strong> MobSF (static & dynamic analysis framework), Frida, Objection, drozer.</li>
+                </ul>`
+            },
+            {
+                icon: '☁️', title: 'Cloud Security',
+                module: 'Specialist',
+                body: `Cloud environments (AWS, Azure, GCP) have their own misconfigurations and attack patterns.
+                <ul>
+                    <li><strong>IAM misconfigs:</strong> Overly permissive roles, publicly exposed S3 buckets, leaked access keys in code repos are the most common cloud vulnerabilities.</li>
+                    <li><strong>SSRF to metadata:</strong> If a web app is vulnerable to SSRF, querying <code>http://169.254.169.254/latest/meta-data/iam/security-credentials/</code> may return AWS credentials.</li>
+                    <li><strong>AWS enumeration:</strong> <code>aws sts get-caller-identity</code>, <code>aws s3 ls</code>, <code>aws iam list-users</code>. Tools: Pacu, ScoutSuite, Prowler.</li>
+                    <li><strong>Container security:</strong> Escape from Docker containers via privileged mode, mounted Docker socket, or kernel exploits.</li>
+                    <li><strong>Secrets management:</strong> Never hardcode credentials. Use AWS Secrets Manager, HashiCorp Vault, or Azure Key Vault.</li>
+                    <li><strong>CloudTrail / audit logging:</strong> Equivalent to SIEM for cloud — log all API calls for detection and forensics.</li>
+                </ul>`
+            },
+            {
+                icon: '🔩', title: 'Binary Exploitation',
+                module: 'Specialist',
+                body: `Low-level exploitation of memory corruption vulnerabilities in compiled software.
+                <ul>
+                    <li><strong>Buffer overflow:</strong> Write past the end of a buffer to overwrite the return address and redirect execution to attacker-controlled code.</li>
+                    <li><strong>Mitigations:</strong> ASLR (randomises memory layout), NX/DEP (non-executable stack), stack canaries (detect overwrites), PIE (position-independent executable).</li>
+                    <li><strong>ROP (Return-Oriented Programming):</strong> Chain existing code snippets ("gadgets") to bypass NX — no need to inject new code.</li>
+                    <li><strong>Format string bugs:</strong> <code>printf(user_input)</code> instead of <code>printf("%s", user_input)</code> allows reading and writing arbitrary memory.</li>
+                    <li><strong>Use-after-free:</strong> Access heap memory after it has been freed — often leads to code execution.</li>
+                    <li><strong>Tools:</strong> GDB with pwndbg/peda, pwntools (Python exploit framework), checksec (inspect binary mitigations), Ghidra/IDA for disassembly.</li>
+                </ul>`
+            },
+            {
+                icon: '📡', title: 'Wireless Security',
+                module: 'Specialist',
+                body: `Wi-Fi networks are a common entry point, especially in physical penetration tests.
+                <ul>
+                    <li><strong>WPA2-PSK attack:</strong> Capture the 4-way handshake with <code>airodump-ng</code>, deauth a client with <code>aireplay-ng -0</code>, then crack offline with <code>hashcat -m 22000</code>.</li>
+                    <li><strong>WPA2-Enterprise:</strong> Uses RADIUS/802.1X. Attacks involve rogue AP with <code>hostapd-wpe</code> to capture MSCHAPv2 hashes.</li>
+                    <li><strong>Evil Twin / Karma:</strong> Broadcast an AP with the same SSID as a legitimate network to intercept client traffic.</li>
+                    <li><strong>WPS attacks:</strong> Pixie-dust attack against WPS PIN (<code>reaver</code>) can recover WPA passphrase in minutes.</li>
+                    <li><strong>Monitor mode:</strong> Required for passive capture. <code>airmon-ng start wlan0</code>.</li>
+                    <li><strong>Bluetooth:</strong> BlueSnarf, BlueBorne — less common but relevant for IoT/embedded assessments.</li>
+                </ul>`
+            },
+        ],
+    };
+
+    const GLS_TERMS = [
+        { term:'Zero-Day',           cat:'Vulnerabilities', def:'A vulnerability unknown to the vendor with no patch available. Highly valuable — often sold for six figures on the grey/black market.' },
+        { term:'CVE',                cat:'Vulnerabilities', def:'Common Vulnerabilities and Exposures. A standardised identifier (e.g. CVE-2021-44228) for publicly known security flaws. Tracked at nvd.nist.gov.' },
+        { term:'CVSS',               cat:'Vulnerabilities', def:'Common Vulnerability Scoring System. A 0–10 score for severity. 9.0+ = Critical. Used to prioritise patching.' },
+        { term:'Attack Surface',     cat:'Vulnerabilities', def:'The sum of all points where an attacker could try to enter or extract data. Reducing it is a core security principle.' },
+        { term:'Exploit',            cat:'Vulnerabilities', def:'Code or technique that takes advantage of a vulnerability to cause unintended behaviour — typically gaining access or escalating privileges.' },
+        { term:'Payload',            cat:'Exploitation', def:'The part of an exploit that performs the actual malicious action after the vulnerability is triggered (e.g. a reverse shell, ransomware, a miner).' },
+        { term:'Reverse Shell',      cat:'Exploitation', def:'A shell session where the target machine initiates the connection back to the attacker, bypassing inbound firewall rules.' },
+        { term:'Bind Shell',         cat:'Exploitation', def:'A shell that listens on a port on the target. The attacker connects to it. Easier to detect and blocked by many firewalls.' },
+        { term:'C2 / C&C',           cat:'Exploitation', def:'Command and Control. Infrastructure used to manage compromised hosts, issue commands, and exfiltrate data.' },
+        { term:'Meterpreter',        cat:'Exploitation', def:'An advanced in-memory payload in Metasploit. Runs entirely in RAM, supports file transfer, webcam access, hashdump, pivoting, and more.' },
+        { term:'Privilege Escalation',cat:'Exploitation',def:'Gaining higher-level access than initially obtained — e.g. moving from a web server account to root/SYSTEM.' },
+        { term:'Lateral Movement',   cat:'Exploitation', def:'Moving from one compromised host to other systems within the same network using discovered credentials or exploits.' },
+        { term:'Persistence',        cat:'Exploitation', def:'Techniques used to maintain access to a system across reboots or session terminations (cron jobs, registry keys, backdoors).' },
+        { term:'Pivot',              cat:'Exploitation', def:'Route network traffic through a compromised host to reach otherwise inaccessible network segments.' },
+        { term:'Enumeration',        cat:'Recon', def:'Systematically extracting information from a target — usernames, shares, services, version numbers — to build an attack plan.' },
+        { term:'Fingerprinting',     cat:'Recon', def:'Identifying the operating system, software versions, or configuration of a target by analysing its responses.' },
+        { term:'OSINT',              cat:'Recon', def:'Open Source Intelligence. Gathering information from publicly available sources — websites, DNS, social media, job postings, WHOIS.' },
+        { term:'Banner Grabbing',    cat:'Recon', def:'Connecting to a service and reading the welcome message it returns. Often reveals software type and version.' },
+        { term:'Port Scanning',      cat:'Recon', def:'Probing a host\'s ports to determine which are open and what services are listening. Nmap is the standard tool.' },
+        { term:'Attack Vector',      cat:'Concepts', def:'The path or method used to gain access to a system. Network, adjacent network, local, and physical are the four CVSS vectors.' },
+        { term:'Threat Actor',       cat:'Concepts', def:'An individual or group that poses a cybersecurity threat. Categories: nation-state, cybercriminal, hacktivist, script kiddie, insider.' },
+        { term:'APT',                cat:'Concepts', def:'Advanced Persistent Threat. A sophisticated, long-term intrusion campaign, typically by nation-state or state-sponsored groups.' },
+        { term:'Social Engineering', cat:'Concepts', def:'Manipulating people into divulging information or taking actions that compromise security. Phishing is the most common form.' },
+        { term:'Phishing',           cat:'Concepts', def:'Sending deceptive emails to trick users into clicking malicious links or providing credentials. Spear phishing targets specific individuals.' },
+        { term:'Red Team',           cat:'Concepts', def:'An adversarial simulation team that emulates real-world attackers to test an organisation\'s defences end-to-end.' },
+        { term:'Blue Team',          cat:'Concepts', def:'The defensive security team responsible for protecting, detecting, and responding to attacks.' },
+        { term:'Purple Team',        cat:'Concepts', def:'Red and blue teams working collaboratively — the red team shares TTPs in real time so the blue team can improve detections.' },
+        { term:'Penetration Test',   cat:'Concepts', def:'An authorised simulated attack against a system to identify exploitable vulnerabilities before real attackers do.' },
+        { term:'Bug Bounty',         cat:'Concepts', def:'Programmes where organisations pay researchers to responsibly disclose vulnerabilities. Platforms include HackerOne and Bugcrowd.' },
+        { term:'CTF',                cat:'Concepts', def:'Capture The Flag. Cybersecurity competitions where participants solve challenges to find hidden flags. Excellent learning environments.' },
+        { term:'IOC',                cat:'Detection', def:'Indicator of Compromise. Evidence that a system has been breached — suspicious file hashes, IPs, domains, registry keys.' },
+        { term:'TTP',                cat:'Detection', def:'Tactics, Techniques, and Procedures. The behaviour patterns of threat actors, catalogued in MITRE ATT&CK.' },
+        { term:'SIEM',               cat:'Detection', def:'Security Information and Event Management. Aggregates and correlates logs from across an environment to detect and alert on threats.' },
+        { term:'EDR',                cat:'Detection', def:'Endpoint Detection and Response. Real-time monitoring and response capability on endpoints. Examples: CrowdStrike, SentinelOne, Defender.' },
+        { term:'IDS / IPS',          cat:'Detection', def:'Intrusion Detection/Prevention System. IDS alerts on suspicious traffic; IPS actively blocks it. Snort and Suricata are common open-source tools.' },
+        { term:'Honeypot',           cat:'Detection', def:'A decoy system designed to attract attackers, reveal their techniques, and provide early warning of an intrusion.' },
+        { term:'SQL Injection',      cat:'Web', def:'Inserting malicious SQL into input fields to manipulate database queries — dumping data, bypassing auth, or executing commands.' },
+        { term:'XSS',                cat:'Web', def:'Cross-Site Scripting. Injecting malicious JavaScript into web pages viewed by other users. Used to steal cookies, redirect, and more.' },
+        { term:'CSRF',               cat:'Web', def:'Cross-Site Request Forgery. Tricks an authenticated user\'s browser into making unwanted requests on their behalf.' },
+        { term:'SSRF',               cat:'Web', def:'Server-Side Request Forgery. Causes the server to make requests to internal resources — often used to reach cloud metadata APIs.' },
+        { term:'IDOR',               cat:'Web', def:'Insecure Direct Object Reference. Accessing objects (user records, files) by manipulating identifiers without authorisation checks.' },
+        { term:'LFI / RFI',          cat:'Web', def:'Local/Remote File Inclusion. Including arbitrary files in server-side code execution. LFI reads local files; RFI loads remote code.' },
+        { term:'Command Injection',  cat:'Web', def:'Inserting OS commands into application input that gets passed to a shell — e.g. <code>; cat /etc/passwd</code> after a filename parameter.' },
+        { term:'OWASP Top 10',       cat:'Web', def:'Annual list of the ten most critical web application security risks. The industry-standard starting point for web security testing.' },
+        { term:'Hash',               cat:'Crypto', def:'A fixed-length digest produced by a one-way function. MD5 (128-bit) and SHA-1 are broken; use SHA-256 or better.' },
+        { term:'Salt',               cat:'Crypto', def:'Random data added to a password before hashing to ensure identical passwords produce different hashes, defeating rainbow tables.' },
+        { term:'Rainbow Table',      cat:'Crypto', def:'A precomputed table of hash→password mappings for fast hash cracking. Defeated by proper salting.' },
+        { term:'PKI',                cat:'Crypto', def:'Public Key Infrastructure. The system of certificates, CAs, and protocols enabling trusted asymmetric cryptography (TLS, code signing).' },
+        { term:'Pass-the-Hash',      cat:'Active Directory', def:'Using a captured NTLM hash to authenticate to other services without knowing the plaintext password.' },
+        { term:'Kerberoasting',      cat:'Active Directory', def:'Requesting Kerberos service tickets for service accounts and cracking them offline to obtain plaintext passwords.' },
+        { term:'Golden Ticket',      cat:'Active Directory', def:'Forging a Kerberos TGT using the KRBTGT account hash — grants unrestricted access to any resource in the domain for ~10 years.' },
+        { term:'DCSync',             cat:'Active Directory', def:'Mimicking a Domain Controller\'s replication protocol to pull password hashes for any account, including KRBTGT.' },
+        { term:'BloodHound',         cat:'Active Directory', def:'Graph-based tool that maps Active Directory relationships and highlights attack paths to Domain Admin.' },
+    ];
+
+    const TOOLS = [
+        {
+            cat: 'Reconnaissance',
+            items: [
+                { name:'Nmap',       badge:'free',     desc:'The definitive network scanner. Discovers hosts, open ports, services, versions, and OS. Scriptable with NSE scripts for deeper enumeration.', use:'Port scanning · Service detection · OS fingerprinting' },
+                { name:'theHarvester',badge:'free',    desc:'Gathers emails, subdomains, IPs, and URLs from public sources including Google, Bing, Shodan, and LinkedIn.', use:'OSINT · Subdomain discovery · Email harvesting' },
+                { name:'Shodan',     badge:'freemium', desc:'Search engine for internet-connected devices. Find exposed services, default credentials, industrial control systems, and more.', use:'Infrastructure recon · IoT discovery · Exposure mapping' },
+                { name:'Maltego',    badge:'freemium', desc:'Graph-based OSINT platform for mapping relationships between people, organisations, domains, and infrastructure.', use:'OSINT · Link analysis · Social engineering prep' },
+                { name:'Amass',      badge:'free',     desc:'In-depth attack surface mapping and asset discovery. DNS enumeration, scraping, and API integration for subdomain discovery.', use:'Subdomain enumeration · Attack surface mapping' },
+                { name:'Recon-ng',   badge:'free',     desc:'Web reconnaissance framework with modular design similar to Metasploit. Aggregates data from dozens of OSINT sources.', use:'OSINT · Modular recon workflow' },
+            ]
+        },
+        {
+            cat: 'Scanning & Enumeration',
+            items: [
+                { name:'Gobuster',   badge:'free',     desc:'Directory and DNS brute-forcing tool. Fast, multi-threaded. Finds hidden paths, virtual hostnames, and S3 buckets.', use:'Web directory fuzzing · DNS enumeration · S3 bucket discovery' },
+                { name:'enum4linux', badge:'free',     desc:'Linux tool for enumerating Windows/Samba shares, users, groups, and password policies via SMB/NetBIOS.', use:'SMB enumeration · Windows network recon' },
+                { name:'Nikto',      badge:'free',     desc:'Web server scanner that checks for dangerous files, outdated software, and common misconfigurations. Noisy but comprehensive.', use:'Web server misconfiguration scanning' },
+                { name:'WPScan',     badge:'freemium', desc:'WordPress-specific vulnerability scanner. Identifies plugins, themes, users, and CVEs in WordPress installations.', use:'WordPress security assessment' },
+                { name:'Masscan',    badge:'free',     desc:'Internet-scale port scanner. Can scan the entire IPv4 internet in under 6 minutes. Much faster than Nmap for large ranges.', use:'Large-scale port scanning' },
+            ]
+        },
+        {
+            cat: 'Exploitation',
+            items: [
+                { name:'Metasploit', badge:'free',     desc:'The world\'s most widely used exploitation framework. Contains hundreds of exploits, payloads, and post-exploitation modules.', use:'Exploitation · Payload delivery · Post-exploitation' },
+                { name:'Burp Suite', badge:'freemium', desc:'The essential tool for web application security testing. Proxy, scanner, Intruder, Repeater, and Collaborator in one platform.', use:'Web app testing · Intercepting HTTP · Fuzzing' },
+                { name:'SQLmap',     badge:'free',     desc:'Automated SQL injection detection and exploitation. Supports all major databases and can dump data, read files, and get shells.', use:'SQL injection · Database dumping' },
+                { name:'BeEF',       badge:'free',     desc:'Browser Exploitation Framework. Hooks browsers via XSS and allows running hundreds of client-side attacks and social engineering.', use:'XSS exploitation · Browser attacks' },
+                { name:'Impacket',   badge:'free',     desc:'Python library and set of tools for interacting with Windows protocols — SMB, MSRPC, Kerberos. Used for AD attacks.', use:'Active Directory attacks · Pass-the-hash · SMB relay' },
+            ]
+        },
+        {
+            cat: 'Password Attacks',
+            items: [
+                { name:'Hashcat',    badge:'free',     desc:'The fastest password cracker available. GPU-accelerated, supports 300+ hash types, multiple attack modes (dictionary, rule, mask, hybrid).', use:'Hash cracking · Password recovery' },
+                { name:'John the Ripper',badge:'free', desc:'Classic CPU-based password cracker. Excellent for cracking /etc/shadow, document passwords, ZIP/RAR archives, and SSH keys.', use:'Password cracking · Hash identification' },
+                { name:'Hydra',      badge:'free',     desc:'Fast online brute-force tool supporting 50+ protocols including SSH, FTP, HTTP, RDP, SMB, and database login forms.', use:'Online brute-force · Login testing' },
+                { name:'CeWL',       badge:'free',     desc:'Custom wordlist generator that crawls a target website and extracts unique words — creates targeted password lists.', use:'Wordlist generation · Targeted attacks' },
+            ]
+        },
+        {
+            cat: 'Post-Exploitation & Privilege Escalation',
+            items: [
+                { name:'LinPEAS / WinPEAS',badge:'free',desc:'Automated privilege escalation enumeration scripts. Checks hundreds of vectors in seconds and colour-codes results by likelihood of success.', use:'Privilege escalation · Post-exploitation enum' },
+                { name:'Mimikatz',   badge:'free',     desc:'Windows credential extraction tool. Dumps NTLM hashes, Kerberos tickets, and plaintext passwords from LSASS memory.', use:'Credential dumping · Pass-the-hash · Golden Ticket' },
+                { name:'BloodHound', badge:'free',     desc:'Active Directory attack path finder using graph theory. Visualises paths from any user to Domain Admin. Pairs with SharpHound collector.', use:'AD attack path analysis · Privilege escalation' },
+                { name:'Chisel',     badge:'free',     desc:'Fast TCP/UDP tunnel over HTTP. Essential for pivoting through firewalls and NAT in red team engagements.', use:'Pivoting · Port forwarding · Tunnelling' },
+            ]
+        },
+        {
+            cat: 'Defence & Analysis',
+            items: [
+                { name:'Wireshark',  badge:'free',     desc:'The definitive network packet analyser. Captures and dissects traffic in real time. Supports hundreds of protocols.', use:'Network analysis · Protocol debugging · Forensics' },
+                { name:'Ghidra',     badge:'free',     desc:'Free and open-source reverse engineering suite developed by the NSA. Decompiles and disassembles executables for malware analysis.', use:'Reverse engineering · Malware analysis · CTF binaries' },
+                { name:'Volatility', badge:'free',     desc:'Memory forensics framework. Analyses RAM dumps to extract processes, network connections, passwords, and artefacts.', use:'Memory forensics · Incident response · Malware analysis' },
+                { name:'YARA',       badge:'free',     desc:'Pattern-matching tool for malware identification. Write rules matching strings, byte patterns, or conditions across files or memory.', use:'Malware detection · Threat hunting · AV rule writing' },
+                { name:'Snort / Suricata',badge:'free',desc:'Open-source network intrusion detection/prevention systems. Snort uses rule-based detection; Suricata is multi-threaded with protocol parsers.', use:'IDS/IPS · Network monitoring · Threat detection' },
+                { name:'Kali Linux', badge:'free',     desc:'Debian-based Linux distribution maintained by Offensive Security. Pre-installed with 600+ security tools. The standard pentesting OS.', use:'Pentesting platform · Tool distribution · Lab OS' },
+            ]
+        },
+    ];
+
+    const ROADMAP_STEPS = [
+        {
+            title: '1. Build Your Foundations',
+            body: `Before hacking anything, understand how computers and networks work.
+            <ul>
+                <li>Learn <strong>Linux</strong> — spend time in the terminal daily. OverTheWire Bandit is ideal for this.</li>
+                <li>Understand <strong>networking</strong> — TCP/IP, DNS, HTTP, subnetting. Professor Messer's CompTIA Network+ videos are free and excellent.</li>
+                <li>Learn basic <strong>Python</strong> or Bash scripting — automating tasks is essential.</li>
+                <li>Study the <strong>CIA Triad</strong> — Confidentiality, Integrity, Availability — the foundation of security thinking.</li>
+            </ul>`,
+            certs: ['CompTIA A+', 'CompTIA Network+', 'Google IT Support Certificate']
+        },
+        {
+            title: '2. Learn Security Fundamentals',
+            body: `Understand the core concepts before moving to offensive techniques.
+            <ul>
+                <li>Study common <strong>attack types</strong> — phishing, malware, DoS, MITM, SQLi, XSS.</li>
+                <li>Learn <strong>cryptography basics</strong> — symmetric/asymmetric encryption, hashing, TLS.</li>
+                <li>Understand <strong>security controls</strong> — firewalls, IDS/IPS, SIEM, MFA, encryption at rest/transit.</li>
+                <li>Read the <strong>OWASP Top 10</strong> in full — this covers the most common web vulnerabilities.</li>
+            </ul>`,
+            certs: ['CompTIA Security+', 'CC (ISC)² Certified in Cybersecurity']
+        },
+        {
+            title: '3. Start Hands-On Practice',
+            body: `Theory without practice is useless. Get into labs immediately.
+            <ul>
+                <li>Create a <strong>TryHackMe</strong> account and complete the "Pre-Security" and "Jr Penetration Tester" paths.</li>
+                <li>Set up a <strong>home lab</strong> — VirtualBox + Kali Linux + Metasploitable2 is all you need to start.</li>
+                <li>Complete the <strong>Bandit</strong> wargame on OverTheWire to sharpen Linux skills.</li>
+                <li>Start <strong>CTF competitions</strong> at picoCTF — beginner-friendly with excellent learning value.</li>
+            </ul>`,
+            certs: []
+        },
+        {
+            title: '4. Specialise in Penetration Testing',
+            body: `Once comfortable with the basics, dive into offensive security methodology.
+            <ul>
+                <li>Work through <strong>HackTheBox</strong> — start with "easy" retired machines, follow writeups to learn from them.</li>
+                <li>Master <strong>Nmap, Metasploit, Burp Suite, and Hashcat</strong> — these form the core pentesting toolkit.</li>
+                <li>Study the <strong>Penetration Testing Execution Standard (PTES)</strong>.</li>
+                <li>Learn <strong>Active Directory attacks</strong> — most corporate engagements involve AD.</li>
+                <li>Practice <strong>report writing</strong> — the report is the deliverable clients pay for.</li>
+            </ul>`,
+            certs: ['eJPT (eLearnSecurity)', 'CompTIA PenTest+', 'CEH (Certified Ethical Hacker)']
+        },
+        {
+            title: '5. Advanced Offensive Security',
+            body: `The gold-standard certifications require real exploitation under exam conditions — no multiple choice.
+            <ul>
+                <li><strong>OSCP (Offensive Security Certified Professional)</strong> — the most respected entry-level pentesting cert. 24-hour exam, compromise 3 of 6 machines. Requires solid fundamentals.</li>
+                <li>Learn <strong>buffer overflows</strong> (required for OSCP), <strong>custom exploit development</strong>, and AV evasion.</li>
+                <li>Study <strong>Active Directory in depth</strong> — Kerberoasting, AS-REP Roasting, BloodHound, DCSync, Golden/Silver Tickets.</li>
+                <li>Begin <strong>bug bounty hunting</strong> on HackerOne or Bugcrowd — real-world scope, legal, and potentially paid.</li>
+            </ul>`,
+            certs: ['OSCP', 'BSCP (Burp Suite Certified Practitioner)', 'GPEN (GIAC Penetration Tester)']
+        },
+        {
+            title: '6. Expert & Specialisation',
+            body: `Top-tier certifications and specialised domains for senior practitioners.
+            <ul>
+                <li><strong>Red Teaming:</strong> Full adversary simulation — CRTO (Certified Red Team Operator) using Cobalt Strike, CRTE for AD red teaming.</li>
+                <li><strong>Web Application:</strong> BSCP, OSWE (OffSec Web Expert) — deep web app exploitation and custom exploit writing.</li>
+                <li><strong>Cloud:</strong> AWS Security Specialty, CCSP — cloud-specific attack and defence.</li>
+                <li><strong>Malware/Reverse Engineering:</strong> GREM (GIAC Reverse Engineering Malware) — malware analysis, shellcode, packers.</li>
+                <li><strong>Management/GRC:</strong> CISSP, CISM — for security leadership and governance roles.</li>
+            </ul>`,
+            certs: ['OSWE', 'OSEP', 'CRTO', 'CISSP', 'GREM']
+        },
+    ];
+
+    // ── TAB SYSTEM ───────────────────────────────────────────────────────────────
+    function showTab(id) {
+        document.querySelectorAll('.hkr-tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.hkr-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + id).classList.add('active');
+        const tabs   = document.querySelectorAll('.hkr-tab');
+        const labels = ['learn','glossary','tools','roadmap'];
+        tabs[labels.indexOf(id)].classList.add('active');
+    }
+
+    // ── LEARN ────────────────────────────────────────────────────────────────────
+    function buildLearn() {
+        [
+            ['foundations', MODULES.foundations],
+            ['offensive',   MODULES.offensive],
+            ['defensive',   MODULES.defensive],
+            ['specialist',  MODULES.specialist],
+        ].forEach(([section, mods]) => {
+            const grid = document.getElementById('learn-' + section);
+            mods.forEach(m => {
+                const card = document.createElement('div');
+                card.className = 'lesson-card';
+                card.innerHTML = `
+                    <div class="lesson-header">
+                        <div class="lesson-icon">${m.icon}</div>
+                        <div class="lesson-title">${m.title}</div>
+                        <div class="lesson-toggle">▶</div>
+                    </div>
+                    <div class="lesson-body">
+                        <div class="lesson-module-tag">${m.module}</div>
+                        ${m.body}
+                    </div>`;
+                card.querySelector('.lesson-header').addEventListener('click', () => {
+                    card.classList.toggle('open');
+                });
+                grid.appendChild(card);
+            });
+        });
+    }
+
+    // ── GLOSSARY ─────────────────────────────────────────────────────────────────
+    const GLS_CATS = ['All', ...new Set(GLS_TERMS.map(t => t.cat))];
+    let glsActiveCat = 'All';
+
+    function buildGlossary() {
+        const catBar = document.getElementById('gls-cats');
+        GLS_CATS.forEach(c => {
+            const btn = document.createElement('button');
+            btn.className = 'gls-cat-btn' + (c === 'All' ? ' active' : '');
+            btn.textContent = c;
+            btn.onclick = () => {
+                glsActiveCat = c;
+                document.querySelectorAll('.gls-cat-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                filterGls();
+            };
+            catBar.appendChild(btn);
+        });
+        filterGls();
+    }
+
+    function filterGls() {
+        const q    = document.getElementById('gls-search').value.toLowerCase().trim();
+        const grid = document.getElementById('gls-grid');
+        grid.innerHTML = '';
+        const filtered = GLS_TERMS.filter(t => {
+            if (glsActiveCat !== 'All' && t.cat !== glsActiveCat) return false;
+            if (q && !t.term.toLowerCase().includes(q) && !t.def.toLowerCase().includes(q)) return false;
+            return true;
+        });
+        if (!filtered.length) {
+            grid.innerHTML = '<div class="gls-none">No terms found.</div>';
+            return;
+        }
+        filtered.forEach(t => {
+            const card = document.createElement('div');
+            card.className = 'gls-card';
+            card.innerHTML = `<div class="gls-term">${t.term}</div><div class="gls-cat-tag">${t.cat}</div><div class="gls-def">${t.def}</div>`;
+            grid.appendChild(card);
+        });
+    }
+
+    // ── TOOLS ────────────────────────────────────────────────────────────────────
+    function buildTools() {
+        const container = document.getElementById('tools-container');
+        TOOLS.forEach(section => {
+            const lbl = document.createElement('div');
+            lbl.className = 'sec-lbl';
+            lbl.textContent = section.cat;
+            container.appendChild(lbl);
+
+            const grid = document.createElement('div');
+            grid.className = 'tools-grid';
+            section.items.forEach(tool => {
+                const card = document.createElement('div');
+                card.className = 'tool-card';
+                card.innerHTML = `
+                    <div class="tool-header">
+                        <div class="tool-name">${tool.name}</div>
+                        <span class="tool-badge ${tool.badge}">${tool.badge}</span>
+                    </div>
+                    <div class="tool-category">${section.cat}</div>
+                    <div class="tool-desc">${tool.desc}</div>
+                    <div class="tool-use"><span>Used for: </span>${tool.use}</div>`;
+                grid.appendChild(card);
+            });
+            container.appendChild(grid);
+        });
+    }
+
+    // ── ROADMAP ──────────────────────────────────────────────────────────────────
+    function buildRoadmap() {
+        const spine = document.getElementById('roadmap-steps');
+        ROADMAP_STEPS.forEach(step => {
+            const el = document.createElement('div');
+            el.className = 'roadmap-step';
+            const certHtml = step.certs.length
+                ? `<div class="cert-row">${step.certs.map(c => `<span class="cert-badge">${c}</span>`).join('')}</div>`
+                : '';
+            el.innerHTML = `
+                <div class="roadmap-step-title">${step.title}</div>
+                <div class="roadmap-step-body">${step.body}${certHtml}</div>`;
+            spine.appendChild(el);
+        });
+    }
+
+    // ── INIT ─────────────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        buildLearn();
+        buildGlossary();
+        buildTools();
+        buildRoadmap();
+    });
+    </script>
+</body>
+</html>

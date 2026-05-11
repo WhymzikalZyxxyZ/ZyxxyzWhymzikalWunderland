@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computer Vision — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js"></script>
+    <style>
+        .cv-wrap { max-width: 960px; margin: 0 auto; padding: 0 20px 60px; }
+
+        /* Tabs */
+        .cv-tabs { display: flex; border-bottom: 1px solid #333; margin-bottom: 0; }
+        .cv-tab {
+            padding: 10px 22px; cursor: pointer; font-size: 13px;
+            color: #888; border-bottom: 2px solid transparent; margin-bottom: -1px;
+            transition: color 0.2s, border-color 0.2s; user-select: none;
+            font-family: 'Courier New', monospace;
+        }
+        .cv-tab:hover { color: #ccc; }
+        .cv-tab.active { color: #f4a261; border-bottom-color: #f4a261; }
+        .cv-panel { display: none; padding-top: 20px; }
+        .cv-panel.active { display: block; }
+
+        /* Learn — accordion */
+        .cv-section { margin-bottom: 28px; }
+        .cv-section-title {
+            font-size: 12px; font-weight: bold; letter-spacing: 0.07em;
+            text-transform: uppercase; color: #f4a261;
+            margin-bottom: 10px; padding-bottom: 6px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .cv-term { border: 1px solid #2a2a2a; border-radius: 6px; margin-bottom: 6px; overflow: hidden; }
+        .cv-q {
+            padding: 9px 14px; cursor: pointer; display: flex;
+            justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.04); font-size: 12px; font-weight: bold;
+            color: #ddd; user-select: none; transition: background 0.15s, color 0.15s;
+            font-family: 'Courier New', monospace;
+        }
+        .cv-q:hover { background: rgba(255,255,255,0.07); color: #f4a261; }
+        .cv-q .cv-arr { font-size: 10px; color: #555; transition: transform 0.2s; }
+        .cv-q.open .cv-arr { transform: rotate(90deg); }
+        .cv-a {
+            display: none; padding: 10px 14px; font-size: 12px; line-height: 1.75;
+            color: #999; border-top: 1px solid #2a2a2a; background: rgba(0,0,0,0.2);
+            font-family: 'Courier New', monospace;
+        }
+        .cv-a.open { display: block; }
+        .cv-a code { background: rgba(244,162,97,0.12); padding: 1px 5px; border-radius: 3px; color: #f4a261; font-size: 11px; }
+        .cv-a em { color: #bbb; font-style: normal; font-weight: bold; }
+
+        /* Practice */
+        .cv-ctrl-bar {
+            display: flex; flex-wrap: wrap; gap: 14px;
+            align-items: flex-end; margin-bottom: 16px;
+            padding: 14px; background: rgba(0,0,0,0.35);
+            border: 1px solid #2a2a2a; border-radius: 10px;
+        }
+        .cv-ctrl-group { display: flex; flex-direction: column; gap: 5px; }
+        .cv-ctrl-label { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: #666; font-family: 'Courier New', monospace; }
+        .cv-btn-row { display: flex; gap: 5px; flex-wrap: wrap; }
+        .cv-btn {
+            background: rgba(255,255,255,0.06); border: 1px solid #333;
+            border-radius: 5px; color: #bbb; font-family: 'Courier New', monospace;
+            font-size: 11px; padding: 5px 11px; cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+        .cv-btn:hover { background: rgba(255,255,255,0.11); border-color: #f4a261; color: #f4a261; }
+        .cv-btn.active { background: rgba(244,162,97,0.15); border-color: #f4a261; color: #f4a261; }
+        .cv-select {
+            background: rgba(255,255,255,0.06); border: 1px solid #333; border-radius: 5px;
+            color: #ddd; font-family: 'Courier New', monospace; font-size: 11px;
+            padding: 5px 10px; cursor: pointer; outline: none; min-width: 180px;
+        }
+        .cv-select:focus { border-color: #f4a261; }
+        .cv-slider-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .cv-slider-row label { font-size: 10px; color: #888; font-family: 'Courier New', monospace; }
+        .cv-slider-row input[type=range] { width: 90px; accent-color: #f4a261; }
+        .cv-slider-val { font-size: 10px; color: #f4a261; font-family: 'Courier New', monospace; min-width: 28px; }
+        .cv-param { display: none; flex-direction: column; gap: 4px; }
+        .cv-param.show { display: flex; }
+
+        /* Op description */
+        .cv-op-desc {
+            font-size: 11px; color: #777; font-family: 'Courier New', monospace;
+            line-height: 1.6; padding: 8px 12px;
+            background: rgba(244,162,97,0.05); border-left: 2px solid #f4a261;
+            border-radius: 0 5px 5px 0; margin-bottom: 14px; min-height: 32px;
+        }
+
+        /* Canvases */
+        .cv-canvas-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+        .cv-canvas-col { flex: 1; min-width: 280px; }
+        .cv-canvas-label {
+            font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase;
+            color: #555; font-family: 'Courier New', monospace; margin-bottom: 5px;
+        }
+        .cv-canvas-col canvas {
+            display: block; width: 100%; border: 1px solid #2a2a2a; border-radius: 6px;
+            background: #0a0a0f; image-rendering: pixelated;
+        }
+        .cv-hist-wrap { margin-top: 4px; }
+        .cv-hist-wrap canvas { display: block; width: 100%; border: 1px solid #2a2a2a; border-radius: 6px; background: #0a0a0f; }
+    </style>
+</head>
+<body class="wunderBody">
+
+    <h2>Computer Vision</h2>
+
+    <div class="navbar">
+        <a href="/index.html">Home</a>
+        <a href="/technologist/apps.html">Apps</a>
+        <a href="/technologist/biosuefi.html">BIOS/UEFI</a>
+        <a href="/technologist/computerengineering.html">Computer Engineering</a>
+        <a href="/technologist/computervision.html">Computer Vision</a>
+        <a href="/technologist/software.html">Software</a>
+        <a href="/technologist/systemoperator.html">System Operator</a>
+    </div>
+
+    <div class="banner"></div>
+
+    <div class="cv-wrap">
+        <div class="cv-tabs">
+            <div class="cv-tab active" data-tab="learn">Learn</div>
+            <div class="cv-tab" data-tab="practice">Practice Lab</div>
+        </div>
+
+        <!-- ══════════ LEARN ══════════ -->
+        <div class="cv-panel active" id="cvtab-learn">
+
+            <div class="cv-section">
+                <div class="cv-section-title">Image Fundamentals</div>
+                <div class="cv-term"><div class="cv-q">Pixel &amp; Raster Images <span class="cv-arr">▶</span></div><div class="cv-a">A <em>pixel</em> (picture element) is the smallest addressable unit of a digital image — a single square of colour stored as numeric values. A <em>raster image</em> is a grid of pixels arranged in rows and columns; its quality is fixed by resolution. In contrast, vector images are mathematical descriptions of shapes and scale infinitely. Almost all CV algorithms operate on raster data.</div></div>
+                <div class="cv-term"><div class="cv-q">Color Spaces — RGB, HSV, LAB <span class="cv-arr">▶</span></div><div class="cv-a"><em>RGB</em> stores colour as additive Red, Green, Blue intensities (0–255 each). It mirrors how screens emit light but doesn't match how humans perceive colour. <em>HSV</em> (Hue, Saturation, Value) separates colour identity from brightness — useful for colour-based segmentation. <em>CIE LAB</em> is a perceptually uniform space where equal numeric distances correspond to equal perceived colour differences, making it ideal for colour comparison algorithms.</div></div>
+                <div class="cv-term"><div class="cv-q">Bit Depth &amp; Dynamic Range <span class="cv-arr">▶</span></div><div class="cv-a"><em>Bit depth</em> is the number of bits used per channel per pixel. Standard images use 8 bits per channel (0–255, 256 values). 16-bit images (0–65535) are used in medical and scientific imaging. <em>Dynamic range</em> is the ratio between the brightest and darkest representable values. HDR (High Dynamic Range) imaging extends this using floating-point values, enabling rendering of sunlit outdoor and dim indoor scenes without clipping.</div></div>
+                <div class="cv-term"><div class="cv-q">Sampling, Resolution &amp; Aliasing <span class="cv-arr">▶</span></div><div class="cv-a">Spatial resolution describes how many pixels cover a given area. The <em>Nyquist theorem</em> states that to accurately represent a signal, you must sample at least twice the highest spatial frequency in the scene. Sampling below this rate causes <em>aliasing</em> — the familiar staircase artefact on diagonal lines. Anti-aliasing applies a slight blur before downsampling to eliminate frequencies that would alias.</div></div>
+                <div class="cv-term"><div class="cv-q">Grayscale Conversion <span class="cv-arr">▶</span></div><div class="cv-a">Converting a colour image to grayscale collapses three channels (R, G, B) into one luminance value. A naive average gives incorrect results because the human eye is far more sensitive to green than red or blue. The standard <em>luminosity formula</em> is: <code>Y = 0.299R + 0.587G + 0.114B</code>. This weighted sum matches the perceptual brightness of the colour. Most edge and feature detection algorithms operate on grayscale images.</div></div>
+            </div>
+
+            <div class="cv-section">
+                <div class="cv-section-title">Image Processing</div>
+                <div class="cv-term"><div class="cv-q">Convolution &amp; Kernels <span class="cv-arr">▶</span></div><div class="cv-a">A <em>convolution</em> slides a small matrix called a <em>kernel</em> (or filter) across an image. At each position, it multiplies each kernel weight by the underlying pixel value and sums the results — replacing the centre pixel with that sum. The kernel encodes the operation: a uniform kernel blurs, a difference-of-neighbours kernel detects edges. Convolution is the fundamental operation in both classical image processing and deep CNNs.</div></div>
+                <div class="cv-term"><div class="cv-q">Gaussian Blur &amp; Noise Reduction <span class="cv-arr">▶</span></div><div class="cv-a">A Gaussian blur convolves the image with a <em>Gaussian kernel</em> — weights that follow the bell-curve distribution centred at the kernel's origin. Pixels near the centre contribute more than those at the edges, producing a smooth, natural-looking blur. The <em>sigma (σ)</em> parameter controls how wide the bell is and therefore how blurry the result. Blurring is used to suppress high-frequency noise before edge detection, so algorithms don't respond to every pixel-level fluctuation.</div></div>
+                <div class="cv-term"><div class="cv-q">Edge Detection — Sobel &amp; Canny <span class="cv-arr">▶</span></div><div class="cv-a">Edges occur where pixel intensity changes rapidly. The <em>Sobel operator</em> applies two kernels to estimate the horizontal (Gx) and vertical (Gy) image gradients; edge strength is <code>√(Gx²+Gy²)</code>. The <em>Canny</em> algorithm adds three more steps: Gaussian smoothing, non-maximum suppression (thinning edges to 1 pixel wide), and hysteresis thresholding (using high and low thresholds to follow weak edges connected to strong ones). Canny produces clean, thin, connected edges.</div></div>
+                <div class="cv-term"><div class="cv-q">Thresholding &amp; Binarisation <span class="cv-arr">▶</span></div><div class="cv-a">Thresholding converts a grayscale image to binary (black/white) by classifying each pixel as foreground or background. A <em>global threshold</em> T sets: pixel = 255 if intensity > T, else 0. <em>Otsu's method</em> automatically selects T by finding the value that minimises intra-class variance. <em>Adaptive thresholding</em> computes a different threshold for each pixel based on its local neighbourhood — essential for uneven lighting conditions such as document scanning.</div></div>
+                <div class="cv-term"><div class="cv-q">Morphological Operations <span class="cv-arr">▶</span></div><div class="cv-a">Morphological operations process binary or grayscale images using a <em>structuring element</em> (a small shape like a 3×3 square or disk). <em>Erosion</em> shrinks foreground regions by keeping only pixels where the structuring element fits entirely within the foreground. <em>Dilation</em> expands them. <em>Opening</em> (erosion then dilation) removes small noise blobs. <em>Closing</em> (dilation then erosion) fills small holes. These are used in pre/post-processing pipelines for object segmentation.</div></div>
+            </div>
+
+            <div class="cv-section">
+                <div class="cv-section-title">Feature Detection</div>
+                <div class="cv-term"><div class="cv-q">Corners &amp; Interest Points — Harris, FAST <span class="cv-arr">▶</span></div><div class="cv-a">An <em>interest point</em> (keypoint) is a location that can be reliably detected across images of the same scene under different conditions. <em>Corner detection</em> looks for regions with large intensity variation in multiple directions. The <em>Harris detector</em> computes a second-moment matrix at each pixel; its eigenvalues reveal whether the point is flat, an edge, or a corner. <em>FAST</em> (Features from Accelerated Segment Test) detects corners by comparing a circle of 16 pixels to the centre — much faster than Harris, enabling real-time use.</div></div>
+                <div class="cv-term"><div class="cv-q">Scale Space &amp; Blob Detection — LoG, DoG <span class="cv-arr">▶</span></div><div class="cv-a">Features must be detected at the right <em>scale</em>. The <em>Laplacian of Gaussian (LoG)</em> finds blobs — round regions — by applying the second-derivative Laplacian after Gaussian smoothing; its response peaks where the blob size matches σ. The <em>Difference of Gaussians (DoG)</em> approximates LoG more efficiently by subtracting two Gaussian-blurred images at adjacent scales. SIFT uses DoG to build a scale-space pyramid and find scale-invariant keypoints.</div></div>
+                <div class="cv-term"><div class="cv-q">SIFT — Scale-Invariant Feature Transform <span class="cv-arr">▶</span></div><div class="cv-a">SIFT detects keypoints that are invariant to scale and rotation. After finding scale-space extrema via DoG, each keypoint is assigned a dominant gradient orientation to achieve rotation invariance. A 128-dimensional descriptor is computed from a 4×4 grid of 8-bin orientation histograms around the keypoint. Because the descriptor is based on gradient orientations rather than raw intensities, it is also robust to lighting changes. SIFT descriptors are matched using nearest-neighbour search in descriptor space.</div></div>
+                <div class="cv-term"><div class="cv-q">HOG — Histogram of Oriented Gradients <span class="cv-arr">▶</span></div><div class="cv-a">HOG describes local shape by building histograms of gradient orientations across <em>cells</em> (small spatial regions, typically 8×8 pixels). Each cell produces an orientation histogram with typically 9 bins (0°–180°). Cells are grouped into <em>blocks</em> (2×2 cells), and the histograms within a block are normalised together for contrast invariance. The concatenation of all block descriptors forms the HOG feature vector. Combined with a linear SVM, HOG+SVM was the state-of-the-art for pedestrian detection before deep learning.</div></div>
+                <div class="cv-term"><div class="cv-q">Feature Matching &amp; Homography <span class="cv-arr">▶</span></div><div class="cv-a">After computing descriptors, <em>feature matching</em> finds corresponding keypoints across images using nearest-neighbour search. Lowe's <em>ratio test</em> rejects ambiguous matches: a match is kept only if the nearest-neighbour distance is less than 0.75× the second-nearest-neighbour distance. From matched keypoints, <em>RANSAC</em> (Random Sample Consensus) estimates a geometric transformation (homography, essential matrix) while robustly rejecting outlier matches caused by false correspondences.</div></div>
+            </div>
+
+            <div class="cv-section">
+                <div class="cv-section-title">Object Detection</div>
+                <div class="cv-term"><div class="cv-q">Sliding Window &amp; Image Pyramids <span class="cv-arr">▶</span></div><div class="cv-a">The earliest object detectors swept a fixed-size window across every position in the image and ran a classifier at each location. To handle objects at different sizes, the image was downscaled repeatedly to form an <em>image pyramid</em>, and the window was run at each scale. Despite its conceptual simplicity, the sliding window approach was computationally expensive (millions of windows per image) and has been superseded by region proposal networks, though it remains important for understanding modern detection pipelines.</div></div>
+                <div class="cv-term"><div class="cv-q">R-CNN Family — Region Proposal Networks <span class="cv-arr">▶</span></div><div class="cv-a"><em>R-CNN</em> (2014) used Selective Search to generate ~2000 region proposals, warped each to a fixed size, ran a CNN feature extractor, and classified with SVMs — too slow for real-time use. <em>Fast R-CNN</em> ran the CNN once over the whole image and used <em>ROI pooling</em> to extract features for each proposal from the feature map. <em>Faster R-CNN</em> replaced Selective Search with a <em>Region Proposal Network</em> sharing the CNN backbone, making the full pipeline end-to-end trainable and near-real-time.</div></div>
+                <div class="cv-term"><div class="cv-q">YOLO — You Only Look Once <span class="cv-arr">▶</span></div><div class="cv-a">YOLO reframes detection as a single regression problem. The image is divided into an S×S grid; each cell predicts B bounding boxes and their confidence scores, along with C class probabilities — all in one forward pass. This gives YOLO its signature speed (real-time at 45+ FPS in early versions). Later versions (YOLOv3-v8) introduced anchor boxes tuned to the dataset, multi-scale prediction heads, and CSP-Net backbones, progressively closing the accuracy gap with two-stage detectors while maintaining speed.</div></div>
+                <div class="cv-term"><div class="cv-q">Anchor Boxes &amp; Non-Maximum Suppression <span class="cv-arr">▶</span></div><div class="cv-a"><em>Anchor boxes</em> are pre-defined bounding boxes of various aspect ratios and sizes tiled across the feature map. The network predicts offsets from these anchors rather than absolute coordinates, making optimisation easier. Multiple detections often overlap the same object; <em>NMS</em> resolves this by sorting all detections by confidence, keeping the highest-confidence box, and suppressing any remaining box whose IoU with the kept box exceeds a threshold (typically 0.5). The process repeats until all boxes are either kept or suppressed.</div></div>
+                <div class="cv-term"><div class="cv-q">IoU &amp; mAP — Evaluation Metrics <span class="cv-arr">▶</span></div><div class="cv-a"><em>Intersection over Union (IoU)</em> measures overlap between a predicted bounding box and the ground truth: IoU = area(A∩B) / area(A∪B). A detection with IoU ≥ 0.5 is typically counted as a true positive. <em>Average Precision (AP)</em> summarises the precision-recall curve for a single class. <em>mAP</em> (mean AP) averages AP over all classes and is the standard benchmark metric for detection datasets like COCO and Pascal VOC. COCO mAP averages over IoU thresholds from 0.5 to 0.95.</div></div>
+            </div>
+
+            <div class="cv-section">
+                <div class="cv-section-title">Deep Learning for CV</div>
+                <div class="cv-term"><div class="cv-q">Convolutional Neural Network (CNN) <span class="cv-arr">▶</span></div><div class="cv-a">CNNs learn image representations by stacking convolutional layers. Each layer applies learned kernels to produce <em>feature maps</em> that detect progressively complex patterns: early layers detect edges and textures; deeper layers detect parts and objects. The key insight is <em>weight sharing</em> — the same kernel is applied across the entire image, vastly reducing parameters compared to fully-connected layers. The spatial hierarchy of learned features is what makes CNNs so effective at visual tasks.</div></div>
+                <div class="cv-term"><div class="cv-q">Pooling Layers &amp; Downsampling <span class="cv-arr">▶</span></div><div class="cv-a"><em>Max pooling</em> takes the maximum value within a sliding window (typically 2×2 with stride 2), halving the spatial dimensions. It achieves two goals: downsampling the feature map to increase the receptive field of subsequent layers, and providing a degree of translation invariance (a feature detected one pixel to the left still fires). <em>Global average pooling</em> collapses the entire spatial map to a single value per channel and is used before the final classification layer in modern architectures.</div></div>
+                <div class="cv-term"><div class="cv-q">ResNet &amp; Skip Connections <span class="cv-arr">▶</span></div><div class="cv-a">As networks got deeper (>20 layers), training became difficult due to vanishing gradients — the gradient signal shrinks as it back-propagates through many layers. <em>ResNet</em> (He et al., 2015) solved this with <em>residual connections</em>: the output of a block is <code>F(x) + x</code> rather than just <code>F(x)</code>. This identity shortcut ensures gradients can flow directly to earlier layers. ResNets enabled training networks with 50, 101, even 152 layers, achieving unprecedented accuracy. Skip connections are now ubiquitous in modern architectures.</div></div>
+                <div class="cv-term"><div class="cv-q">Transfer Learning &amp; Fine-Tuning <span class="cv-arr">▶</span></div><div class="cv-a">Training a deep CNN from scratch requires millions of labelled examples and days of GPU compute. <em>Transfer learning</em> instead starts from a model pretrained on a large dataset (typically ImageNet with 1.2M images and 1000 classes) and adapts it to a new task. <em>Fine-tuning</em> means unfreezing some or all pretrained layers and training them at a low learning rate on the new data. The pretrained layers have already learned general visual features (edges, textures, shapes) that transfer well across many visual domains.</div></div>
+                <div class="cv-term"><div class="cv-q">Data Augmentation &amp; Regularisation <span class="cv-arr">▶</span></div><div class="cv-a"><em>Data augmentation</em> artificially expands the training set by applying random transformations — horizontal flips, rotation, scaling, colour jitter, random crops — so the model sees more variety without collecting new data. <em>Dropout</em> randomly zeros activations during training, forcing the network to learn redundant representations and preventing co-adaptation. <em>Batch normalisation</em> normalises activations across the mini-batch to have zero mean and unit variance, stabilising training and allowing higher learning rates.</div></div>
+            </div>
+
+            <div class="cv-section">
+                <div class="cv-section-title">Advanced Topics</div>
+                <div class="cv-term"><div class="cv-q">Semantic Segmentation <span class="cv-arr">▶</span></div><div class="cv-a"><em>Semantic segmentation</em> assigns a class label to <em>every pixel</em> in the image — not just bounding boxes. The <em>Fully Convolutional Network (FCN)</em> was the first to do this end-to-end by replacing the fully-connected classification head with convolutional layers and using transposed convolutions to upsample back to full resolution. <em>U-Net</em> (widely used in medical imaging) adds skip connections between the contracting encoder path and the expanding decoder path, recovering fine spatial detail lost during downsampling.</div></div>
+                <div class="cv-term"><div class="cv-q">Instance Segmentation — Mask R-CNN <span class="cv-arr">▶</span></div><div class="cv-a">While semantic segmentation classifies pixels by class, <em>instance segmentation</em> distinguishes individual object instances — "person #1" vs "person #2". <em>Mask R-CNN</em> extends Faster R-CNN with a parallel branch that predicts a binary segmentation mask for each detected region. It introduces <em>ROI Align</em> (replacing ROI Pooling) to avoid quantisation artefacts when mapping proposals to feature maps. The result is a per-pixel, per-instance mask combined with a class label and bounding box.</div></div>
+                <div class="cv-term"><div class="cv-q">Optical Flow &amp; Motion Estimation <span class="cv-arr">▶</span></div><div class="cv-a"><em>Optical flow</em> estimates the apparent motion of pixels between consecutive video frames, producing a dense vector field where each pixel carries a (dx, dy) displacement. <em>Lucas-Kanade</em> assumes constant flow within a small neighbourhood and solves the optical flow constraint equation using least-squares. <em>Farneback</em> and <em>FlowNet</em> (a CNN-based approach) compute dense flow over the whole frame. Optical flow enables action recognition, video stabilisation, object tracking, and frame interpolation.</div></div>
+                <div class="cv-term"><div class="cv-q">Stereo Vision &amp; Depth Estimation <span class="cv-arr">▶</span></div><div class="cv-a">A stereo camera rig (two cameras at a known baseline distance) enables depth estimation by computing <em>disparity</em> — how many pixels a feature shifts between the left and right images. Depth is inversely proportional to disparity: <code>Z = f × B / d</code>, where f is focal length and B is baseline. <em>Structure from Motion (SfM)</em> reconstructs 3D structure from monocular video using feature matching across frames. Modern <em>monocular depth estimation</em> CNNs predict depth from a single image by learning scene priors from large datasets.</div></div>
+                <div class="cv-term"><div class="cv-q">GANs in Computer Vision <span class="cv-arr">▶</span></div><div class="cv-a">A <em>Generative Adversarial Network</em> pits two networks against each other: a <em>generator</em> learns to produce realistic images from noise; a <em>discriminator</em> learns to tell real from generated images. This adversarial dynamic drives both to improve until the generator produces images indistinguishable from real ones. In CV, GANs power <em>super-resolution</em> (SRGAN), <em>image-to-image translation</em> (pix2pix, CycleGAN), and <em>inpainting</em>. Diffusion models have largely superseded GANs for high-quality image synthesis but GANs remain important in real-time applications.</div></div>
+            </div>
+
+        </div>
+
+        <!-- ══════════ PRACTICE ══════════ -->
+        <div class="cv-panel" id="cvtab-practice">
+
+            <!-- Controls -->
+            <div class="cv-ctrl-bar">
+                <div class="cv-ctrl-group">
+                    <div class="cv-ctrl-label">Sample Image</div>
+                    <div class="cv-btn-row">
+                        <button class="cv-btn active" data-sample="geometric">Geometric</button>
+                        <button class="cv-btn" data-sample="gradient">Gradient</button>
+                        <button class="cv-btn" data-sample="checker">Checker</button>
+                        <button class="cv-btn" data-sample="noise">Noise</button>
+                        <label class="cv-btn" style="cursor:pointer;">
+                            Upload ↑
+                            <input type="file" id="cv-upload" accept="image/*" style="display:none;">
+                        </label>
+                    </div>
+                </div>
+
+                <div class="cv-ctrl-group">
+                    <div class="cv-ctrl-label">Operation</div>
+                    <select class="cv-select" id="cv-op">
+                        <option value="none">— select operation —</option>
+                        <optgroup label="Colour">
+                            <option value="grayscale">Grayscale</option>
+                            <option value="invert">Invert</option>
+                            <option value="channel-r">Red Channel</option>
+                            <option value="channel-g">Green Channel</option>
+                            <option value="channel-b">Blue Channel</option>
+                        </optgroup>
+                        <optgroup label="Thresholding">
+                            <option value="threshold">Binary Threshold</option>
+                            <option value="histeq">Histogram Equalisation</option>
+                        </optgroup>
+                        <optgroup label="Filtering">
+                            <option value="blur">Gaussian Blur</option>
+                            <option value="sharpen">Sharpen</option>
+                            <option value="emboss">Emboss</option>
+                        </optgroup>
+                        <optgroup label="Edge Detection">
+                            <option value="sobel">Sobel Edges</option>
+                            <option value="laplacian">Laplacian Edges</option>
+                        </optgroup>
+                        <optgroup label="Adjustment">
+                            <option value="brightness">Brightness / Contrast</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <!-- Params: Threshold -->
+                <div class="cv-ctrl-group cv-param" id="param-threshold">
+                    <div class="cv-ctrl-label">Threshold</div>
+                    <div class="cv-slider-row">
+                        <label>T</label>
+                        <input type="range" id="p-thresh" min="0" max="255" value="128">
+                        <span class="cv-slider-val" id="p-thresh-val">128</span>
+                    </div>
+                </div>
+
+                <!-- Params: Blur -->
+                <div class="cv-ctrl-group cv-param" id="param-blur">
+                    <div class="cv-ctrl-label">Blur Radius</div>
+                    <div class="cv-slider-row">
+                        <label>σ</label>
+                        <input type="range" id="p-blur" min="1" max="5" value="2">
+                        <span class="cv-slider-val" id="p-blur-val">2</span>
+                    </div>
+                </div>
+
+                <!-- Params: Brightness/Contrast -->
+                <div class="cv-ctrl-group cv-param" id="param-brightness">
+                    <div class="cv-ctrl-label">Adjustment</div>
+                    <div class="cv-slider-row">
+                        <label>Brightness</label>
+                        <input type="range" id="p-bright" min="-100" max="100" value="0">
+                        <span class="cv-slider-val" id="p-bright-val">0</span>
+                    </div>
+                    <div class="cv-slider-row">
+                        <label>Contrast</label>
+                        <input type="range" id="p-contrast" min="-100" max="100" value="0">
+                        <span class="cv-slider-val" id="p-contrast-val">0</span>
+                    </div>
+                </div>
+
+                <div class="cv-ctrl-group">
+                    <div class="cv-ctrl-label">&nbsp;</div>
+                    <button class="cv-btn" id="cv-reset-op">Reset</button>
+                </div>
+            </div>
+
+            <div class="cv-op-desc" id="cv-op-desc">Select an operation above to see a description of what it does and how it works.</div>
+
+            <div class="cv-canvas-row">
+                <div class="cv-canvas-col">
+                    <div class="cv-canvas-label">Original</div>
+                    <canvas id="cv-orig" width="460" height="320"></canvas>
+                </div>
+                <div class="cv-canvas-col">
+                    <div class="cv-canvas-label">Processed</div>
+                    <canvas id="cv-proc" width="460" height="320"></canvas>
+                </div>
+            </div>
+
+            <div class="cv-hist-wrap">
+                <div class="cv-canvas-label" style="margin-top:8px;">Luminance Histogram — Processed Image</div>
+                <canvas id="cv-hist" width="920" height="90"></canvas>
+            </div>
+
+        </div>
+    </div>
+
+    <button type="button" onclick="navigateToPage('/index.html')">E.T. Phone Home!</button>
+
+<script>
+// ── Tab switching ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.cv-tab').forEach(t => {
+    t.addEventListener('click', () => {
+        document.querySelectorAll('.cv-tab').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.cv-panel').forEach(x => x.classList.remove('active'));
+        t.classList.add('active');
+        document.getElementById('cvtab-' + t.dataset.tab).classList.add('active');
+        if (t.dataset.tab === 'practice' && !origLoaded) loadSample('geometric');
+    });
+});
+
+// ── Accordion ─────────────────────────────────────────────────────────────────
+document.querySelectorAll('.cv-q').forEach(q => {
+    q.addEventListener('click', () => {
+        q.classList.toggle('open');
+        q.nextElementSibling.classList.toggle('open');
+    });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  PRACTICE LAB
+// ═══════════════════════════════════════════════════════════════════════════════
+const origCanvas = document.getElementById('cv-orig');
+const procCanvas = document.getElementById('cv-proc');
+const histCanvas = document.getElementById('cv-hist');
+const origCtx    = origCanvas.getContext('2d', {willReadFrequently: true});
+const procCtx    = procCanvas.getContext('2d');
+const histCtx    = histCanvas.getContext('2d');
+const W = origCanvas.width, H = origCanvas.height;
+let origLoaded = false;
+
+// ── Sample image generators ───────────────────────────────────────────────────
+function genGeometric(ctx) {
+    ctx.fillStyle = '#0d0d14'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(100, 90, 60, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#3b82f6'; ctx.beginPath(); ctx.arc(300, 160, 80, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#10b981'; ctx.fillRect(30, 210, 130, 90);
+    ctx.fillStyle = '#f59e0b'; ctx.fillRect(350, 40, 90, 130);
+    ctx.fillStyle = '#a78bfa';
+    ctx.beginPath(); ctx.moveTo(220, 260); ctx.lineTo(160, 310); ctx.lineTo(280, 310); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#ec4899'; ctx.beginPath(); ctx.arc(410, 230, 40, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(160, 40); ctx.lineTo(380, 200); ctx.stroke();
+}
+
+function genGradient(ctx) {
+    const g1 = ctx.createLinearGradient(0, 0, W, H);
+    g1.addColorStop(0, '#1e1b4b'); g1.addColorStop(0.5, '#7c3aed'); g1.addColorStop(1, '#f59e0b');
+    ctx.fillStyle = g1; ctx.fillRect(0, 0, W, H);
+    const g2 = ctx.createRadialGradient(W*0.3, H*0.4, 10, W*0.3, H*0.4, 160);
+    g2.addColorStop(0, 'rgba(255,255,255,0.7)'); g2.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H);
+    const g3 = ctx.createRadialGradient(W*0.75, H*0.65, 5, W*0.75, H*0.65, 120);
+    g3.addColorStop(0, 'rgba(16,185,129,0.8)'); g3.addColorStop(1, 'rgba(16,185,129,0)');
+    ctx.fillStyle = g3; ctx.fillRect(0, 0, W, H);
+}
+
+function genChecker(ctx) {
+    const sz = 40;
+    for (let y = 0; y < H; y += sz) for (let x = 0; x < W; x += sz) {
+        ctx.fillStyle = ((x/sz + y/sz) % 2 === 0) ? '#e2e8f0' : '#1e293b';
+        ctx.fillRect(x, y, sz, sz);
+    }
+    ctx.fillStyle = 'rgba(239,68,68,0.7)';
+    ctx.beginPath(); ctx.arc(W/2, H/2, 70, 0, Math.PI*2); ctx.fill();
+}
+
+function genNoise(ctx) {
+    const id = ctx.createImageData(W, H);
+    const d = id.data;
+    for (let i = 0; i < d.length; i += 4) {
+        // Structured noise: smooth base + random grain
+        const x = (i/4) % W, y = Math.floor((i/4) / W);
+        const base = (Math.sin(x*0.05) * Math.cos(y*0.05) + 1) * 100;
+        const noise = Math.random() * 80;
+        const v = Math.min(255, base + noise);
+        d[i] = v * 0.8; d[i+1] = v * 0.5; d[i+2] = v * 1.1; d[i+3] = 255;
+    }
+    ctx.putImageData(id, 0, 0);
+}
+
+function loadSample(name) {
+    switch (name) {
+        case 'geometric': genGeometric(origCtx); break;
+        case 'gradient':  genGradient(origCtx);  break;
+        case 'checker':   genChecker(origCtx);   break;
+        case 'noise':     genNoise(origCtx);     break;
+    }
+    origLoaded = true;
+    applyOp();
+}
+
+// ── Convolution helper ────────────────────────────────────────────────────────
+function convolve(src, w, h, kernel, kSize, scale) {
+    const dst = new Uint8ClampedArray(src.length);
+    const half = kSize >> 1;
+    const sc = scale || 1;
+    for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+            let r = 0, g = 0, b = 0;
+            for (let ky = 0; ky < kSize; ky++) for (let kx = 0; kx < kSize; kx++) {
+                const py = Math.min(Math.max(y + ky - half, 0), h-1);
+                const px = Math.min(Math.max(x + kx - half, 0), w-1);
+                const pi = (py * w + px) * 4;
+                const kv = kernel[ky * kSize + kx];
+                r += src[pi]   * kv;
+                g += src[pi+1] * kv;
+                b += src[pi+2] * kv;
+            }
+            const di = (y * w + x) * 4;
+            dst[di]   = Math.min(Math.max(r * sc, 0), 255);
+            dst[di+1] = Math.min(Math.max(g * sc, 0), 255);
+            dst[di+2] = Math.min(Math.max(b * sc, 0), 255);
+            dst[di+3] = 255;
+        }
+    }
+    return dst;
+}
+
+// ── Gaussian kernel builder ───────────────────────────────────────────────────
+function gaussianKernel(sigma) {
+    const r = Math.ceil(sigma * 2);
+    const kSize = r * 2 + 1;
+    const k = new Array(kSize * kSize);
+    let sum = 0;
+    for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) {
+        const v = Math.exp(-(x*x + y*y) / (2 * sigma * sigma));
+        k[(y+r)*kSize + (x+r)] = v;
+        sum += v;
+    }
+    return {kernel: k.map(v => v/sum), kSize};
+}
+
+// ── CV operations ─────────────────────────────────────────────────────────────
+function opGrayscale(d) {
+    for (let i = 0; i < d.length; i += 4) {
+        const v = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+        d[i] = d[i+1] = d[i+2] = v;
+    }
+}
+
+function opInvert(d) {
+    for (let i = 0; i < d.length; i += 4) { d[i] = 255-d[i]; d[i+1] = 255-d[i+1]; d[i+2] = 255-d[i+2]; }
+}
+
+function opChannel(d, ch) { // ch: 0=R, 1=G, 2=B
+    for (let i = 0; i < d.length; i += 4) {
+        const v = d[i + ch];
+        d[i] = ch===0?v:0; d[i+1] = ch===1?v:0; d[i+2] = ch===2?v:0;
+    }
+}
+
+function opThreshold(d, T) {
+    for (let i = 0; i < d.length; i += 4) {
+        const v = (0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]) > T ? 255 : 0;
+        d[i] = d[i+1] = d[i+2] = v;
+    }
+}
+
+function opHistEq(d, w, h) {
+    const hist = new Array(256).fill(0);
+    for (let i = 0; i < d.length; i += 4) hist[Math.round(0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2])]++;
+    const total = w * h, cdf = new Array(256);
+    let acc = 0;
+    for (let i = 0; i < 256; i++) { acc += hist[i]; cdf[i] = Math.round((acc / total) * 255); }
+    for (let i = 0; i < d.length; i += 4) {
+        const gray = Math.round(0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]);
+        const eq = cdf[gray];
+        d[i] = d[i+1] = d[i+2] = eq;
+    }
+}
+
+function opBlur(d, w, h, sigma) {
+    const {kernel, kSize} = gaussianKernel(sigma);
+    const out = convolve(d, w, h, kernel, kSize);
+    d.set(out);
+}
+
+function opSobel(d, w, h) {
+    const gray = new Float32Array(w * h);
+    for (let i = 0; i < w*h; i++) gray[i] = 0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2];
+    const Kx = [-1,0,1,-2,0,2,-1,0,1], Ky = [-1,-2,-1,0,0,0,1,2,1];
+    for (let y = 1; y < h-1; y++) for (let x = 1; x < w-1; x++) {
+        let gx = 0, gy = 0;
+        for (let ky = 0; ky < 3; ky++) for (let kx = 0; kx < 3; kx++) {
+            const g = gray[(y+ky-1)*w+(x+kx-1)];
+            gx += g * Kx[ky*3+kx]; gy += g * Ky[ky*3+kx];
+        }
+        const mag = Math.min(Math.sqrt(gx*gx+gy*gy), 255);
+        const di = (y*w+x)*4;
+        d[di] = d[di+1] = d[di+2] = mag; d[di+3] = 255;
+    }
+}
+
+function opLaplacian(d, w, h) {
+    const K = [0,1,0, 1,-4,1, 0,1,0];
+    const gray = new Uint8ClampedArray(d.length);
+    for (let i = 0; i < d.length; i += 4) {
+        const v = 0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
+        gray[i] = gray[i+1] = gray[i+2] = v; gray[i+3] = 255;
+    }
+    const out = convolve(gray, w, h, K, 3, 4);
+    d.set(out);
+}
+
+function opSharpen(d, w, h) {
+    const K = [0,-1,0, -1,5,-1, 0,-1,0];
+    const out = convolve(d, w, h, K, 3);
+    d.set(out);
+}
+
+function opEmboss(d, w, h) {
+    const K = [-2,-1,0, -1,1,1, 0,1,2];
+    const out = convolve(d, w, h, K, 3);
+    // shift output to mid-grey for better visibility
+    for (let i = 0; i < out.length; i += 4) {
+        out[i]   = Math.min(255, out[i]   + 64);
+        out[i+1] = Math.min(255, out[i+1] + 64);
+        out[i+2] = Math.min(255, out[i+2] + 64);
+    }
+    d.set(out);
+}
+
+function opBrightness(d, brightness, contrast) {
+    const f = (259*(contrast+255))/(255*(259-contrast));
+    for (let i = 0; i < d.length; i += 4) {
+        d[i]   = Math.min(255, Math.max(0, f*(d[i]   - 128) + 128 + brightness));
+        d[i+1] = Math.min(255, Math.max(0, f*(d[i+1] - 128) + 128 + brightness));
+        d[i+2] = Math.min(255, Math.max(0, f*(d[i+2] - 128) + 128 + brightness));
+    }
+}
+
+// ── Apply current operation ───────────────────────────────────────────────────
+function applyOp() {
+    if (!origLoaded) return;
+    const op = document.getElementById('cv-op').value;
+    const id = origCtx.getImageData(0, 0, W, H);
+    const d  = id.data;
+
+    if (op === 'grayscale')   opGrayscale(d);
+    else if (op === 'invert') opInvert(d);
+    else if (op === 'channel-r') opChannel(d, 0);
+    else if (op === 'channel-g') opChannel(d, 1);
+    else if (op === 'channel-b') opChannel(d, 2);
+    else if (op === 'threshold') opThreshold(d, +document.getElementById('p-thresh').value);
+    else if (op === 'histeq')    opHistEq(d, W, H);
+    else if (op === 'blur')      opBlur(d, W, H, +document.getElementById('p-blur').value);
+    else if (op === 'sobel')     opSobel(d, W, H);
+    else if (op === 'laplacian') opLaplacian(d, W, H);
+    else if (op === 'sharpen')   opSharpen(d, W, H);
+    else if (op === 'emboss')    opEmboss(d, W, H);
+    else if (op === 'brightness') opBrightness(d,
+        +document.getElementById('p-bright').value,
+        +document.getElementById('p-contrast').value);
+
+    procCtx.putImageData(id, 0, 0);
+    drawHistogram(id);
+}
+
+// ── Histogram ─────────────────────────────────────────────────────────────────
+function drawHistogram(imageData) {
+    const hw = histCanvas.width, hh = histCanvas.height;
+    histCtx.fillStyle = '#0a0a0f'; histCtx.fillRect(0, 0, hw, hh);
+    const hist = new Array(256).fill(0);
+    const d = imageData.data;
+    for (let i = 0; i < d.length; i += 4) {
+        hist[Math.round(0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2])]++;
+    }
+    const max = Math.max(...hist);
+    const bw = hw / 256;
+    for (let i = 0; i < 256; i++) {
+        const bh = (hist[i] / max) * (hh - 6);
+        histCtx.fillStyle = `rgb(${i},${i},${i})`;
+        histCtx.fillRect(i * bw, hh - bh, bw + 0.5, bh);
+    }
+    // axis line
+    histCtx.strokeStyle = '#333'; histCtx.lineWidth = 1;
+    histCtx.beginPath(); histCtx.moveTo(0, hh-1); histCtx.lineTo(hw, hh-1); histCtx.stroke();
+}
+
+// ── Operation descriptions ────────────────────────────────────────────────────
+const OP_DESC = {
+    none:       'Select an operation above to see a description of what it does and how it works.',
+    grayscale:  'Converts colour to a single luminance channel using the perceptual weights Y = 0.299R + 0.587G + 0.114B. These weights reflect that the human eye is most sensitive to green light.',
+    invert:     'Subtracts each channel from 255 — turning light pixels dark and vice versa. Equivalent to a photographic negative. Useful for viewing X-rays and certain edge responses.',
+    'channel-r': 'Isolates the Red channel: other channels are zeroed out. Shows where red energy is present in the scene — strong in warm-toned areas and skin tones.',
+    'channel-g': 'Isolates the Green channel. Green typically contains the most luminance information (why camera sensors use twice as many green pixels — the Bayer pattern).',
+    'channel-b': 'Isolates the Blue channel. Blue energy appears in sky, shadows, and cool-toned regions. Weakest contributor to perceived brightness.',
+    threshold:   'Binary thresholding classifies each pixel as foreground (white) or background (black) based on its luminance compared to the threshold T. Move the slider to find the natural separation in the histogram.',
+    histeq:      'Histogram equalisation redistributes pixel intensities so that the output histogram is flat across 0–255. This stretches low-contrast regions, revealing hidden detail — especially useful in medical and satellite imagery.',
+    blur:        'Gaussian blur convolves the image with a Gaussian-weighted kernel. The σ (sigma) parameter controls blur radius. Blurring suppresses high-frequency noise before edge detection — the first step of the Canny algorithm.',
+    sobel:       'The Sobel operator estimates the image gradient magnitude √(Gx²+Gy²) using 3×3 derivative kernels. Bright pixels in the output indicate rapid intensity change — i.e., edges. Works on the grayscale version of the image.',
+    laplacian:   'The Laplacian operator computes the second derivative of the image, responding strongly to rapid changes in gradient. It detects edges in all directions simultaneously but is sensitive to noise. Here amplified ×4 for visibility.',
+    sharpen:     'The sharpening kernel enhances high-frequency detail by subtracting a blurred version from the original: output = original + (original - blurred). Edges and fine textures become more pronounced.',
+    emboss:      'The emboss kernel produces a relief-like 3D appearance by computing directional differences across the image. Output is shifted to mid-grey (128) so that flat regions appear grey and edges appear bright or dark.',
+    brightness:  'Brightness shifts all pixel values uniformly. Contrast applies a linear stretch/squeeze around the midpoint (128) — positive contrast amplifies the distance from mid-grey, negative contrast compresses it.',
+};
+
+// ── UI wiring ─────────────────────────────────────────────────────────────────
+document.querySelectorAll('[data-sample]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-sample]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        loadSample(btn.dataset.sample);
+    });
+});
+
+document.getElementById('cv-upload').addEventListener('change', function() {
+    if (!this.files[0]) return;
+    const img = new Image();
+    const url = URL.createObjectURL(this.files[0]);
+    img.onload = () => {
+        origCtx.clearRect(0, 0, W, H);
+        // Fit image into canvas maintaining aspect ratio
+        const scale = Math.min(W/img.width, H/img.height);
+        const dw = img.width*scale, dh = img.height*scale;
+        origCtx.fillStyle = '#0d0d14'; origCtx.fillRect(0,0,W,H);
+        origCtx.drawImage(img, (W-dw)/2, (H-dh)/2, dw, dh);
+        URL.revokeObjectURL(url);
+        origLoaded = true;
+        document.querySelectorAll('[data-sample]').forEach(b => b.classList.remove('active'));
+        applyOp();
+    };
+    img.src = url;
+});
+
+document.getElementById('cv-op').addEventListener('change', function() {
+    // Show/hide param panels
+    document.querySelectorAll('.cv-param').forEach(p => p.classList.remove('show'));
+    if (this.value === 'threshold')  document.getElementById('param-threshold').classList.add('show');
+    if (this.value === 'blur')       document.getElementById('param-blur').classList.add('show');
+    if (this.value === 'brightness') document.getElementById('param-brightness').classList.add('show');
+    document.getElementById('cv-op-desc').textContent = OP_DESC[this.value] || '';
+    applyOp();
+});
+
+// Slider live-update
+['p-thresh','p-blur','p-bright','p-contrast'].forEach(id => {
+    const el = document.getElementById(id);
+    const val = document.getElementById(id + '-val');
+    el.addEventListener('input', () => { val.textContent = el.value; applyOp(); });
+});
+
+document.getElementById('cv-reset-op').addEventListener('click', () => {
+    document.getElementById('cv-op').value = 'none';
+    document.querySelectorAll('.cv-param').forEach(p => p.classList.remove('show'));
+    document.getElementById('cv-op-desc').textContent = OP_DESC['none'];
+    applyOp();
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadSample('geometric');
+</script>
+
+</body>
+</html>

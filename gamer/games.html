@@ -170,6 +170,16 @@
                 <span class="score-user" id="user-poker">—</span>
             </div>
         </a>
+        <a href="daedalus.html" class="game-card">
+            <span class="game-card-icon">🌀</span>
+            <h3>Daedalus</h3>
+            <p>Ten mazes of growing difficulty. Escape them all — your total time is your score.</p>
+            <div class="world-score-box">
+                <label>LOCAL BEST</label>
+                <span class="score-num" id="local-daedalus" style="font-size:14px;">—</span>
+                <span class="score-user" id="user-daedalus"></span>
+            </div>
+        </a>
         <a href="five-card-draw.html" class="game-card">
             <span class="game-card-icon">♦</span>
             <h3>Five Card Draw</h3>
@@ -186,6 +196,17 @@
 
     <script src="/js/gamer-chat.js"></script>
     <script>
+        (function() {
+            const b = localStorage.getItem('dae_best');
+            if (b) {
+                const ms = +b, s = Math.floor(ms / 100) / 10;
+                const m = Math.floor(s / 60), sec = s % 60;
+                document.getElementById('local-daedalus').textContent =
+                    String(m).padStart(2,'0') + ':' + sec.toFixed(1).padStart(4,'0');
+                document.getElementById('user-daedalus').textContent = 'this device';
+            }
+        })();
+
         if (typeof getOrCreateUsername === 'function') {
             document.getElementById('username-display').textContent = getOrCreateUsername();
         }

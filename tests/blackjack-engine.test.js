@@ -146,7 +146,7 @@ describe('bjDouble', () => {
 describe('bjRunDealer', () => {
     test('dealer stands at 17+', () => {
         const g = {
-            deck: [c(5)], player: c(5), dealer: [c(10), c(6)],
+            deck: [c(5)], player: [c(5)], dealer: [c(10), c(6)],
             phase: 'playing', bet: 20, chips: 480, result: null,
         };
         const r = bjRunDealer(g);

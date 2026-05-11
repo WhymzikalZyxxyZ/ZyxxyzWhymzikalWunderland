@@ -127,7 +127,7 @@ function getPokerAIAction(state, pidx) {
     const fn     = (typeof evaluateHand === 'function') ? evaluateHand : () => ({ rank:1 });
     const all    = [...p.hand, ...state.community];
     const str    = all.length >= 5 ? fn(all).rank / 10 :
-                   fn(p.hand.length >= 2 ? p.hand : p.hand.concat([{suit:'S',rank:7},{suit:'H',rank:2},{suit:'D',rank:9}])).rank / 10;
+                   fn(p.hand.concat([{suit:'S',rank:7},{suit:'H',rank:2},{suit:'D',rank:9}])).rank / 10;
 
     if (toCall === 0) return str > 0.5 ? { action:'raise', amount: BIG_BLIND * 2 } : { action:'check' };
     if (str < 0.2)    return { action:'fold' };

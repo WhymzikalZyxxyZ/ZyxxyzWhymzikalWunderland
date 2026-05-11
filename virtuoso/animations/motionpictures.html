@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,6 +23,33 @@
             border-bottom: 1px solid #2a2a2a;
             padding-bottom: 8px;
             margin: 32px 0 16px;
+        }
+
+        /* ══ TABS ══ */
+        .mp-tab-bar {
+            display: flex;
+            gap: 4px;
+            margin-top: 16px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .mp-tab {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            color: #555;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: color 0.14s, background 0.14s, border-color 0.14s;
+            user-select: none;
+        }
+        .mp-tab:hover { color: #aaa; }
+        .mp-tab.active {
+            background: rgba(244,162,97,0.08);
+            border-color: rgba(244,162,97,0.3);
+            color: #f4a261;
         }
 
         /* ══ EDITOR ══ */
@@ -183,6 +210,7 @@
         #anim-overlay {
             position: absolute; top: 0; left: 0;
             width: 100%; height: 100%; cursor: crosshair;
+            touch-action: none;
         }
 
         /* palette */
@@ -375,205 +403,427 @@
         #archive-details[open] summary::before { content: '▼  '; }
         #archive-grid { padding: 14px 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
 
+        /* ══ VIDEO EDITOR ══ */
+        .ved-workspace {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            margin-top: 4px;
+        }
+        .ved-col-left { flex: 1; min-width: 0; }
+        .ved-col-right { width: 340px; flex-shrink: 0; }
+        .ved-library-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 12px 0 4px;
+            min-height: 60px;
+        }
+        .ved-clip-card {
+            background: rgba(0,0,0,0.45);
+            border: 1px solid #2a2a2a;
+            border-radius: 7px;
+            padding: 8px;
+            width: 114px;
+            text-align: center;
+            transition: border-color 0.14s;
+        }
+        .ved-clip-card:hover { border-color: rgba(244,162,97,0.4); }
+        .ved-clip-thumb {
+            width: 98px;
+            height: 98px;
+            border: 1px solid #333;
+            border-radius: 3px;
+            margin: 0 auto 5px;
+            background: #111;
+            overflow: hidden;
+        }
+        .ved-clip-thumb canvas { width: 98px; height: 98px; display: block; }
+        .ved-clip-name {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            color: #777;
+            line-height: 1.4;
+            word-break: break-word;
+            margin-bottom: 5px;
+        }
+        .ved-add-btn {
+            padding: 3px 8px;
+            background: rgba(244,162,97,0.1);
+            border: 1px solid rgba(244,162,97,0.28);
+            border-radius: 4px;
+            color: #f4a261;
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            cursor: pointer;
+            transition: background 0.12s;
+        }
+        .ved-add-btn:hover { background: rgba(244,162,97,0.22); }
+        .ved-timeline-list {
+            min-height: 100px;
+            border: 1px solid #2a2a2a;
+            border-radius: 7px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            max-height: 340px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #333 transparent;
+        }
+        .ved-tl-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid #2a2a2a;
+            border-radius: 5px;
+            padding: 5px 8px;
+        }
+        .ved-tl-item-name {
+            flex: 1;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #aaa;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .ved-tl-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 3px;
+            color: #555;
+            padding: 2px 6px;
+            font-size: 10px;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: color 0.12s, border-color 0.12s;
+        }
+        .ved-tl-btn:hover { color: #fff; border-color: #888; }
+        .ved-tl-btn.remove:hover { color: #f66; border-color: #f66; }
+        #ved-progress {
+            flex: 1; min-width: 80px; max-width: 200px;
+            height: 4px; background: #2a2a2a; border-radius: 2px; overflow: hidden;
+        }
+        #ved-bar { height: 100%; background: #f4a261; width: 0%; transition: width 0.1s linear; }
+        #ved-frame-label { font-family: 'Courier New', monospace; font-size: 10px; color: #555; }
+        #ved-duration {
+            font-family: 'Courier New', monospace; font-size: 10px;
+            color: #444; text-align: center; margin-top: 8px;
+        }
+        #ved-controls {
+            display: flex; align-items: center; gap: 8px;
+            margin-top: 10px; justify-content: center; flex-wrap: wrap;
+        }
+
+        /* ══ SOUNDBOARD ══ */
+        .sb-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+            gap: 12px;
+            padding: 4px 0 32px;
+        }
+        .sb-card {
+            background: rgba(0,0,0,0.45);
+            border: 1px solid #2a2a2a;
+            border-radius: 9px;
+            padding: 14px 10px 12px;
+            text-align: center;
+            transition: border-color 0.14s, background 0.14s;
+        }
+        .sb-card.playing {
+            border-color: rgba(244,162,97,0.7);
+            background: rgba(244,162,97,0.07);
+        }
+        .sb-emoji { font-size: 2em; display: block; margin-bottom: 6px; line-height: 1; }
+        .sb-label {
+            font-family: 'Courier New', monospace;
+            font-size: 10px; color: #bbb;
+            display: block; margin-bottom: 4px; line-height: 1.4;
+        }
+        .sb-dur {
+            font-family: 'Courier New', monospace;
+            font-size: 9px; color: #444;
+            display: block; margin-bottom: 10px;
+        }
+        .sb-btns { display: flex; gap: 6px; justify-content: center; }
+        .sb-btn {
+            padding: 5px 10px; border-radius: 4px;
+            font-family: 'Courier New', monospace; font-size: 10px;
+            cursor: pointer; transition: background 0.12s, color 0.12s, border-color 0.12s;
+            white-space: nowrap;
+        }
+        .sb-btn-play {
+            background: rgba(244,162,97,0.1);
+            border: 1px solid rgba(244,162,97,0.3);
+            color: #f4a261;
+        }
+        .sb-btn-play:hover { background: rgba(244,162,97,0.22); }
+        .sb-btn-dl {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #777;
+        }
+        .sb-btn-dl:hover { color: #ddd; border-color: #777; }
+        .sb-note {
+            font-family: 'Courier New', monospace; font-size: 11px;
+            color: #555; margin: 0 0 14px; line-height: 1.6;
+        }
+
         /* ══ RESPONSIVE ══ */
         @media (max-width: 620px) {
             #editor-body { flex-direction: column; }
             #ed-sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; }
             .ed-sec { flex: 1; min-width: 100px; }
             .ed-palette-grid { grid-template-columns: repeat(8, 1fr); }
+            .ved-workspace { flex-direction: column; }
+            .ved-col-right { width: 100%; }
+            .sb-grid { grid-template-columns: repeat(2, 1fr); }
+            .mp-tab { padding: 8px 12px; font-size: 11px; }
         }
     </style>
 </head>
-<body class="notYetBody">
+<body class="wunderBody">
 
     <h2>Zyxxyz, the Director</h2>
 
     <div class="navbar">
-        <a href="../../index.html">Home</a>
-        <a href="../../virtuoso/animations/motionpictures.html">Motion Pictures</a>
-        <a href="../../virtuoso/comics/webcomic.html">Webcomic</a>
-        <a href="../../virtuoso/crafts/handmade.html">Handmade</a>
-        <a href="../../virtuoso/drawings/doodles.html">Doodles</a>
-        <a href="../../virtuoso/writings/stories.html">Stories</a>
+        <a href="/index.html">Home</a>
+        <a href="/virtuoso/animations/motionpictures.html">Motion Pictures</a>
+        <a href="/virtuoso/comics/webcomic.html">Webcomic</a>
+        <a href="/virtuoso/crafts/handmade.html">Handmade</a>
+        <a href="/virtuoso/drawings/doodles.html">Doodles</a>
+        <a href="/virtuoso/writings/stories.html">Stories</a>
     </div>
 
     <div class="banner"></div>
 
     <div id="animator-page">
 
-        <!-- ══ FRAME EDITOR ══ -->
-        <div class="mp-section-title">Frame Editor</div>
+        <!-- ══ TAB BAR ══ -->
+        <div class="mp-tab-bar">
+            <button class="mp-tab active" data-tab="editor"     onclick="showTab('editor')">&#127912; Frame Editor</button>
+            <button class="mp-tab"        data-tab="video"      onclick="showTab('video')">&#127916; Video Editor</button>
+            <button class="mp-tab"        data-tab="soundboard" onclick="showTab('soundboard')">&#128266; Soundboard</button>
+        </div>
 
-        <div id="editor-wrap">
+        <!-- ══════════════════════════════════════════════════════════
+             TAB 1 — FRAME EDITOR
+        ══════════════════════════════════════════════════════════ -->
+        <div id="tab-editor" class="mp-tab-panel">
 
-            <!-- Toolbar -->
-            <div id="editor-toolbar">
-                <div class="tb-group">
-                    <button class="tb-btn" id="btn-prev-frame" onclick="prevFrame()" title="Previous frame">&#9664; Prev</button>
-                    <span id="frame-counter">1 / 1</span>
-                    <button class="tb-btn" id="btn-next-frame" onclick="nextFrame()" title="Next frame">Next &#9654;</button>
-                </div>
-                <div class="tb-sep"></div>
-                <div class="tb-group">
-                    <button class="tb-btn" onclick="duplicateFrame()" title="Duplicate current frame">&#10065; Dup</button>
-                    <button class="tb-btn danger" onclick="deleteFrame()" title="Delete current frame">&#10005; Del</button>
-                </div>
-                <div class="tb-sep"></div>
-                <div class="tb-group">
-                    <span class="tb-label">FPS</span>
-                    <input type="number" id="fps-input" value="8" min="1" max="24" title="Frames per second">
-                </div>
-                <div class="tb-sep"></div>
-                <div class="tb-group">
-                    <button class="tb-btn accent" id="btn-play" onclick="playAnimation()" title="Play animation">&#9654; Play</button>
-                    <button class="tb-btn" id="btn-stop" onclick="stopAnimation()" disabled title="Stop">&#9632; Stop</button>
-                </div>
-                <div class="tb-sep"></div>
-                <div class="tb-group">
-                    <label class="tb-label" style="display:flex;align-items:center;gap:5px;cursor:pointer;">
-                        <input type="checkbox" id="onion-toggle" checked> Onion skin
-                    </label>
-                </div>
-            </div>
+            <div class="mp-section-title">Frame Editor</div>
 
-            <!-- Body: sidebar + canvas -->
-            <div id="editor-body">
+            <div id="editor-wrap">
 
-                <!-- Sidebar -->
-                <div id="ed-sidebar">
-                    <div class="ed-sec">
-                        <div class="ed-sec-label">Draw</div>
-                        <div class="tool-grid">
-                            <button class="tool-btn active" id="btn-pen"    onclick="setTool('pen')">&#9999;<br>Pen</button>
-                            <button class="tool-btn"        id="btn-eraser" onclick="setTool('eraser')">&#9633;<br>Erase</button>
-                        </div>
+                <!-- Toolbar -->
+                <div id="editor-toolbar">
+                    <div class="tb-group">
+                        <button class="tb-btn" id="btn-prev-frame" onclick="prevFrame()" title="Previous frame">&#9664; Prev</button>
+                        <span id="frame-counter">1 / 1</span>
+                        <button class="tb-btn" id="btn-next-frame" onclick="nextFrame()" title="Next frame">Next &#9654;</button>
                     </div>
-                    <div class="ed-sec">
-                        <div class="ed-sec-label">Shapes</div>
-                        <div class="tool-grid">
-                            <button class="tool-btn" id="btn-line"     onclick="setTool('line')">&#9585;<br>Line</button>
-                            <button class="tool-btn" id="btn-rect"     onclick="setTool('rect')">&#9645;<br>Rect</button>
-                            <button class="tool-btn" id="btn-circle"   onclick="setTool('circle')">&#9711;<br>Circle</button>
-                            <button class="tool-btn" id="btn-triangle" onclick="setTool('triangle')">&#9651;<br>Tri</button>
-                        </div>
+                    <div class="tb-sep"></div>
+                    <div class="tb-group">
+                        <button class="tb-btn" onclick="duplicateFrame()" title="Duplicate current frame">&#10065; Dup</button>
+                        <button class="tb-btn danger" onclick="deleteFrame()" title="Delete current frame">&#10005; Del</button>
                     </div>
-                    <div class="ed-sec">
-                        <div class="ed-sec-label">Size</div>
-                        <input type="range" class="ed-range" id="size-slider" min="1" max="60" value="4">
-                        <div class="ed-range-label" id="size-label">4 px</div>
+                    <div class="tb-sep"></div>
+                    <div class="tb-group">
+                        <span class="tb-label">FPS</span>
+                        <input type="number" id="fps-input" value="8" min="1" max="24" title="Frames per second">
                     </div>
-                    <div class="ed-sec">
-                        <div class="ed-sec-label">Options</div>
-                        <label class="ed-check-row">
-                            <input type="checkbox" id="fill-check"> Fill shapes
+                    <div class="tb-sep"></div>
+                    <div class="tb-group">
+                        <button class="tb-btn accent" id="btn-play" onclick="playAnimation()" title="Play animation">&#9654; Play</button>
+                        <button class="tb-btn" id="btn-stop" onclick="stopAnimation()" disabled title="Stop">&#9632; Stop</button>
+                    </div>
+                    <div class="tb-sep"></div>
+                    <div class="tb-group">
+                        <label class="tb-label" style="display:flex;align-items:center;gap:5px;cursor:pointer;">
+                            <input type="checkbox" id="onion-toggle" checked> Onion skin
                         </label>
                     </div>
-                    <div class="ed-sec">
-                        <div class="ed-sec-label">Colour</div>
-                        <div class="active-swatch-wrap">
-                            <div id="ed-active-swatch" onclick="document.getElementById('ed-custom-color').click()" title="Click to pick custom colour"></div>
-                            <div class="active-swatch-label">ACTIVE</div>
+                </div>
+
+                <!-- Body: sidebar + canvas -->
+                <div id="editor-body">
+
+                    <!-- Sidebar -->
+                    <div id="ed-sidebar">
+                        <div class="ed-sec">
+                            <div class="ed-sec-label">Draw</div>
+                            <div class="tool-grid">
+                                <button class="tool-btn active" id="btn-pen"    onclick="setTool('pen')">&#9999;<br>Pen</button>
+                                <button class="tool-btn"        id="btn-eraser" onclick="setTool('eraser')">&#9633;<br>Erase</button>
+                            </div>
+                        </div>
+                        <div class="ed-sec">
+                            <div class="ed-sec-label">Shapes</div>
+                            <div class="tool-grid">
+                                <button class="tool-btn" id="btn-line"     onclick="setTool('line')">&#9585;<br>Line</button>
+                                <button class="tool-btn" id="btn-rect"     onclick="setTool('rect')">&#9645;<br>Rect</button>
+                                <button class="tool-btn" id="btn-circle"   onclick="setTool('circle')">&#9711;<br>Circle</button>
+                                <button class="tool-btn" id="btn-triangle" onclick="setTool('triangle')">&#9651;<br>Tri</button>
+                            </div>
+                        </div>
+                        <div class="ed-sec">
+                            <div class="ed-sec-label">Size</div>
+                            <input type="range" class="ed-range" id="size-slider" min="1" max="60" value="4">
+                            <div class="ed-range-label" id="size-label">4 px</div>
+                        </div>
+                        <div class="ed-sec">
+                            <div class="ed-sec-label">Options</div>
+                            <label class="ed-check-row">
+                                <input type="checkbox" id="fill-check"> Fill shapes
+                            </label>
+                        </div>
+                        <div class="ed-sec">
+                            <div class="ed-sec-label">Colour</div>
+                            <div class="active-swatch-wrap">
+                                <div id="ed-active-swatch" onclick="document.getElementById('ed-custom-color').click()" title="Click to pick custom colour"></div>
+                                <div class="active-swatch-label">ACTIVE</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Canvas column -->
+                    <div id="ed-canvas-col">
+                        <div class="canvas-wrap">
+                            <canvas id="anim-canvas"  width="480" height="480"></canvas>
+                            <canvas id="anim-overlay" width="480" height="480"></canvas>
+                        </div>
+
+                        <div class="ed-palette-row">
+                            <div class="ed-palette-grid" id="ed-palette-grid"></div>
+                            <input type="color" id="ed-custom-color" value="#000000" title="Custom colour">
+                        </div>
+
+                        <div class="ed-actions">
+                            <button class="ed-btn" id="undo-btn" onclick="undoLast()" title="Undo">&#8629; Undo</button>
+                            <button class="ed-btn" onclick="clearFrame()" title="Clear frame to white">&#128465; Clear</button>
+                            <button class="ed-btn" onclick="downloadFrame()" title="Download current frame as PNG">&#8595; Save Frame</button>
+                            <button class="ed-btn" onclick="downloadAllFrames()" title="Download all frames as PNGs">&#8595; All Frames</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Canvas column -->
-                <div id="ed-canvas-col">
-                    <div class="canvas-wrap">
-                        <canvas id="anim-canvas"  width="480" height="480"></canvas>
-                        <canvas id="anim-overlay" width="480" height="480"></canvas>
-                    </div>
+                <!-- Frame strip -->
+                <div id="frame-strip-wrap">
+                    <div id="frame-strip"></div>
+                    <button id="add-frame-btn" onclick="addFrame()" title="Add new blank frame">+</button>
+                </div>
 
-                    <div class="ed-palette-row">
-                        <div class="ed-palette-grid" id="ed-palette-grid"></div>
-                        <input type="color" id="ed-custom-color" value="#000000" title="Custom colour">
-                    </div>
+            </div>
 
+            <!-- Publish panel -->
+            <div id="publish-panel">
+                <div class="pub-row">
+                    <input type="text" id="anim-title-input" placeholder="Animation title..." maxlength="80">
+                    <button class="ed-btn primary" onclick="generateSnippet()">&#128196; Prepare to Publish</button>
+                    <span id="snippet-status"></span>
+                </div>
+                <textarea id="snippet-output" readonly></textarea>
+                <div class="pub-note">
+                    Copy the snippet above and paste it into the <code>ANIMATIONS</code> array in this file's
+                    <code>&lt;script&gt;</code> block. Animations dated more than 30 days ago are automatically
+                    moved to the Archive section.
+                </div>
+            </div>
+
+            <!-- ══ PUBLISHED ANIMATIONS ══ -->
+            <div class="mp-section-title" id="viewer-section">Published Animations</div>
+
+            <div id="viewer-section-body">
+                <div id="anim-viewer-wrap">
+                    <div id="viewer-header">
+                        <div id="viewer-title">—</div>
+                        <div id="viewer-meta"></div>
+                    </div>
+                    <div id="viewer-canvas-wrap">
+                        <canvas id="viewer-canvas" width="480" height="480"></canvas>
+                    </div>
+                    <div id="viewer-controls">
+                        <button class="tb-btn accent" id="vbtn-play" onclick="viewerPlay()">&#9654; Play</button>
+                        <button class="tb-btn" id="vbtn-stop" onclick="viewerStop()" disabled>&#9632; Stop</button>
+                        <div id="viewer-progress"><div id="viewer-bar"></div></div>
+                        <span id="viewer-frame-label">— / —</span>
+                    </div>
+                </div>
+
+                <div id="viewer-toc-title">All Animations</div>
+                <div id="viewer-toc-grid"></div>
+                <div class="empty-notice" id="viewer-empty" style="display:none;">
+                    No animations published yet — use the editor above to create one!
+                </div>
+            </div>
+
+            <!-- ══ ARCHIVE ══ -->
+            <details id="archive-details">
+                <summary>Archive — older than 30 days</summary>
+                <div id="archive-grid"></div>
+            </details>
+
+        </div><!-- /tab-editor -->
+
+        <!-- ══════════════════════════════════════════════════════════
+             TAB 2 — VIDEO EDITOR
+        ══════════════════════════════════════════════════════════ -->
+        <div id="tab-video" class="mp-tab-panel" style="display:none">
+
+            <div class="mp-section-title" style="margin-top:16px">Clip Library</div>
+            <p class="sb-note">Select clips to add to your timeline. Editor Work reflects your current frame editor session.</p>
+            <div id="ved-library" class="ved-library-grid"></div>
+
+            <div class="ved-workspace">
+                <div class="ved-col-left">
+                    <div class="mp-section-title">Timeline</div>
+                    <div id="ved-timeline" class="ved-timeline-list">
+                        <div class="empty-notice">Add clips from the library above</div>
+                    </div>
                     <div class="ed-actions">
-                        <button class="ed-btn" id="undo-btn" onclick="undoLast()" title="Undo">&#8629; Undo</button>
-                        <button class="ed-btn" onclick="clearFrame()" title="Clear frame to white">&#128465; Clear</button>
-                        <button class="ed-btn" onclick="downloadFrame()" title="Download current frame as PNG">&#8595; Save Frame</button>
-                        <button class="ed-btn" onclick="downloadAllFrames()" title="Download all frames as PNGs">&#8595; All Frames</button>
+                        <button class="ed-btn" onclick="vedClearTimeline()">&#10005; Clear All</button>
+                        <button class="ed-btn primary" onclick="vedExport()">&#8595; Export Frames</button>
                     </div>
                 </div>
-            </div>
-
-            <!-- Frame strip -->
-            <div id="frame-strip-wrap">
-                <div id="frame-strip"></div>
-                <button id="add-frame-btn" onclick="addFrame()" title="Add new blank frame">+</button>
-            </div>
-
-        </div>
-
-        <!-- Publish panel -->
-        <div id="publish-panel">
-            <div class="pub-row">
-                <input type="text" id="anim-title-input" placeholder="Animation title..." maxlength="80">
-                <button class="ed-btn primary" onclick="generateSnippet()">&#128196; Prepare to Publish</button>
-                <span id="snippet-status"></span>
-            </div>
-            <textarea id="snippet-output" readonly></textarea>
-            <div class="pub-note">
-                Copy the snippet above and paste it into the <code>ANIMATIONS</code> array in this file's
-                <code>&lt;script&gt;</code> block. Animations dated more than 30 days ago are automatically
-                moved to the Archive section.
-            </div>
-        </div>
-
-        <!-- ══ PUBLISHED ANIMATIONS ══ -->
-        <div class="mp-section-title" id="viewer-section">Published Animations</div>
-
-        <div id="viewer-section-body">
-            <div id="anim-viewer-wrap">
-                <div id="viewer-header">
-                    <div id="viewer-title">—</div>
-                    <div id="viewer-meta"></div>
-                </div>
-                <div id="viewer-canvas-wrap">
-                    <canvas id="viewer-canvas" width="480" height="480"></canvas>
-                </div>
-                <div id="viewer-controls">
-                    <button class="tb-btn accent" id="vbtn-play" onclick="viewerPlay()">&#9654; Play</button>
-                    <button class="tb-btn" id="vbtn-stop" onclick="viewerStop()" disabled>&#9632; Stop</button>
-                    <div id="viewer-progress"><div id="viewer-bar"></div></div>
-                    <span id="viewer-frame-label">— / —</span>
+                <div class="ved-col-right">
+                    <div class="mp-section-title">Preview</div>
+                    <div class="canvas-wrap" style="max-width:320px;margin:0 auto">
+                        <canvas id="ved-canvas" width="480" height="480" style="width:100%;height:auto;display:block"></canvas>
+                    </div>
+                    <div id="ved-controls">
+                        <button class="tb-btn accent" id="ved-btn-play" onclick="vedPlay()">&#9654; Play</button>
+                        <button class="tb-btn" id="ved-btn-stop" onclick="vedStop()" disabled>&#9632; Stop</button>
+                        <div id="ved-progress"><div id="ved-bar"></div></div>
+                        <span id="ved-frame-label">— / —</span>
+                    </div>
+                    <div id="ved-duration">Duration: —</div>
                 </div>
             </div>
 
-            <div id="viewer-toc-title">All Animations</div>
-            <div id="viewer-toc-grid"></div>
-            <div class="empty-notice" id="viewer-empty" style="display:none;">
-                No animations published yet — use the editor above to create one!
-            </div>
-        </div>
+        </div><!-- /tab-video -->
 
-        <!-- ══ ARCHIVE ══ -->
-        <details id="archive-details">
-            <summary>Archive — older than 30 days</summary>
-            <div id="archive-grid"></div>
-        </details>
+        <!-- ══════════════════════════════════════════════════════════
+             TAB 3 — SOUNDBOARD
+        ══════════════════════════════════════════════════════════ -->
+        <div id="tab-soundboard" class="mp-tab-panel" style="display:none">
+
+            <div class="mp-section-title" style="margin-top:16px">Movie Soundboard</div>
+            <p class="sb-note">All sounds are synthesized in-browser via Web Audio API — no files to load. Click &#9654; to preview or &#8595; WAV to download for use in video editing.</p>
+            <div id="soundboard-grid" class="sb-grid"></div>
+
+        </div><!-- /tab-soundboard -->
 
     </div>
 
-    <button type="button" onclick="navigateToPage('../../index.html')">E.T. Phone Home!</button>
+    <button type="button" onclick="navigateToPage('/index.html')">E.T. Phone Home!</button>
 
     <script>
         // ════════════════════════════════════════════════════════════════════════
-        //  HOW TO ADD A PUBLISHED ANIMATION
-        //  ─────────────────────────────────────────────────────────────────────
-        //  1. Use the editor above to draw your frames.
-        //  2. Click "Prepare to Publish", give it a title, copy the snippet.
-        //  3. Paste the snippet into the ANIMATIONS array below.
-        //
-        //  Animations with a date older than 30 days are automatically
-        //  shown in the Archive section instead of the main viewer.
-        //
-        //  Each entry:
-        //    title  — shown in the viewer header
-        //    date   — "YYYY-MM-DD" publish date
-        //    fps    — playback speed (1–24)
-        //    frames — array of image paths OR data URLs
+        //  PUBLISHED ANIMATIONS — paste generated snippets into this array
         // ════════════════════════════════════════════════════════════════════════
 
         const ANIMATIONS = [
@@ -755,23 +1005,10 @@
         // ── Drawing utilities ────────────────────────────────────────────────
 
         function getPos(e) {
-            if (e.touches && e.touches.length) {
-                const r = overlay.getBoundingClientRect();
-                return {
-                    x: (e.touches[0].clientX - r.left) * (CANVAS_W / r.width),
-                    y: (e.touches[0].clientY - r.top)  * (CANVAS_H / r.height)
-                };
-            }
-            if (e.changedTouches && e.changedTouches.length) {
-                const r = overlay.getBoundingClientRect();
-                return {
-                    x: (e.changedTouches[0].clientX - r.left) * (CANVAS_W / r.width),
-                    y: (e.changedTouches[0].clientY - r.top)  * (CANVAS_H / r.height)
-                };
-            }
+            const r = overlay.getBoundingClientRect();
             return {
-                x: e.offsetX * (CANVAS_W / overlay.offsetWidth),
-                y: e.offsetY * (CANVAS_H / overlay.offsetHeight)
+                x: (e.clientX - r.left) * (CANVAS_W / r.width),
+                y: (e.clientY - r.top)  * (CANVAS_H / r.height)
             };
         }
 
@@ -822,6 +1059,7 @@
         function onDown(e) {
             e.preventDefault();
             if (edPlaying) return;
+            overlay.setPointerCapture(e.pointerId);
             const { x, y } = getPos(e);
             isDrawing = true; startX = x; startY = y;
             startSnap = ctx.getImageData(0, 0, CANVAS_W, CANVAS_H);
@@ -860,13 +1098,10 @@
             ctx.beginPath();
         }
 
-        overlay.addEventListener('mousedown',  onDown);
-        overlay.addEventListener('mousemove',  onMove);
-        overlay.addEventListener('mouseup',    onUp);
-        overlay.addEventListener('mouseleave', onUp);
-        overlay.addEventListener('touchstart', onDown, { passive: false });
-        overlay.addEventListener('touchmove',  onMove, { passive: false });
-        overlay.addEventListener('touchend',   onUp,   { passive: false });
+        overlay.addEventListener('pointerdown',   onDown);
+        overlay.addEventListener('pointermove',   onMove);
+        overlay.addEventListener('pointerup',     onUp);
+        overlay.addEventListener('pointercancel', onUp);
 
         // ── Tool selection ───────────────────────────────────────────────────
 
@@ -1020,12 +1255,10 @@
             document.getElementById('viewer-meta').textContent  =
                 anim.date + ' · ' + anim.fps + ' fps · ' + anim.frames.length + ' frames';
 
-            // Show first frame
             renderViewerFrame(0);
             document.getElementById('viewer-bar').style.width = '0%';
             document.getElementById('viewer-frame-label').textContent = '1 / ' + anim.frames.length;
 
-            // Highlight TOC
             document.querySelectorAll('#viewer-toc-grid .toc-card').forEach((c, i) => {
                 c.classList.toggle('active', i === idx);
             });
@@ -1035,9 +1268,7 @@
             const anim = published[viewerIdx];
             if (!anim || !anim.frames[frameIdx]) return;
             const img = new Image();
-            img.onload = () => {
-                vCtx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H);
-            };
+            img.onload = () => { vCtx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H); };
             img.src = anim.frames[frameIdx];
 
             const pct = anim.frames.length > 1
@@ -1119,7 +1350,7 @@
         }
 
         // ════════════════════════════════════════════════════════════════════
-        //  INIT
+        //  INIT — Frame Editor
         // ════════════════════════════════════════════════════════════════════
 
         ctx.fillStyle = '#ffffff';
@@ -1130,6 +1361,638 @@
         renderOnionSkin();
         renderStrip();
         initViewer();
+
+        // ════════════════════════════════════════════════════════════════════
+        //  TABS
+        // ════════════════════════════════════════════════════════════════════
+
+        function showTab(tab) {
+            document.querySelectorAll('.mp-tab-panel').forEach(p => p.style.display = 'none');
+            document.querySelectorAll('.mp-tab').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tab).style.display = '';
+            document.querySelector('.mp-tab[data-tab="' + tab + '"]').classList.add('active');
+            if (tab === 'video') initVedLibrary();
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        //  VIDEO EDITOR
+        // ════════════════════════════════════════════════════════════════════
+
+        let vedTl         = [];
+        let vedPlaying    = false;
+        let vedTimer      = null;
+        let vedFi         = 0;
+        let vedFlatFrames = [];
+
+        const vedCanvas = document.getElementById('ved-canvas');
+        const vedVCtx   = vedCanvas.getContext('2d');
+        vedVCtx.fillStyle = '#111';
+        vedVCtx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+        function fmtSec(s) {
+            const m = Math.floor(s / 60);
+            return m + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+        }
+
+        function getClipFrameCount(clip) {
+            return clip.type === 'editor' ? edFrames.length : ANIMATIONS[clip.animIdx].frames.length;
+        }
+
+        function getClipFps(clip) {
+            if (clip.type === 'editor')
+                return Math.max(1, Math.min(24, parseInt(document.getElementById('fps-input').value) || 8));
+            return Math.max(1, ANIMATIONS[clip.animIdx].fps);
+        }
+
+        function updateVedDuration() {
+            if (!vedTl.length) {
+                document.getElementById('ved-duration').textContent = 'Duration: —';
+                return;
+            }
+            let total = 0;
+            vedTl.forEach(c => { total += getClipFrameCount(c) / getClipFps(c); });
+            document.getElementById('ved-duration').textContent = 'Duration: ' + fmtSec(total);
+        }
+
+        function vedAddClip(type, animIdx, label) {
+            vedTl.push({ type, animIdx, label });
+            renderVedTimeline();
+            updateVedDuration();
+        }
+
+        function vedRemoveClip(i) {
+            vedTl.splice(i, 1);
+            renderVedTimeline();
+            updateVedDuration();
+        }
+
+        function vedMoveClip(i, dir) {
+            const j = i + dir;
+            if (j < 0 || j >= vedTl.length) return;
+            [vedTl[i], vedTl[j]] = [vedTl[j], vedTl[i]];
+            renderVedTimeline();
+        }
+
+        function vedClearTimeline() {
+            if (!vedTl.length) return;
+            if (!confirm('Clear the timeline?')) return;
+            vedStop();
+            vedTl = [];
+            renderVedTimeline();
+            updateVedDuration();
+        }
+
+        function renderVedTimeline() {
+            const list = document.getElementById('ved-timeline');
+            if (!vedTl.length) {
+                list.innerHTML = '<div class="empty-notice">Add clips from the library above</div>';
+                return;
+            }
+            list.innerHTML = '';
+            vedTl.forEach((clip, i) => {
+                const item = document.createElement('div');
+                item.className = 'ved-tl-item';
+
+                const name = document.createElement('div');
+                name.className = 'ved-tl-item-name';
+                name.textContent = (i + 1) + '. ' + clip.label;
+                item.appendChild(name);
+
+                if (i > 0) {
+                    const upBtn = document.createElement('button');
+                    upBtn.className = 'ved-tl-btn';
+                    upBtn.textContent = '↑';
+                    upBtn.addEventListener('click', () => vedMoveClip(i, -1));
+                    item.appendChild(upBtn);
+                }
+                if (i < vedTl.length - 1) {
+                    const downBtn = document.createElement('button');
+                    downBtn.className = 'ved-tl-btn';
+                    downBtn.textContent = '↓';
+                    downBtn.addEventListener('click', () => vedMoveClip(i, 1));
+                    item.appendChild(downBtn);
+                }
+
+                const rmBtn = document.createElement('button');
+                rmBtn.className = 'ved-tl-btn remove';
+                rmBtn.textContent = '×';
+                rmBtn.addEventListener('click', () => vedRemoveClip(i));
+                item.appendChild(rmBtn);
+
+                list.appendChild(item);
+            });
+        }
+
+        function vedBuildFlatFrames() {
+            vedFlatFrames = [];
+            const tmp = document.createElement('canvas');
+            tmp.width = CANVAS_W; tmp.height = CANVAS_H;
+            const tc = tmp.getContext('2d');
+
+            vedTl.forEach(clip => {
+                const fps = getClipFps(clip);
+                if (clip.type === 'editor') {
+                    saveCurrentFrame();
+                    edFrames.forEach(f => {
+                        tc.putImageData(f, 0, 0);
+                        vedFlatFrames.push({ dataUrl: tmp.toDataURL('image/png'), fps });
+                    });
+                } else {
+                    ANIMATIONS[clip.animIdx].frames.forEach(f => {
+                        vedFlatFrames.push({ dataUrl: f, fps });
+                    });
+                }
+            });
+        }
+
+        function vedShowFrame(fi) {
+            if (!vedFlatFrames.length) return;
+            const frame = vedFlatFrames[fi];
+            const img = new Image();
+            img.onload = () => vedVCtx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H);
+            img.src = frame.dataUrl;
+            const pct = vedFlatFrames.length > 1 ? (fi / (vedFlatFrames.length - 1)) * 100 : 100;
+            document.getElementById('ved-bar').style.width = pct + '%';
+            document.getElementById('ved-frame-label').textContent = (fi + 1) + ' / ' + vedFlatFrames.length;
+        }
+
+        function vedPlayNext() {
+            if (!vedPlaying) return;
+            vedShowFrame(vedFi);
+            const fps = vedFlatFrames[vedFi].fps;
+            vedFi = (vedFi + 1) % vedFlatFrames.length;
+            vedTimer = setTimeout(vedPlayNext, 1000 / fps);
+        }
+
+        function vedPlay() {
+            if (vedPlaying) return;
+            if (!vedTl.length) { alert('Add clips to the timeline first.'); return; }
+            vedBuildFlatFrames();
+            if (!vedFlatFrames.length) return;
+            vedPlaying = true;
+            vedFi = 0;
+            document.getElementById('ved-btn-play').disabled = true;
+            document.getElementById('ved-btn-stop').disabled = false;
+            vedPlayNext();
+        }
+
+        function vedStop() {
+            clearTimeout(vedTimer);
+            vedPlaying = false;
+            document.getElementById('ved-btn-play').disabled = false;
+            document.getElementById('ved-btn-stop').disabled = true;
+        }
+
+        function vedExport() {
+            if (!vedTl.length) { alert('Add clips to the timeline first.'); return; }
+            vedBuildFlatFrames();
+            if (!vedFlatFrames.length) return;
+            let i = 0;
+            function next() {
+                if (i >= vedFlatFrames.length) return;
+                const a = document.createElement('a');
+                a.download = 'video-frame-' + String(i + 1).padStart(4, '0') + '.png';
+                a.href = vedFlatFrames[i].dataUrl;
+                a.click();
+                i++;
+                setTimeout(next, 80);
+            }
+            next();
+        }
+
+        function initVedLibrary() {
+            const lib = document.getElementById('ved-library');
+            lib.innerHTML = '';
+
+            const edCard = buildVedLibCard('editor', null, 'Editor Work (' + edFrames.length + ' frame' + (edFrames.length !== 1 ? 's' : '') + ')', null);
+            lib.appendChild(edCard);
+
+            ANIMATIONS.forEach((anim, i) => {
+                const lbl = anim.title + ' · ' + anim.date + ' (' + anim.frames.length + ' frames)';
+                lib.appendChild(buildVedLibCard('anim', i, lbl, anim.frames[0]));
+            });
+
+            if (!ANIMATIONS.length) {
+                const note = document.createElement('span');
+                note.style.cssText = 'font-family:"Courier New",monospace;font-size:10px;color:#444;padding:8px 0;';
+                note.textContent = 'Publish animations from the Frame Editor to add them here.';
+                lib.appendChild(note);
+            }
+        }
+
+        function buildVedLibCard(type, animIdx, label, firstFrameSrc) {
+            const card = document.createElement('div');
+            card.className = 'ved-clip-card';
+
+            const thumbDiv = document.createElement('div');
+            thumbDiv.className = 'ved-clip-thumb';
+            const tc = document.createElement('canvas');
+            tc.width = 98; tc.height = 98;
+            thumbDiv.appendChild(tc);
+
+            if (type === 'editor' && edFrames.length) {
+                const tmp = document.createElement('canvas');
+                tmp.width = CANVAS_W; tmp.height = CANVAS_H;
+                saveCurrentFrame();
+                tmp.getContext('2d').putImageData(edFrames[0], 0, 0);
+                tc.getContext('2d').drawImage(tmp, 0, 0, 98, 98);
+            } else if (firstFrameSrc) {
+                const img = new Image();
+                img.onload = () => tc.getContext('2d').drawImage(img, 0, 0, 98, 98);
+                img.src = firstFrameSrc;
+            }
+
+            const nameEl = document.createElement('div');
+            nameEl.className = 'ved-clip-name';
+            nameEl.textContent = label;
+
+            const addBtn = document.createElement('button');
+            addBtn.className = 'ved-add-btn';
+            addBtn.textContent = '+ Add';
+            addBtn.addEventListener('click', () => vedAddClip(type, animIdx, label));
+
+            card.appendChild(thumbDiv);
+            card.appendChild(nameEl);
+            card.appendChild(addBtn);
+            return card;
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        //  SOUNDBOARD
+        // ════════════════════════════════════════════════════════════════════
+
+        function makeNoise(actx, dur) {
+            const n = Math.ceil(actx.sampleRate * dur);
+            const b = actx.createBuffer(1, n, actx.sampleRate);
+            const d = b.getChannelData(0);
+            for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+            const s = actx.createBufferSource();
+            s.buffer = b;
+            return s;
+        }
+
+        function bufferToWav(audioBuffer) {
+            const nc = audioBuffer.numberOfChannels;
+            const sr = audioBuffer.sampleRate;
+            const len = audioBuffer.length;
+            const bps = 2;
+            const size = 44 + len * nc * bps;
+            const buf = new ArrayBuffer(size);
+            const v = new DataView(buf);
+            function ws(o, s) { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); }
+            ws(0, 'RIFF'); v.setUint32(4, size - 8, true); ws(8, 'WAVE');
+            ws(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true);
+            v.setUint16(22, nc, true); v.setUint32(24, sr, true);
+            v.setUint32(28, sr * nc * bps, true); v.setUint16(32, nc * bps, true); v.setUint16(34, 16, true);
+            ws(36, 'data'); v.setUint32(40, len * nc * bps, true);
+            let off = 44;
+            for (let i = 0; i < len; i++) {
+                for (let c = 0; c < nc; c++) {
+                    const sample = Math.max(-1, Math.min(1, audioBuffer.getChannelData(c)[i]));
+                    v.setInt16(off, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+                    off += 2;
+                }
+            }
+            return new Blob([buf], { type: 'audio/wav' });
+        }
+
+        let sbCtx = null;
+        function getSbCtx() {
+            if (!sbCtx) sbCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (sbCtx.state === 'suspended') sbCtx.resume();
+            return sbCtx;
+        }
+
+        function playSound(s) {
+            const actx = getSbCtx();
+            s.gen(actx, actx.destination, actx.currentTime);
+            const card = document.getElementById('sb-' + s.id);
+            if (card) {
+                card.classList.add('playing');
+                setTimeout(() => card.classList.remove('playing'), s.dur * 1000);
+            }
+        }
+
+        async function downloadSound(s) {
+            const rate = 44100;
+            const offCtx = new OfflineAudioContext(1, Math.ceil((s.dur + 0.1) * rate), rate);
+            s.gen(offCtx, offCtx.destination, 0);
+            const buffer = await offCtx.startRendering();
+            const blob = bufferToWav(buffer);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = s.id + '.wav'; a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 2000);
+        }
+
+        const SOUNDS = [
+            {
+                id: 'dramatic-sting', emoji: '🎭', label: 'Dramatic Sting', dur: 2.0,
+                gen(actx, dst, t) {
+                    [130.8, 155.6, 196, 261.6].forEach(freq => {
+                        const osc = actx.createOscillator();
+                        const g = actx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.value = freq;
+                        g.gain.setValueAtTime(0, t);
+                        g.gain.linearRampToValueAtTime(0.18, t + 0.02);
+                        g.gain.exponentialRampToValueAtTime(0.0001, t + 2.0);
+                        osc.connect(g); g.connect(dst);
+                        osc.start(t); osc.stop(t + 2.0);
+                    });
+                }
+            },
+            {
+                id: 'comedy-boing', emoji: '🎪', label: 'Comedy Boing', dur: 0.9,
+                gen(actx, dst, t) {
+                    const osc = actx.createOscillator();
+                    const g = actx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(80, t);
+                    osc.frequency.exponentialRampToValueAtTime(1200, t + 0.15);
+                    osc.frequency.exponentialRampToValueAtTime(500, t + 0.9);
+                    g.gain.setValueAtTime(0.6, t);
+                    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+                    osc.connect(g); g.connect(dst);
+                    osc.start(t); osc.stop(t + 0.9);
+                }
+            },
+            {
+                id: 'record-scratch', emoji: '💿', label: 'Record Scratch', dur: 0.5,
+                gen(actx, dst, t) {
+                    const ns = makeNoise(actx, 0.5);
+                    const filt = actx.createBiquadFilter();
+                    const g = actx.createGain();
+                    filt.type = 'bandpass'; filt.Q.value = 4;
+                    filt.frequency.setValueAtTime(150, t);
+                    filt.frequency.exponentialRampToValueAtTime(3000, t + 0.1);
+                    filt.frequency.exponentialRampToValueAtTime(100, t + 0.5);
+                    g.gain.setValueAtTime(1.2, t);
+                    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+                    ns.connect(filt); filt.connect(g); g.connect(dst);
+                    ns.start(t); ns.stop(t + 0.5);
+                }
+            },
+            {
+                id: 'whoosh', emoji: '💨', label: 'Whoosh', dur: 0.6,
+                gen(actx, dst, t) {
+                    const ns = makeNoise(actx, 0.6);
+                    const filt = actx.createBiquadFilter();
+                    const g = actx.createGain();
+                    filt.type = 'bandpass'; filt.Q.value = 2;
+                    filt.frequency.setValueAtTime(200, t);
+                    filt.frequency.exponentialRampToValueAtTime(6000, t + 0.3);
+                    filt.frequency.exponentialRampToValueAtTime(200, t + 0.6);
+                    g.gain.setValueAtTime(0, t);
+                    g.gain.linearRampToValueAtTime(1.0, t + 0.05);
+                    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+                    ns.connect(filt); filt.connect(g); g.connect(dst);
+                    ns.start(t); ns.stop(t + 0.6);
+                }
+            },
+            {
+                id: 'thunder', emoji: '⛈️', label: 'Thunder Crack', dur: 2.5,
+                gen(actx, dst, t) {
+                    const ns = makeNoise(actx, 2.5);
+                    const filt = actx.createBiquadFilter();
+                    const g = actx.createGain();
+                    filt.type = 'lowpass'; filt.frequency.value = 200;
+                    g.gain.setValueAtTime(0, t);
+                    g.gain.linearRampToValueAtTime(1.2, t + 0.01);
+                    g.gain.exponentialRampToValueAtTime(0.0001, t + 2.5);
+                    ns.connect(filt); filt.connect(g); g.connect(dst);
+                    ns.start(t); ns.stop(t + 2.5);
+                }
+            },
+            {
+                id: 'applause', emoji: '👏', label: 'Audience Applause', dur: 3.0,
+                gen(actx, dst, t) {
+                    const ns = makeNoise(actx, 3.0);
+                    const filt = actx.createBiquadFilter();
+                    const g = actx.createGain();
+                    const lfo = actx.createOscillator();
+                    const lfoG = actx.createGain();
+                    filt.type = 'bandpass'; filt.frequency.value = 3000; filt.Q.value = 1.5;
+                    g.gain.setValueAtTime(0, t);
+                    g.gain.linearRampToValueAtTime(0.6, t + 0.3);
+                    g.gain.setValueAtTime(0.6, t + 2.5);
+                    g.gain.exponentialRampToValueAtTime(0.0001, t + 3.0);
+                    lfo.type = 'sine'; lfo.frequency.value = 5;
+                    lfoG.gain.value = 0.25;
+                    lfo.connect(lfoG); lfoG.connect(g.gain);
+                    ns.connect(filt); filt.connect(g); g.connect(dst);
+                    lfo.start(t); lfo.stop(t + 3.0);
+                    ns.start(t); ns.stop(t + 3.0);
+                }
+            },
+            {
+                id: 'slide-up', emoji: '📈', label: 'Slide Whistle ↑', dur: 0.9,
+                gen(actx, dst, t) {
+                    const osc = actx.createOscillator();
+                    const g = actx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(200, t);
+                    osc.frequency.exponentialRampToValueAtTime(1600, t + 0.9);
+                    g.gain.setValueAtTime(0.5, t);
+                    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+                    osc.connect(g); g.connect(dst);
+                    osc.start(t); osc.stop(t + 0.9);
+                }
+            },
+            {
+                id: 'slide-down', emoji: '📉', label: 'Slide Whistle ↓', dur: 0.9,
+                gen(actx, dst, t) {
+                    const osc = actx.createOscillator();
+                    const g = actx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1600, t);
+                    osc.frequency.exponentialRampToValueAtTime(200, t + 0.9);
+                    g.gain.setValueAtTime(0.5, t);
+                    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+                    osc.connect(g); g.connect(dst);
+                    osc.start(t); osc.stop(t + 0.9);
+                }
+            },
+            {
+                id: 'horror-sting', emoji: '😱', label: 'Horror Sting', dur: 2.5,
+                gen(actx, dst, t) {
+                    [130.8, 185.0].forEach(freq => {
+                        const osc = actx.createOscillator();
+                        const g = actx.createGain();
+                        const lfo = actx.createOscillator();
+                        const lfoG = actx.createGain();
+                        osc.type = 'sawtooth'; osc.frequency.value = freq;
+                        g.gain.setValueAtTime(0, t);
+                        g.gain.linearRampToValueAtTime(0.25, t + 0.8);
+                        g.gain.exponentialRampToValueAtTime(0.0001, t + 2.5);
+                        lfo.type = 'sine'; lfo.frequency.value = 6;
+                        lfoG.gain.value = 0.1;
+                        lfo.connect(lfoG); lfoG.connect(g.gain);
+                        osc.connect(g); g.connect(dst);
+                        lfo.start(t); lfo.stop(t + 2.5);
+                        osc.start(t); osc.stop(t + 2.5);
+                    });
+                }
+            },
+            {
+                id: 'victory', emoji: '🏆', label: 'Victory Fanfare', dur: 1.5,
+                gen(actx, dst, t) {
+                    [293.7, 370.0, 440.0, 587.3].forEach((freq, i) => {
+                        const osc = actx.createOscillator();
+                        const g = actx.createGain();
+                        osc.type = 'square'; osc.frequency.value = freq;
+                        const st = t + i * 0.3;
+                        const dur = i === 3 ? 0.6 : 0.25;
+                        g.gain.setValueAtTime(0, st);
+                        g.gain.linearRampToValueAtTime(0.2, st + 0.01);
+                        g.gain.exponentialRampToValueAtTime(0.0001, st + dur);
+                        osc.connect(g); g.connect(dst);
+                        osc.start(st); osc.stop(st + dur);
+                    });
+                }
+            },
+            {
+                id: 'typewriter', emoji: '⌨️', label: 'Typewriter Clack', dur: 0.08,
+                gen(actx, dst, t) {
+                    const ns = makeNoise(actx, 0.08);
+                    const filt = actx.createBiquadFilter();
+                    const g = actx.createGain();
+                    filt.type = 'highpass'; filt.frequency.value = 3000;
+                    g.gain.setValueAtTime(1.0, t);
+                    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+                    ns.connect(filt); filt.connect(g); g.connect(dst);
+                    ns.start(t); ns.stop(t + 0.08);
+                }
+            },
+            {
+                id: 'film-projector', emoji: '🎞️', label: 'Film Projector', dur: 3.0,
+                gen(actx, dst, t) {
+                    for (let i = 0; i < 18; i++) {
+                        const st = t + i / 6;
+                        const ns = makeNoise(actx, 0.04);
+                        const filt = actx.createBiquadFilter();
+                        const g = actx.createGain();
+                        filt.type = 'bandpass'; filt.frequency.value = 1200; filt.Q.value = 5;
+                        g.gain.setValueAtTime(0.8, st);
+                        g.gain.exponentialRampToValueAtTime(0.0001, st + 0.04);
+                        ns.connect(filt); filt.connect(g); g.connect(dst);
+                        ns.start(st); ns.stop(st + 0.04);
+                    }
+                }
+            },
+            {
+                id: 'sword-swish', emoji: '⚔️', label: 'Sword Swish', dur: 0.5,
+                gen(actx, dst, t) {
+                    const ns = makeNoise(actx, 0.5);
+                    const filt = actx.createBiquadFilter();
+                    const g = actx.createGain();
+                    filt.type = 'bandpass'; filt.Q.value = 1.5;
+                    filt.frequency.setValueAtTime(3000, t);
+                    filt.frequency.exponentialRampToValueAtTime(8000, t + 0.15);
+                    filt.frequency.exponentialRampToValueAtTime(1000, t + 0.5);
+                    g.gain.setValueAtTime(0, t);
+                    g.gain.linearRampToValueAtTime(0.8, t + 0.05);
+                    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+                    ns.connect(filt); filt.connect(g); g.connect(dst);
+                    ns.start(t); ns.stop(t + 0.5);
+                }
+            },
+            {
+                id: 'glass-break', emoji: '🪟', label: 'Glass Break', dur: 0.9,
+                gen(actx, dst, t) {
+                    const ns = makeNoise(actx, 0.2);
+                    const hpf = actx.createBiquadFilter();
+                    const ng = actx.createGain();
+                    hpf.type = 'highpass'; hpf.frequency.value = 2000;
+                    ng.gain.setValueAtTime(1.0, t);
+                    ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+                    ns.connect(hpf); hpf.connect(ng); ng.connect(dst);
+                    ns.start(t); ns.stop(t + 0.2);
+                    [1800, 2400, 3200].forEach(freq => {
+                        const osc = actx.createOscillator();
+                        const g = actx.createGain();
+                        osc.type = 'sine'; osc.frequency.value = freq;
+                        g.gain.setValueAtTime(0.15, t);
+                        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+                        osc.connect(g); g.connect(dst);
+                        osc.start(t); osc.stop(t + 0.9);
+                    });
+                }
+            },
+            {
+                id: 'door-slam', emoji: '🚪', label: 'Door Slam', dur: 0.6,
+                gen(actx, dst, t) {
+                    const ns = makeNoise(actx, 0.6);
+                    const filt = actx.createBiquadFilter();
+                    const g = actx.createGain();
+                    filt.type = 'lowpass'; filt.frequency.value = 300;
+                    g.gain.setValueAtTime(0, t);
+                    g.gain.linearRampToValueAtTime(1.5, t + 0.01);
+                    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+                    ns.connect(filt); filt.connect(g); g.connect(dst);
+                    ns.start(t); ns.stop(t + 0.6);
+                }
+            },
+            {
+                id: 'cartoon-run', emoji: '🏃', label: 'Cartoon Run', dur: 1.2,
+                gen(actx, dst, t) {
+                    [200,280,380,500,640,800,1000,800,640,500,380,280].forEach((freq, i) => {
+                        const osc = actx.createOscillator();
+                        const g = actx.createGain();
+                        osc.type = 'sine'; osc.frequency.value = freq;
+                        const st = t + i * 0.1;
+                        g.gain.setValueAtTime(0.3, st);
+                        g.gain.exponentialRampToValueAtTime(0.0001, st + 0.09);
+                        osc.connect(g); g.connect(dst);
+                        osc.start(st); osc.stop(st + 0.1);
+                    });
+                }
+            },
+        ];
+
+        function initSoundboard() {
+            const grid = document.getElementById('soundboard-grid');
+            SOUNDS.forEach(s => {
+                const card = document.createElement('div');
+                card.className = 'sb-card';
+                card.id = 'sb-' + s.id;
+
+                const emoji = document.createElement('span');
+                emoji.className = 'sb-emoji';
+                emoji.textContent = s.emoji;
+
+                const label = document.createElement('span');
+                label.className = 'sb-label';
+                label.textContent = s.label;
+
+                const dur = document.createElement('span');
+                dur.className = 'sb-dur';
+                dur.textContent = s.dur.toFixed(1) + 's';
+
+                const btns = document.createElement('div');
+                btns.className = 'sb-btns';
+
+                const playBtn = document.createElement('button');
+                playBtn.className = 'sb-btn sb-btn-play';
+                playBtn.textContent = '▶ Play';
+                playBtn.addEventListener('click', () => playSound(s));
+
+                const dlBtn = document.createElement('button');
+                dlBtn.className = 'sb-btn sb-btn-dl';
+                dlBtn.textContent = '↓ WAV';
+                dlBtn.addEventListener('click', () => downloadSound(s));
+
+                btns.appendChild(playBtn);
+                btns.appendChild(dlBtn);
+                card.appendChild(emoji);
+                card.appendChild(label);
+                card.appendChild(dur);
+                card.appendChild(btns);
+                grid.appendChild(card);
+            });
+        }
+
+        initSoundboard();
 
     </script>
 

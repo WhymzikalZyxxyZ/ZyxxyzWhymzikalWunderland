@@ -8,6 +8,8 @@
     "custom-property-empty-line-before":            null,
     "comment-empty-line-before":                    null,
     "alpha-value-notation":                         null,
-    "color-function-notation":                      null
+    "color-function-notation":                      null,
+    "selector-type-no-unknown":                     null,
+    "declaration-property-value-no-unknown":        null
   }
 }

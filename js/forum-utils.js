@@ -28,7 +28,10 @@ function escHtml(str) {
 }
 
 function fmtTime(ts) {
-    return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const d = new Date(ts);
+    const date = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+    const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date + ' · ' + time;
 }
 
 if (typeof module !== 'undefined' && module.exports) {

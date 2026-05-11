@@ -5,13 +5,12 @@ fsbody {
 h1 {
     color: blue;
     text-align: center;
-    text-decoration-line: underline;
     font-size: 69px;
     font-weight: bolder;
     font-style: oblique;
     font-palette: dark;
     font-family: 'Comic Sans MS';
-    text-decoration: blink;
+    text-decoration: underline blink;
     outline-color: aquamarine;
 }
 
@@ -45,12 +44,22 @@ banner {
 }
 
 .notYetBody {
-    background-image: url('../images/comebacklater.png'); /* Background image */
+    background-image: url('../images/comebacklater.png');
     background-size: contain;
-    background-position: center; /* Centers the background image */
-    background-repeat: no-repeat; /* Prevents the background from repeating */
-    background-attachment: scroll; /* Makes the background fixed when scrolling */
-    min-height: 100vh; /* Ensure the body takes full viewport height */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+    min-height: 100vh;
+}
+
+.wunderBody {
+    background:
+        radial-gradient(ellipse 80% 55% at 58% 32%, rgba(210, 70, 120, 0.22) 0%, transparent 62%),
+        radial-gradient(ellipse 60% 75% at 22% 72%, rgba(110, 35, 155, 0.18) 0%, transparent 58%),
+        radial-gradient(ellipse 90% 50% at 82% 78%, rgba(185, 95, 30, 0.12) 0%, transparent 52%),
+        linear-gradient(155deg, #0e0818 0%, #160c28 38%, #0c1018 68%, #09080e 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
 }
 
 .banner {
@@ -80,30 +89,7 @@ button:hover {
     background-color: #e76f51; /* Darker shade on hover */
 }
 
-.indexNavbar {
-    width: 100%;
-    background-color: rgba(69, 69, 69, 0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 12px 0;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
-
-.indexNavbar a {
-        color: azure;
-        text-decoration: none;
-        margin: 0 20px;
-        padding: 8px 16px;
-        border-radius: 6px;
-        transition: background-color 0.3s;
-}
-
-.indexNavbar a:hover {
-        background-color: rgba(255, 255, 255, 0.2);
-    }
+/* .indexNavbar replaced by unified .navbar — see below */
 
 .content-row {
     margin-bottom: 20px; /* Adds space between rows */
@@ -111,29 +97,219 @@ button:hover {
     z-index: 1;
 }
 
-/* Navigation bar style */
-.navbar-container {
-    position: relative; /* Keep navbar in normal document flow */
-    z-index: 1; /* Ensures navbar stays above the background */
-    background-color: rgba(69, 69, 69, 0.8); /* Optional: Adds background for readability */
-    padding: 10px 0; /* Adds some space around the navbar */
-}
-
+/* ── Navigation ─────────────────────────────────────────────────────────── */
 .navbar {
-    text-align: center;
+    width: 100%;
+    background-color: rgba(14, 8, 24, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 1px solid rgba(244, 162, 97, 0.2);
 }
 
-.navbar a {
-    margin: 0 15px; /* Adds space between navbar items */
-    text-decoration: none; /* Removes underline */
-    color: #80289d;
-    font-size: 18px;
-    font-family: Papyrus;
-    transition: background-color 0.3s;
+.nav-links {
+    display: flex;
+    align-items: stretch;
 }
 
-.navbar a:hover {
-    color: #007bff; /* Color change on hover */
+.nav-link {
+    display: flex;
+    align-items: center;
+    padding: 15px 18px;
+    color: #c8b0d8;
+    text-decoration: none;
+    font-family: Papyrus, fantasy;
+    font-size: 15px;
+    white-space: nowrap;
+    transition: color 0.2s ease, background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.nav-link:hover,
+.nav-dropdown:hover > .nav-link {
+    color: #f4a261;
+    background-color: rgba(244, 162, 97, 0.08);
+}
+
+.nav-active > .nav-link,
+a.nav-link.nav-active {
+    color: #f4a261;
+}
+
+.nav-dropdown-toggle::after {
+    content: ' ▾';
+    font-size: 0.7em;
+    opacity: 0.65;
+}
+
+.nav-dropdown {
+    position: relative;
+}
+
+.nav-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 1px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-6px);
+    background-color: rgba(12, 7, 22, 0.97);
+    border: 1px solid rgba(244, 162, 97, 0.18);
+    border-radius: 10px;
+    padding: 6px 0;
+    min-width: 180px;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s;
+    z-index: 1010;
+}
+
+.nav-dropdown:hover .nav-dropdown-menu,
+.nav-dropdown:focus-within .nav-dropdown-menu {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.nav-dropdown-menu a {
+    display: block;
+    padding: 9px 20px;
+    color: #a898b8;
+    text-decoration: none;
+    font-family: Papyrus, fantasy;
+    font-size: 13px;
+    white-space: nowrap;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.nav-dropdown-menu a:hover,
+.nav-dropdown-menu a.nav-active {
+    color: #f4a261;
+    background-color: rgba(244, 162, 97, 0.08);
+}
+
+.nav-dropdown-menu--wide {
+    min-width: 300px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 6px;
+}
+
+.nav-dropdown-menu--wide a {
+    border-radius: 6px;
+}
+
+/* Mobile hamburger */
+.nav-burger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+    margin: 0 8px 0 auto;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+.nav-burger:hover {
+    background: rgba(244, 162, 97, 0.1);
+    border-radius: 6px;
+}
+
+.nav-burger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: #c8b0d8;
+    border-radius: 2px;
+    margin: 0 auto;
+    transition: transform 0.22s ease, opacity 0.22s ease;
+}
+
+.navbar.nav-open .nav-burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.navbar.nav-open .nav-burger span:nth-child(2) { opacity: 0; }
+.navbar.nav-open .nav-burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+@media (width <= 768px) {
+    .navbar {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+    }
+
+    .nav-burger {
+        display: flex;
+        margin: 6px 10px 6px auto;
+    }
+
+    .nav-links {
+        display: none;
+        flex-direction: column;
+        border-top: 1px solid rgba(244, 162, 97, 0.15);
+        padding-bottom: 8px;
+    }
+
+    .navbar.nav-open .nav-links {
+        display: flex;
+    }
+
+    .nav-link {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+
+    .nav-item.nav-dropdown {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .nav-dropdown-menu {
+        position: static;
+        transform: none;
+        visibility: visible;
+        opacity: 1;
+        pointer-events: auto;
+        transition: none;
+        background: rgba(255, 255, 255, 0.03);
+        border: none;
+        border-left: 2px solid rgba(244, 162, 97, 0.2);
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0 0 4px;
+        min-width: unset;
+    }
+
+    .nav-dropdown-menu--wide {
+        display: flex;
+        flex-direction: column;
+        grid-template-columns: none;
+    }
+
+    .nav-dropdown-menu a {
+        padding: 8px 28px;
+        font-size: 13px;
+    }
+
+    .nav-dropdown-toggle::after {
+        content: '';
+    }
+}
+
+/* ── Page transitions ───────────────────────────────────────────────────── */
+body.page-fade-out {
+    opacity: 0 !important;
+    transition: opacity 0.2s ease !important;
+    pointer-events: none;
 }
 
 .hero {

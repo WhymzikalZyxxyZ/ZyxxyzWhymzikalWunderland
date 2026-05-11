@@ -1,33 +1,861 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>About ZYXXYZ's Whymzykal Wunderland!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
+    <style>
+    #sw-page { max-width:1100px; margin:0 auto; padding:0 14px 80px; }
+
+    .main-tabs { display:flex; gap:0; margin-bottom:18px; border-bottom:2px solid #2a2a2a; }
+    .main-tab {
+        padding:10px 28px; font-family:'Courier New',monospace; font-size:11px;
+        letter-spacing:2px; text-transform:uppercase; color:#666; cursor:pointer;
+        border-bottom:2px solid transparent; margin-bottom:-2px; user-select:none;
+    }
+    .main-tab.active { color:#f4a261; border-bottom-color:#f4a261; }
+
+    .panel { background:rgba(0,0,0,0.75); border:1px solid #2a2a2a; border-radius:12px; padding:18px; margin-bottom:16px; }
+    .panel-title { font-family:'Courier New',monospace; font-size:11px; letter-spacing:3px;
+        text-transform:uppercase; color:#f4a261; border-bottom:1px solid #2a2a2a; padding-bottom:8px; margin:0 0 14px; }
+
+    /* ── Learn ── */
+    .learn-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media(max-width:640px){ .learn-grid{ grid-template-columns:1fr; } }
+    .learn-card { background:rgba(255,255,255,0.03); border:1px solid #2a2a2a; border-radius:8px; padding:14px; }
+    .learn-card-title { font-family:'Courier New',monospace; font-size:11px; letter-spacing:2px;
+        color:#f4a261; text-transform:uppercase; cursor:pointer;
+        display:flex; justify-content:space-between; align-items:center; }
+    .learn-card-body { display:none; font-family:'Courier New',monospace; font-size:12px;
+        color:#aaa; line-height:1.7; margin-top:10px; }
+    .learn-card-body.open { display:block; }
+    .learn-card-body ul { margin:6px 0 10px; padding-left:18px; }
+    .learn-card-body li { margin-bottom:4px; }
+    .learn-card-body p { margin:0 0 8px; }
+    .spec-tag { display:inline-block; background:rgba(244,162,97,0.1);
+        color:#f4a261; border-radius:3px; padding:1px 7px; font-size:10px; margin:2px; }
+    .term { color:#f4a261; text-decoration:underline dotted; cursor:help; position:relative; display:inline-block; }
+    .term::after { content:attr(data-def); position:absolute; bottom:calc(100% + 6px); left:50%;
+        transform:translateX(-50%); background:#0d1117; color:#ccc; padding:8px 12px;
+        border-radius:6px; border:1px solid #f4a261; font-size:11px; line-height:1.5;
+        width:260px; white-space:normal; display:none; z-index:200;
+        font-family:'Courier New',monospace; pointer-events:none; box-shadow:0 4px 16px rgba(0,0,0,0.7); }
+    .term:hover::after { display:block; }
+
+    /* ── IDE toolbar ── */
+    .ide-toolbar { display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;
+        margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #2a2a2a; }
+    .tb-group { display:flex; flex-direction:column; gap:3px; }
+    .tb-label { font-family:'Courier New',monospace; font-size:9px; letter-spacing:2px;
+        color:#444; text-transform:uppercase; }
+    .ide-select { background:rgba(255,255,255,0.07); border:1px solid #333; border-radius:5px;
+        color:#ccc; font-family:'Courier New',monospace; font-size:12px;
+        padding:7px 10px; cursor:pointer; outline:none; }
+    .ide-select:focus { border-color:#f4a261; }
+    .ide-select option { background:#111; }
+    .ide-btn { background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15);
+        color:#bbb; border-radius:5px; padding:7px 14px;
+        font-family:'Courier New',monospace; font-size:11px; cursor:pointer;
+        transition:border-color 0.13s, color 0.13s; white-space:nowrap; align-self:flex-end; }
+    .ide-btn:hover { border-color:#f4a261; color:#fff; }
+    .ide-btn.run { background:#f4a261; border-color:#f4a261; color:#111; font-weight:bold; }
+    .ide-btn.run:hover { background:#e76f51; border-color:#e76f51; color:#fff; }
+    .tb-sep { width:1px; height:40px; background:#2a2a2a; align-self:flex-end; }
+
+    /* ── IDE layout ── */
+    .ide-layout { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media(max-width:700px){ .ide-layout{ grid-template-columns:1fr; } }
+    .editor-wrap, .output-wrap { display:flex; flex-direction:column; gap:5px; }
+    .editor-col-label { font-family:'Courier New',monospace; font-size:9px; letter-spacing:2px;
+        color:#444; text-transform:uppercase; }
+
+    #code-editor {
+        flex:1; width:100%; box-sizing:border-box;
+        background:#06060f; border:1px solid #2a2a2a; border-radius:7px;
+        color:#e8e8ff; font-family:'Courier New',monospace; font-size:13px;
+        line-height:1.6; padding:14px; resize:vertical; min-height:360px;
+        outline:none; tab-size:4; white-space:pre; overflow-wrap:normal; overflow-x:auto;
+        scrollbar-width:thin; scrollbar-color:#333 transparent; transition:border-color 0.15s;
+    }
+    #code-editor:focus { border-color:#f4a261; }
+
+    #output-panel {
+        flex:1; background:#030d03; border:1px solid #1a2a1a; border-radius:7px;
+        padding:14px; font-family:'Courier New',monospace; font-size:12px;
+        line-height:1.6; min-height:360px; overflow-y:auto;
+        scrollbar-width:thin; scrollbar-color:#333 transparent; white-space:pre-wrap; word-break:break-word;
+    }
+    .out-line  { color:#4caf50; }
+    .out-error { color:#e74c3c; }
+    .out-warn  { color:#f4a261; }
+    .out-meta  { color:#555; font-style:italic; }
+
+    #html-preview-wrap { display:none; flex:1; border:1px solid #2a2a2a;
+        border-radius:7px; overflow:hidden; min-height:360px; }
+    #html-preview-wrap.show { display:block; }
+    #html-preview { width:100%; height:100%; min-height:360px; background:#fff; border:none; display:block; }
+    </style>
 </head>
-<body class="notYetBody">
+<body class="wunderBody">
 
     <h2>Zyxxyz writes software sometimes</h2>
-    <br />
-
-    <!-- Navigation Bar -->
     <div class="navbar">
-        <a href="../../index.html">Home</a>
-        <a href="../../technologist/apps.html">Apps</a>
-        <a href="../../technologist/bioseufi.html">BIOS/UEFI</a>
-        <a href="../../technologist/computerengineering.html">Computer Engineering</a>
-        <a href="../../technologist/software.html">Software</a>
-        <a href="../../technologist/systemoperator.html">System Operator</a>
+        <a href="../index.html">Home</a>
+        <a href="../technologist/apps.html">Apps</a>
+        <a href="../technologist/biosuefi.html">BIOS/UEFI</a>
+        <a href="../technologist/computerengineering.html">Computer Engineering</a>
+        <a href="../technologist/computervision.html">Computer Vision</a>
+        <a href="../technologist/software.html">Software</a>
+        <a href="../technologist/systemoperator.html">System Operator</a>
     </div>
 
-    <!-- Removed the <img> tag here as it's no longer needed -->
-    <div class="banner"></div> <!-- Placeholder for your logo as background -->
+    <div id="sw-page">
+        <div class="main-tabs">
+            <div class="main-tab active" id="tab-learn" onclick="switchTab('learn')">Learning Center</div>
+            <div class="main-tab"        id="tab-ide"   onclick="switchTab('ide')">Practice IDE</div>
+        </div>
 
-    <br>
-    <p id="demo">ZYXXYZ</p>
+        <!-- ═══ LEARN TAB ═══ -->
+        <div id="tab-learn-content">
+            <div class="panel">
+                <div class="panel-title">Software Engineering Concepts</div>
+                <p style="font-family:'Courier New',monospace;font-size:12px;color:#666;margin:0 0 14px;line-height:1.7;">
+                    Click any topic to expand it. Hover <span class="term" data-def="Highlighted terms show a definition on hover.">orange terms</span> for quick definitions.
+                </p>
+                <div class="learn-grid" id="learn-grid"></div>
+            </div>
+        </div>
 
-    <button type="button" onclick="navigateToPage('../../index.html')">E.T. Phone Home!</button>
+        <!-- ═══ IDE TAB ═══ -->
+        <div id="tab-ide-content" style="display:none;">
+            <div class="panel">
+                <div class="panel-title">Practice IDE</div>
+                <div class="ide-toolbar">
+                    <div class="tb-group">
+                        <span class="tb-label">Language</span>
+                        <select class="ide-select" id="lang-select" onchange="onLangChange()">
+                            <option value="js">JavaScript</option>
+                            <option value="html">HTML / CSS</option>
+                            <option value="python">Python</option>
+                            <option value="sql">SQL</option>
+                        </select>
+                    </div>
+                    <div class="tb-sep"></div>
+                    <div class="tb-group">
+                        <span class="tb-label">Template / Challenge</span>
+                        <select class="ide-select" id="challenge-select" onchange="loadChallenge()"></select>
+                    </div>
+                    <div class="tb-sep"></div>
+                    <button class="ide-btn run" onclick="runCode()">&#9654; Run</button>
+                    <button class="ide-btn" onclick="clearOutput()">&#10005; Clear</button>
+                    <button class="ide-btn" onclick="copyCode(this)">&#8685; Copy</button>
+                </div>
 
+                <div class="ide-layout">
+                    <div class="editor-wrap">
+                        <div class="editor-col-label">Editor</div>
+                        <textarea id="code-editor" spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
+                    </div>
+                    <div class="output-wrap">
+                        <div class="editor-col-label" id="output-label">Output</div>
+                        <div id="output-panel"><span class="out-meta">// Run your code to see output here.</span></div>
+                        <div id="html-preview-wrap"><iframe id="html-preview" sandbox="allow-scripts"></iframe></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" onclick="navigateToPage('../index.html')">E.T. Phone Home!</button>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════════════════════════════════
+function switchTab(t) {
+    ['learn','ide'].forEach(id => {
+        document.getElementById('tab-'+id).classList.toggle('active', id===t);
+        document.getElementById('tab-'+id+'-content').style.display = id===t ? '' : 'none';
+    });
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// LEARNING CENTER
+// ════════════════════════════════════════════════════════════════════════
+const TOPICS = [
+  { title:'Programming Paradigms', body:`
+    <p>A <span class="term" data-def="A fundamental style or approach to building programs — it shapes how you structure and think about code.">paradigm</span> is a style of programming.</p>
+    <ul>
+      <li><strong>Procedural</strong> — step-by-step instructions in sequence. C is the archetype.</li>
+      <li><strong><span class="term" data-def="Organises code as objects that bundle data (fields) and behaviour (methods). Core pillars: encapsulation, inheritance, polymorphism, abstraction.">Object-Oriented (OOP)</span></strong> — model the world as interacting objects. Java, Python, C#.</li>
+      <li><strong><span class="term" data-def="Treats computation as evaluating pure mathematical functions. No shared state, no side-effects. Haskell, Clojure, Elixir, and also supported in JS/Python.">Functional</span></strong> — pure functions, immutable data, no side-effects.</li>
+      <li><strong>Declarative</strong> — describe <em>what</em> you want, not <em>how</em>. SQL and HTML are declarative.</li>
+      <li><strong>Event-driven</strong> — program flow determined by events (clicks, messages). UI and server frameworks.</li>
+    </ul>
+    <p>Most modern languages are <em>multi-paradigm</em> — mix styles as the problem demands.</p>
+  `},
+  { title:'Algorithms & Big O', body:`
+    <p><span class="term" data-def="Big O notation describes how an algorithm's time or space requirements grow as input size n increases. O(1) is constant, O(n) is linear, O(n²) is quadratic.">Big O notation</span> measures how performance scales with input size.</p>
+    <ul>
+      <li><span class="spec-tag">O(1)</span> Constant — array index, hash map lookup.</li>
+      <li><span class="spec-tag">O(log n)</span> Logarithmic — binary search, balanced BST operations.</li>
+      <li><span class="spec-tag">O(n)</span> Linear — single loop, linear search.</li>
+      <li><span class="spec-tag">O(n log n)</span> Quasilinear — merge sort, quicksort (avg).</li>
+      <li><span class="spec-tag">O(n²)</span> Quadratic — bubble sort, nested loops over n elements.</li>
+      <li><span class="spec-tag">O(2ⁿ)</span> Exponential — brute-force subset enumeration.</li>
+    </ul>
+    <p>Algorithm families: <strong>sorting</strong> (merge, quick, heap), <strong>searching</strong> (binary, BFS, DFS), <strong>dynamic programming</strong> (memoisation), <strong>greedy</strong> (locally optimal step).</p>
+  `},
+  { title:'Data Structures', body:`
+    <p>Choosing the right structure is often more impactful than optimising the algorithm.</p>
+    <ul>
+      <li><strong>Array / List</strong> — O(1) index access, O(n) mid-insert.</li>
+      <li><strong><span class="term" data-def="Each node holds data and a pointer to the next node. O(1) head insert, O(n) random access. Doubly-linked lists have a back-pointer too.">Linked List</span></strong> — Efficient head/tail insert, poor random access.</li>
+      <li><strong>Stack</strong> — LIFO. push/pop O(1). Undo history, recursion, parsing.</li>
+      <li><strong>Queue</strong> — FIFO. enqueue/dequeue O(1). Scheduling, BFS traversal.</li>
+      <li><strong><span class="term" data-def="Maps keys to values using a hash function. Average O(1) get/set. Collisions handled by chaining or open addressing.">Hash Map</span></strong> — Key-value store, near-O(1) all operations.</li>
+      <li><strong><span class="term" data-def="Hierarchical nodes. Binary Search Trees: O(log n) when balanced. AVL and Red-Black trees self-balance. Tries are prefix trees for strings.">Tree</span></strong> — BST, AVL, Red-Black, Trie, Heap.</li>
+      <li><strong>Graph</strong> — Nodes + edges. Directed/undirected, weighted/unweighted. BFS/DFS for traversal.</li>
+    </ul>
+  `},
+  { title:'Design Patterns', body:`
+    <p><span class="term" data-def="Reusable solutions to commonly recurring software design problems. Popularised by the Gang of Four book (1994). Three families: Creational, Structural, Behavioural.">Design patterns</span> are proven templates for common problems.</p>
+    <ul>
+      <li><strong>Singleton</strong> — Only one instance of a class exists app-wide. e.g. config, logger.</li>
+      <li><strong>Factory</strong> — Delegate object creation instead of calling <code>new</code> directly.</li>
+      <li><strong>Observer</strong> — Objects subscribe to events from a subject. Foundation of reactive/event-driven UIs.</li>
+      <li><strong>Strategy</strong> — Encapsulate a family of interchangeable algorithms.</li>
+      <li><strong>Decorator</strong> — Attach behaviour to objects dynamically without subclassing.</li>
+      <li><strong>Repository</strong> — Abstracts data-access logic behind a clean interface.</li>
+      <li><strong>MVC / MVVM</strong> — Separate Model (data), View (UI), and Controller/ViewModel (logic).</li>
+    </ul>
+  `},
+  { title:'Git & Version Control', body:`
+    <p><span class="term" data-def="A distributed version control system. Every developer has a full copy of the repository and its history. Created by Linus Torvalds in 2005.">Git</span> is the standard tool for tracking code changes.</p>
+    <ul>
+      <li><code>git init</code> / <code>clone</code> — create or copy a repo.</li>
+      <li><code>git add</code> / <code>commit</code> — stage changes and record a snapshot.</li>
+      <li><code>git branch</code> / <code>checkout -b</code> — create and switch branches.</li>
+      <li><code>git merge</code> / <code>rebase</code> — combine histories. Rebase replays commits for a cleaner log.</li>
+      <li><code>git pull</code> / <code>push</code> — sync with a remote (GitHub, GitLab, etc.).</li>
+      <li><strong>Branching strategies:</strong> <span class="term" data-def="Feature branches, main, develop — all features merged via pull request. Good for release-based workflows.">Git Flow</span>, trunk-based development, GitHub Flow.</li>
+      <li><strong>Conventional Commits</strong> — <code>feat:</code>, <code>fix:</code>, <code>chore:</code> prefixes make history scannable and enable changelogs.</li>
+    </ul>
+  `},
+  { title:'Web & APIs', body:`
+    <p>The web is built on <span class="term" data-def="HyperText Transfer Protocol. Stateless request/response protocol. HTTP/1.1 uses persistent connections; HTTP/2 multiplexes requests; HTTP/3 runs over QUIC (UDP).">HTTP</span> — a stateless request/response protocol.</p>
+    <ul>
+      <li><strong>REST</strong> — HTTP verbs (GET/POST/PUT/DELETE) on resource URLs. Stateless, cacheable, widely understood.</li>
+      <li><strong>GraphQL</strong> — Client specifies exactly the fields it needs. Single endpoint, reduces over-fetching.</li>
+      <li><strong>WebSockets</strong> — Persistent bidirectional connection. Real-time chat, dashboards, multiplayer.</li>
+      <li><strong><span class="term" data-def="Cross-Origin Resource Sharing. Browser security policy restricting which origins a page may request. Server opts-in via Access-Control-Allow-Origin headers.">CORS</span></strong> — Server must send headers to allow cross-origin requests.</li>
+      <li><strong>Auth</strong> — <span class="term" data-def="JSON Web Token. Signed, compact token encoding claims (user id, roles). Verified without a DB lookup using the server's secret key.">JWT</span>, OAuth 2.0, API keys, cookie sessions.</li>
+      <li><strong>Status codes</strong> — 2xx success, 3xx redirect, 4xx client error, 5xx server error.</li>
+    </ul>
+  `},
+  { title:'Databases', body:`
+    <p>Two major camps: <strong>relational (SQL)</strong> and <strong>non-relational (NoSQL)</strong>.</p>
+    <ul>
+      <li><strong>Relational</strong> — tables with schemas, joins for relations. PostgreSQL, MySQL, SQLite.</li>
+      <li><strong>Document</strong> — JSON-like documents, flexible schema. MongoDB, Firestore.</li>
+      <li><strong>Key-Value</strong> — ultra-fast lookups, simple structure. Redis, DynamoDB.</li>
+      <li><strong>Column-family</strong> — wide, sparse data at scale. Cassandra, HBase.</li>
+    </ul>
+    <p><span class="term" data-def="Atomicity, Consistency, Isolation, Durability — the four guarantees of a reliable relational database transaction.">ACID</span> guarantees transactional reliability. <span class="term" data-def="Basically Available, Soft-state, Eventually consistent — the NoSQL trade-off: sacrifice strict consistency for availability and partition tolerance.">BASE</span> is the NoSQL trade-off.</p>
+    <p><strong>Normalisation</strong> eliminates redundancy (1NF → 2NF → 3NF). <strong>Indexing</strong> speeds reads (B-tree) at the cost of write overhead. <strong>N+1 problem</strong> — fetching N items then querying each individually: use JOINs or eager loading.</p>
+  `},
+  { title:'Testing', body:`
+    <p>Automated tests catch regressions early and document expected behaviour.</p>
+    <ul>
+      <li><strong>Unit tests</strong> — test one function/class in isolation. Fast, cheap, many of them. (Jest, pytest, JUnit)</li>
+      <li><strong>Integration tests</strong> — test multiple components together. Slower, catch contract bugs.</li>
+      <li><strong>End-to-end (E2E)</strong> — drive a real browser through user flows. (Playwright, Cypress) Slowest but highest confidence.</li>
+      <li><strong><span class="term" data-def="Test-Driven Development: write a failing test first, then write the minimum code to pass it, then refactor. Red → Green → Refactor cycle.">TDD</span></strong> — write the test before the code. Forces clear specification.</li>
+      <li><strong>Code coverage</strong> — % of lines/branches exercised by tests. 80%+ is a reasonable target; 100% can indicate over-testing.</li>
+      <li><strong>Mocking</strong> — replace real dependencies (DB, network) with fakes in unit tests for speed and isolation.</li>
+    </ul>
+  `},
+  { title:'Security Basics', body:`
+    <p>Security must be designed in — it cannot be bolted on afterwards.</p>
+    <ul>
+      <li><strong><span class="term" data-def="Attacker injects SQL into user input to read or modify the database. Prevent with parameterised queries / prepared statements — never string-concatenate user input into SQL.">SQL Injection</span></strong> — always use parameterised queries.</li>
+      <li><strong><span class="term" data-def="Cross-Site Scripting: injecting malicious scripts into pages viewed by other users. Prevent by HTML-escaping user content before rendering and using Content-Security-Policy headers.">XSS</span></strong> — escape output; set Content-Security-Policy headers.</li>
+      <li><strong>CSRF</strong> — Cross-Site Request Forgery. Mitigate with CSRF tokens or SameSite=Strict cookies.</li>
+      <li><strong>Password hashing</strong> — bcrypt, Argon2, or scrypt. Never MD5/SHA1 for passwords.</li>
+      <li><strong><span class="term" data-def="Principle of Least Privilege: every user and process gets only the minimum permissions necessary. Limits blast radius when something is compromised.">Least Privilege</span></strong> — grant only permissions actually needed.</li>
+      <li><strong>HTTPS / TLS</strong> — encrypt all traffic. Use HSTS to prevent downgrade attacks.</li>
+      <li><strong>OWASP Top 10</strong> — the industry's canonical list of the ten most critical web security risks. Required reading.</li>
+    </ul>
+  `},
+  { title:'Memory & Runtime', body:`
+    <p>Understanding how code runs helps write faster and safer programs.</p>
+    <ul>
+      <li><strong>Stack vs Heap</strong> — the <span class="term" data-def="LIFO memory for function calls and local variables. Automatically managed and very fast, but limited in size. Stack overflow = too many nested calls.">call stack</span> holds frames and locals; the heap holds dynamically allocated objects.</li>
+      <li><strong>Garbage Collection</strong> — automatic memory reclamation (Java, Python, JS, Go). Traces live objects, frees the rest. Trade-off: GC pauses.</li>
+      <li><strong>Manual memory</strong> — C/C++ require explicit malloc/free. Rust uses ownership and borrow-checking for compile-time safety with zero GC.</li>
+      <li><strong><span class="term" data-def="JavaScript's concurrency model: a single thread processes tasks from a queue one at a time. Async callbacks, Promises, and async/await are all built on this. Long synchronous code blocks the loop.">Event Loop</span></strong> — JS is single-threaded; async I/O keeps it non-blocking.</li>
+      <li><strong>Threads vs async</strong> — threads for CPU-bound parallel work; async I/O for I/O-bound work on one thread.</li>
+      <li><strong>Caching</strong> — store expensive results. Levels: CPU cache → in-process → Redis → CDN. Always plan cache invalidation.</li>
+    </ul>
+  `},
+  { title:'Software Dev Lifecycle', body:`
+    <p>How a feature travels from idea to production.</p>
+    <ul>
+      <li><strong><span class="term" data-def="Iterative development in short cycles (sprints, typically 2 weeks). Prioritises working software, customer collaboration, and adapting to change over following a plan.">Agile / Scrum</span></strong> — sprints, standups, retrospectives. Most common in product teams.</li>
+      <li><strong>Waterfall</strong> — sequential phases: requirements → design → build → test → deploy. Still used in regulated industries.</li>
+      <li><strong><span class="term" data-def="Continuous Integration / Continuous Delivery. CI: automated tests run on every commit. CD: passing builds automatically deploy to staging or production.">CI/CD</span></strong> — automated test and deploy pipelines. Catches regressions within minutes.</li>
+      <li><strong>Code Review</strong> — pull requests reviewed by peers. Spreads knowledge and catches bugs before merge.</li>
+      <li><strong>Testing pyramid</strong> — many unit, fewer integration, few E2E. Fast and cheap at the base.</li>
+      <li><strong>Observability</strong> — logs, metrics, traces. Can you answer "why is it slow?" in production?</li>
+    </ul>
+  `},
+];
+
+function buildLearnGrid() {
+    const grid = document.getElementById('learn-grid');
+    TOPICS.forEach((t, i) => {
+        const bodyId = 'lc-body-' + i;
+        const card   = document.createElement('div');
+        card.className = 'learn-card';
+        card.innerHTML =
+            '<div class="learn-card-title" onclick="toggleCard(\'' + bodyId + '\',this)">' +
+                '<span>' + t.title + '</span><span>&#9658;</span>' +
+            '</div>' +
+            '<div class="learn-card-body" id="' + bodyId + '">' + t.body + '</div>';
+        grid.appendChild(card);
+    });
+}
+
+function toggleCard(id, titleEl) {
+    const open  = document.getElementById(id).classList.toggle('open');
+    const arrow = titleEl.querySelector('span:last-child');
+    if (arrow) arrow.innerHTML = open ? '&#9660;' : '&#9658;';
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// IDE — CHALLENGES DATABASE
+// ════════════════════════════════════════════════════════════════════════
+const CHALLENGES = {
+  js: [
+    { label:'— select template —', code:'' },
+    { label:'Hello World', code:
+`// JavaScript Hello World
+console.log("Hello, Wunderland! ✨");
+console.log("2 + 2 =", 2 + 2);
+console.log("Today:", new Date().toDateString());` },
+    { label:'FizzBuzz', code:
+`// FizzBuzz 1-30
+for (let i = 1; i <= 30; i++) {
+    if      (i % 15 === 0) console.log("FizzBuzz");
+    else if (i % 3  === 0) console.log("Fizz");
+    else if (i % 5  === 0) console.log("Buzz");
+    else                   console.log(i);
+}` },
+    { label:'Fibonacci', code:
+`function fibonacci(n) {
+    const seq = [0, 1];
+    for (let i = 2; i < n; i++) seq.push(seq[i-1] + seq[i-2]);
+    return seq.slice(0, n);
+}
+console.log(fibonacci(15).join(", "));` },
+    { label:'Reverse String', code:
+`function reverseString(s) {
+    let out = "";
+    for (let i = s.length - 1; i >= 0; i--) out += s[i];
+    return out;
+}
+console.log(reverseString("Whymzykal Wunderland"));
+console.log(reverseString("racecar"));` },
+    { label:'Palindrome Check', code:
+`function isPalindrome(s) {
+    const c = s.toLowerCase().replace(/[^a-z0-9]/g, "");
+    return c === c.split("").reverse().join("");
+}
+["racecar","hello","A man a plan a canal Panama","level"]
+    .forEach(w => console.log(\`"\${w}" → \${isPalindrome(w) ? "✓ palindrome" : "✗ not"}\`));` },
+    { label:'Bubble Sort', code:
+`function bubbleSort(arr) {
+    const a = [...arr];
+    for (let i = 0; i < a.length - 1; i++)
+        for (let j = 0; j < a.length - i - 1; j++)
+            if (a[j] > a[j+1]) [a[j], a[j+1]] = [a[j+1], a[j]];
+    return a;
+}
+const nums = [64, 34, 25, 12, 22, 11, 90];
+console.log("Before:", nums.join(", "));
+console.log("After: ", bubbleSort(nums).join(", "));` },
+    { label:'Binary Search', code:
+`function binarySearch(arr, target) {
+    let lo = 0, hi = arr.length - 1;
+    while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if      (arr[mid] === target) return mid;
+        else if (arr[mid] <  target)  lo = mid + 1;
+        else                          hi = mid - 1;
+    }
+    return -1;
+}
+const sorted = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91];
+console.log("Array:", sorted.join(", "));
+console.log("Search 23 → index", binarySearch(sorted, 23));
+console.log("Search 99 → index", binarySearch(sorted, 99));` },
+    { label:'Linked List', code:
+`class Node { constructor(v) { this.v = v; this.next = null; } }
+class LinkedList {
+    constructor() { this.head = null; }
+    push(v) {
+        const n = new Node(v);
+        if (!this.head) { this.head = n; return; }
+        let c = this.head; while (c.next) c = c.next; c.next = n;
+    }
+    toArray() {
+        const out = []; let c = this.head;
+        while (c) { out.push(c.v); c = c.next; }
+        return out;
+    }
+}
+const list = new LinkedList();
+[10, 20, 30, 40, 50].forEach(v => list.push(v));
+console.log(list.toArray().join(" → "));` },
+    { label:'Memoised Fibonacci', code:
+`// Dynamic programming with memoisation
+function memoFib(n, memo = {}) {
+    if (n <= 1)    return n;
+    if (memo[n])   return memo[n];
+    memo[n] = memoFib(n-1, memo) + memoFib(n-2, memo);
+    return memo[n];
+}
+// Compare: fib(40) is instant with memo
+console.log("fib(40) =", memoFib(40));
+console.log("fib(50) =", memoFib(50));` },
+    { label:'Blank', code:'// Write your JavaScript here\n' },
+  ],
+  html: [
+    { label:'— select template —', code:'' },
+    { label:'Hello World', code:
+`<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family:sans-serif; background:#111; color:#f4a261; padding:24px; }
+    h1   { font-size:2em; margin-bottom:8px; }
+    p    { color:#aaa; }
+  </style>
+</head>
+<body>
+  <h1>Hello, Wunderland! ✨</h1>
+  <p>This preview renders live HTML &amp; CSS.</p>
 </body>
-</html> 
+</html>` },
+    { label:'Card Component', code:
+`<!DOCTYPE html>
+<html><head><style>
+  body { background:#111; display:flex; justify-content:center; padding:30px; font-family:sans-serif; }
+  .card { background:#1a1a1a; border:2px solid #f4a261; border-radius:12px;
+          padding:24px; max-width:280px; color:#fff; }
+  .card h2 { color:#f4a261; margin:0 0 8px; }
+  .card p  { color:#aaa; font-size:14px; line-height:1.6; margin:0 0 14px; }
+  .btn { background:#f4a261; border:none; border-radius:6px;
+         padding:8px 18px; font-weight:bold; cursor:pointer; }
+  .btn:hover { background:#e76f51; color:#fff; }
+</style></head>
+<body>
+  <div class="card">
+    <h2>✨ Magic Card</h2>
+    <p>A reusable card component styled with pure CSS.</p>
+    <button class="btn" onclick="this.textContent='Clicked! 🎉'">Click Me</button>
+  </div>
+</body></html>` },
+    { label:'CSS Animation', code:
+`<!DOCTYPE html>
+<html><head><style>
+  body { background:#111; display:flex; justify-content:center;
+         align-items:center; height:100vh; margin:0; gap:24px; }
+  .orb { width:60px; height:60px; border-radius:50%;
+         animation:bounce 1s ease-in-out infinite alternate; }
+  .orb:nth-child(1) { background:#f4a261; animation-delay:0s; }
+  .orb:nth-child(2) { background:#4caf50; animation-delay:0.2s; }
+  .orb:nth-child(3) { background:#42a5f5; animation-delay:0.4s; }
+  @keyframes bounce { from { transform:translateY(0); } to { transform:translateY(-40px); } }
+</style></head>
+<body>
+  <div class="orb"></div>
+  <div class="orb"></div>
+  <div class="orb"></div>
+</body></html>` },
+    { label:'Flexbox Layout', code:
+`<!DOCTYPE html>
+<html><head><style>
+  * { box-sizing:border-box; margin:0; }
+  body { background:#111; padding:20px; font-family:sans-serif; }
+  .row { display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+  .box { flex:1; min-width:80px; height:70px; border-radius:8px;
+         display:flex; align-items:center; justify-content:center;
+         font-weight:bold; color:#111; font-size:13px; }
+</style></head>
+<body>
+  <div class="row">
+    <div class="box" style="background:#f4a261">Flex 1</div>
+    <div class="box" style="background:#4caf50">Flex 1</div>
+    <div class="box" style="background:#42a5f5">Flex 1</div>
+  </div>
+  <div class="row">
+    <div class="box" style="flex:2;background:#ab47bc">Flex 2</div>
+    <div class="box" style="flex:1;background:#ef5350">Flex 1</div>
+  </div>
+</body></html>` },
+    { label:'Interactive Counter', code:
+`<!DOCTYPE html>
+<html><head><style>
+  body { background:#111; display:flex; flex-direction:column;
+         align-items:center; justify-content:center; height:100vh; margin:0;
+         font-family:sans-serif; color:#fff; gap:20px; }
+  #count { font-size:5em; color:#f4a261; font-weight:bold; min-width:120px; text-align:center; }
+  .btns  { display:flex; gap:12px; }
+  button { padding:12px 28px; font-size:18px; border:none; border-radius:8px;
+           cursor:pointer; font-weight:bold; transition:opacity .15s; }
+  button:hover { opacity:.8; }
+  #dec { background:#e74c3c; color:#fff; }
+  #inc { background:#4caf50; color:#fff; }
+  #rst { background:#555;    color:#fff; font-size:14px; padding:10px 20px; }
+</style></head>
+<body>
+  <div id="count">0</div>
+  <div class="btns">
+    <button id="dec" onclick="update(-1)">−</button>
+    <button id="inc" onclick="update(+1)">+</button>
+  </div>
+  <button id="rst" onclick="update(0,true)">Reset</button>
+  <script>
+    let n = 0;
+    function update(d, reset) {
+      n = reset ? 0 : n + d;
+      document.getElementById('count').textContent = n;
+    }
+  <\/script>
+</body></html>` },
+    { label:'Blank', code:'<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family:sans-serif; padding:20px; }\n  </style>\n</head>\n<body>\n  <!-- Write your HTML here -->\n</body>\n</html>' },
+  ],
+  python: [
+    { label:'— select template —', code:'' },
+    { label:'Hello World', code:
+`# Python Hello World
+print("Hello, Wunderland! ✨")
+print("1 + 1 =", 1 + 1)
+print("2 ** 10 =", 2 ** 10)` },
+    { label:'FizzBuzz', code:
+`for i in range(1, 31):
+    if   i % 15 == 0: print("FizzBuzz")
+    elif i % 3  == 0: print("Fizz")
+    elif i % 5  == 0: print("Buzz")
+    else:             print(i)` },
+    { label:'Fibonacci', code:
+`def fibonacci(n):
+    a, b = 0, 1
+    result = []
+    for _ in range(n):
+        result.append(a)
+        a, b = b, a + b
+    return result
+
+print(fibonacci(15))` },
+    { label:'List Comprehensions', code:
+`nums    = list(range(1, 11))
+squares = [x**2 for x in nums]
+evens   = [x for x in nums if x % 2 == 0]
+pairs   = [(x, x**2) for x in range(1, 6)]
+
+print("Numbers:", nums)
+print("Squares:", squares)
+print("Evens:  ", evens)
+print("Pairs:  ", pairs)` },
+    { label:'Dictionary', code:
+`inventory = {"sword": 3, "potion": 12, "shield": 1, "wand": 7}
+
+best  = max(inventory, key=inventory.get)
+print("Most common:", best, "x", inventory[best])
+
+plenty = {k: v for k, v in inventory.items() if v > 5}
+print("Plenty in stock:", plenty)
+print("Total items:", sum(inventory.values()))` },
+    { label:'Classes & OOP', code:
+`class Wizard:
+    def __init__(self, name, element):
+        self.name    = name
+        self.element = element
+        self.casts   = 0
+
+    def cast(self, spell):
+        self.casts += 1
+        print(self.name, "casts", spell, "[" + self.element + "]!")
+
+    def __str__(self):
+        return self.name + " (" + str(self.casts) + " spells cast)"
+
+merlin = Wizard("Merlin", "Fire")
+merlin.cast("Fireball")
+merlin.cast("Inferno")
+print(merlin)` },
+    { label:'Recursion', code:
+`def factorial(n):
+    if n <= 1: return 1
+    return n * factorial(n - 1)
+
+for i in range(1, 11):
+    print(str(i) + "! = " + str(factorial(i)))` },
+    { label:'Blank', code:'# Write your Python here\nprint("Hello!")\n' },
+  ],
+  sql: [
+    { label:'— select template —', code:'' },
+    { label:'Create & Query', code:
+`CREATE TABLE potions (
+    id    INTEGER PRIMARY KEY,
+    name  TEXT    NOT NULL,
+    type  TEXT,
+    price REAL
+);
+INSERT INTO potions VALUES
+    (1, 'Elixir of Calm',  'Herbal',  4.99),
+    (2, 'Potion of Speed', 'Magical', 12.50),
+    (3, 'Healing Brew',    'Herbal',  7.25),
+    (4, 'Invisibility Mix','Magical', 25.00),
+    (5, 'Strength Tonic',  'Magical', 9.75);
+
+SELECT * FROM potions ORDER BY price ASC;` },
+    { label:'WHERE & ORDER BY', code:
+`CREATE TABLE potions (id INTEGER PRIMARY KEY, name TEXT, type TEXT, price REAL);
+INSERT INTO potions VALUES
+    (1,'Elixir of Calm','Herbal',4.99),(2,'Potion of Speed','Magical',12.50),
+    (3,'Healing Brew','Herbal',7.25),(4,'Invisibility Mix','Magical',25.00),
+    (5,'Strength Tonic','Magical',9.75);
+
+SELECT name, price
+FROM   potions
+WHERE  type = 'Magical'
+ORDER  BY price DESC;` },
+    { label:'GROUP BY & Aggregates', code:
+`CREATE TABLE potions (id INTEGER PRIMARY KEY, name TEXT, type TEXT, price REAL);
+INSERT INTO potions VALUES
+    (1,'Elixir of Calm','Herbal',4.99),(2,'Potion of Speed','Magical',12.50),
+    (3,'Healing Brew','Herbal',7.25),(4,'Invisibility Mix','Magical',25.00),
+    (5,'Strength Tonic','Magical',9.75);
+
+SELECT type,
+    COUNT(*)             AS count,
+    MIN(price)           AS cheapest,
+    MAX(price)           AS priciest,
+    ROUND(AVG(price), 2) AS avg_price
+FROM  potions
+GROUP BY type;` },
+    { label:'JOIN', code:
+`CREATE TABLE guilds  (id INTEGER PRIMARY KEY, name TEXT, founded INTEGER);
+CREATE TABLE wizards (id INTEGER PRIMARY KEY, name TEXT, guild_id INTEGER);
+
+INSERT INTO guilds  VALUES (1,'Order of the Flame',1304),(2,'Silver Moon Coven',1892),(3,'Techno Mages',2001);
+INSERT INTO wizards VALUES (1,'Merlin',1),(2,'Isolde',2),(3,'Zara',1),(4,'Kael',3),(5,'Oryn',2);
+
+SELECT w.name AS wizard, g.name AS guild, g.founded
+FROM   wizards w
+JOIN   guilds  g ON w.guild_id = g.id
+ORDER  BY g.name, w.name;` },
+    { label:'Subquery', code:
+`CREATE TABLE potions (id INTEGER PRIMARY KEY, name TEXT, type TEXT, price REAL);
+INSERT INTO potions VALUES
+    (1,'Elixir of Calm','Herbal',4.99),(2,'Potion of Speed','Magical',12.50),
+    (3,'Healing Brew','Herbal',7.25),(4,'Invisibility Mix','Magical',25.00),
+    (5,'Strength Tonic','Magical',9.75);
+
+-- Potions priced above the average
+SELECT name, price
+FROM   potions
+WHERE  price > (SELECT AVG(price) FROM potions)
+ORDER  BY price DESC;` },
+    { label:'Blank', code:'-- Write your SQL here\nSELECT "Hello, SQL!" AS greeting;\n' },
+  ],
+};
+
+// ════════════════════════════════════════════════════════════════════════
+// IDE LOGIC
+// ════════════════════════════════════════════════════════════════════════
+let currentLang = 'js';
+let sqlReady    = false;
+let sqlLib      = null;
+
+function onLangChange() {
+    currentLang = document.getElementById('lang-select').value;
+    populateChallenges();
+    const htmlMode = currentLang === 'html';
+    document.getElementById('output-panel').style.display      = htmlMode ? 'none' : '';
+    document.getElementById('html-preview-wrap').className     = htmlMode ? 'show'  : '';
+    document.getElementById('output-label').textContent        = htmlMode ? 'Preview' : 'Output';
+    clearOutput();
+    document.getElementById('code-editor').value = '';
+}
+
+function populateChallenges() {
+    const sel = document.getElementById('challenge-select');
+    sel.innerHTML = '';
+    (CHALLENGES[currentLang] || []).forEach((c, i) => {
+        const opt = document.createElement('option');
+        opt.value = i; opt.textContent = c.label; sel.appendChild(opt);
+    });
+}
+
+function loadChallenge() {
+    const idx = parseInt(document.getElementById('challenge-select').value);
+    const c   = (CHALLENGES[currentLang] || [])[idx];
+    if (!c || !c.code) return;
+    document.getElementById('code-editor').value = c.code;
+    clearOutput();
+}
+
+// ── Tab key support ───────────────────────────────────────────────────────────
+document.getElementById('code-editor').addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    e.preventDefault();
+    const el = e.target, s = el.selectionStart, end = el.selectionEnd;
+    el.value = el.value.substring(0, s) + '    ' + el.value.substring(end);
+    el.selectionStart = el.selectionEnd = s + 4;
+});
+
+// ── Run ───────────────────────────────────────────────────────────────────────
+function runCode() {
+    const code = document.getElementById('code-editor').value;
+    clearOutput();
+    if (!code.trim()) { appendOut('// Nothing to run.', 'meta'); return; }
+    if      (currentLang === 'js')     runJS(code);
+    else if (currentLang === 'html')   runHTML(code);
+    else if (currentLang === 'python') runPython(code);
+    else if (currentLang === 'sql')    runSQL(code);
+}
+
+// JavaScript
+function runJS(code) {
+    const t0 = performance.now();
+    const fakeCons = {
+        log:   (...a) => appendOut(a.map(fmt).join(' '), 'line'),
+        error: (...a) => appendOut('ERROR: ' + a.map(fmt).join(' '), 'error'),
+        warn:  (...a) => appendOut('WARN:  ' + a.map(fmt).join(' '), 'warn'),
+        info:  (...a) => appendOut(a.map(fmt).join(' '), 'line'),
+    };
+    try {
+        // eslint-disable-next-line no-new-func
+        new Function('console', code)(fakeCons);
+        appendOut('\n✓ Finished in ' + (performance.now()-t0).toFixed(1) + 'ms', 'meta');
+    } catch(e) { appendOut('Error: ' + e.message, 'error'); }
+}
+
+function fmt(v) {
+    if (v === null)      return 'null';
+    if (v === undefined) return 'undefined';
+    if (typeof v === 'object') { try { return JSON.stringify(v, null, 2); } catch { return String(v); } }
+    return String(v);
+}
+
+// HTML
+function runHTML(code) {
+    document.getElementById('html-preview').srcdoc = code;
+}
+
+// Python via Skulpt
+function runPython(code) {
+    if (typeof Sk === 'undefined') {
+        appendOut('Loading Python runtime…', 'warn');
+        loadScript('https://skulpt.org/js/skulpt.min.js', 'sk1', () =>
+            loadScript('https://skulpt.org/js/skulpt-stdlib.js', 'sk2', () => runPython(code)));
+        return;
+    }
+    const t0 = performance.now();
+    Sk.configure({
+        output: t => { if (t !== '\n') appendOut(t, 'line'); },
+        read:   x => { if (!Sk.builtinFiles?.files[x]) throw 'File not found: ' + x;
+                        return Sk.builtinFiles.files[x]; },
+        execLimit: 8000,
+    });
+    Sk.misceval.asyncToPromise(() => Sk.importMainWithBody('<stdin>', false, code, true))
+        .then(() => appendOut('\n✓ Finished in ' + (performance.now()-t0).toFixed(1) + 'ms', 'meta'))
+        .catch(e  => appendOut('Error: ' + (e.toString ? e.toString() : e), 'error'));
+}
+
+// SQL via sql.js
+function runSQL(code) {
+    if (!sqlReady) {
+        appendOut('Loading SQL engine…', 'warn');
+        loadSqlJs(() => runSQL(code));
+        return;
+    }
+    initSqlJs({ locateFile: f => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/' + f })
+        .then(SQL => {
+            const db = new SQL.Database(), t0 = performance.now();
+            try {
+                const results = db.exec(code);
+                if (!results.length) {
+                    appendOut('(query executed — no rows returned)', 'meta');
+                } else {
+                    results.forEach(res => {
+                        const cols = res.columns, rows = res.values;
+                        const widths = cols.map((c, i) => Math.max(c.length, ...rows.map(r => String(r[i]).length)));
+                        const pad = (s, w) => String(s).padEnd(w);
+                        appendOut(cols.map((c,i)=>pad(c,widths[i])).join(' | '), 'warn');
+                        appendOut(widths.map(w=>'-'.repeat(w)).join('-+-'), 'meta');
+                        rows.forEach(r => appendOut(r.map((v,i)=>pad(v,widths[i])).join(' | '), 'line'));
+                        appendOut('(' + rows.length + ' row' + (rows.length!==1?'s':'') + ')', 'meta');
+                    });
+                }
+                appendOut('\n✓ Finished in ' + (performance.now()-t0).toFixed(1) + 'ms', 'meta');
+            } catch(e) { appendOut('SQL Error: ' + e.message, 'error'); }
+            db.close();
+        });
+}
+
+function loadSqlJs(cb) {
+    if (window.initSqlJs) { if (cb) cb(); return; }
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js', 'sqljslib', () => {
+        sqlReady = true; if (cb) cb();
+    });
+}
+
+function loadScript(src, id, cb) {
+    if (document.getElementById(id)) { if (cb) cb(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.id = id; s.onload = cb || null;
+    document.head.appendChild(s);
+}
+
+// Output helpers
+function appendOut(text, type) {
+    const p    = document.getElementById('output-panel');
+    const line = document.createElement('div');
+    line.className  = 'out-' + (type || 'line');
+    line.textContent = text;
+    p.appendChild(line);
+    p.scrollTop = p.scrollHeight;
+}
+
+function clearOutput() {
+    document.getElementById('output-panel').innerHTML = '';
+    document.getElementById('html-preview').srcdoc = '';
+}
+
+function copyCode(btn) {
+    const code = document.getElementById('code-editor').value;
+    if (!code) return;
+    navigator.clipboard.writeText(code).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = '✓ Copied';
+        setTimeout(() => btn.textContent = orig, 1400);
+    }).catch(() => {});
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+buildLearnGrid();
+populateChallenges();
+// Pre-load runtimes in background
+loadScript('https://skulpt.org/js/skulpt.min.js', 'sk1', () =>
+    loadScript('https://skulpt.org/js/skulpt-stdlib.js', 'sk2', null));
+loadSqlJs(null);
+</script>
+</body>
+</html>

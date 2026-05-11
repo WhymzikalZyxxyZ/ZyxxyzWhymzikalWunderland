@@ -159,7 +159,8 @@
         <a href="/virtuoso/virtuoso.html">Virtuoso</a>
         <a href="/gamer/games.html">Gamer</a>
         <a href="/technologist/apps.html">Technologist</a>
-        <a href="/community/forum.html">Community</a>
+        <a href="/community/forum.html">Forum</a>
+        <a href="/community/wellness.html">Wellness</a>
     </div>
 
     <div class="banner"></div>
@@ -223,7 +224,10 @@
             return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
         function fmtTime(ts) {
-            return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const d = new Date(ts);
+            const date = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+            const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return date + ' · ' + time;
         }
         function addSystemMsg(text) {
             const el = document.createElement('div');

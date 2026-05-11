@@ -205,6 +205,8 @@
     <button type="button" onclick="navigateToPage('../gamer/games.html')">&#8592; Back to Games</button>
     <script src="/js/gamer-chat.js"></script>
     <script>
+        function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
         const myName   = (typeof getOrCreateUsername === 'function') ? getOrCreateUsername() : 'Guest';
         const FB_HS    = 'scores/fivecarddraw';
         const AI_NAMES = ['Aria','Blake','Casey','Dana','Ellis'];
@@ -445,7 +447,7 @@
                 const handName = (showCards && hrMap[p.id]) ? hrMap[p.id].name : '';
 
                 seat.innerHTML = `
-                    <div class="seat-name">${p.name}${isWinner ? ' ★' : ''}</div>
+                    <div class="seat-name">${escHtml(p.name)}${isWinner ? ' ★' : ''}</div>
                     <div class="seat-chips">$${p.chips}</div>
                     <div class="seat-bet">${p.bet > 0 ? 'Bet: $'+p.bet : ''}</div>
                 `;

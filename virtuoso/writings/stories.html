@@ -1,34 +1,636 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>About ZYXXYZ's Whymzykal Wunderland!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stories — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/username-gen.js"></script>
+    <style>
+    #st-page { max-width:1000px; margin:0 auto; padding:0 14px 80px; }
+
+    .main-tabs { display:flex; gap:0; margin-bottom:18px; border-bottom:2px solid #2a2a2a; }
+    .main-tab {
+        padding:10px 28px; font-family:'Courier New',monospace; font-size:11px;
+        letter-spacing:2px; text-transform:uppercase; color:#666; cursor:pointer;
+        border-bottom:2px solid transparent; margin-bottom:-2px; user-select:none;
+    }
+    .main-tab.active { color:#f4a261; border-bottom-color:#f4a261; }
+
+    .panel { background:rgba(0,0,0,0.75); border:1px solid #2a2a2a; border-radius:12px; padding:18px; margin-bottom:16px; }
+    .panel-title { font-family:'Courier New',monospace; font-size:11px; letter-spacing:3px;
+        text-transform:uppercase; color:#f4a261; border-bottom:1px solid #2a2a2a; padding-bottom:8px; margin:0 0 14px; }
+
+    /* ── Library ── */
+    .library-toolbar {
+        display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+        margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid #2a2a2a;
+    }
+    .lib-search {
+        flex:1; min-width:160px;
+        background:rgba(255,255,255,0.06); border:1px solid #333; border-radius:6px;
+        color:#ccc; font-family:'Courier New',monospace; font-size:12px;
+        padding:8px 12px; outline:none;
+    }
+    .lib-search:focus { border-color:#f4a261; }
+    .lib-search::placeholder { color:#444; }
+    .lib-filter {
+        background:rgba(255,255,255,0.06); border:1px solid #333; border-radius:6px;
+        color:#ccc; font-family:'Courier New',monospace; font-size:12px;
+        padding:8px 10px; outline:none; cursor:pointer;
+    }
+    .lib-filter:focus { border-color:#f4a261; }
+    .lib-filter option { background:#111; }
+    .lib-count { font-family:'Courier New',monospace; font-size:11px; color:#444; margin-left:auto; }
+
+    .story-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media(max-width:640px){ .story-grid{ grid-template-columns:1fr; } }
+
+    .story-card {
+        background:rgba(255,255,255,0.03); border:1px solid #2a2a2a; border-radius:10px;
+        padding:16px; display:flex; flex-direction:column; gap:10px;
+        transition:border-color 0.15s;
+    }
+    .story-card:hover { border-color:#3a3a3a; }
+
+    .story-card-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+    .story-title {
+        font-family:'Courier New',monospace; font-size:13px; color:#eee;
+        font-weight:bold; line-height:1.4; flex:1;
+    }
+    .genre-tag {
+        display:inline-block; background:rgba(244,162,97,0.1); color:#f4a261;
+        border-radius:3px; padding:2px 8px; font-size:10px; font-family:'Courier New',monospace;
+        letter-spacing:1px; text-transform:uppercase; white-space:nowrap; flex-shrink:0;
+    }
+    .story-author {
+        font-family:'Courier New',monospace; font-size:11px; color:#888;
+        display:flex; align-items:center; gap:6px;
+    }
+    .story-author::before { content:'by'; color:#444; }
+    .author-name { color:#f4a261; }
+    .story-excerpt {
+        font-family:Georgia,'Times New Roman',serif; font-size:13px;
+        color:#666; line-height:1.7; flex:1;
+        display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;
+    }
+    .story-footer {
+        display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;
+        padding-top:10px; border-top:1px solid rgba(255,255,255,0.05);
+    }
+    .story-meta { font-family:'Courier New',monospace; font-size:10px; color:#444; }
+    .story-meta span + span::before { content:' · '; }
+    .read-btn {
+        background:transparent; border:1px solid #f4a261; color:#f4a261;
+        border-radius:5px; padding:5px 14px; font-family:'Courier New',monospace;
+        font-size:11px; cursor:pointer; transition:background 0.13s, color 0.13s;
+        letter-spacing:1px;
+    }
+    .read-btn:hover { background:#f4a261; color:#111; }
+
+    .empty-state {
+        text-align:center; padding:60px 20px;
+        font-family:'Courier New',monospace; color:#444; font-size:13px; line-height:2;
+    }
+    .empty-state .em-icon { font-size:36px; display:block; margin-bottom:12px; }
+
+    /* ── Reader ── */
+    #reader-view { display:none; }
+    .reader-nav {
+        display:flex; align-items:center; gap:12px; margin-bottom:20px;
+        padding-bottom:14px; border-bottom:1px solid #2a2a2a;
+    }
+    .back-btn {
+        background:transparent; border:1px solid #333; color:#888;
+        border-radius:5px; padding:6px 14px; font-family:'Courier New',monospace;
+        font-size:11px; cursor:pointer; transition:border-color 0.13s, color 0.13s;
+        letter-spacing:1px;
+    }
+    .back-btn:hover { border-color:#f4a261; color:#f4a261; }
+    .reader-breadcrumb { font-family:'Courier New',monospace; font-size:11px; color:#444; }
+
+    .reader-title {
+        font-family:Georgia,'Times New Roman',serif; font-size:28px;
+        color:#eee; line-height:1.35; margin:0 0 12px;
+    }
+    .reader-byline {
+        font-family:'Courier New',monospace; font-size:12px; color:#666;
+        margin-bottom:6px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    }
+    .reader-byline .by-author { color:#f4a261; }
+    .reader-body {
+        font-family:Georgia,'Times New Roman',serif; font-size:15px;
+        color:#bbb; line-height:1.95; white-space:pre-wrap; word-break:break-word;
+        margin-top:24px; padding-top:24px; border-top:1px solid #2a2a2a;
+    }
+
+    /* ── Write ── */
+    .write-header {
+        display:flex; align-items:center; justify-content:space-between;
+        flex-wrap:wrap; gap:10px; margin-bottom:14px;
+        padding-bottom:12px; border-bottom:1px solid #2a2a2a;
+    }
+    .author-badge {
+        display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    }
+    .ab-label { font-family:'Courier New',monospace; font-size:10px; color:#444; letter-spacing:2px; text-transform:uppercase; }
+    .ab-name { font-family:'Courier New',monospace; font-size:12px; color:#f4a261; }
+    .ab-change {
+        background:transparent; border:1px solid #333; color:#666;
+        border-radius:4px; padding:3px 8px; font-family:'Courier New',monospace;
+        font-size:10px; cursor:pointer; transition:border-color 0.13s, color 0.13s;
+    }
+    .ab-change:hover { border-color:#f4a261; color:#f4a261; }
+
+    .write-fields { display:grid; grid-template-columns:1fr auto; gap:10px; margin-bottom:12px; }
+    @media(max-width:560px){ .write-fields{ grid-template-columns:1fr; } }
+    .field-group { display:flex; flex-direction:column; gap:4px; }
+    .field-label { font-family:'Courier New',monospace; font-size:9px; letter-spacing:2px; color:#444; text-transform:uppercase; }
+    .title-input {
+        background:rgba(255,255,255,0.06); border:1px solid #333; border-radius:6px;
+        color:#eee; font-family:'Courier New',monospace; font-size:13px;
+        padding:9px 12px; outline:none; width:100%; box-sizing:border-box;
+    }
+    .title-input:focus { border-color:#f4a261; }
+    .title-input::placeholder { color:#333; }
+    .genre-select {
+        background:rgba(255,255,255,0.06); border:1px solid #333; border-radius:6px;
+        color:#ccc; font-family:'Courier New',monospace; font-size:12px;
+        padding:9px 10px; outline:none; cursor:pointer; min-width:130px;
+    }
+    .genre-select:focus { border-color:#f4a261; }
+    .genre-select option { background:#111; }
+
+    #story-editor {
+        width:100%; box-sizing:border-box; min-height:400px; resize:vertical;
+        background:#06060f; border:1px solid #2a2a2a; border-radius:8px;
+        color:#ddd; font-family:Georgia,'Times New Roman',serif; font-size:15px;
+        line-height:1.9; padding:20px; outline:none;
+        scrollbar-width:thin; scrollbar-color:#333 transparent;
+        transition:border-color 0.15s;
+    }
+    #story-editor:focus { border-color:#f4a261; }
+    #story-editor::placeholder { color:#222; font-style:italic; }
+
+    .write-footer {
+        display:flex; align-items:center; justify-content:space-between;
+        flex-wrap:wrap; gap:10px; margin-top:12px;
+        padding-top:12px; border-top:1px solid #2a2a2a;
+    }
+    .wc-display { font-family:'Courier New',monospace; font-size:11px; color:#444; }
+    .wc-display span { color:#f4a261; }
+    .publish-btn {
+        background:#f4a261; border:none; border-radius:6px; color:#111;
+        font-family:'Courier New',monospace; font-size:12px; font-weight:bold;
+        padding:9px 24px; cursor:pointer; letter-spacing:1px;
+        transition:background 0.13s;
+    }
+    .publish-btn:hover { background:#e76f51; color:#fff; }
+    .publish-btn:disabled { background:#333; color:#666; cursor:not-allowed; }
+
+    .pub-status {
+        font-family:'Courier New',monospace; font-size:11px;
+        padding:6px 12px; border-radius:5px; display:none;
+    }
+    .pub-status.ok  { background:rgba(76,175,80,0.12); border:1px solid rgba(76,175,80,0.3); color:#4caf50; display:inline-block; }
+    .pub-status.err { background:rgba(231,76,60,0.12);  border:1px solid rgba(231,76,60,0.3);  color:#e74c3c; display:inline-block; }
+
+    /* ── Username modal ── */
+    .modal-overlay {
+        position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:500;
+        display:none; align-items:center; justify-content:center; padding:20px;
+    }
+    .modal-overlay.open { display:flex; }
+    .modal-box {
+        background:#0e0818; border:1px solid #f4a261; border-radius:12px;
+        padding:28px; max-width:400px; width:100%;
+    }
+    .modal-title { font-family:'Courier New',monospace; font-size:13px; color:#f4a261;
+        letter-spacing:2px; text-transform:uppercase; margin:0 0 16px; }
+    .modal-input {
+        width:100%; box-sizing:border-box; background:rgba(255,255,255,0.06);
+        border:1px solid #333; border-radius:6px; color:#eee;
+        font-family:'Courier New',monospace; font-size:13px; padding:9px 12px;
+        outline:none; margin-bottom:10px;
+    }
+    .modal-input:focus { border-color:#f4a261; }
+    .modal-hint { font-family:'Courier New',monospace; font-size:10px; color:#444;
+        margin-bottom:16px; line-height:1.6; }
+    .modal-actions { display:flex; gap:8px; justify-content:flex-end; }
+    .modal-btn {
+        background:transparent; border:1px solid #444; color:#888;
+        border-radius:5px; padding:7px 16px; font-family:'Courier New',monospace;
+        font-size:11px; cursor:pointer; transition:border-color 0.13s, color 0.13s;
+    }
+    .modal-btn:hover { border-color:#f4a261; color:#f4a261; }
+    .modal-btn.primary { background:#f4a261; border-color:#f4a261; color:#111; font-weight:bold; }
+    .modal-btn.primary:hover { background:#e76f51; border-color:#e76f51; color:#fff; }
+    </style>
 </head>
-<body class="notYetBody">
+<body class="wunderBody">
 
     <h2>Zyxxyz Ztory Thyme</h2>
-    <br />
-    <div class="content-row">
-        <!-- Navigation Bar -->
-        <div class="navbar">
-            <a href="../../index.html">Home</a>
-            <a href="../../virtuoso/animations/motionpictures.html">Motion Pictures</a>
-            <a href="../../virtuoso/comics/webcomic.html">Webcomic</a>
-            <a href="../../virtuoso/crafts/handmade.html">Handmade</a>
-            <a href="../../virtuoso/drawings/doodles.html">Doodles</a>
-            <a href="../../virtuoso/writings/stories.html">Stories</a>
+
+    <div class="navbar">
+        <a href="/index.html">Home</a>
+        <a href="/virtuoso/animations/motionpictures.html">Motion Pictures</a>
+        <a href="/virtuoso/comics/webcomic.html">Webcomic</a>
+        <a href="/virtuoso/crafts/handmade.html">Handmade</a>
+        <a href="/virtuoso/drawings/doodles.html">Doodles</a>
+        <a href="/virtuoso/writings/stories.html">Stories</a>
+    </div>
+
+    <div id="st-page">
+        <div class="main-tabs">
+            <div class="main-tab active" id="tab-library" onclick="switchTab('library')">Library</div>
+            <div class="main-tab"        id="tab-write"   onclick="switchTab('write')">Write a Story</div>
+        </div>
+
+        <!-- ═══ LIBRARY TAB ═══ -->
+        <div id="tab-library-content">
+            <div class="panel">
+                <div class="panel-title">Story Library</div>
+
+                <!-- Reader view (hidden until a story is opened) -->
+                <div id="reader-view">
+                    <div class="reader-nav">
+                        <button class="back-btn" onclick="closeReader()">&#8592; Back</button>
+                        <span class="reader-breadcrumb">Library / Reading</span>
+                    </div>
+                    <h1 class="reader-title" id="reader-title"></h1>
+                    <div class="reader-byline">
+                        <span>by <span class="by-author" id="reader-author"></span></span>
+                        <span id="reader-meta"></span>
+                    </div>
+                    <div class="reader-body" id="reader-body"></div>
+                </div>
+
+                <!-- Library list view -->
+                <div id="library-view">
+                    <div class="library-toolbar">
+                        <input class="lib-search" id="lib-search" type="text"
+                            placeholder="Search titles, authors, or stories…"
+                            oninput="filterStories()" />
+                        <select class="lib-filter" id="lib-genre" onchange="filterStories()">
+                            <option value="">All Genres</option>
+                            <option value="fantasy">Fantasy</option>
+                            <option value="scifi">Sci-Fi</option>
+                            <option value="horror">Horror</option>
+                            <option value="romance">Romance</option>
+                            <option value="mystery">Mystery</option>
+                            <option value="adventure">Adventure</option>
+                            <option value="drama">Drama</option>
+                            <option value="comedy">Comedy</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <span class="lib-count" id="lib-count"></span>
+                    </div>
+                    <div class="story-grid" id="story-grid">
+                        <div class="empty-state" style="grid-column:1/-1;">
+                            <span class="em-icon">&#128213;</span>
+                            Loading stories…
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ WRITE TAB ═══ -->
+        <div id="tab-write-content" style="display:none;">
+            <div class="panel">
+                <div class="panel-title">Write a Story</div>
+                <div class="write-header">
+                    <div class="author-badge">
+                        <span class="ab-label">Writing as</span>
+                        <span class="ab-name" id="write-author-name">—</span>
+                        <button class="ab-change" onclick="openUsernameModal()">&#9998; Change</button>
+                    </div>
+                </div>
+
+                <div class="write-fields">
+                    <div class="field-group">
+                        <span class="field-label">Title</span>
+                        <input class="title-input" id="story-title" type="text"
+                            placeholder="Give your story a title…" maxlength="120"
+                            oninput="updateWriteState()" />
+                    </div>
+                    <div class="field-group">
+                        <span class="field-label">Genre</span>
+                        <select class="genre-select" id="story-genre">
+                            <option value="fantasy">Fantasy</option>
+                            <option value="scifi">Sci-Fi</option>
+                            <option value="horror">Horror</option>
+                            <option value="romance">Romance</option>
+                            <option value="mystery">Mystery</option>
+                            <option value="adventure">Adventure</option>
+                            <option value="drama">Drama</option>
+                            <option value="comedy">Comedy</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <textarea id="story-editor" spellcheck="true"
+                    placeholder="Once upon a time in the Whymzykal Wunderland…"
+                    oninput="updateWriteState()"></textarea>
+
+                <div class="write-footer">
+                    <div class="wc-display">
+                        <span id="wc-num">0</span> words &nbsp;·&nbsp; <span id="cc-num">0</span> characters
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                        <span class="pub-status" id="pub-status"></span>
+                        <button class="publish-btn" id="publish-btn" onclick="publishStory()" disabled>
+                            &#10026; Publish Story
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Removed the <img> tag here as it's no longer needed -->
-    <div class="banner"></div> <!-- Placeholder for your logo as background -->
+    <!-- Username modal -->
+    <div class="modal-overlay" id="username-modal">
+        <div class="modal-box">
+            <div class="modal-title">&#9998; Change Pen Name</div>
+            <input class="modal-input" id="username-input" type="text"
+                placeholder="e.g. VelvetSiren_234" maxlength="35" />
+            <div class="modal-hint">
+                Format: two words followed by _ and three digits.<br>
+                e.g. MidnightOracle_887 &nbsp;·&nbsp; Or click Randomise for a new one.
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn" onclick="closeUsernameModal()">Cancel</button>
+                <button class="modal-btn" onclick="randomiseUsername()">&#9790; Randomise</button>
+                <button class="modal-btn primary" onclick="saveUsername()">Save</button>
+            </div>
+        </div>
+    </div>
 
-    <br>
-    <p id="demo">ZYXXYZ</p>
+    <button type="button" onclick="navigateToPage('/index.html')">E.T. Phone Home!</button>
 
-    <button type="button" onclick="navigateToPage('../../index.html')">E.T. Phone Home!</button>
+<script>
+// ════════════════════════════════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════════════════════════════════
+function switchTab(t) {
+    ['library','write'].forEach(id => {
+        document.getElementById('tab-'+id).classList.toggle('active', id===t);
+        document.getElementById('tab-'+id+'-content').style.display = id===t ? '' : 'none';
+    });
+}
 
+// ════════════════════════════════════════════════════════════════════════
+// AUTHOR / USERNAME
+// ════════════════════════════════════════════════════════════════════════
+let currentAuthor = '';
+
+function initAuthor() {
+    currentAuthor = getOrCreateUsername();
+    document.getElementById('write-author-name').textContent = currentAuthor;
+}
+
+function openUsernameModal() {
+    document.getElementById('username-input').value = currentAuthor;
+    document.getElementById('username-modal').classList.add('open');
+    setTimeout(() => document.getElementById('username-input').focus(), 50);
+}
+
+function closeUsernameModal() {
+    document.getElementById('username-modal').classList.remove('open');
+}
+
+function randomiseUsername() {
+    document.getElementById('username-input').value = genUsername();
+}
+
+function saveUsername() {
+    const val = document.getElementById('username-input').value.trim();
+    try {
+        setUsername(val);
+        currentAuthor = val;
+        document.getElementById('write-author-name').textContent = currentAuthor;
+        closeUsernameModal();
+    } catch (_) {
+        document.getElementById('username-input').style.borderColor = '#e74c3c';
+        setTimeout(() => document.getElementById('username-input').style.borderColor = '', 1200);
+    }
+}
+
+document.getElementById('username-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveUsername();
+    if (e.key === 'Escape') closeUsernameModal();
+});
+document.getElementById('username-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('username-modal')) closeUsernameModal();
+});
+
+// ════════════════════════════════════════════════════════════════════════
+// WRITE — word count & publish state
+// ════════════════════════════════════════════════════════════════════════
+function wordCount(text) {
+    return text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+}
+
+function updateWriteState() {
+    const body  = document.getElementById('story-editor').value;
+    const title = document.getElementById('story-title').value.trim();
+    const wc    = wordCount(body);
+    const cc    = body.length;
+    document.getElementById('wc-num').textContent = wc.toLocaleString();
+    document.getElementById('cc-num').textContent = cc.toLocaleString();
+    document.getElementById('publish-btn').disabled = !(title && wc >= 5);
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// FIREBASE
+// ════════════════════════════════════════════════════════════════════════
+let db       = null;
+let allStories = [];
+
+function initFirebase() {
+    if (typeof firebase === 'undefined' || !FIREBASE_READY) return;
+    try { db = firebase.database(); } catch (_) { return; }
+    db.ref('stories').orderByChild('timestamp').on('value', snap => {
+        allStories = [];
+        snap.forEach(child => {
+            allStories.unshift({ id: child.key, ...child.val() });
+        });
+        renderLibrary(allStories);
+    });
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// PUBLISH
+// ════════════════════════════════════════════════════════════════════════
+function publishStory() {
+    const title  = document.getElementById('story-title').value.trim();
+    const body   = document.getElementById('story-editor').value.trim();
+    const genre  = document.getElementById('story-genre').value;
+    const author = currentAuthor;
+    const wc     = wordCount(body);
+
+    if (!title || wc < 5) return;
+
+    const btn    = document.getElementById('publish-btn');
+    const status = document.getElementById('pub-status');
+    btn.disabled = true;
+    btn.textContent = 'Publishing…';
+    status.className = 'pub-status';
+    status.style.display = 'none';
+
+    const story = { title, author, genre, body, wordCount: wc, timestamp: Date.now() };
+
+    if (!db) {
+        // Offline fallback — store locally
+        const localId = 'local_' + Date.now();
+        allStories.unshift({ id: localId, ...story });
+        renderLibrary(allStories);
+        onPublishSuccess(btn);
+        return;
+    }
+
+    db.ref('stories').push(story)
+        .then(() => onPublishSuccess(btn))
+        .catch(err => onPublishError(btn, status, err));
+}
+
+function onPublishSuccess(btn) {
+    document.getElementById('story-title').value  = '';
+    document.getElementById('story-editor').value = '';
+    updateWriteState();
+    const status = document.getElementById('pub-status');
+    status.textContent = '&#10003; Story published!';
+    status.className   = 'pub-status ok';
+    btn.textContent    = '&#10026; Publish Story';
+    btn.disabled       = true;
+    switchTab('library');
+    setTimeout(() => { status.className = 'pub-status'; }, 3000);
+}
+
+function onPublishError(btn, status, err) {
+    btn.disabled    = false;
+    btn.textContent = '&#10026; Publish Story';
+    status.textContent = 'Error: ' + (err && err.message ? err.message : 'Could not save.');
+    status.className   = 'pub-status err';
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// LIBRARY — render & filter
+// ════════════════════════════════════════════════════════════════════════
+const GENRE_LABELS = {
+    fantasy:'Fantasy', scifi:'Sci-Fi', horror:'Horror', romance:'Romance',
+    mystery:'Mystery', adventure:'Adventure', drama:'Drama', comedy:'Comedy', other:'Other'
+};
+
+function formatDate(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+
+function excerpt(text, len) {
+    if (!text) return '';
+    const clean = text.replace(/\s+/g, ' ').trim();
+    return clean.length <= len ? clean : clean.slice(0, len).trimEnd() + '…';
+}
+
+function renderLibrary(stories) {
+    const grid  = document.getElementById('story-grid');
+    const count = document.getElementById('lib-count');
+
+    if (!stories.length) {
+        grid.innerHTML =
+            '<div class="empty-state" style="grid-column:1/-1;">' +
+            '<span class="em-icon">&#128213;</span>' +
+            'No stories yet.<br>Be the first to write one!' +
+            '</div>';
+        count.textContent = '';
+        return;
+    }
+
+    count.textContent = stories.length + (stories.length === 1 ? ' story' : ' stories');
+    grid.innerHTML = '';
+
+    stories.forEach(story => {
+        const card = document.createElement('div');
+        card.className = 'story-card';
+        card.innerHTML =
+            '<div class="story-card-header">' +
+                '<div class="story-title">' + escHtml(story.title || 'Untitled') + '</div>' +
+                (story.genre ? '<span class="genre-tag">' + escHtml(GENRE_LABELS[story.genre] || story.genre) + '</span>' : '') +
+            '</div>' +
+            '<div class="story-author"><span class="author-name">' + escHtml(story.author || 'Anonymous') + '</span></div>' +
+            '<div class="story-excerpt">' + escHtml(excerpt(story.body || '', 280)) + '</div>' +
+            '<div class="story-footer">' +
+                '<div class="story-meta">' +
+                    '<span>' + (story.wordCount ? story.wordCount.toLocaleString() + ' words' : '') + '</span>' +
+                    '<span>' + formatDate(story.timestamp) + '</span>' +
+                '</div>' +
+                '<button class="read-btn" onclick="openReader(' + JSON.stringify(story.id) + ')">Read &#8594;</button>' +
+            '</div>';
+        grid.appendChild(card);
+    });
+}
+
+function filterStories() {
+    const query = document.getElementById('lib-search').value.toLowerCase();
+    const genre = document.getElementById('lib-genre').value;
+    const filtered = allStories.filter(s => {
+        const matchGenre  = !genre || s.genre === genre;
+        const matchSearch = !query ||
+            (s.title  || '').toLowerCase().includes(query) ||
+            (s.author || '').toLowerCase().includes(query) ||
+            (s.body   || '').toLowerCase().includes(query);
+        return matchGenre && matchSearch;
+    });
+    renderLibrary(filtered);
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// READER
+// ════════════════════════════════════════════════════════════════════════
+function openReader(storyId) {
+    const story = allStories.find(s => s.id === storyId);
+    if (!story) return;
+    document.getElementById('reader-title').textContent  = story.title  || 'Untitled';
+    document.getElementById('reader-author').textContent = story.author || 'Anonymous';
+    document.getElementById('reader-body').textContent   = story.body   || '';
+    document.getElementById('reader-meta').textContent   =
+        (story.genre ? (GENRE_LABELS[story.genre] || story.genre) + ' · ' : '') +
+        (story.wordCount ? story.wordCount.toLocaleString() + ' words · ' : '') +
+        formatDate(story.timestamp);
+    document.getElementById('reader-view').style.display  = '';
+    document.getElementById('library-view').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function closeReader() {
+    document.getElementById('reader-view').style.display  = 'none';
+    document.getElementById('library-view').style.display = '';
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════════════════════════════
+function escHtml(s) {
+    return String(s)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;');
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════════════════
+initAuthor();
+initFirebase();
+updateWriteState();
+</script>
 </body>
-</html> 
+</html>

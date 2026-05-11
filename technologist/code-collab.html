@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeCollab — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js"></script>
+    <style>
+        :root { --acc: #60c0f8; --acc2: #3a9fd6; --alice: #60c0f8; --bob: #f4a261; }
+
+        .cc-wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px 60px; }
+
+        .cc-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 24px 0 20px; }
+        .cc-tab {
+            padding: 8px 20px; border-radius: 6px; border: 1px solid #333;
+            background: #111; color: #aaa; cursor: pointer; font-size: 0.9rem; transition: all .18s;
+        }
+        .cc-tab.active, .cc-tab:hover { background: var(--acc); color: #000; border-color: var(--acc); }
+        .cc-panel { display: none; }
+        .cc-panel.active { display: block; }
+
+        /* Editor pair */
+        .editors-row {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+        }
+        @media (width <= 768px) { .editors-row { grid-template-columns: 1fr; } }
+
+        .editor-box {
+            background: #0a0a0a; border: 1px solid #222; border-radius: 10px; overflow: hidden;
+        }
+        .editor-header {
+            padding: 10px 16px; display: flex; align-items: center; gap: 10px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        .editor-avatar {
+            width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 0.75rem; font-weight: 700;
+        }
+        .editor-name { font-weight: 700; font-size: 0.9rem; }
+        .editor-status { margin-left: auto; font-size: 0.75rem; color: #555; }
+        .editor-status.typing { color: #f4a261; }
+
+        .code-area {
+            width: 100%; box-sizing: border-box;
+            background: transparent; border: none; outline: none;
+            color: #e0e0e0; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.85rem;
+            line-height: 1.6; padding: 14px 16px; resize: vertical; min-height: 220px;
+        }
+
+        /* OT visualiser */
+        .ot-vis {
+            background: #080808; border: 1px solid #1a1a1a; border-radius: 10px;
+            padding: 20px; margin-top: 16px;
+        }
+        .ot-vis h4 { margin: 0 0 12px; color: var(--acc); font-size: 0.9rem; }
+        .ot-log {
+            font-family: monospace; font-size: 0.8rem; max-height: 220px; overflow-y: auto;
+        }
+        .ot-op { display: flex; align-items: baseline; gap: 10px; padding: 3px 0; border-bottom: 1px solid #0f0f0f; }
+        .ot-actor { font-weight: 700; width: 52px; flex-shrink: 0; }
+        .ot-actor.alice { color: var(--alice); }
+        .ot-actor.bob { color: var(--bob); }
+        .ot-desc { color: #bbb; flex: 1; }
+        .ot-state { color: #555; font-size: 0.75rem; }
+        .ot-conflict { color: #ef5350 !important; }
+        .ot-resolve { color: #56c98a !important; }
+
+        /* Merged output */
+        .merged-box {
+            background: #090909; border: 1px solid #1e1e1e; border-radius: 10px; padding: 16px; margin-top: 16px;
+        }
+        .merged-box h4 { margin: 0 0 10px; color: #ccc; font-size: 0.9rem; }
+        .merged-content {
+            font-family: monospace; font-size: 0.85rem; line-height: 1.6;
+            color: #d0d0d0; white-space: pre-wrap; min-height: 60px;
+        }
+        .merge-highlight-alice { background: rgba(96,192,248,0.15); border-radius: 2px; }
+        .merge-highlight-bob { background: rgba(244,162,97,0.15); border-radius: 2px; }
+
+        /* Controls */
+        .sim-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+        .btn-main {
+            padding: 9px 20px; border-radius: 8px; border: none;
+            background: var(--acc); color: #000; font-weight: 700; font-size: 0.88rem;
+            cursor: pointer; transition: all .18s;
+        }
+        .btn-main:hover { filter: brightness(1.12); }
+        .btn-sec {
+            padding: 9px 20px; border-radius: 8px; border: 1px solid #333;
+            background: #111; color: #aaa; font-size: 0.88rem; cursor: pointer;
+        }
+        .btn-sec:hover { border-color: var(--acc); color: var(--acc); }
+        .delay-label { font-size: 0.82rem; color: #666; display: flex; align-items: center; gap: 8px; }
+        .delay-label input { width: 70px; background: #1a1a1a; border: 1px solid #333; border-radius: 5px; color: #ccc; padding: 5px 8px; font-size: 0.82rem; }
+
+        /* Scenario cards */
+        .scenario-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-bottom: 20px; }
+        .scenario-card {
+            background: #0e0e0e; border: 1px solid #222; border-radius: 10px; padding: 16px;
+            cursor: pointer; transition: border-color .2s;
+        }
+        .scenario-card:hover, .scenario-card.selected { border-color: var(--acc); }
+        .scenario-card h4 { margin: 0 0 6px; color: var(--acc); font-size: 0.9rem; }
+        .scenario-card p { margin: 0; color: #888; font-size: 0.82rem; line-height: 1.5; }
+
+        /* Concepts */
+        .concept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .concept-card {
+            background: #0e0e0e; border: 1px solid #1e1e1e; border-radius: 10px; padding: 18px;
+        }
+        .concept-card h4 { color: var(--acc); margin: 0 0 8px; font-size: 0.95rem; }
+        .concept-card p { color: #999; font-size: 0.85rem; line-height: 1.6; margin: 0; }
+
+        .algo-diagram {
+            background: #070707; border: 1px solid #1a1a1a; border-radius: 8px;
+            padding: 16px; margin-top: 14px; font-family: monospace; font-size: 0.78rem; color: #aaa;
+        }
+        .algo-step { padding: 4px 0; }
+        .algo-step .step-num { color: var(--acc); margin-right: 8px; }
+        .algo-step .step-op { color: #d0d0d0; }
+        .algo-step .step-why { color: #555; }
+    </style>
+</head>
+<body class="wunderBody">
+    <div class="navbar"></div>
+
+    <div class="cc-wrap">
+        <h2 style="margin-bottom:4px;">CodeCollab</h2>
+        <p style="color:#888;margin-top:0;">Watch Operational Transformation resolve concurrent edits — two editors, one document, zero conflicts.</p>
+
+        <div class="cc-tabs">
+            <button class="cc-tab active" onclick="switchTab('editor')">Live Editor</button>
+            <button class="cc-tab" onclick="switchTab('simulate')">Simulate Conflict</button>
+            <button class="cc-tab" onclick="switchTab('concepts')">Concepts</button>
+        </div>
+
+        <!-- LIVE EDITOR TAB -->
+        <div id="tab-editor" class="cc-panel active">
+            <p style="color:#777;font-size:0.85rem;margin-bottom:14px;">
+                Both editors share a live document. Changes from either editor are merged in real time using a simplified OT algorithm — watch the log below to see how operations are transformed.
+            </p>
+
+            <div class="sim-controls">
+                <button class="btn-sec" onclick="resetDoc()">Reset Document</button>
+                <button class="btn-sec" onclick="clearLog()">Clear Log</button>
+                <label class="delay-label">Sync delay <input type="number" id="syncDelay" value="400" min="0" max="2000" step="100"> ms</label>
+            </div>
+
+            <div class="editors-row">
+                <div class="editor-box">
+                    <div class="editor-header">
+                        <div class="editor-avatar" style="background:var(--alice);color:#000;">A</div>
+                        <span class="editor-name" style="color:var(--alice);">Alice</span>
+                        <span class="editor-status" id="statusAlice">Ready</span>
+                    </div>
+                    <textarea class="code-area" id="editorAlice" spellcheck="false"></textarea>
+                </div>
+                <div class="editor-box">
+                    <div class="editor-header">
+                        <div class="editor-avatar" style="background:var(--bob);color:#000;">B</div>
+                        <span class="editor-name" style="color:var(--bob);">Bob</span>
+                        <span class="editor-status" id="statusBob">Ready</span>
+                    </div>
+                    <textarea class="code-area" id="editorBob" spellcheck="false"></textarea>
+                </div>
+            </div>
+
+            <div class="merged-box">
+                <h4>Converged Document <span style="color:#444;font-size:0.78rem;font-weight:400;">(what both editors will see after sync)</span></h4>
+                <div class="merged-content" id="mergedDoc">—</div>
+            </div>
+
+            <div class="ot-vis">
+                <h4>Operation Log</h4>
+                <div class="ot-log" id="otLog">
+                    <div class="ot-op"><span class="ot-desc" style="color:#444;">Waiting for edits...</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SIMULATE CONFLICT TAB -->
+        <div id="tab-simulate" class="cc-panel">
+            <p style="color:#777;font-size:0.85rem;margin-bottom:16px;">
+                Choose a scenario to see how concurrent conflicting operations are detected and transformed.
+            </p>
+
+            <div class="scenario-grid" id="scenarioGrid">
+                <!-- populated by JS -->
+            </div>
+
+            <div id="scenarioDetail" style="display:none;">
+                <div class="editors-row" style="margin-bottom:16px;">
+                    <div class="editor-box">
+                        <div class="editor-header">
+                            <div class="editor-avatar" style="background:var(--alice);color:#000;">A</div>
+                            <span class="editor-name" style="color:var(--alice);">Alice's op</span>
+                        </div>
+                        <div style="padding:14px;font-family:monospace;font-size:0.85rem;color:#ccc;min-height:100px;" id="simAliceOp"></div>
+                    </div>
+                    <div class="editor-box">
+                        <div class="editor-header">
+                            <div class="editor-avatar" style="background:var(--bob);color:#000;">B</div>
+                            <span class="editor-name" style="color:var(--bob);">Bob's op</span>
+                        </div>
+                        <div style="padding:14px;font-family:monospace;font-size:0.85rem;color:#ccc;min-height:100px;" id="simBobOp"></div>
+                    </div>
+                </div>
+
+                <button class="btn-main" onclick="runScenario()">&#9654; Step Through Transformation</button>
+
+                <div class="ot-vis" style="margin-top:16px;">
+                    <h4>Transformation Steps</h4>
+                    <div class="ot-log" id="simLog"></div>
+                </div>
+
+                <div class="merged-box" style="margin-top:12px;">
+                    <h4>Final Converged Result</h4>
+                    <div class="merged-content" id="simResult">—</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONCEPTS TAB -->
+        <div id="tab-concepts" class="cc-panel">
+            <div class="concept-grid">
+                <div class="concept-card">
+                    <h4>Operational Transformation (OT)</h4>
+                    <p>OT transforms concurrent operations against each other so they compose correctly. If Alice inserts at position 3 while Bob deletes at position 5, and Bob's op arrives after Alice's, Bob's delete must be shifted to position 6 to account for Alice's insertion.</p>
+                </div>
+                <div class="concept-card">
+                    <h4>CRDTs</h4>
+                    <p><strong style="color:#ccc;">Conflict-free Replicated Data Types</strong> encode position into the data structure itself (e.g. Logoot, LSEQ, Yjs). Each character gets a globally unique fractional position — there's nothing to transform. CRDTs are simpler to distribute but use more memory.</p>
+                </div>
+                <div class="concept-card">
+                    <h4>The CP1 / CP2 Properties</h4>
+                    <p><strong style="color:#ccc;">CP1 (convergence):</strong> all replicas reach the same state. <strong style="color:#ccc;">CP2 (intention preservation):</strong> the effect of each operation reflects the user's intent even after transformation. Achieving both simultaneously is the hard problem in OT.</p>
+                </div>
+                <div class="concept-card">
+                    <h4>Vector Clocks</h4>
+                    <p>Each client tracks a vector of operation counts per peer, e.g. <code style="color:var(--acc);">[Alice:3, Bob:2]</code>. This establishes a partial order of operations — detecting which were truly concurrent (neither happened-before the other) vs. sequential.</p>
+                </div>
+                <div class="concept-card">
+                    <h4>OT vs CRDT Trade-offs</h4>
+                    <p><strong style="color:#ccc;">OT:</strong> requires a central server (or peer coordination) to order concurrent ops; mature (Google Docs uses it). <strong style="color:#ccc;">CRDTs:</strong> fully peer-to-peer, works offline, but character IDs can bloat with many edits. Yjs (used by VS Code Live Share) is CRDT-based.</p>
+                </div>
+                <div class="concept-card">
+                    <h4>Tombstoning</h4>
+                    <p>Deleted characters are marked as "tombstoned" rather than removed immediately. This preserves position indices for in-flight operations that reference those positions. Tombstones are garbage-collected once all peers have acknowledged the deletion.</p>
+                </div>
+            </div>
+
+            <div style="margin-top:24px;background:#0e0e0e;border:1px solid #1e1e1e;border-radius:10px;padding:20px;">
+                <h4 style="color:var(--acc);margin:0 0 16px;">OT Insert-Insert Transformation</h4>
+                <div class="algo-diagram">
+                    <div class="algo-step"><span class="step-num">State:</span> <span class="step-op">"hello world"</span></div>
+                    <div class="algo-step"><span class="step-num">Alice:</span> <span class="step-op">Insert("!", pos=11)</span> <span class="step-why">// append exclamation</span></div>
+                    <div class="algo-step"><span class="step-num">Bob:</span>  <span class="step-op">Insert(" big", pos=5)</span> <span class="step-why">// insert before "world"</span></div>
+                    <div style="border-top:1px solid #1a1a1a;margin:8px 0;"></div>
+                    <div class="algo-step"><span class="step-num">Server receives Alice first:</span></div>
+                    <div class="algo-step"><span class="step-num"> Apply:</span> <span class="step-op">"hello world!"</span></div>
+                    <div class="algo-step"><span class="step-num"> Bob's op arrives:</span> <span class="step-op">Insert(" big", pos=5)</span></div>
+                    <div class="algo-step"><span class="step-num"> Transform:</span> <span class="step-op">Alice inserted at 11, Bob inserts at 5 &lt; 11 → no shift needed</span></div>
+                    <div class="algo-step"><span class="step-num"> Apply:</span> <span class="step-op">"hello big world!"</span> <span class="step-why">✓ Both intentions preserved</span></div>
+                </div>
+                <div class="algo-diagram" style="margin-top:12px;">
+                    <div class="algo-step"><span class="step-num">State:</span> <span class="step-op">"hello world"</span></div>
+                    <div class="algo-step"><span class="step-num">Alice:</span> <span class="step-op">Insert(" beautiful", pos=5)</span></div>
+                    <div class="algo-step"><span class="step-num">Bob:</span>  <span class="step-op">Insert("!", pos=11)</span></div>
+                    <div style="border-top:1px solid #1a1a1a;margin:8px 0;"></div>
+                    <div class="algo-step"><span class="step-num">Server receives Alice first:</span></div>
+                    <div class="algo-step"><span class="step-num"> Apply:</span> <span class="step-op">"hello beautiful world"</span></div>
+                    <div class="algo-step"><span class="step-num"> Bob's op arrives:</span> <span class="step-op">Insert("!", pos=11)</span></div>
+                    <div class="algo-step"><span class="step-num"> Transform:</span> <span class="step-op">Alice inserted 10 chars at pos 5 &lt; 11 → shift Bob's pos by +10 → pos=21</span></div>
+                    <div class="algo-step"><span class="step-num"> Apply:</span> <span class="step-op">"hello beautiful world!"</span> <span class="step-why">✓ Both intentions preserved</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    'use strict';
+
+    // --- OT core (simplified, text only) ---
+    function otTransformInsertInsert(opA, opB) {
+        // Transform opB against opA (both inserts, concurrent)
+        if (opA.pos <= opB.pos) {
+            return { ...opB, pos: opB.pos + opA.text.length };
+        }
+        return opB;
+    }
+    function otTransformDeleteInsert(opDel, opIns) {
+        // Transform delete against prior insert
+        if (opIns.pos <= opDel.pos) {
+            return { ...opDel, pos: opDel.pos + opIns.text.length };
+        }
+        return opDel;
+    }
+    function otTransformInsertDelete(opIns, opDel) {
+        if (opDel.pos < opIns.pos) {
+            return { ...opIns, pos: Math.max(opDel.pos, opIns.pos - opDel.count) };
+        }
+        return opIns;
+    }
+    function applyOp(text, op) {
+        if (op.type === 'insert') {
+            return text.slice(0, op.pos) + op.text + text.slice(op.pos);
+        } else if (op.type === 'delete') {
+            return text.slice(0, op.pos) + text.slice(op.pos + op.count);
+        }
+        return text;
+    }
+
+    // --- Live Editor ---
+    const INITIAL_DOC = `function greet(name) {\n    return "Hello, " + name;\n}\n\nconsole.log(greet("World"));`;
+    let docState = INITIAL_DOC;
+    let aliceVersion = INITIAL_DOC;
+    let bobVersion = INITIAL_DOC;
+    let otLogLines = [];
+    let syncTimerAlice = null;
+    let syncTimerBob = null;
+
+    function resetDoc() {
+        docState = INITIAL_DOC;
+        aliceVersion = INITIAL_DOC;
+        bobVersion = INITIAL_DOC;
+        document.getElementById('editorAlice').value = INITIAL_DOC;
+        document.getElementById('editorBob').value = INITIAL_DOC;
+        document.getElementById('mergedDoc').textContent = INITIAL_DOC;
+        clearLog();
+    }
+
+    function clearLog() {
+        otLogLines = [];
+        document.getElementById('otLog').innerHTML = '<div class="ot-op"><span class="ot-desc" style="color:#444;">Waiting for edits...</span></div>';
+    }
+
+    function addOtLog(actor, desc, cls) {
+        const el = document.getElementById('otLog');
+        if (el.querySelector('.ot-op span[style]')) el.innerHTML = '';
+        const line = document.createElement('div');
+        line.className = 'ot-op';
+        line.innerHTML = `<span class="ot-actor ${actor}">${actor === 'alice' ? 'Alice' : 'Bob'}</span><span class="ot-desc ${cls||''}">${desc}</span>`;
+        el.appendChild(line);
+        el.scrollTop = el.scrollHeight;
+    }
+
+    function diffStrings(oldStr, newStr) {
+        // Find first difference
+        let i = 0;
+        while (i < oldStr.length && i < newStr.length && oldStr[i] === newStr[i]) i++;
+        if (i === oldStr.length && i === newStr.length) return null;
+        // Check if insert or delete
+        if (newStr.length > oldStr.length) {
+            const ins = newStr.slice(i, i + (newStr.length - oldStr.length));
+            return { type: 'insert', pos: i, text: ins };
+        } else if (newStr.length < oldStr.length) {
+            const count = oldStr.length - newStr.length;
+            return { type: 'delete', pos: i, count };
+        }
+        return { type: 'replace', pos: i, text: newStr.slice(i) };
+    }
+
+    function setupLiveEditors() {
+        const edA = document.getElementById('editorAlice');
+        const edB = document.getElementById('editorBob');
+        edA.value = INITIAL_DOC;
+        edB.value = INITIAL_DOC;
+        document.getElementById('mergedDoc').textContent = INITIAL_DOC;
+
+        function handleChange(actor, editor, otherEditor, statusId, otherStatusId) {
+            const delay = parseInt(document.getElementById('syncDelay').value) || 400;
+            const newText = editor.value;
+            const op = diffStrings(actor === 'alice' ? aliceVersion : bobVersion, newText);
+
+            if (actor === 'alice') aliceVersion = newText;
+            else bobVersion = newText;
+
+            document.getElementById(statusId).textContent = 'Typing...';
+            document.getElementById(statusId).className = 'editor-status typing';
+
+            if (op) {
+                if (op.type === 'insert') {
+                    addOtLog(actor, `insert "${op.text.replace(/\n/g,'↵')}" at pos ${op.pos}`);
+                } else if (op.type === 'delete') {
+                    addOtLog(actor, `delete ${op.count} char(s) at pos ${op.pos}`);
+                }
+            }
+
+            clearTimeout(actor === 'alice' ? syncTimerAlice : syncTimerBob);
+            const timer = setTimeout(() => {
+                // Sync: the other editor gets the change, transformed
+                const otherText = otherEditor.value;
+                if (op) {
+                    let transformedOp = op;
+                    const otherOp = diffStrings(docState, otherText);
+                    if (otherOp && otherOp.type === 'insert' && op.type === 'insert') {
+                        transformedOp = otTransformInsertInsert(otherOp, op);
+                        addOtLog(actor, `→ transformed pos ${op.pos} → ${transformedOp.pos} (other inserted "${otherOp.text.replace(/\n/g,'↵')}" at ${otherOp.pos})`, 'ot-resolve');
+                    }
+                    const merged = applyOp(otherText, transformedOp);
+                    otherEditor.value = merged;
+                    if (actor === 'alice') bobVersion = merged;
+                    else aliceVersion = merged;
+                    docState = merged;
+                    document.getElementById('mergedDoc').textContent = merged;
+                } else {
+                    docState = newText;
+                    otherEditor.value = newText;
+                    if (actor === 'alice') bobVersion = newText;
+                    else aliceVersion = newText;
+                    document.getElementById('mergedDoc').textContent = newText;
+                }
+
+                document.getElementById(statusId).textContent = 'Synced ✓';
+                document.getElementById(statusId).className = 'editor-status';
+                addOtLog(actor, 'sync complete', 'ot-resolve');
+            }, delay);
+
+            if (actor === 'alice') syncTimerAlice = timer;
+            else syncTimerBob = timer;
+        }
+
+        edA.addEventListener('input', () => handleChange('alice', edA, edB, 'statusAlice', 'statusBob'));
+        edB.addEventListener('input', () => handleChange('bob', edB, edA, 'statusBob', 'statusAlice'));
+    }
+
+    // --- Scenarios ---
+    const SCENARIOS = [
+        {
+            id: 'ins-ins-after',
+            title: 'Concurrent Inserts (non-overlapping)',
+            desc: 'Alice inserts at end; Bob inserts in middle. Positions must be adjusted.',
+            initial: 'hello world',
+            aliceOp: { type: 'insert', pos: 11, text: '!' },
+            bobOp:   { type: 'insert', pos: 5,  text: ' big' },
+        },
+        {
+            id: 'ins-ins-same',
+            title: 'Concurrent Inserts (same position)',
+            desc: 'Both insert at position 5. Tie-breaking by alphabetical actor name.',
+            initial: 'hello world',
+            aliceOp: { type: 'insert', pos: 5, text: ' beautiful' },
+            bobOp:   { type: 'insert', pos: 5, text: ' wonderful' },
+        },
+        {
+            id: 'del-ins',
+            title: 'Delete vs Insert',
+            desc: 'Alice deletes a word; Bob inserts before the deleted range.',
+            initial: 'the quick brown fox',
+            aliceOp: { type: 'delete', pos: 10, count: 6 },
+            bobOp:   { type: 'insert', pos: 4,  text: 'very ' },
+        },
+        {
+            id: 'ins-del-overlap',
+            title: 'Insert into Deleted Range',
+            desc: 'Bob inserts inside a range that Alice concurrently deleted.',
+            initial: 'foobar baz',
+            aliceOp: { type: 'delete', pos: 0, count: 6 },
+            bobOp:   { type: 'insert', pos: 3, text: 'XYZ' },
+        },
+    ];
+
+    let selectedScenario = null;
+    let simStep = 0;
+    let simSteps = [];
+
+    function renderScenarios() {
+        const grid = document.getElementById('scenarioGrid');
+        grid.innerHTML = SCENARIOS.map(s => `
+            <div class="scenario-card" id="sc-${s.id}" onclick="selectScenario('${s.id}')">
+                <h4>${s.title}</h4>
+                <p>${s.desc}</p>
+            </div>
+        `).join('');
+    }
+
+    function selectScenario(id) {
+        selectedScenario = SCENARIOS.find(s => s.id === id);
+        document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('selected'));
+        document.getElementById('sc-' + id).classList.add('selected');
+
+        const s = selectedScenario;
+        document.getElementById('simAliceOp').innerHTML =
+            `<div style="color:#666;margin-bottom:6px;">Initial: <span style="color:#ccc;">"${s.initial}"</span></div>` +
+            `<div style="color:var(--alice);">Alice: ${describeOp(s.aliceOp)}</div>`;
+        document.getElementById('simBobOp').innerHTML =
+            `<div style="color:#666;margin-bottom:6px;">Initial: <span style="color:#ccc;">"${s.initial}"</span></div>` +
+            `<div style="color:var(--bob);">Bob: ${describeOp(s.bobOp)}</div>`;
+
+        document.getElementById('simLog').innerHTML = '';
+        document.getElementById('simResult').textContent = '—';
+        document.getElementById('scenarioDetail').style.display = 'block';
+        simStep = 0;
+        buildSimSteps(s);
+    }
+
+    function describeOp(op) {
+        if (op.type === 'insert') return `insert "${op.text}" at pos ${op.pos}`;
+        if (op.type === 'delete') return `delete ${op.count} char(s) at pos ${op.pos}`;
+        return JSON.stringify(op);
+    }
+
+    function buildSimSteps(s) {
+        simSteps = [];
+        const initial = s.initial;
+        const aliceOp = s.aliceOp;
+        const bobOp = s.bobOp;
+
+        simSteps.push({ actor: null, desc: `Initial document: "<strong>${initial}</strong>"`, cls: 'log-info' });
+        simSteps.push({ actor: 'alice', desc: `Applies: ${describeOp(aliceOp)}`, cls: '' });
+        simSteps.push({ actor: 'bob',   desc: `Applies (concurrent): ${describeOp(bobOp)}`, cls: '' });
+
+        const afterAlice = applyOp(initial, aliceOp);
+        const afterBob   = applyOp(initial, bobOp);
+        simSteps.push({ actor: 'alice', desc: `Alice's doc: "<strong>${afterAlice}</strong>"`, cls: 'ot-resolve' });
+        simSteps.push({ actor: 'bob',   desc: `Bob's doc: "<strong>${afterBob}</strong>"`, cls: 'ot-resolve' });
+
+        // Server receives Alice first, transforms Bob's op
+        let bobTransformed;
+        if (aliceOp.type === 'insert' && bobOp.type === 'insert') {
+            bobTransformed = otTransformInsertInsert(aliceOp, bobOp);
+            if (bobTransformed.pos !== bobOp.pos) {
+                simSteps.push({ actor: null, desc: `<span class="ot-conflict">⚠ Conflict detected — positions overlap</span>`, cls: '' });
+                simSteps.push({ actor: null, desc: `Transform: Bob's pos ${bobOp.pos} → ${bobTransformed.pos} (shift by +${aliceOp.text.length} for Alice's insert)`, cls: 'ot-resolve' });
+            } else if (bobOp.pos === aliceOp.pos) {
+                // Tie-break: Alice wins (alphabetical)
+                bobTransformed = { ...bobOp, pos: bobOp.pos + aliceOp.text.length };
+                simSteps.push({ actor: null, desc: `<span class="ot-conflict">⚠ Same position — tie-break: Alice (alphabetically first) goes first</span>`, cls: '' });
+                simSteps.push({ actor: null, desc: `Transform: Bob's pos ${bobOp.pos} → ${bobTransformed.pos}`, cls: 'ot-resolve' });
+            } else {
+                simSteps.push({ actor: null, desc: `No position conflict — Bob's op applied as-is`, cls: 'ot-resolve' });
+            }
+        } else if (aliceOp.type === 'delete' && bobOp.type === 'insert') {
+            bobTransformed = otTransformDeleteInsert(aliceOp, bobOp);
+            if (bobOp.pos !== bobTransformed.pos) {
+                simSteps.push({ actor: null, desc: `Transform: Bob's insert shifts pos ${bobOp.pos} → ${bobTransformed.pos}`, cls: 'ot-resolve' });
+            } else {
+                simSteps.push({ actor: null, desc: `Bob's insert is outside deleted range — no transform needed`, cls: 'ot-resolve' });
+            }
+        } else if (aliceOp.type === 'insert' && bobOp.type === 'delete') {
+            bobTransformed = otTransformInsertDelete(aliceOp, bobOp);
+        } else {
+            bobTransformed = bobOp;
+        }
+
+        const finalDoc = applyOp(afterAlice, bobTransformed);
+        simSteps.push({ actor: null, desc: `Apply transformed Bob op to Alice's doc`, cls: '' });
+        simSteps.push({ actor: null, desc: `✓ Converged: "<strong>${finalDoc}</strong>"`, cls: 'ot-resolve', final: finalDoc });
+    }
+
+    let simRunning = false;
+    async function runScenario() {
+        if (simRunning) return;
+        if (!selectedScenario) return;
+        simRunning = true;
+        document.getElementById('simLog').innerHTML = '';
+        document.getElementById('simResult').textContent = '—';
+
+        for (const step of simSteps) {
+            await new Promise(r => setTimeout(r, 520));
+            const el = document.getElementById('simLog');
+            const div = document.createElement('div');
+            div.className = 'ot-op';
+            if (step.actor) {
+                div.innerHTML = `<span class="ot-actor ${step.actor}">${step.actor === 'alice' ? 'Alice' : 'Bob'}</span><span class="ot-desc ${step.cls||''}">${step.desc}</span>`;
+            } else {
+                div.innerHTML = `<span class="ot-desc ${step.cls||''}" style="padding-left:60px;">${step.desc}</span>`;
+            }
+            el.appendChild(div);
+            el.scrollTop = el.scrollHeight;
+            if (step.final) document.getElementById('simResult').textContent = step.final;
+        }
+        simRunning = false;
+    }
+
+    // --- Tab switch ---
+    function switchTab(name) {
+        document.querySelectorAll('.cc-tab').forEach((t, i) => {
+            const tabs = ['editor','simulate','concepts'];
+            t.classList.toggle('active', tabs[i] === name);
+        });
+        document.querySelectorAll('.cc-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+    }
+
+    renderScenarios();
+    setupLiveEditors();
+    </script>
+</body>
+</html>

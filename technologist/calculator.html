@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Calculator — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js"></script>
+    <style>
+        :root { --acc: #80cbc4; --acc2: #4db6ac; }
+        .calc-wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px 60px; }
+
+        /* Top tabs */
+        .calc-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 24px 0 20px; }
+        .calc-tab {
+            padding: 8px 22px; border-radius: 6px; border: 1px solid #333;
+            background: #111; color: #aaa; cursor: pointer; font-size: 0.9rem; transition: all .18s;
+        }
+        .calc-tab.active, .calc-tab:hover { background: var(--acc); color: #000; border-color: var(--acc); }
+        .calc-panel { display: none; }
+        .calc-panel.active { display: block; }
+
+        /* Progress bar */
+        .progress-bar-wrap { background: #111; border-radius: 20px; height: 6px; margin-bottom: 20px; }
+        .progress-bar { height: 6px; border-radius: 20px; background: var(--acc); transition: width .4s; }
+
+        /* Subject cards */
+        .subject-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-bottom: 24px; }
+        .subject-card {
+            background: #0e0e0e; border: 1px solid #222; border-radius: 10px; padding: 16px;
+            cursor: pointer; transition: border-color .2s;
+        }
+        .subject-card:hover, .subject-card.active-subject { border-color: var(--acc); }
+        .subject-card h4 { margin: 0 0 6px; font-size: 0.95rem; }
+        .subject-card p { margin: 0; color: #666; font-size: 0.78rem; line-height: 1.4; }
+        .subject-num { font-size: 0.7rem; color: #444; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+
+        /* Lesson list */
+        .lesson-list { display: flex; flex-direction: column; gap: 8px; }
+        .lesson-item {
+            background: #0a0a0a; border: 1px solid #1e1e1e; border-radius: 8px; overflow: hidden;
+        }
+        .lesson-header {
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+            cursor: pointer; transition: background .15s;
+        }
+        .lesson-header:hover { background: #111; }
+        .lesson-num { font-size: 0.72rem; color: #444; width: 28px; flex-shrink: 0; }
+        .lesson-title { flex: 1; font-size: 0.9rem; color: #ccc; font-weight: 600; }
+        .lesson-chevron { color: #444; font-size: 0.8rem; transition: transform .2s; }
+        .lesson-item.open .lesson-chevron { transform: rotate(90deg); }
+        .lesson-body { display: none; padding: 0 16px 16px; }
+        .lesson-item.open .lesson-body { display: block; }
+        .lesson-body p { color: #999; font-size: 0.85rem; line-height: 1.7; margin: 0 0 10px; }
+        .lesson-body .practical {
+            background: rgba(128,203,196,0.07); border-left: 3px solid var(--acc);
+            padding: 10px 14px; border-radius: 0 6px 6px 0; margin: 12px 0;
+        }
+        .lesson-body .practical strong { color: var(--acc); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
+        .lesson-body .practical p { margin: 0; color: #a0c4c1; font-size: 0.84rem; }
+        .formula-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .formula-chip {
+            background: #111; border: 1px solid #2a2a2a; border-radius: 6px;
+            padding: 5px 12px; font-family: monospace; font-size: 0.82rem; color: #ddd;
+        }
+
+        /* Back button */
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px;
+            background: #111; border: 1px solid #333; border-radius: 6px; color: #888;
+            font-size: 0.82rem; cursor: pointer; margin-bottom: 16px;
+        }
+        .back-btn:hover { border-color: var(--acc); color: var(--acc); }
+
+        /* CALCULATOR TAB */
+        .tool-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+        .tool-tab {
+            padding: 7px 16px; border-radius: 6px; border: 1px solid #2a2a2a;
+            background: #0e0e0e; color: #888; cursor: pointer; font-size: 0.82rem;
+        }
+        .tool-tab.active { background: #1a2a29; border-color: var(--acc); color: var(--acc); }
+        .tool-panel { display: none; }
+        .tool-panel.active { display: block; }
+
+        .calc-tool-box {
+            background: #0a0a0a; border: 1px solid #1e1e1e; border-radius: 10px; padding: 20px;
+            max-width: 600px;
+        }
+        .calc-tool-box h4 { margin: 0 0 4px; color: var(--acc); }
+        .calc-tool-box .tool-desc { color: #666; font-size: 0.82rem; margin: 0 0 16px; }
+
+        .tool-field { margin-bottom: 12px; }
+        .tool-field label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 4px; }
+        .tool-field input, .tool-field select {
+            width: 100%; box-sizing: border-box;
+            background: #111; border: 1px solid #2a2a2a; border-radius: 6px;
+            color: #e0e0e0; padding: 8px 12px; font-size: 0.88rem; font-family: monospace;
+        }
+        .tool-btn {
+            padding: 9px 22px; border-radius: 7px; border: none;
+            background: var(--acc); color: #000; font-weight: 700; font-size: 0.88rem;
+            cursor: pointer; transition: filter .15s;
+        }
+        .tool-btn:hover { filter: brightness(1.1); }
+        .tool-result {
+            margin-top: 14px; background: #080808; border: 1px solid #1a1a1a;
+            border-radius: 8px; padding: 14px; font-family: monospace; font-size: 0.85rem;
+            color: #d0d0d0; min-height: 48px; white-space: pre-wrap;
+        }
+        .tool-result .res-line { padding: 2px 0; }
+        .tool-result .res-hl { color: var(--acc); font-weight: 700; }
+        .tool-result .res-dim { color: #555; }
+        .tool-result .res-err { color: #ef5350; }
+
+        /* Basic calc buttons */
+        .calc-display {
+            background: #050505; border: 1px solid #1a1a1a; border-radius: 8px;
+            padding: 14px 16px; font-family: monospace; font-size: 1.6rem; color: #e0e0e0;
+            text-align: right; margin-bottom: 10px; min-height: 56px; word-break: break-all;
+        }
+        .calc-display .calc-expr { font-size: 0.8rem; color: #444; display: block; min-height: 18px; }
+        .calc-btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        .cb {
+            padding: 14px 0; border-radius: 7px; border: none; font-size: 0.95rem;
+            font-weight: 600; cursor: pointer; transition: filter .12s;
+        }
+        .cb:hover { filter: brightness(1.2); }
+        .cb-num { background: #1a1a1a; color: #e0e0e0; }
+        .cb-op  { background: #1e2a29; color: var(--acc); }
+        .cb-eq  { background: var(--acc); color: #000; }
+        .cb-fn  { background: #141414; color: #aaa; font-size: 0.78rem; }
+        .cb-clr { background: #1a1212; color: #ef9090; }
+
+        /* REFERENCE TAB */
+        .ref-sections { display: flex; flex-direction: column; gap: 20px; }
+        .ref-section { background: #0a0a0a; border: 1px solid #1e1e1e; border-radius: 10px; overflow: hidden; }
+        .ref-section-hdr {
+            padding: 12px 18px; background: #0e0e0e; border-bottom: 1px solid #1a1a1a;
+            display: flex; align-items: center; gap: 10px; cursor: pointer;
+        }
+        .ref-section-hdr h4 { margin: 0; color: var(--acc); font-size: 0.9rem; }
+        .ref-section-body { display: none; padding: 16px 18px; }
+        .ref-section.open .ref-section-body { display: block; }
+        .ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+        .ref-card {
+            background: #0e0e0e; border: 1px solid #1a1a1a; border-radius: 8px; padding: 12px;
+        }
+        .ref-card .ref-name { font-size: 0.75rem; color: #777; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .ref-card .ref-formula { font-family: monospace; font-size: 0.88rem; color: #d0e8d0; }
+        .ref-card .ref-note { font-size: 0.75rem; color: #555; margin-top: 4px; }
+
+        /* GLOSSARY TAB */
+        .gloss-search {
+            width: 100%; box-sizing: border-box; background: #0e0e0e; border: 1px solid #2a2a2a;
+            border-radius: 8px; color: #e0e0e0; padding: 10px 14px; font-size: 0.9rem; margin-bottom: 16px;
+        }
+        .gloss-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+        .gloss-card {
+            background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 8px; padding: 14px;
+        }
+        .gloss-term { font-weight: 700; color: var(--acc); font-size: 0.9rem; margin-bottom: 4px; }
+        .gloss-cat { font-size: 0.7rem; color: #444; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .gloss-def { color: #888; font-size: 0.82rem; line-height: 1.55; }
+        .gloss-card.hidden { display: none; }
+    </style>
+</head>
+<body class="wunderBody">
+<div class="navbar"></div>
+<div class="calc-wrap">
+    <h2 style="margin-bottom:4px;">The Calculator</h2>
+    <p style="color:#888;margin-top:0;">A complete mathematics curriculum from arithmetic to differential equations — with interactive tools, a formula reference, and a glossary of 90+ terms.</p>
+
+    <div class="calc-tabs">
+        <button class="calc-tab active" onclick="switchMain('curriculum')">Curriculum</button>
+        <button class="calc-tab" onclick="switchMain('tools')">Calculator</button>
+        <button class="calc-tab" onclick="switchMain('reference')">Reference</button>
+        <button class="calc-tab" onclick="switchMain('glossary')">Glossary</button>
+    </div>
+
+    <!-- CURRICULUM -->
+    <div id="panel-curriculum" class="calc-panel active">
+        <div id="subject-grid-view">
+            <p style="color:#777;font-size:0.85rem;margin-bottom:16px;">Select a subject to explore its lessons. Each lesson explains the concept and its real-world applications.</p>
+            <div class="subject-grid" id="subjectGrid"></div>
+        </div>
+        <div id="lesson-view" style="display:none;">
+            <button class="back-btn" onclick="showSubjectGrid()">&#8592; All Subjects</button>
+            <div id="lessonTitle" style="margin-bottom:16px;"></div>
+            <div class="lesson-list" id="lessonList"></div>
+        </div>
+    </div>
+
+    <!-- TOOLS -->
+    <div id="panel-tools" class="calc-panel">
+        <div class="tool-tabs">
+            <button class="tool-tab active" onclick="switchTool('basic')">Basic</button>
+            <button class="tool-tab" onclick="switchTool('quadratic')">Quadratic</button>
+            <button class="tool-tab" onclick="switchTool('trig')">Trig</button>
+            <button class="tool-tab" onclick="switchTool('derivative')">Derivative</button>
+            <button class="tool-tab" onclick="switchTool('integral')">Integral</button>
+            <button class="tool-tab" onclick="switchTool('ode')">ODE Solver</button>
+            <button class="tool-tab" onclick="switchTool('stats')">Statistics</button>
+        </div>
+
+        <!-- Basic calc -->
+        <div id="tool-basic" class="tool-panel active">
+            <div class="calc-tool-box">
+                <h4>Scientific Calculator</h4>
+                <p class="tool-desc">Full scientific calculator with history.</p>
+                <div class="calc-display">
+                    <span class="calc-expr" id="calcExpr"></span>
+                    <span id="calcDisplay">0</span>
+                </div>
+                <div class="calc-btns">
+                    <button class="cb cb-fn" onclick="calcFn('sin')">sin</button>
+                    <button class="cb cb-fn" onclick="calcFn('cos')">cos</button>
+                    <button class="cb cb-fn" onclick="calcFn('tan')">tan</button>
+                    <button class="cb cb-clr" onclick="calcClear()">C</button>
+                    <button class="cb cb-fn" onclick="calcFn('sqrt')">√</button>
+                    <button class="cb cb-fn" onclick="calcFn('log')">log</button>
+                    <button class="cb cb-fn" onclick="calcFn('ln')">ln</button>
+                    <button class="cb cb-op" onclick="calcOp('(')">(</button>
+                    <button class="cb cb-fn" onclick="calcFn('pow2')">x²</button>
+                    <button class="cb cb-fn" onclick="calcConst('pi')">π</button>
+                    <button class="cb cb-fn" onclick="calcConst('e')">e</button>
+                    <button class="cb cb-op" onclick="calcOp(')')">)</button>
+                    <button class="cb cb-num" onclick="calcDigit('7')">7</button>
+                    <button class="cb cb-num" onclick="calcDigit('8')">8</button>
+                    <button class="cb cb-num" onclick="calcDigit('9')">9</button>
+                    <button class="cb cb-op" onclick="calcOp('/')">÷</button>
+                    <button class="cb cb-num" onclick="calcDigit('4')">4</button>
+                    <button class="cb cb-num" onclick="calcDigit('5')">5</button>
+                    <button class="cb cb-num" onclick="calcDigit('6')">6</button>
+                    <button class="cb cb-op" onclick="calcOp('*')">×</button>
+                    <button class="cb cb-num" onclick="calcDigit('1')">1</button>
+                    <button class="cb cb-num" onclick="calcDigit('2')">2</button>
+                    <button class="cb cb-num" onclick="calcDigit('3')">3</button>
+                    <button class="cb cb-op" onclick="calcOp('-')">−</button>
+                    <button class="cb cb-num" onclick="calcDigit('0')">0</button>
+                    <button class="cb cb-num" onclick="calcDigit('.')">.</button>
+                    <button class="cb cb-op" onclick="calcBackspace()">⌫</button>
+                    <button class="cb cb-op" onclick="calcOp('+')">+</button>
+                    <button class="cb cb-eq" style="grid-column:span 4;" onclick="calcEval()">=</button>
+                </div>
+                <div id="calcHistory" style="margin-top:12px;max-height:120px;overflow-y:auto;font-family:monospace;font-size:0.78rem;color:#444;"></div>
+            </div>
+        </div>
+
+        <!-- Quadratic -->
+        <div id="tool-quadratic" class="tool-panel">
+            <div class="calc-tool-box">
+                <h4>Quadratic Solver</h4>
+                <p class="tool-desc">Solves ax² + bx + c = 0 using the quadratic formula. Shows discriminant analysis and all steps.</p>
+                <div class="tool-field"><label>a (coefficient of x²)</label><input id="qa" type="number" value="1" /></div>
+                <div class="tool-field"><label>b (coefficient of x)</label><input id="qb" type="number" value="-3" /></div>
+                <div class="tool-field"><label>c (constant)</label><input id="qc" type="number" value="2" /></div>
+                <button class="tool-btn" onclick="solveQuadratic()">Solve</button>
+                <div class="tool-result" id="quadraticResult"></div>
+            </div>
+        </div>
+
+        <!-- Trig -->
+        <div id="tool-trig" class="tool-panel">
+            <div class="calc-tool-box">
+                <h4>Trigonometry Calculator</h4>
+                <p class="tool-desc">Compute trig functions and their inverses in degrees or radians.</p>
+                <div class="tool-field">
+                    <label>Function</label>
+                    <select id="trigFn">
+                        <option>sin</option><option>cos</option><option>tan</option>
+                        <option>asin</option><option>acos</option><option>atan</option>
+                        <option>sec</option><option>csc</option><option>cot</option>
+                    </select>
+                </div>
+                <div class="tool-field"><label>Angle / Value</label><input id="trigVal" type="number" value="45" /></div>
+                <div class="tool-field">
+                    <label>Unit</label>
+                    <select id="trigUnit"><option value="deg">Degrees</option><option value="rad">Radians</option></select>
+                </div>
+                <button class="tool-btn" onclick="calcTrig()">Calculate</button>
+                <div class="tool-result" id="trigResult"></div>
+            </div>
+        </div>
+
+        <!-- Derivative -->
+        <div id="tool-derivative" class="tool-panel">
+            <div class="calc-tool-box">
+                <h4>Numerical Derivative</h4>
+                <p class="tool-desc">Evaluates f'(x) at a point using the central difference method: f'(x) ≈ [f(x+h) − f(x−h)] / 2h. Use standard JS math notation (e.g. <code style="color:var(--acc);">Math.sin(x)</code>, <code style="color:var(--acc);">x**2</code>, <code style="color:var(--acc);">Math.exp(x)</code>).</p>
+                <div class="tool-field"><label>f(x) =</label><input id="derivFn" type="text" value="x**3 - 2*x**2 + x" /></div>
+                <div class="tool-field"><label>x =</label><input id="derivX" type="number" value="2" /></div>
+                <button class="tool-btn" onclick="calcDerivative()">Differentiate</button>
+                <div class="tool-result" id="derivResult"></div>
+            </div>
+        </div>
+
+        <!-- Integral -->
+        <div id="tool-integral" class="tool-panel">
+            <div class="calc-tool-box">
+                <h4>Definite Integral (Simpson's Rule)</h4>
+                <p class="tool-desc">Numerically integrates f(x) from a to b using Simpson's 1/3 rule with n=1000 subintervals.</p>
+                <div class="tool-field"><label>f(x) =</label><input id="intFn" type="text" value="x**2" /></div>
+                <div class="tool-field"><label>Lower bound (a)</label><input id="intA" type="number" value="0" /></div>
+                <div class="tool-field"><label>Upper bound (b)</label><input id="intB" type="number" value="3" /></div>
+                <button class="tool-btn" onclick="calcIntegral()">Integrate</button>
+                <div class="tool-result" id="integralResult"></div>
+            </div>
+        </div>
+
+        <!-- ODE -->
+        <div id="tool-ode" class="tool-panel">
+            <div class="calc-tool-box">
+                <h4>ODE Solver (Euler's Method)</h4>
+                <p class="tool-desc">Solves dy/dx = f(x,y) numerically from x₀ to xₙ given initial condition y(x₀) = y₀.</p>
+                <div class="tool-field"><label>dy/dx = f(x,y) =</label><input id="odeFn" type="text" value="-2*y + x" /></div>
+                <div class="tool-field"><label>x₀ (start)</label><input id="odeX0" type="number" value="0" /></div>
+                <div class="tool-field"><label>y₀ (initial value)</label><input id="odeY0" type="number" value="1" /></div>
+                <div class="tool-field"><label>xₙ (end)</label><input id="odeXn" type="number" value="2" /></div>
+                <div class="tool-field"><label>Step size h</label><input id="odeH" type="number" value="0.5" step="0.01" /></div>
+                <button class="tool-btn" onclick="solveODE()">Solve</button>
+                <div class="tool-result" id="odeResult"></div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div id="tool-stats" class="tool-panel">
+            <div class="calc-tool-box">
+                <h4>Statistics Calculator</h4>
+                <p class="tool-desc">Paste comma-separated numbers to compute descriptive statistics.</p>
+                <div class="tool-field"><label>Data (comma-separated)</label><input id="statsData" type="text" value="4, 7, 13, 2, 1, 9, 6, 8, 3" /></div>
+                <button class="tool-btn" onclick="calcStats()">Calculate</button>
+                <div class="tool-result" id="statsResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- REFERENCE -->
+    <div id="panel-reference" class="calc-panel">
+        <div class="ref-sections" id="refSections"></div>
+    </div>
+
+    <!-- GLOSSARY -->
+    <div id="panel-glossary" class="calc-panel">
+        <input class="gloss-search" id="glossSearch" placeholder="Search terms..." oninput="filterGloss()" />
+        <div class="gloss-grid" id="glossGrid"></div>
+    </div>
+</div>
+
+<script>
+'use strict';
+
+// ─── CURRICULUM DATA ──────────────────────────────────────────────────────────
+const CURRICULUM = [
+  {
+    id: 'arithmetic', label: 'Arithmetic', color: '#80cbc4',
+    tagline: 'The foundation of all mathematics',
+    lessons: [
+      {
+        title: 'Natural Numbers & Place Value',
+        body: `Numbers are abstract representations of quantity. The Hindu-Arabic numeral system uses place value — each position represents a power of 10. The digit 4 in 400 represents 4×10² = 400; the same digit in 40 means 4×10 = 40.`,
+        practical: `Engineering drawings use precise tolerances (0.001 mm); financial systems track currency to two decimal places. Understanding place value prevents costly off-by-one errors in software that handles money or physical dimensions.`,
+        formulas: ['Place value: dₙ×10ⁿ + ... + d₁×10 + d₀']
+      },
+      {
+        title: 'The Four Operations',
+        body: `Addition, subtraction, multiplication, and division are the bedrock operations. Multiplication is repeated addition; division is repeated subtraction. The order of operations (PEMDAS/BODMAS) resolves ambiguity: Parentheses, Exponents, Multiplication/Division (left to right), Addition/Subtraction.`,
+        practical: `Every algorithm in computing eventually reduces to these operations. CPUs execute billions of additions and multiplications per second. When you compress a video or render 3D graphics, matrix multiplication — thousands of multiply-then-add steps — is what's happening.`,
+        formulas: ['a×(b+c) = a×b + a×c', 'a÷b = a × (1/b)']
+      },
+      {
+        title: 'Fractions, Decimals & Percentages',
+        body: `A fraction a/b expresses a parts of a whole divided into b equal parts. Decimals are fractions with powers-of-10 denominators. Percentages are fractions out of 100. They are three notations for the same idea and can be converted freely.`,
+        practical: `Interest rates, tax calculations, and data compression ratios all rely on fractions and percentages. A 3.5% annual interest rate compounds as (1 + 0.035)ⁿ — understanding the decimal form is essential for financial modelling.`,
+        formulas: ['a/b × c/d = ac/bd', 'x% = x/100', 'Decimal ↔ Fraction: multiply/divide by 10ⁿ']
+      },
+      {
+        title: 'Prime Numbers & Factorisation',
+        body: `A prime number has exactly two divisors: 1 and itself. Every integer greater than 1 can be written uniquely as a product of primes (Fundamental Theorem of Arithmetic). The GCD and LCM of numbers are found via prime factorisation.`,
+        practical: `RSA encryption — the backbone of HTTPS — relies on the fact that multiplying two large primes is easy, but factoring the product back is computationally infeasible. Prime factorisation is also used in simplifying fractions and solving Diophantine equations.`,
+        formulas: ['n = p₁^a₁ × p₂^a₂ × ...', 'GCD(a,b) × LCM(a,b) = a×b']
+      }
+    ]
+  },
+  {
+    id: 'algebra', label: 'Algebra', color: '#a5d6a7',
+    tagline: 'Generalising arithmetic with variables',
+    lessons: [
+      {
+        title: 'Variables & Expressions',
+        body: `Algebra replaces specific numbers with variables — symbols that stand for unknown or changing quantities. An algebraic expression combines variables, constants, and operations. Simplification uses the distributive, commutative, and associative laws.`,
+        practical: `Every formula in physics, finance, or programming is an algebraic expression. A database query filter WHERE price * quantity > budget is algebra. So is the formula for calculating a monthly mortgage payment.`,
+        formulas: ['(a+b)² = a²+2ab+b²', '(a-b)(a+b) = a²-b²']
+      },
+      {
+        title: 'Linear Equations & Inequalities',
+        body: `A linear equation in one variable (ax + b = 0) has exactly one solution. Linear inequalities define ranges. In two variables, a linear equation describes a straight line; solving a system finds the intersection point.`,
+        practical: `Break-even analysis in business: Revenue = Cost → Price×Units = FixedCost + VariableCost×Units is a linear equation solved for Units. Network traffic shaping rules are linear inequalities.`,
+        formulas: ['ax + b = 0 → x = -b/a', 'Slope: m = (y₂-y₁)/(x₂-x₁)', 'y = mx + b']
+      },
+      {
+        title: 'Quadratic Equations',
+        body: `A quadratic (degree-2) equation ax²+bx+c=0 can have two, one, or zero real solutions depending on the discriminant Δ = b²-4ac. Solutions come from factoring, completing the square, or the quadratic formula. The parabola it graphs has a vertex at x = -b/2a.`,
+        practical: `Projectile motion is governed by a quadratic: h(t) = h₀ + v₀t - ½gt². Engineers calculating the trajectory of a thrown object, a water jet, or a satellite re-entry solve quadratics. Quadratics also appear in optimising profit functions.`,
+        formulas: ['x = (-b ± √(b²-4ac)) / 2a', 'Δ>0: 2 real roots, Δ=0: 1, Δ<0: complex']
+      },
+      {
+        title: 'Polynomials & Factoring',
+        body: `A polynomial is a sum of terms aₙxⁿ + ... + a₁x + a₀. Factoring reverses multiplication — it expresses a polynomial as a product of lower-degree polynomials. The Factor Theorem: (x-r) is a factor if and only if r is a root.`,
+        practical: `Polynomial interpolation fits a curve through data points — used in computer graphics for smooth animations (Bézier curves are polynomials) and in numerical methods to approximate complex functions.`,
+        formulas: ['aⁿ-bⁿ = (a-b)(aⁿ⁻¹+...+bⁿ⁻¹)', 'Remainder Theorem: f(r) = 0 ↔ (x-r)|f(x)']
+      },
+      {
+        title: 'Systems of Equations',
+        body: `Multiple equations in multiple unknowns. 2×2 systems are solved by substitution or elimination; larger systems use Gaussian elimination. Matrix form Ax = b is the foundation of linear algebra. The system has a unique solution when det(A) ≠ 0.`,
+        practical: `Every structural engineering FEM simulation solves massive systems of linear equations (millions of unknowns). Machine learning's least-squares regression and network flow optimisation are systems of equations.`,
+        formulas: ['Ax = b → x = A⁻¹b (if det A ≠ 0)', 'Cramer: xᵢ = det(Aᵢ)/det(A)']
+      }
+    ]
+  },
+  {
+    id: 'geometry', label: 'Geometry', color: '#ffcc80',
+    tagline: 'Shape, space, and measurement',
+    lessons: [
+      {
+        title: 'Euclidean Geometry & Proofs',
+        body: `Euclidean geometry builds from five axioms. Theorems are logical consequences — proven, not assumed. Key results: vertical angles are equal, angles in a triangle sum to 180°, the exterior angle equals the sum of the two non-adjacent interior angles.`,
+        practical: `Computer vision uses geometric invariants to recognise objects regardless of rotation. Architecture and CAD rely on geometric constructions. GPS trilateration is pure 3D Euclidean geometry.`,
+        formulas: ['Triangle angles: A+B+C = 180°', 'Exterior angle = sum of remote interior angles']
+      },
+      {
+        title: 'Area, Perimeter & Volume',
+        body: `Area measures 2D surface; volume measures 3D space. Perimeter measures boundary length. Formulas differ by shape but derive from first principles — a circle's area πr² comes from summing concentric rings via integration.`,
+        practical: `Civil engineering: calculating material quantities for construction. Game development: collision detection uses bounding volumes. Medical imaging: volumetric MRI scans compute tissue volumes from cross-sections.`,
+        formulas: ['Circle: A=πr², C=2πr', 'Sphere: V=4πr³/3', 'Cylinder: V=πr²h', 'Triangle: A=½bh']
+      },
+      {
+        title: 'The Pythagorean Theorem',
+        body: `In a right triangle, a²+b²=c² where c is the hypotenuse. Conversely, if a²+b²=c² then the angle opposite c is 90°. Extensions: the distance formula in the plane is the Pythagorean theorem; the 3D distance is √(Δx²+Δy²+Δz²).`,
+        practical: `Every 2D/3D distance calculation in software uses this theorem — pathfinding, collision detection, nearest-neighbour search. Surveyors use it to check right angles. It's foundational to the dot product definition.`,
+        formulas: ['a²+b²=c²', 'Distance: d=√((x₂-x₁)²+(y₂-y₁)²)', 'Pythagorean triples: 3-4-5, 5-12-13']
+      },
+      {
+        title: 'Coordinate Geometry',
+        body: `Cartesian coordinates assign ordered pairs (x,y) to points in a plane, bridging algebra and geometry. Lines, circles, and parabolas become equations. The midpoint formula and distance formula are direct applications of the Pythagorean theorem.`,
+        practical: `Every computer screen is a coordinate system — pixels are integer (x,y) pairs. Mapping software (Google Maps) uses projected coordinate systems. Physics simulations track object positions as coordinate pairs.`,
+        formulas: ['Midpoint: ((x₁+x₂)/2, (y₁+y₂)/2)', 'Circle: (x-h)²+(y-k)²=r²']
+      }
+    ]
+  },
+  {
+    id: 'trig', label: 'Trigonometry', color: '#ef9a9a',
+    tagline: 'Angles, waves, and rotations',
+    lessons: [
+      {
+        title: 'The Unit Circle & Radian Measure',
+        body: `Radians measure angles as arc length on a unit circle (radius = 1). 2π radians = 360°. The unit circle maps every angle θ to a point (cos θ, sin θ). Radians are dimensionless and natural — calculus derivatives of trig functions are clean only in radians.`,
+        practical: `Radians are used in every physics and engineering formula involving rotation — angular velocity ω (rad/s), torque, and wave equations. All programming languages' math libraries expect radians.`,
+        formulas: ['θ(rad) = θ(°)×π/180', 'Arc length: s = rθ', 'Unit circle: x=cosθ, y=sinθ']
+      },
+      {
+        title: 'Sine, Cosine & Tangent',
+        body: `In a right triangle: sin = opposite/hypotenuse, cos = adjacent/hypotenuse, tan = opposite/adjacent (SOH-CAH-TOA). As functions of a continuous angle, they produce smooth periodic waves — sin completes a full cycle every 2π.`,
+        practical: `Audio processing, alternating current (AC circuits), and signal analysis all describe waves with sin and cos. The amplitude, frequency, and phase of a sinusoidal wave directly correspond to A·sin(ωt + φ).`,
+        formulas: ['sin²θ + cos²θ = 1', 'tan θ = sin θ / cos θ', 'SOHCAHTOA']
+      },
+      {
+        title: 'Trigonometric Identities',
+        body: `Identities are equations true for all valid inputs. Sum-to-product and product-to-sum formulas transform expressions. The double-angle formulas sin(2θ)=2sinθcosθ and cos(2θ)=cos²θ-sin²θ appear constantly in calculus and physics.`,
+        practical: `In signal processing, product-to-sum identities are used in amplitude modulation (AM radio). In calculus, identities simplify integrals that would otherwise be intractable.`,
+        formulas: ['sin(A±B)=sinAcosB±cosAsinB', 'cos(2θ)=cos²θ-sin²θ=1-2sin²θ', 'tan(A+B)=(tanA+tanB)/(1-tanAtanB)']
+      },
+      {
+        title: 'Laws of Sines & Cosines',
+        body: `The Law of Sines relates sides and angles of any triangle: a/sinA = b/sinB = c/sinC. The Law of Cosines generalises the Pythagorean theorem: c²=a²+b²-2ab·cosC. Together they solve any triangle given sufficient information.`,
+        practical: `Surveying and navigation use these laws constantly. GPS receivers use them in triangulation. 3D rendering engines compute lighting with the dot product, which is derived from the Law of Cosines.`,
+        formulas: ['a/sinA = b/sinB = c/sinC', 'c² = a²+b²-2ab·cosC']
+      }
+    ]
+  },
+  {
+    id: 'precalc', label: 'Pre-Calculus', color: '#ce93d8',
+    tagline: 'Functions, limits, and the path to calculus',
+    lessons: [
+      {
+        title: 'Functions & Their Graphs',
+        body: `A function maps each input to exactly one output. Key concepts: domain (valid inputs), range (possible outputs), composition f(g(x)), and inverse f⁻¹. Transformations — shifting, reflecting, scaling — modify the graph predictably.`,
+        practical: `Every computation is a function call. A compiler maps source code → machine code. A hash function maps a key → bucket index. Understanding function composition is essential for understanding how pipelines and middleware chains work.`,
+        formulas: ['(f∘g)(x) = f(g(x))', 'f⁻¹(f(x)) = x', 'Even: f(-x)=f(x), Odd: f(-x)=-f(x)']
+      },
+      {
+        title: 'Exponentials & Logarithms',
+        body: `Exponential functions bˣ model growth and decay. The natural base e ≈ 2.718 arises naturally wherever a quantity's rate of change is proportional to its value. Logarithms are inverses of exponentials: logb(x) = y ↔ bʸ = x. The change-of-base formula connects any two bases.`,
+        practical: `Compound interest uses eʳᵗ (continuous) or (1+r/n)ⁿᵗ (discrete). Database B-trees have height O(log n). Signal decibels use log₁₀. The Richter scale and pH are logarithmic. Big-O notation's log n means log₂ in CS.`,
+        formulas: ['ln(ab)=ln(a)+ln(b)', 'logb(x) = ln(x)/ln(b)', 'eˣ = 1 + x + x²/2! + ...']
+      },
+      {
+        title: 'Sequences & Series',
+        body: `A sequence is an ordered list of numbers. An arithmetic sequence adds a constant difference d; a geometric sequence multiplies by constant ratio r. A series is the sum of a sequence. Infinite geometric series converge when |r| < 1.`,
+        practical: `Loan amortisation schedules are arithmetic/geometric series. Recursive algorithms have complexity described by recurrence relations (sequences). The binary search running time is T(n) = T(n/2) + 1 — a geometric series whose closed form is O(log n).`,
+        formulas: ['Arithmetic sum: n/2×(a₁+aₙ)', 'Geometric sum: a₁×(1-rⁿ)/(1-r)', 'Infinite geo: a/(1-r) if |r|<1']
+      },
+      {
+        title: 'Limits',
+        body: `A limit describes the value a function approaches as x approaches a point, without needing to evaluate at that point. lim(x→c) f(x) = L means f(x) gets arbitrarily close to L. Limits formalise the intuition behind calculus and handle discontinuities.`,
+        practical: `Limits underpin every numerical algorithm that converges — gradient descent, Newton's method, iterative solvers. The definition of a derivative is a limit. Understanding limits is why a 0/0 form from L'Hôpital's rule gives a useful answer.`,
+        formulas: ['lim(x→0) sinx/x = 1', 'lim(x→∞)(1+1/x)ˣ = e', 'L\'Hôpital: lim f/g = lim f\'/g\'']
+      }
+    ]
+  },
+  {
+    id: 'diffcalc', label: 'Differential Calculus', color: '#80deea',
+    tagline: 'Rates of change and slopes of curves',
+    lessons: [
+      {
+        title: 'The Derivative',
+        body: `The derivative f'(x) is the instantaneous rate of change of f at x — defined as the limit of the difference quotient: f'(x) = lim(h→0) [f(x+h) - f(x)] / h. Geometrically it is the slope of the tangent line to the curve at that point.`,
+        practical: `Velocity is the derivative of position with respect to time. Current is the derivative of charge. In machine learning, the gradient of the loss function is a vector of partial derivatives, used to update weights during backpropagation.`,
+        formulas: ['f\'(x) = lim(h→0)[f(x+h)-f(x)]/h', 'd/dx[xⁿ]=nxⁿ⁻¹', 'd/dx[eˣ]=eˣ', 'd/dx[sinx]=cosx']
+      },
+      {
+        title: 'Differentiation Rules',
+        body: `Rules eliminate the need to evaluate the limit every time. The product rule, quotient rule, and chain rule handle compound expressions. The chain rule d/dx[f(g(x))] = f'(g(x))·g'(x) is the most important — it governs how derivatives propagate through composed functions.`,
+        practical: `Automatic differentiation in deep learning frameworks (TensorFlow, PyTorch) applies the chain rule symbolically through computational graphs. Backpropagation is literally repeated application of the chain rule from output to input.`,
+        formulas: ['Product: (fg)\'=f\'g+fg\'', 'Quotient: (f/g)\'=(f\'g-fg\')/g²', 'Chain: (f∘g)\'=f\'(g)·g\'']
+      },
+      {
+        title: 'Optimisation',
+        body: `A function has a local extremum where f'(x) = 0 (critical point). The second derivative test confirms: f''(x) > 0 means local minimum, f''(x) < 0 means local maximum. Optimisation is finding the input that maximises or minimises an output.`,
+        practical: `Engineering design optimises material use, strength-to-weight ratio, or cost. Machine learning minimises a loss function. Resource allocation in operating systems and logistics planning all reduce to constrained optimisation.`,
+        formulas: ['Critical pts: f\'(x)=0', 'f\'\'(x)>0 → min, f\'\'(x)<0 → max', 'Concavity changes at inflection pts']
+      },
+      {
+        title: 'Implicit Differentiation & Related Rates',
+        body: `When y is defined implicitly by F(x,y)=0, differentiate both sides with respect to x and solve for dy/dx. Related rates problems use the chain rule to relate rates of change of two quantities connected by an equation.`,
+        practical: `Constraint-based design in CAD systems uses implicit functions. In physics, the ideal gas law PV=nRT relates pressure, volume, and temperature — related rates tell you how fast pressure changes as volume decreases at a known rate.`,
+        formulas: ['d/dx[F(x,y)=0]: differentiate both sides, solve for dy/dx', 'Related: dV/dt = (dV/dr)(dr/dt)']
+      }
+    ]
+  },
+  {
+    id: 'intcalc', label: 'Integral Calculus', color: '#a5d6a7',
+    tagline: 'Accumulation and area under curves',
+    lessons: [
+      {
+        title: 'Antiderivatives & Indefinite Integrals',
+        body: `An antiderivative F(x) of f(x) satisfies F'(x) = f(x). The indefinite integral ∫f(x)dx = F(x) + C, where C is an arbitrary constant of integration. The power rule reverses: ∫xⁿdx = xⁿ⁺¹/(n+1) + C.`,
+        practical: `Finding position from velocity, or velocity from acceleration, requires integration. In signal processing, integration smooths signals and computes cumulative sums. Digital PID controllers integrate error over time for the I (integral) term.`,
+        formulas: ['∫xⁿdx = xⁿ⁺¹/(n+1)+C', '∫eˣdx = eˣ+C', '∫sinx dx = -cosx+C', '∫1/x dx = ln|x|+C']
+      },
+      {
+        title: 'The Fundamental Theorem of Calculus',
+        body: `The FTC has two parts: (1) if F(x) = ∫ₐˣ f(t)dt then F'(x) = f(x) — differentiation undoes integration. (2) ∫ₐᵇ f(x)dx = F(b) - F(a). This connects the geometric area interpretation to the algebraic antiderivative.`,
+        practical: `The FTC is why numerical integration works: every quadrature algorithm (Simpson's, Gaussian) approximates ∫ₐᵇf(x)dx. In probability, the CDF is the integral of the PDF — the FTC relates them directly.`,
+        formulas: ['∫ₐᵇ f(x)dx = F(b)-F(a)', 'd/dx ∫ₐˣ f(t)dt = f(x)']
+      },
+      {
+        title: 'Integration Techniques',
+        body: `Substitution (u-sub) reverses the chain rule. Integration by parts ∫u dv = uv - ∫v du reverses the product rule. Partial fractions decompose rational functions. Trigonometric substitution handles integrands with √(a²-x²) forms.`,
+        practical: `In control systems, the Laplace transform (which integrates) converts differential equations to algebra. Fourier transforms use integration over trig functions. Partial fractions appear in transfer function analysis of circuits.`,
+        formulas: ['∫u dv = uv - ∫v du', 'u-sub: ∫f(g(x))g\'(x)dx = ∫f(u)du', '∫sin²x dx = x/2 - sin(2x)/4 + C']
+      },
+      {
+        title: 'Applications of Integration',
+        body: `Definite integrals compute area between curves, arc length, surface area, and volume (disk/shell methods). Work done by a variable force is W = ∫F(x)dx. The average value of f on [a,b] is (1/(b-a))∫ₐᵇf(x)dx.`,
+        practical: `Fluid dynamics: pressure force on a dam is an integral of pressure×area over depth. Electrical energy consumed is ∫P(t)dt. Computer graphics uses integration to compute physically-based lighting (rendering equation is an integral).`,
+        formulas: ['Area: ∫ₐᵇ|f(x)-g(x)|dx', 'Volume (disk): π∫ₐᵇ[f(x)]²dx', 'Arc length: ∫ₐᵇ√(1+[f\'(x)]²)dx']
+      }
+    ]
+  },
+  {
+    id: 'ode', label: 'Differential Equations', color: '#ffcc80',
+    tagline: 'Equations that model change itself',
+    lessons: [
+      {
+        title: 'What is a Differential Equation?',
+        body: `A differential equation (DE) relates a function to its own derivatives. An ODE involves one independent variable; a PDE involves partial derivatives with multiple variables. Order is the highest derivative present. A solution is a function (not a number) satisfying the equation.`,
+        practical: `Nearly every fundamental law in physics is a differential equation: Newton's second law F=ma is F=m(d²x/dt²), Maxwell's equations govern electromagnetism, Schrödinger's equation governs quantum mechanics. Financial models (Black-Scholes) use stochastic DEs.`,
+        formulas: ['ODE: F(x, y, y\', y\'\', ...) = 0', 'Order = highest derivative', 'General solution has arbitrary constants']
+      },
+      {
+        title: 'Separation of Variables',
+        body: `For equations of the form dy/dx = f(x)g(y), separate: dy/g(y) = f(x)dx and integrate both sides. This works when variables can be fully separated. The general solution contains a constant C determined by an initial condition.`,
+        practical: `Population growth: dP/dt = kP separates to dP/P = k dt → ln P = kt + C → P = P₀eᵏᵗ. Radioactive decay, Newton's law of cooling, and capacitor charging/discharging all use separation of variables.`,
+        formulas: ['dP/dt = kP → P(t) = P₀eᵏᵗ', 'Newton cooling: dT/dt = -k(T-Tₐ)']
+      },
+      {
+        title: 'First-Order Linear ODEs',
+        body: `Form: dy/dx + P(x)y = Q(x). Solved using an integrating factor μ(x) = e^∫P(x)dx, which transforms the left side into d/dx[μy]. Solution: y = (1/μ)∫μQ dx + C. This handles equations not separable by variables.`,
+        practical: `RL circuits: L(dI/dt) + RI = V(t) is a first-order linear ODE. Mixing problems (salt dissolved in a tank), pharmacokinetics (drug concentration over time), and simple economic growth models all use this form.`,
+        formulas: ['Integrating factor: μ = e^∫P(x)dx', 'd/dx[μy] = μQ', 'y = (1/μ)∫μQ dx + C']
+      },
+      {
+        title: 'Second-Order Linear ODEs',
+        body: `Form: ay''+by'+cy = f(x). The homogeneous case (f=0) has solutions based on the characteristic equation ar²+br+c=0. Three cases: two distinct real roots (overdamped), repeated root (critically damped), complex conjugate roots (oscillatory). The general solution is a superposition.`,
+        practical: `Spring-mass-damper systems: m(d²x/dt²) + c(dx/dt) + kx = F(t) is a 2nd-order ODE. It models car suspensions, building sway, circuit resonance (RLC circuits), and the vibration of bridges.`,
+        formulas: ['Char. eq: ar²+br+c=0', 'Overdamped: y=c₁e^r₁x+c₂e^r₂x', 'Oscillatory: y=e^αx(c₁cosβx+c₂sinβx)']
+      },
+      {
+        title: 'Systems of ODEs & Phase Planes',
+        body: `Multiple coupled ODEs in several dependent variables. Written as x' = Ax in matrix form. Eigenvalues of A determine the qualitative behaviour — stable node, saddle, spiral, centre. Phase plane diagrams visualise all solution trajectories.`,
+        practical: `Predator-prey dynamics (Lotka-Volterra), epidemic models (SIR), and coupled electrical networks are all systems of ODEs. In robotics, the equations of motion for a multi-link arm are a system of 2nd-order ODEs.`,
+        formulas: ['x\' = Ax → solutions involve eigenvalues/vectors of A', 'Stability: Re(λ)<0 → stable, Re(λ)>0 → unstable']
+      },
+      {
+        title: 'Numerical Methods for ODEs',
+        body: `Most ODEs lack closed-form solutions. Euler's method: yₙ₊₁ = yₙ + h·f(xₙ,yₙ). Runge-Kutta (RK4) takes a weighted average of four slope estimates for much greater accuracy at the same step size. Adaptive step-size methods adjust h automatically.`,
+        practical: `Every physics engine in game development uses numerical ODE integration — usually Verlet or RK4 — to advance positions and velocities. Climate models, flight simulators, and orbital mechanics all rely on numerical ODE solvers.`,
+        formulas: ['Euler: yₙ₊₁ = yₙ+h·f(xₙ,yₙ)', 'RK4: k₁=hf(xₙ,yₙ), k₂=hf(xₙ+h/2, yₙ+k₁/2), ...', 'Error: Euler O(h), RK4 O(h⁴)']
+      }
+    ]
+  }
+];
+
+// ─── REFERENCE DATA ────────────────────────────────────────────────────────────
+const REFERENCE = [
+  {
+    title: 'Algebra', formulas: [
+      { name: 'Quadratic Formula', f: 'x = (-b ± √(b²-4ac)) / 2a', note: 'Discriminant: Δ=b²-4ac' },
+      { name: 'Difference of Squares', f: 'a²-b² = (a+b)(a-b)', note: '' },
+      { name: 'Perfect Square (sum)', f: '(a+b)² = a²+2ab+b²', note: '' },
+      { name: 'Perfect Square (diff)', f: '(a-b)² = a²-2ab+b²', note: '' },
+      { name: 'Sum of Cubes', f: 'a³+b³ = (a+b)(a²-ab+b²)', note: '' },
+      { name: 'Binomial Theorem', f: '(a+b)ⁿ = Σ C(n,k) aⁿ⁻ᵏ bᵏ', note: 'C(n,k) = n!/(k!(n-k)!)' },
+      { name: 'Exponent Product', f: 'aᵐ·aⁿ = aᵐ⁺ⁿ', note: '' },
+      { name: 'Exponent Quotient', f: 'aᵐ/aⁿ = aᵐ⁻ⁿ', note: '' },
+      { name: 'Log Product', f: 'log(ab) = log a + log b', note: '' },
+      { name: 'Log Quotient', f: 'log(a/b) = log a - log b', note: '' },
+      { name: 'Log Power', f: 'log(aⁿ) = n·log a', note: '' },
+      { name: 'Change of Base', f: 'logb(x) = ln(x)/ln(b)', note: '' },
+    ]
+  },
+  {
+    title: 'Trigonometry', formulas: [
+      { name: 'Pythagorean', f: 'sin²θ + cos²θ = 1', note: '' },
+      { name: 'Pythagorean (tan)', f: '1 + tan²θ = sec²θ', note: '' },
+      { name: 'Pythagorean (cot)', f: 'cot²θ + 1 = csc²θ', note: '' },
+      { name: 'Sum (sin)', f: 'sin(A+B) = sinAcosB + cosAsinB', note: '' },
+      { name: 'Sum (cos)', f: 'cos(A+B) = cosAcosB - sinAsinB', note: '' },
+      { name: 'Double Angle (sin)', f: 'sin(2θ) = 2sinθcosθ', note: '' },
+      { name: 'Double Angle (cos)', f: 'cos(2θ) = cos²θ-sin²θ', note: '' },
+      { name: 'Half Angle (sin)', f: 'sin(θ/2) = ±√((1-cosθ)/2)', note: '' },
+      { name: 'Half Angle (cos)', f: 'cos(θ/2) = ±√((1+cosθ)/2)', note: '' },
+      { name: 'Law of Sines', f: 'a/sinA = b/sinB = c/sinC', note: '' },
+      { name: 'Law of Cosines', f: 'c² = a²+b²-2ab·cosC', note: '' },
+    ]
+  },
+  {
+    title: 'Derivatives', formulas: [
+      { name: 'Power Rule', f: 'd/dx[xⁿ] = nxⁿ⁻¹', note: '' },
+      { name: 'Constant', f: 'd/dx[c] = 0', note: '' },
+      { name: 'Exponential', f: 'd/dx[eˣ] = eˣ', note: '' },
+      { name: 'Exponential (base a)', f: 'd/dx[aˣ] = aˣ·ln a', note: '' },
+      { name: 'Natural Log', f: 'd/dx[ln x] = 1/x', note: '' },
+      { name: 'Sin', f: 'd/dx[sin x] = cos x', note: '' },
+      { name: 'Cos', f: 'd/dx[cos x] = -sin x', note: '' },
+      { name: 'Tan', f: 'd/dx[tan x] = sec²x', note: '' },
+      { name: 'Product Rule', f: '(fg)\' = f\'g + fg\'', note: '' },
+      { name: 'Quotient Rule', f: '(f/g)\' = (f\'g-fg\')/g²', note: '' },
+      { name: 'Chain Rule', f: '(f∘g)\' = f\'(g(x))·g\'(x)', note: '' },
+      { name: 'Implicit', f: 'F(x,y)=0 → dy/dx = -Fₓ/Fᵧ', note: '' },
+    ]
+  },
+  {
+    title: 'Integrals', formulas: [
+      { name: 'Power Rule', f: '∫xⁿ dx = xⁿ⁺¹/(n+1)+C', note: 'n ≠ -1' },
+      { name: 'Reciprocal', f: '∫1/x dx = ln|x|+C', note: '' },
+      { name: 'Exponential', f: '∫eˣ dx = eˣ+C', note: '' },
+      { name: 'Sin', f: '∫sin x dx = -cos x+C', note: '' },
+      { name: 'Cos', f: '∫cos x dx = sin x+C', note: '' },
+      { name: 'Sec²', f: '∫sec²x dx = tan x+C', note: '' },
+      { name: 'By Parts', f: '∫u dv = uv - ∫v du', note: 'LIATE for u choice' },
+      { name: 'FTC', f: '∫ₐᵇ f(x)dx = F(b)-F(a)', note: '' },
+      { name: 'Area between curves', f: 'A = ∫ₐᵇ |f(x)-g(x)| dx', note: '' },
+      { name: 'Volume (disk)', f: 'V = π∫ₐᵇ [f(x)]² dx', note: '' },
+      { name: 'Arc length', f: 'L = ∫ₐᵇ √(1+(f\'(x))²) dx', note: '' },
+    ]
+  },
+  {
+    title: 'Differential Equations', formulas: [
+      { name: 'Exponential Growth', f: 'dP/dt = kP → P=P₀eᵏᵗ', note: '' },
+      { name: 'Newton Cooling', f: 'dT/dt = -k(T-Tₐ) → T=Tₐ+(T₀-Tₐ)e⁻ᵏᵗ', note: '' },
+      { name: '1st Order Linear', f: 'y\'+P(x)y=Q → μ=e^∫P dx', note: '' },
+      { name: 'Char. Eq. (2nd order)', f: 'ay\'\'+ by\'+cy=0 → ar²+br+c=0', note: '' },
+      { name: 'Overdamped', f: 'b²>4ac → y=c₁e^r₁x+c₂e^r₂x', note: '' },
+      { name: 'Critically damped', f: 'b²=4ac → y=(c₁+c₂x)e^rx', note: '' },
+      { name: 'Underdamped', f: 'b²<4ac → y=eᵅˣ(c₁cosβx+c₂sinβx)', note: '' },
+      { name: 'Euler Method', f: 'yₙ₊₁ = yₙ + h·f(xₙ,yₙ)', note: 'O(h) error per step' },
+      { name: 'RK4 (k₁)', f: 'k₁ = h·f(xₙ, yₙ)', note: '' },
+      { name: 'RK4 (k₂)', f: 'k₂ = h·f(xₙ+h/2, yₙ+k₁/2)', note: '' },
+      { name: 'RK4 (final)', f: 'yₙ₊₁ = yₙ+(k₁+2k₂+2k₃+k₄)/6', note: 'O(h⁴) error' },
+    ]
+  }
+];
+
+// ─── GLOSSARY DATA ─────────────────────────────────────────────────────────────
+const GLOSSARY = [
+  { term: 'Absolute Value', cat: 'Arithmetic', def: '|x| — distance from zero on the number line; always non-negative.' },
+  { term: 'Additive Inverse', cat: 'Arithmetic', def: 'The number that, added to x, gives zero: -x.' },
+  { term: 'Asymptote', cat: 'Algebra', def: 'A line the graph of a function approaches but never reaches.' },
+  { term: 'Base (logarithm)', cat: 'Algebra', def: 'The value b in logb(x); log₁₀ is "common log", logₑ = ln is "natural log".' },
+  { term: 'Bijection', cat: 'Algebra', def: 'A function that is both injective (one-to-one) and surjective (onto).' },
+  { term: 'Chain Rule', cat: 'Calculus', def: 'Derivative of a composed function: (f∘g)\'(x) = f\'(g(x))·g\'(x).' },
+  { term: 'Characteristic Equation', cat: 'Differential Equations', def: 'Polynomial equation ar²+br+c=0 whose roots determine the solution structure of a 2nd-order ODE.' },
+  { term: 'Codomain', cat: 'Algebra', def: 'The set of possible outputs a function is defined to map into (may be larger than the range).' },
+  { term: 'Composition', cat: 'Algebra', def: 'Applying one function to the result of another: (f∘g)(x) = f(g(x)).' },
+  { term: 'Concavity', cat: 'Calculus', def: 'Concave up: f\'\'(x)>0 (cup shape); concave down: f\'\'(x)<0. Changes at inflection points.' },
+  { term: 'Continuity', cat: 'Pre-Calculus', def: 'f is continuous at c if lim(x→c) f(x) = f(c) — no holes, jumps, or asymptotes.' },
+  { term: 'Convergence', cat: 'Pre-Calculus', def: 'A sequence or series converges if it approaches a finite limit.' },
+  { term: 'Critical Point', cat: 'Calculus', def: 'A point where f\'(x) = 0 or f\'(x) is undefined; a candidate for local min/max.' },
+  { term: 'Definite Integral', cat: 'Calculus', def: '∫ₐᵇ f(x)dx — the signed area under f from a to b; a number.' },
+  { term: 'Derivative', cat: 'Calculus', def: 'f\'(x) — instantaneous rate of change; slope of the tangent line at x.' },
+  { term: 'Determinant', cat: 'Algebra', def: 'A scalar det(A) encoding how a matrix scales area/volume; zero means no inverse.' },
+  { term: 'Differential Equation', cat: 'Differential Equations', def: 'An equation relating a function to its derivatives; solution is a function.' },
+  { term: 'Discriminant', cat: 'Algebra', def: 'Δ = b²-4ac for a quadratic; Δ>0: 2 real roots, Δ=0: 1, Δ<0: complex roots.' },
+  { term: 'Domain', cat: 'Algebra', def: 'The set of all valid inputs for a function.' },
+  { term: 'Eigenvalue', cat: 'Differential Equations', def: 'A scalar λ such that Av = λv for eigenvector v; determines ODE system stability.' },
+  { term: 'Euler\'s Number (e)', cat: 'Pre-Calculus', def: 'e ≈ 2.71828...; base of the natural logarithm; unique: d/dx[eˣ]=eˣ.' },
+  { term: 'Euler\'s Method', cat: 'Differential Equations', def: 'First-order numerical ODE solver: yₙ₊₁ = yₙ + h·f(xₙ,yₙ).' },
+  { term: 'Even Function', cat: 'Algebra', def: 'f(-x) = f(x) for all x; symmetric about the y-axis.' },
+  { term: 'Exponent', cat: 'Arithmetic', def: 'In aⁿ, n is the exponent; the number of times a is multiplied by itself.' },
+  { term: 'Extremum', cat: 'Calculus', def: 'A local max or min; global extremum is the largest or smallest over the whole domain.' },
+  { term: 'Factor Theorem', cat: 'Algebra', def: '(x-r) is a factor of polynomial p(x) if and only if p(r) = 0.' },
+  { term: 'First Derivative Test', cat: 'Calculus', def: 'f\'changes + to − at c → local max; − to + → local min.' },
+  { term: 'Fundamental Theorem of Calculus', cat: 'Calculus', def: 'Links differentiation and integration: ∫ₐᵇf(x)dx = F(b)−F(a) where F\'=f.' },
+  { term: 'General Solution', cat: 'Differential Equations', def: 'ODE solution containing arbitrary constants; represents the family of all solutions.' },
+  { term: 'Geometric Series', cat: 'Pre-Calculus', def: 'Sum a + ar + ar²+... converges to a/(1-r) when |r|<1.' },
+  { term: 'Gradient', cat: 'Calculus', def: 'Vector of partial derivatives ∇f = (∂f/∂x, ∂f/∂y, ...); points in direction of steepest ascent.' },
+  { term: 'Homogeneous ODE', cat: 'Differential Equations', def: 'DE with right-hand side equal to zero; no forcing function.' },
+  { term: 'Implicit Differentiation', cat: 'Calculus', def: 'Differentiating both sides of F(x,y)=0 to find dy/dx without solving for y.' },
+  { term: 'Indefinite Integral', cat: 'Calculus', def: '∫f(x)dx = F(x)+C — the antiderivative; family of all antiderivatives.' },
+  { term: 'Inflection Point', cat: 'Calculus', def: 'Where f\'\'(x)=0 and concavity changes; not necessarily an extremum.' },
+  { term: 'Initial Condition', cat: 'Differential Equations', def: 'A value y(x₀)=y₀ that selects a particular solution from the general solution.' },
+  { term: 'Initial Value Problem', cat: 'Differential Equations', def: 'A DE plus one or more initial conditions specifying a unique solution.' },
+  { term: 'Integrating Factor', cat: 'Differential Equations', def: 'μ(x) = e^∫P(x)dx — multiplied through a 1st-order linear ODE to make left side exact.' },
+  { term: 'Integration by Parts', cat: 'Calculus', def: '∫u dv = uv − ∫v du; reverses the product rule.' },
+  { term: 'Intermediate Value Theorem', cat: 'Pre-Calculus', def: 'If f is continuous on [a,b] and f(a)<N<f(b), then f(c)=N for some c in (a,b).' },
+  { term: 'Irrational Number', cat: 'Arithmetic', def: 'Cannot be expressed as p/q (integers); e.g. π, e, √2.' },
+  { term: 'L\'Hôpital\'s Rule', cat: 'Pre-Calculus', def: 'If lim f/g → 0/0 or ∞/∞, then lim f/g = lim f\'/g\'.' },
+  { term: 'Limit', cat: 'Pre-Calculus', def: 'lim(x→c) f(x) = L: f(x) approaches L as x approaches c (without necessarily reaching c).' },
+  { term: 'Linear Combination', cat: 'Algebra', def: 'An expression c₁v₁ + c₂v₂ + ... where cᵢ are scalars.' },
+  { term: 'Linear ODE', cat: 'Differential Equations', def: 'ODE in which y and its derivatives appear only to the first power with no products.' },
+  { name: 'LIATE Rule', cat: 'Calculus', def: 'Guides choice of u in integration by parts: Logarithm, Inverse trig, Algebraic, Trig, Exponential.' },
+  { term: 'Local Extremum', cat: 'Calculus', def: 'A point where f is larger (max) or smaller (min) than nearby points.' },
+  { term: 'Logarithm', cat: 'Pre-Calculus', def: 'logb(x) = y means bʸ=x; the inverse of exponentiation.' },
+  { term: 'Matrix', cat: 'Algebra', def: 'A rectangular array of numbers; represents a linear transformation or system of equations.' },
+  { term: 'Mean Value Theorem', cat: 'Calculus', def: 'If f is diff. on (a,b), then f\'(c)=(f(b)-f(a))/(b-a) for some c in (a,b).' },
+  { term: 'Modular Arithmetic', cat: 'Arithmetic', def: 'Clock arithmetic — a≡b (mod n) means n divides a-b.' },
+  { term: 'Monotone Function', cat: 'Algebra', def: 'Strictly increasing (f\'(x)>0) or strictly decreasing (f\'(x)<0) throughout its domain.' },
+  { term: 'Newton\'s Method', cat: 'Calculus', def: 'Iterative root-finding: xₙ₊₁ = xₙ - f(xₙ)/f\'(xₙ).' },
+  { term: 'Odd Function', cat: 'Algebra', def: 'f(-x) = -f(x); symmetric about the origin. Example: sin(x).' },
+  { term: 'Order of ODE', cat: 'Differential Equations', def: 'The degree of the highest derivative in the equation.' },
+  { term: 'Partial Derivative', cat: 'Calculus', def: '∂f/∂x — derivative with respect to one variable holding others constant.' },
+  { term: 'Particular Solution', cat: 'Differential Equations', def: 'The unique solution obtained by applying initial/boundary conditions to the general solution.' },
+  { term: 'Period', cat: 'Trigonometry', def: 'Smallest T such that f(x+T)=f(x) for all x. sin and cos have period 2π.' },
+  { term: 'Phase Plane', cat: 'Differential Equations', def: 'A 2D plot of y vs y\' (or x vs y for a system) showing trajectories of solutions.' },
+  { term: 'Pi (π)', cat: 'Geometry', def: 'π ≈ 3.14159...; ratio of a circle\'s circumference to its diameter.' },
+  { term: 'Power Series', cat: 'Pre-Calculus', def: 'An infinite series Σ aₙ(x-c)ⁿ; represents functions near the centre c.' },
+  { term: 'Prime Number', cat: 'Arithmetic', def: 'Positive integer greater than 1 with no divisors other than 1 and itself.' },
+  { term: 'Product Rule', cat: 'Calculus', def: '(fg)\' = f\'g + fg\'; derivative of a product of two functions.' },
+  { term: 'Quadratic', cat: 'Algebra', def: 'Polynomial of degree 2; ax²+bx+c. Graph is a parabola.' },
+  { term: 'Quotient Rule', cat: 'Calculus', def: '(f/g)\' = (f\'g - fg\')/g²; derivative of a quotient.' },
+  { term: 'Radian', cat: 'Trigonometry', def: 'Angle whose arc length equals the radius. 2π rad = 360°.' },
+  { term: 'Range', cat: 'Algebra', def: 'The set of actual output values of a function.' },
+  { term: 'Rational Function', cat: 'Algebra', def: 'A ratio of two polynomials p(x)/q(x).' },
+  { term: 'Related Rates', cat: 'Calculus', def: 'Using the chain rule to relate rates of change of two connected quantities.' },
+  { term: 'Riemann Sum', cat: 'Calculus', def: 'Approximation of ∫f(x)dx by summing f(xᵢ)·Δx over subdivisions.' },
+  { term: 'Rolle\'s Theorem', cat: 'Calculus', def: 'If f(a)=f(b) and f is differentiable on (a,b), then f\'(c)=0 for some c.' },
+  { term: 'Runge-Kutta (RK4)', cat: 'Differential Equations', def: '4th-order numerical ODE method using weighted average of four slope estimates; O(h⁴) accuracy.' },
+  { term: 'Scalar', cat: 'Algebra', def: 'A single number (magnitude only), as opposed to a vector.' },
+  { term: 'Secant Line', cat: 'Calculus', def: 'A line through two points on a curve; its slope approximates the derivative.' },
+  { term: 'Separation of Variables', cat: 'Differential Equations', def: 'Technique for ODEs of the form dy/dx = f(x)g(y): move y terms to one side, x to the other.' },
+  { term: 'Slope', cat: 'Algebra', def: 'Rate of change of y per unit change in x: m = Δy/Δx.' },
+  { term: 'Steady State', cat: 'Differential Equations', def: 'The long-term solution of an ODE as t → ∞ (transient dies out).' },
+  { term: 'Substitution (u-sub)', cat: 'Calculus', def: 'Integration technique: substitute u=g(x), du=g\'(x)dx to simplify ∫f(g(x))g\'(x)dx.' },
+  { term: 'Superposition Principle', cat: 'Differential Equations', def: 'For linear DEs: if y₁ and y₂ are solutions, so is c₁y₁+c₂y₂.' },
+  { term: 'Tangent Line', cat: 'Calculus', def: 'The line through (a, f(a)) with slope f\'(a); best linear approximation to f at a.' },
+  { term: 'Taylor Series', cat: 'Pre-Calculus', def: 'f(x) = Σ f⁽ⁿ⁾(a)/n! · (x-a)ⁿ; polynomial approximation around point a.' },
+  { term: 'Unit Circle', cat: 'Trigonometry', def: 'Circle of radius 1 centred at origin; coordinates are (cosθ, sinθ).' },
+  { term: 'Vector', cat: 'Algebra', def: 'Quantity with both magnitude and direction; generalises scalar to higher dimensions.' },
+  { term: 'Wronskian', cat: 'Differential Equations', def: 'Determinant used to test linear independence of ODE solutions.' },
+];
+
+// ─── CURRICULUM RENDER ─────────────────────────────────────────────────────────
+function renderSubjectGrid() {
+    const grid = document.getElementById('subjectGrid');
+    grid.innerHTML = CURRICULUM.map(s => `
+        <div class="subject-card" onclick="showLessons('${s.id}')">
+            <div class="subject-num">${CURRICULUM.indexOf(s) + 1} of ${CURRICULUM.length}</div>
+            <h4 style="color:${s.color};">${s.label}</h4>
+            <p>${s.tagline}</p>
+            <div style="margin-top:8px;font-size:0.75rem;color:#444;">${s.lessons.length} lessons</div>
+        </div>
+    `).join('');
+}
+
+function showLessons(id) {
+    const subj = CURRICULUM.find(s => s.id === id);
+    document.getElementById('subject-grid-view').style.display = 'none';
+    document.getElementById('lesson-view').style.display = 'block';
+    document.getElementById('lessonTitle').innerHTML = `
+        <h3 style="margin:0 0 4px;color:${subj.color};">${subj.label}</h3>
+        <p style="color:#666;margin:0;font-size:0.85rem;">${subj.tagline}</p>
+    `;
+    document.getElementById('lessonList').innerHTML = subj.lessons.map((l, i) => `
+        <div class="lesson-item" id="lesson-${id}-${i}">
+            <div class="lesson-header" onclick="toggleLesson('${id}-${i}')">
+                <span class="lesson-num">${i+1}.</span>
+                <span class="lesson-title">${l.title}</span>
+                <span class="lesson-chevron">&#9654;</span>
+            </div>
+            <div class="lesson-body">
+                <p>${l.body.replace(/\n\n/g, '</p><p>')}</p>
+                <div class="practical">
+                    <strong>Real-World Application</strong>
+                    <p>${l.practical}</p>
+                </div>
+                ${l.formulas.length ? `<div class="formula-chips">${l.formulas.map(f=>`<span class="formula-chip">${f}</span>`).join('')}</div>` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function toggleLesson(key) {
+    const el = document.getElementById('lesson-' + key);
+    el.classList.toggle('open');
+}
+
+function showSubjectGrid() {
+    document.getElementById('subject-grid-view').style.display = 'block';
+    document.getElementById('lesson-view').style.display = 'none';
+}
+
+// ─── CALCULATOR TOOLS ──────────────────────────────────────────────────────────
+let calcExpr = '';
+let calcFresh = false;
+
+function updateCalcDisplay(val) {
+    document.getElementById('calcDisplay').textContent = val;
+}
+function calcDigit(d) {
+    if (calcFresh && d !== '.') { calcExpr = ''; calcFresh = false; }
+    calcExpr += d;
+    updateCalcDisplay(calcExpr);
+    document.getElementById('calcExpr').textContent = '';
+}
+function calcOp(op) {
+    calcFresh = false;
+    calcExpr += op;
+    updateCalcDisplay(calcExpr);
+}
+function calcFn(fn) {
+    calcFresh = false;
+    if (fn === 'pow2') { calcExpr = '(' + (calcExpr||'0') + ')**2'; }
+    else if (fn === 'sqrt') { calcExpr = 'Math.sqrt(' + (calcExpr||'0') + ')'; }
+    else if (fn === 'sin')  { calcExpr = 'Math.sin(' + (calcExpr||'0') + ')'; }
+    else if (fn === 'cos')  { calcExpr = 'Math.cos(' + (calcExpr||'0') + ')'; }
+    else if (fn === 'tan')  { calcExpr = 'Math.tan(' + (calcExpr||'0') + ')'; }
+    else if (fn === 'log')  { calcExpr = 'Math.log10(' + (calcExpr||'0') + ')'; }
+    else if (fn === 'ln')   { calcExpr = 'Math.log(' + (calcExpr||'0') + ')'; }
+    updateCalcDisplay(calcExpr);
+}
+function calcConst(c) {
+    calcFresh = false;
+    if (c === 'pi') calcExpr += 'Math.PI';
+    else calcExpr += 'Math.E';
+    updateCalcDisplay(calcExpr);
+}
+function calcClear() { calcExpr = ''; calcFresh = false; updateCalcDisplay('0'); document.getElementById('calcExpr').textContent = ''; }
+function calcBackspace() { calcExpr = calcExpr.slice(0,-1); updateCalcDisplay(calcExpr || '0'); }
+function calcEval() {
+    try {
+        const result = Function('"use strict"; return (' + calcExpr + ')')();
+        document.getElementById('calcExpr').textContent = calcExpr + ' =';
+        const hist = document.getElementById('calcHistory');
+        hist.innerHTML = `<div>${calcExpr} = <strong style="color:var(--acc);">${result}</strong></div>` + hist.innerHTML;
+        calcExpr = String(result);
+        calcFresh = true;
+        updateCalcDisplay(result);
+    } catch(e) {
+        updateCalcDisplay('Error');
+        calcExpr = '';
+    }
+}
+
+function solveQuadratic() {
+    const a = parseFloat(document.getElementById('qa').value);
+    const b = parseFloat(document.getElementById('qb').value);
+    const c = parseFloat(document.getElementById('qc').value);
+    const el = document.getElementById('quadraticResult');
+    if (a === 0) { el.innerHTML = '<span class="res-err">a cannot be 0 (not a quadratic).</span>'; return; }
+    const disc = b*b - 4*a*c;
+    let out = `<div class="res-line">Equation: <span class="res-hl">${a}x² + ${b}x + ${c} = 0</span></div>`;
+    out += `<div class="res-line res-dim">Discriminant Δ = b² - 4ac = ${b}² - 4(${a})(${c}) = <span class="res-hl">${disc.toFixed(4)}</span></div>`;
+    if (disc > 0) {
+        const x1 = (-b + Math.sqrt(disc)) / (2*a);
+        const x2 = (-b - Math.sqrt(disc)) / (2*a);
+        out += `<div class="res-line">Δ > 0 → Two real roots:</div>`;
+        out += `<div class="res-line">x₁ = (-${b} + √${disc.toFixed(4)}) / ${2*a} = <span class="res-hl">${x1.toFixed(6)}</span></div>`;
+        out += `<div class="res-line">x₂ = (-${b} - √${disc.toFixed(4)}) / ${2*a} = <span class="res-hl">${x2.toFixed(6)}</span></div>`;
+    } else if (disc === 0) {
+        const x = -b / (2*a);
+        out += `<div class="res-line">Δ = 0 → One repeated root: <span class="res-hl">x = ${x.toFixed(6)}</span></div>`;
+    } else {
+        const re = (-b / (2*a)).toFixed(6);
+        const im = (Math.sqrt(-disc) / (2*a)).toFixed(6);
+        out += `<div class="res-line">Δ < 0 → Complex roots:</div>`;
+        out += `<div class="res-line">x = <span class="res-hl">${re} ± ${im}i</span></div>`;
+    }
+    el.innerHTML = out;
+}
+
+function calcTrig() {
+    const fn = document.getElementById('trigFn').value;
+    const val = parseFloat(document.getElementById('trigVal').value);
+    const unit = document.getElementById('trigUnit').value;
+    const el = document.getElementById('trigResult');
+    let x = unit === 'deg' ? val * Math.PI / 180 : val;
+    let result, extra = '';
+    try {
+        if (fn === 'sin') result = Math.sin(x);
+        else if (fn === 'cos') result = Math.cos(x);
+        else if (fn === 'tan') result = Math.tan(x);
+        else if (fn === 'asin') { result = Math.asin(val); extra = `(${(result*180/Math.PI).toFixed(4)}°)`; }
+        else if (fn === 'acos') { result = Math.acos(val); extra = `(${(result*180/Math.PI).toFixed(4)}°)`; }
+        else if (fn === 'atan') { result = Math.atan(val); extra = `(${(result*180/Math.PI).toFixed(4)}°)`; }
+        else if (fn === 'sec') result = 1/Math.cos(x);
+        else if (fn === 'csc') result = 1/Math.sin(x);
+        else if (fn === 'cot') result = 1/Math.tan(x);
+        if (!isFinite(result)) throw new Error('undefined');
+        el.innerHTML = `<div class="res-line">${fn}(${val}${unit==='deg'?'°':' rad'}) = <span class="res-hl">${result.toFixed(8)}</span> ${extra}</div>`;
+    } catch(e) {
+        el.innerHTML = `<span class="res-err">Result is undefined for this input.</span>`;
+    }
+}
+
+function evalFn(expr, xVal) {
+    return Function('"use strict"; var x = ' + xVal + '; return (' + expr + ')')();
+}
+
+function calcDerivative() {
+    const expr = document.getElementById('derivFn').value;
+    const xVal = parseFloat(document.getElementById('derivX').value);
+    const el = document.getElementById('derivResult');
+    try {
+        const h = 1e-7;
+        const fp = (evalFn(expr, xVal + h) - evalFn(expr, xVal - h)) / (2 * h);
+        el.innerHTML = `
+            <div class="res-line res-dim">f(x) = ${expr}</div>
+            <div class="res-line res-dim">Method: central difference with h = ${h}</div>
+            <div class="res-line">f'(${xVal}) ≈ <span class="res-hl">${fp.toFixed(8)}</span></div>
+            <div class="res-line res-dim">f(x) = ${evalFn(expr, xVal).toFixed(6)}</div>
+        `;
+    } catch(e) {
+        el.innerHTML = `<span class="res-err">Error evaluating function. Check syntax (use Math.sin(x), x**2, etc).</span>`;
+    }
+}
+
+function calcIntegral() {
+    const expr = document.getElementById('intFn').value;
+    const a = parseFloat(document.getElementById('intA').value);
+    const b = parseFloat(document.getElementById('intB').value);
+    const el = document.getElementById('integralResult');
+    try {
+        const n = 1000;
+        const h = (b - a) / n;
+        let sum = evalFn(expr, a) + evalFn(expr, b);
+        for (let i = 1; i < n; i++) {
+            sum += (i % 2 === 0 ? 2 : 4) * evalFn(expr, a + i * h);
+        }
+        const result = (h / 3) * sum;
+        el.innerHTML = `
+            <div class="res-line res-dim">∫ ${expr} dx from ${a} to ${b}</div>
+            <div class="res-line res-dim">Method: Simpson's 1/3 rule, n=${n} subintervals</div>
+            <div class="res-line">Result ≈ <span class="res-hl">${result.toFixed(8)}</span></div>
+        `;
+    } catch(e) {
+        el.innerHTML = `<span class="res-err">Error: ${e.message}</span>`;
+    }
+}
+
+function solveODE() {
+    const expr = document.getElementById('odeFn').value;
+    const x0 = parseFloat(document.getElementById('odeX0').value);
+    const y0 = parseFloat(document.getElementById('odeY0').value);
+    const xn = parseFloat(document.getElementById('odeXn').value);
+    const h  = parseFloat(document.getElementById('odeH').value);
+    const el = document.getElementById('odeResult');
+    try {
+        const odeF = (x, y) => Function('"use strict"; var x='+x+', y='+y+'; return ('+expr+')')();
+        let x = x0, y = y0;
+        let out = `<div class="res-line res-dim">dy/dx = ${expr},  y(${x0}) = ${y0},  h = ${h}</div>`;
+        out += `<div class="res-line" style="margin-top:6px;"><span style="display:inline-block;width:90px;">x</span><span>y</span></div>`;
+        out += `<div class="res-line res-dim" style="border-top:1px solid #1a1a1a;margin:4px 0;"></div>`;
+        const steps = Math.round((xn - x0) / h);
+        for (let i = 0; i <= steps && i <= 30; i++) {
+            const cls = i === steps ? 'res-hl' : 'res-dim';
+            out += `<div class="res-line"><span style="display:inline-block;width:90px;">${x.toFixed(4)}</span><span class="${cls}">${y.toFixed(6)}</span></div>`;
+            if (i < steps) {
+                const dy = h * odeF(x, y);
+                x = parseFloat((x + h).toFixed(10));
+                y = y + dy;
+            }
+        }
+        if (steps > 30) out += `<div class="res-line res-dim">... (truncated after 30 steps)</div>`;
+        el.innerHTML = out;
+    } catch(e) {
+        el.innerHTML = `<span class="res-err">Error: ${e.message}</span>`;
+    }
+}
+
+function calcStats() {
+    const raw = document.getElementById('statsData').value;
+    const data = raw.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+    const el = document.getElementById('statsResult');
+    if (!data.length) { el.innerHTML = '<span class="res-err">No valid numbers found.</span>'; return; }
+    const n = data.length;
+    const sorted = [...data].sort((a,b)=>a-b);
+    const mean = data.reduce((a,b)=>a+b,0) / n;
+    const variance = data.reduce((a,b)=>a+(b-mean)**2,0) / n;
+    const stddev = Math.sqrt(variance);
+    const sampleVar = n > 1 ? data.reduce((a,b)=>a+(b-mean)**2,0)/(n-1) : 0;
+    const sampleStd = Math.sqrt(sampleVar);
+    const median = n%2===0 ? (sorted[n/2-1]+sorted[n/2])/2 : sorted[Math.floor(n/2)];
+    const modes = [];
+    const freq = {};
+    data.forEach(v => freq[v] = (freq[v]||0)+1);
+    const maxFreq = Math.max(...Object.values(freq));
+    Object.entries(freq).forEach(([k,v]) => { if (v===maxFreq) modes.push(k); });
+    const q1 = sorted[Math.floor(n/4)];
+    const q3 = sorted[Math.floor(3*n/4)];
+    el.innerHTML = `
+        <div class="res-line">n = <span class="res-hl">${n}</span></div>
+        <div class="res-line">Mean = <span class="res-hl">${mean.toFixed(6)}</span></div>
+        <div class="res-line">Median = <span class="res-hl">${median}</span></div>
+        <div class="res-line">Mode = <span class="res-hl">${modes.join(', ')}</span> (freq ${maxFreq})</div>
+        <div class="res-line">Min = <span class="res-hl">${sorted[0]}</span>  Max = <span class="res-hl">${sorted[n-1]}</span></div>
+        <div class="res-line">Range = <span class="res-hl">${(sorted[n-1]-sorted[0]).toFixed(6)}</span></div>
+        <div class="res-line">Q1 = <span class="res-hl">${q1}</span>  Q3 = <span class="res-hl">${q3}</span>  IQR = <span class="res-hl">${q3-q1}</span></div>
+        <div class="res-line">Population σ = <span class="res-hl">${stddev.toFixed(6)}</span>  (σ² = ${variance.toFixed(6)})</div>
+        <div class="res-line">Sample s = <span class="res-hl">${sampleStd.toFixed(6)}</span></div>
+        <div class="res-line res-dim">Sorted: ${sorted.join(', ')}</div>
+    `;
+}
+
+// ─── REFERENCE RENDER ──────────────────────────────────────────────────────────
+function renderReference() {
+    document.getElementById('refSections').innerHTML = REFERENCE.map((sec, i) => `
+        <div class="ref-section ${i===0?'open':''}">
+            <div class="ref-section-hdr" onclick="toggleRef(this)">
+                <h4>${sec.title}</h4>
+                <span style="margin-left:auto;color:#444;font-size:0.8rem;">${sec.formulas.length} formulas ▾</span>
+            </div>
+            <div class="ref-section-body">
+                <div class="ref-grid">
+                    ${sec.formulas.map(f => `
+                        <div class="ref-card">
+                            <div class="ref-name">${f.name}</div>
+                            <div class="ref-formula">${f.f}</div>
+                            ${f.note ? `<div class="ref-note">${f.note}</div>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function toggleRef(hdr) {
+    hdr.closest('.ref-section').classList.toggle('open');
+}
+
+// ─── GLOSSARY RENDER ───────────────────────────────────────────────────────────
+function renderGlossary() {
+    document.getElementById('glossGrid').innerHTML = GLOSSARY.map((g,i) => `
+        <div class="gloss-card" id="gc-${i}">
+            <div class="gloss-term">${g.term || g.name}</div>
+            <div class="gloss-cat">${g.cat}</div>
+            <div class="gloss-def">${g.def}</div>
+        </div>
+    `).join('');
+}
+
+function filterGloss() {
+    const q = document.getElementById('glossSearch').value.toLowerCase();
+    GLOSSARY.forEach((g, i) => {
+        const term = (g.term || g.name || '').toLowerCase();
+        const match = !q || term.includes(q) || g.cat.toLowerCase().includes(q) || g.def.toLowerCase().includes(q);
+        document.getElementById('gc-' + i).classList.toggle('hidden', !match);
+    });
+}
+
+// ─── TAB SWITCHING ─────────────────────────────────────────────────────────────
+function switchMain(name) {
+    document.querySelectorAll('.calc-tab').forEach((t,i) => {
+        const names = ['curriculum','tools','reference','glossary'];
+        t.classList.toggle('active', names[i] === name);
+    });
+    document.querySelectorAll('.calc-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+}
+
+function switchTool(name) {
+    document.querySelectorAll('.tool-tab').forEach((t,i) => {
+        const names = ['basic','quadratic','trig','derivative','integral','ode','stats'];
+        t.classList.toggle('active', names[i] === name);
+    });
+    document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tool-' + name).classList.add('active');
+}
+
+// ─── INIT ──────────────────────────────────────────────────────────────────────
+renderSubjectGrid();
+renderReference();
+renderGlossary();
+</script>
+</body>
+</html>
