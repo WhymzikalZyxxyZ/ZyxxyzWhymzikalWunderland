@@ -53,6 +53,7 @@ const NAV_STRUCTURE = [
             { label: 'Pipeline',             href: '/technologist/pipeline.html' },
             { label: 'CodeCollab',           href: '/technologist/code-collab.html' },
             { label: 'Schema Diff',          href: '/technologist/schema-diff.html' },
+            { label: 'The Calculator',       href: '/technologist/calculator.html' },
         ],
     },
     {
