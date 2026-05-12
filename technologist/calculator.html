@@ -1563,6 +1563,209 @@ const CURRICULUM = [
 </svg>`
       }
     ]
+  },
+  {
+    id: 'linalg', label: 'Linear Algebra', color: '#90caf9',
+    tagline: 'Vectors, matrices, transformations, and the geometry of n-dimensional space.',
+    lessons: [
+      {
+        title: 'Vectors and Vector Spaces',
+        body: `A vector is an ordered list of numbers representing magnitude and direction. A vector space V over ℝ is a set closed under addition and scalar multiplication. Key ideas: span (all linear combinations of a set), linear independence (no vector is a combination of the others), basis (a minimal spanning set), and dimension (number of basis vectors). The standard basis of ℝⁿ is the set of unit vectors e₁, e₂, ..., eₙ.`,
+        practical: `Computer graphics encodes positions, colours, and normals as vectors. Machine learning represents data points as vectors in high-dimensional space — PCA finds the basis directions that capture the most variance.`,
+        formulas: ['v = (v₁, v₂, ..., vₙ)', '|v| = √(v₁²+v₂²+...+vₙ²)', 'v·w = v₁w₁+...+vₙwₙ', 'cos θ = v·w / (|v||w|)'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <line x1="30" y1="130" x2="200" y2="130" stroke="#333" stroke-width="1.5"/>
+  <line x1="50" y1="145" x2="50" y2="15" stroke="#333" stroke-width="1.5"/>
+  <text x="202" y="134" fill="#555" font-size="9" font-family="monospace">x</text>
+  <text x="54" y="13" fill="#555" font-size="9" font-family="monospace">y</text>
+  <line x1="50" y1="130" x2="140" y2="100" stroke="#90caf9" stroke-width="2"/>
+  <polygon points="140,100 133,107 145,108" fill="#90caf9"/>
+  <text x="143" y="98" fill="#90caf9" font-size="9" font-family="monospace">v=(3,1)</text>
+  <line x1="50" y1="130" x2="80" y2="70" stroke="#a5d6a7" stroke-width="2"/>
+  <polygon points="80,70 73,80 83,78" fill="#a5d6a7"/>
+  <text x="83" y="68" fill="#a5d6a7" font-size="9" font-family="monospace">w=(1,2)</text>
+  <line x1="50" y1="130" x2="170" y2="40" stroke="#ffcc80" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <polygon points="170,40 161,49 172,50" fill="#ffcc80"/>
+  <text x="173" y="39" fill="#ffcc80" font-size="9" font-family="monospace">v+w</text>
+  <line x1="140" y1="100" x2="170" y2="40" stroke="#333" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="80" y1="70" x2="170" y2="40" stroke="#333" stroke-width="1" stroke-dasharray="3,3"/>
+  <rect x="215" y="15" width="195" height="128" rx="6" fill="#0d1520" stroke="#1e3050" stroke-width="1"/>
+  <text x="312" y="33" text-anchor="middle" fill="#90caf9" font-size="10" font-family="monospace">Vector Space Basics</text>
+  <line x1="225" y1="40" x2="400" y2="40" stroke="#1e3050" stroke-width="1"/>
+  <text x="225" y="55" fill="#888" font-size="9" font-family="monospace">Span: all c₁v+c₂w+...</text>
+  <text x="225" y="70" fill="#888" font-size="9" font-family="monospace">Indep: no redundant vectors</text>
+  <text x="225" y="85" fill="#888" font-size="9" font-family="monospace">Basis: indep + spans V</text>
+  <text x="225" y="100" fill="#888" font-size="9" font-family="monospace">Dim(V): # basis vectors</text>
+  <line x1="225" y1="109" x2="400" y2="109" stroke="#1e3050" stroke-width="1"/>
+  <text x="225" y="123" fill="#555" font-size="9" font-family="monospace">ℝ²: dim=2, basis {e₁,e₂}</text>
+  <text x="225" y="137" fill="#555" font-size="9" font-family="monospace">v·w = |v||w|cosθ</text>
+</svg>`
+      },
+      {
+        title: 'Matrix Operations',
+        body: `A matrix is a rectangular array of numbers with m rows and n columns. Addition and scalar multiplication are element-wise. Matrix multiplication (AB)ᵢⱼ = row i of A · column j of B requires the inner dimensions to match: if A is m×n and B is n×p, then AB is m×p. Multiplication is associative but not commutative: AB ≠ BA in general. The transpose Aᵀ flips rows and columns; for orthogonal matrices Aᵀ = A⁻¹.`,
+        practical: `Neural networks are entirely matrix multiplications — each layer computes Wx+b. 3D graphics pipelines apply sequences of 4×4 transformation matrices to every vertex on the GPU each frame.`,
+        formulas: ['(AB)ᵢⱼ = Σₖ AᵢₖBₖⱼ', '(AB)ᵀ = BᵀAᵀ', '(AB)⁻¹ = B⁻¹A⁻¹', 'A·I = I·A = A'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <rect x="20" y="35" width="80" height="80" rx="4" fill="#0d1520" stroke="#1e3050" stroke-width="1"/>
+  <text x="60" y="26" text-anchor="middle" fill="#90caf9" font-size="10" font-family="monospace">A</text>
+  <text x="38" y="68" fill="#ccc" font-size="12" font-family="monospace">2  1</text>
+  <text x="38" y="94" fill="#ccc" font-size="12" font-family="monospace">0  3</text>
+  <text x="112" y="82" fill="#555" font-size="16" font-family="monospace">×</text>
+  <rect x="130" y="35" width="80" height="80" rx="4" fill="#0d1520" stroke="#2a1e30" stroke-width="1"/>
+  <text x="170" y="26" text-anchor="middle" fill="#a5d6a7" font-size="10" font-family="monospace">B</text>
+  <text x="148" y="68" fill="#ccc" font-size="12" font-family="monospace">1  4</text>
+  <text x="148" y="94" fill="#ccc" font-size="12" font-family="monospace">2  0</text>
+  <text x="222" y="82" fill="#555" font-size="16" font-family="monospace">=</text>
+  <rect x="244" y="35" width="80" height="80" rx="4" fill="#0d1520" stroke="#303010" stroke-width="1"/>
+  <text x="284" y="26" text-anchor="middle" fill="#ffcc80" font-size="10" font-family="monospace">C=AB</text>
+  <text x="256" y="68" fill="#ffcc80" font-size="12" font-family="monospace">4  8</text>
+  <text x="256" y="94" fill="#ffcc80" font-size="12" font-family="monospace">6  0</text>
+  <text x="344" y="50" fill="#555" font-size="8" font-family="monospace">row 1 · col 1:</text>
+  <text x="344" y="62" fill="#555" font-size="8" font-family="monospace">(2)(1)+(1)(2)=4</text>
+  <line x1="340" y1="70" x2="405" y2="70" stroke="#333" stroke-width="1"/>
+  <text x="344" y="83" fill="#555" font-size="8" font-family="monospace">row 1 · col 2:</text>
+  <text x="344" y="95" fill="#555" font-size="8" font-family="monospace">(2)(4)+(1)(0)=8</text>
+  <line x1="340" y1="103" x2="405" y2="103" stroke="#333" stroke-width="1"/>
+  <text x="344" y="116" fill="#ef5350" font-size="8" font-family="monospace">AB ≠ BA</text>
+  <text x="344" y="128" fill="#555" font-size="8" font-family="monospace">(non-commutative)</text>
+  <text x="60" y="130" text-anchor="middle" fill="#444" font-size="8" font-family="monospace">2×2</text>
+  <text x="170" y="130" text-anchor="middle" fill="#444" font-size="8" font-family="monospace">2×2</text>
+  <text x="284" y="130" text-anchor="middle" fill="#444" font-size="8" font-family="monospace">2×2</text>
+</svg>`
+      },
+      {
+        title: 'Systems of Linear Equations & Row Reduction',
+        body: `A system of m equations in n unknowns is encoded as an augmented matrix [A|b]. Row operations — swap two rows, scale a row, add a multiple of one row to another — preserve the solution set. Applying them systematically produces row echelon form, then reduced row echelon form (RREF) with leading 1s and zeros above and below each pivot. The outcome: unique solution when rank(A) = n, infinitely many solutions when rank(A) < n (free variables exist), or no solution when rank(A) ≠ rank([A|b]).`,
+        practical: `Circuit analysis uses Kirchhoff's laws to form a linear system solved by row reduction. Computer graphics solves linear systems to find where rays intersect surfaces in ray-tracing renderers.`,
+        formulas: ['rank(A) = n → unique solution', 'rank(A) < n → free variables (∞ solutions)', 'rank(A) ≠ rank([A|b]) → inconsistent', 'Rᵢ ← Rᵢ − (aᵢⱼ/aₖⱼ)Rₖ'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <text x="20" y="22" fill="#555" font-size="8" font-family="monospace">Original [A|b]</text>
+  <rect x="15" y="28" width="110" height="70" rx="3" fill="#0d1520" stroke="#1e3050" stroke-width="1"/>
+  <text x="25" y="48" fill="#ccc" font-size="9" font-family="monospace">1  2  1 | 4</text>
+  <text x="25" y="63" fill="#ccc" font-size="9" font-family="monospace">2  1  1 | 5</text>
+  <text x="25" y="78" fill="#ccc" font-size="9" font-family="monospace">0  1  2 | 3</text>
+  <text x="136" y="65" fill="#555" font-size="14" font-family="monospace">→</text>
+  <text x="155" y="22" fill="#555" font-size="8" font-family="monospace">R₂←R₂-2R₁</text>
+  <rect x="150" y="28" width="110" height="70" rx="3" fill="#0d1520" stroke="#1e3050" stroke-width="1"/>
+  <text x="160" y="48" fill="#ccc" font-size="9" font-family="monospace">1  2  1 | 4</text>
+  <text x="160" y="63" fill="#90caf9" font-size="9" font-family="monospace">0 -3 -1 |-3</text>
+  <text x="160" y="78" fill="#ccc" font-size="9" font-family="monospace">0  1  2 | 3</text>
+  <text x="271" y="65" fill="#555" font-size="14" font-family="monospace">→</text>
+  <text x="290" y="22" fill="#555" font-size="8" font-family="monospace">RREF</text>
+  <rect x="285" y="28" width="115" height="70" rx="3" fill="#0d1520" stroke="#303010" stroke-width="1"/>
+  <text x="295" y="48" fill="#ffcc80" font-size="9" font-family="monospace">1  0  0 | 1</text>
+  <text x="295" y="63" fill="#ffcc80" font-size="9" font-family="monospace">0  1  0 | 2</text>
+  <text x="295" y="78" fill="#ffcc80" font-size="9" font-family="monospace">0  0  1 | 0</text>
+  <text x="295" y="100" fill="#a5d6a7" font-size="9" font-family="monospace">x₁=1, x₂=2, x₃=0</text>
+  <text x="20" y="115" fill="#555" font-size="8" font-family="monospace">Rank = number of pivots (leading 1s)</text>
+  <text x="20" y="128" fill="#555" font-size="8" font-family="monospace">Free columns → infinitely many solutions</text>
+  <text x="20" y="141" fill="#ef5350" font-size="8" font-family="monospace">Row [0 0 0 | c], c≠0 → no solution</text>
+</svg>`
+      },
+      {
+        title: 'Determinants',
+        body: `The determinant det(A) is a scalar that encodes how a matrix scales area (in 2D) or volume (in 3D). For a 2×2 matrix [[a,b],[c,d]], det = ad−bc. For 3×3, expand by cofactors along any row. Key properties: det(AB) = det(A)det(B); det(Aᵀ) = det(A); swapping rows negates the determinant; scaling a row scales the determinant. A matrix is invertible if and only if its determinant is nonzero. Geometrically, |det(A)| is the area scale factor of the linear map.`,
+        practical: `Cramer's Rule expresses solutions as ratios of determinants. Computer vision uses determinants in camera calibration matrices. Physics uses the Jacobian determinant when changing variables in multi-dimensional integrals.`,
+        formulas: ['det[[a,b],[c,d]] = ad−bc', 'det(AB) = det(A)·det(B)', 'A⁻¹ = adj(A) / det(A)', 'A invertible ↔ det(A) ≠ 0'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <rect x="20" y="30" width="80" height="70" rx="4" fill="#0d1520" stroke="#1e3050" stroke-width="1"/>
+  <text x="60" y="22" text-anchor="middle" fill="#90caf9" font-size="9" font-family="monospace">A = [[a,b],[c,d]]</text>
+  <text x="38" y="62" fill="#ccc" font-size="14" font-family="monospace">a  b</text>
+  <text x="38" y="86" fill="#ccc" font-size="14" font-family="monospace">c  d</text>
+  <text x="60" y="116" text-anchor="middle" fill="#ffcc80" font-size="10" font-family="monospace">det = ad − bc</text>
+  <text x="130" y="22" fill="#555" font-size="8" font-family="monospace">Geometric interpretation</text>
+  <line x1="130" y1="130" x2="260" y2="130" stroke="#333" stroke-width="1"/>
+  <line x1="145" y1="140" x2="145" y2="20" stroke="#333" stroke-width="1"/>
+  <line x1="145" y1="130" x2="205" y2="110" stroke="#90caf9" stroke-width="2"/>
+  <polygon points="205,110 197,116 207,119" fill="#90caf9"/>
+  <text x="208" y="108" fill="#90caf9" font-size="8" font-family="monospace">col 1</text>
+  <line x1="145" y1="130" x2="165" y2="70" stroke="#a5d6a7" stroke-width="2"/>
+  <polygon points="165,70 158,80 168,78" fill="#a5d6a7"/>
+  <text x="168" y="68" fill="#a5d6a7" font-size="8" font-family="monospace">col 2</text>
+  <polygon points="145,130 205,110 225,50 165,70" fill="rgba(144,202,249,0.12)" stroke="#90caf9" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="195" y="100" fill="#ffcc80" font-size="9" font-family="monospace">area=|det|</text>
+  <rect x="270" y="20" width="140" height="120" rx="6" fill="#0d1520" stroke="#1e3050" stroke-width="1"/>
+  <text x="340" y="37" text-anchor="middle" fill="#90caf9" font-size="10" font-family="monospace">Properties</text>
+  <line x1="280" y1="43" x2="400" y2="43" stroke="#1e3050" stroke-width="1"/>
+  <text x="280" y="57" fill="#888" font-size="8" font-family="monospace">det(I) = 1</text>
+  <text x="280" y="70" fill="#888" font-size="8" font-family="monospace">row swap → negate det</text>
+  <text x="280" y="83" fill="#888" font-size="8" font-family="monospace">scale row → scale det</text>
+  <text x="280" y="96" fill="#888" font-size="8" font-family="monospace">det(AB)=det(A)det(B)</text>
+  <text x="280" y="109" fill="#888" font-size="8" font-family="monospace">det(Aᵀ) = det(A)</text>
+  <text x="280" y="122" fill="#ef5350" font-size="8" font-family="monospace">det=0 → singular (no inv)</text>
+  <text x="280" y="135" fill="#a5d6a7" font-size="8" font-family="monospace">det≠0 → invertible</text>
+</svg>`
+      },
+      {
+        title: 'Eigenvalues and Eigenvectors',
+        body: `A nonzero vector v is an eigenvector of A if Av = λv — the matrix only stretches or flips it, never rotates it off its span. The scalar λ is the eigenvalue. Find eigenvalues by solving the characteristic equation det(A − λI) = 0, an nth-degree polynomial. Each eigenvalue λᵢ has a corresponding eigenspace (set of all eigenvectors). If A has n linearly independent eigenvectors it is diagonalisable: A = PDP⁻¹ where D is diagonal with eigenvalues on the diagonal. The trace equals the sum of eigenvalues; the determinant equals their product.`,
+        practical: `Google's PageRank is the dominant eigenvector of the web's link matrix. PCA computes eigenvectors of the covariance matrix to find directions of maximum variance. Quantum states are eigenvectors of observable operators.`,
+        formulas: ['Av = λv', 'det(A − λI) = 0', 'A = PDP⁻¹', 'tr(A) = Σλᵢ,  det(A) = Πλᵢ'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <line x1="30" y1="120" x2="200" y2="120" stroke="#333" stroke-width="1"/>
+  <line x1="50" y1="135" x2="50" y2="15" stroke="#333" stroke-width="1"/>
+  <line x1="50" y1="120" x2="140" y2="80" stroke="#90caf9" stroke-width="2.5"/>
+  <polygon points="140,80 131,87 141,90" fill="#90caf9"/>
+  <text x="143" y="78" fill="#90caf9" font-size="8" font-family="monospace">v₁ (λ=2)</text>
+  <line x1="50" y1="120" x2="170" y2="40" stroke="#90caf9" stroke-width="1" stroke-dasharray="3,2" opacity="0.45"/>
+  <text x="172" y="39" fill="#555" font-size="7" font-family="monospace">Av₁=2v₁</text>
+  <line x1="50" y1="120" x2="70" y2="55" stroke="#a5d6a7" stroke-width="2.5"/>
+  <polygon points="70,55 63,64 73,63" fill="#a5d6a7"/>
+  <text x="73" y="53" fill="#a5d6a7" font-size="8" font-family="monospace">v₂ (λ=-1)</text>
+  <line x1="50" y1="120" x2="130" y2="58" stroke="#ffcc80" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <polygon points="130,58 121,65 130,70" fill="#ffcc80"/>
+  <text x="132" y="56" fill="#ffcc80" font-size="8" font-family="monospace">u (rotates)</text>
+  <rect x="215" y="15" width="195" height="128" rx="6" fill="#0d1520" stroke="#1e3050" stroke-width="1"/>
+  <text x="312" y="33" text-anchor="middle" fill="#90caf9" font-size="10" font-family="monospace">Finding Eigenvalues</text>
+  <line x1="225" y1="40" x2="400" y2="40" stroke="#1e3050" stroke-width="1"/>
+  <text x="230" y="56" fill="#888" font-size="9" font-family="monospace">1. Form A − λI</text>
+  <text x="230" y="70" fill="#888" font-size="9" font-family="monospace">2. det(A−λI) = 0</text>
+  <text x="230" y="84" fill="#888" font-size="9" font-family="monospace">3. Solve for λ₁, λ₂, ...</text>
+  <text x="230" y="98" fill="#888" font-size="9" font-family="monospace">4. (A−λᵢI)v = 0 → vᵢ</text>
+  <line x1="225" y1="107" x2="400" y2="107" stroke="#1e3050" stroke-width="1"/>
+  <text x="230" y="121" fill="#555" font-size="9" font-family="monospace">Diag: A = PDP⁻¹</text>
+  <text x="230" y="136" fill="#555" font-size="9" font-family="monospace">D = diag(λ₁, λ₂, ...)</text>
+</svg>`
+      },
+      {
+        title: 'Linear Transformations & the Rank-Nullity Theorem',
+        body: `A function T: V → W is a linear transformation if T(u+v) = T(u)+T(v) and T(cv) = cT(v). Every linear map from ℝⁿ to ℝᵐ is represented by an m×n matrix. The kernel (null space) is the set of all vectors mapped to zero — its dimension is the nullity. The image (column space) is the set of all possible outputs — its dimension is the rank. The Rank-Nullity Theorem states rank(T) + nullity(T) = n. A transformation is injective iff ker = {0}, surjective iff rank = m, bijective (invertible) iff both.`,
+        practical: `JPEG compression projects image data onto a low-rank subspace, discarding small singular values. Robotics uses transformation matrices to convert between coordinate frames of joints and the world. Signal processing filters lie in the kernel of a linear operator.`,
+        formulas: ['rank(A) + nullity(A) = n', 'ker(T) = {v : Tv = 0}', 'im(T) = {Tv : v ∈ V}', 'T(cu+dv) = cT(u)+dT(v)'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <text x="40" y="18" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">Domain ℝ²</text>
+  <rect x="15" y="25" width="50" height="50" fill="rgba(144,202,249,0.1)" stroke="#90caf9" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <text x="40" y="84" text-anchor="middle" fill="#90caf9" font-size="8" font-family="monospace">unit square</text>
+  <text x="83" y="48" fill="#ffcc80" font-size="11" font-family="monospace">T</text>
+  <line x1="70" y1="50" x2="103" y2="50" stroke="#ffcc80" stroke-width="1.5"/>
+  <polygon points="103,50 96,46 96,54" fill="#ffcc80"/>
+  <text x="155" y="18" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">Image (col space)</text>
+  <polygon points="115,72 155,30 185,42 145,82" fill="rgba(165,214,167,0.12)" stroke="#a5d6a7" stroke-width="1.5"/>
+  <text x="153" y="100" text-anchor="middle" fill="#a5d6a7" font-size="8" font-family="monospace">rank = dim(im)</text>
+  <text x="240" y="18" fill="#555" font-size="8" font-family="monospace">Kernel (null space)</text>
+  <line x1="225" y1="55" x2="288" y2="55" stroke="#ef5350" stroke-width="2"/>
+  <circle cx="225" cy="55" r="3" fill="#ef5350"/>
+  <text x="225" y="70" fill="#ef5350" font-size="8" font-family="monospace">{v : Tv = 0}</text>
+  <text x="225" y="83" fill="#555" font-size="8" font-family="monospace">nullity = dim(ker)</text>
+  <rect x="300" y="20" width="112" height="115" rx="6" fill="#0d1520" stroke="#1e3050" stroke-width="1"/>
+  <text x="356" y="38" text-anchor="middle" fill="#90caf9" font-size="9" font-family="monospace">Rank-Nullity</text>
+  <line x1="310" y1="44" x2="402" y2="44" stroke="#1e3050" stroke-width="1"/>
+  <text x="356" y="60" text-anchor="middle" fill="#ffcc80" font-size="11" font-family="monospace">r + n = dim(V)</text>
+  <line x1="310" y1="68" x2="402" y2="68" stroke="#1e3050" stroke-width="1"/>
+  <text x="356" y="83" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">rank: # pivot cols</text>
+  <text x="356" y="96" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">nullity: # free cols</text>
+  <text x="356" y="109" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">injective: ker={0}</text>
+  <text x="356" y="122" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">surjective: rank=m</text>
+</svg>`
+      }
+    ]
   }
 ];
 
@@ -1643,6 +1846,22 @@ const REFERENCE = [
       { name: 'RK4 (k₁)', f: 'k₁ = h·f(xₙ, yₙ)', note: '' },
       { name: 'RK4 (k₂)', f: 'k₂ = h·f(xₙ+h/2, yₙ+k₁/2)', note: '' },
       { name: 'RK4 (final)', f: 'yₙ₊₁ = yₙ+(k₁+2k₂+2k₃+k₄)/6', note: 'O(h⁴) error' },
+    ]
+  },
+  {
+    title: 'Linear Algebra', formulas: [
+      { name: 'Dot Product', f: 'v·w = Σ vᵢwᵢ = |v||w|cosθ', note: '' },
+      { name: 'Cross Product (3D)', f: '|v×w| = |v||w|sinθ', note: 'Perpendicular to both v and w' },
+      { name: 'Matrix Multiply', f: '(AB)ᵢⱼ = Σₖ AᵢₖBₖⱼ', note: 'A: m×n, B: n×p → AB: m×p' },
+      { name: 'Determinant 2×2', f: 'det[[a,b],[c,d]] = ad − bc', note: '' },
+      { name: 'Inverse 2×2', f: 'A⁻¹ = (1/det)·[[d,−b],[−c,a]]', note: '' },
+      { name: 'Characteristic Equation', f: 'det(A − λI) = 0', note: 'Yields the eigenvalues' },
+      { name: 'Diagonalisation', f: 'A = PDP⁻¹', note: 'D=diag(λᵢ), cols of P = eigenvectors' },
+      { name: 'Rank-Nullity', f: 'rank(A) + nullity(A) = n', note: 'n = number of columns' },
+      { name: 'Trace', f: 'tr(A) = Σ aᵢᵢ = Σ λᵢ', note: 'Sum of diagonal = sum of eigenvalues' },
+      { name: 'Determinant Product', f: 'det(AB) = det(A)·det(B)', note: '' },
+      { name: 'Orthogonal Matrix', f: 'QᵀQ = I  →  Q⁻¹ = Qᵀ', note: 'Preserves lengths and angles' },
+      { name: 'Projection onto v', f: 'projᵥu = (u·v / |v|²) v', note: '' },
     ]
   }
 ];
@@ -1733,6 +1952,30 @@ const GLOSSARY = [
   { term: 'Unit Circle', cat: 'Trigonometry', def: 'Circle of radius 1 centred at origin; coordinates are (cosθ, sinθ).' },
   { term: 'Vector', cat: 'Algebra', def: 'Quantity with both magnitude and direction; generalises scalar to higher dimensions.' },
   { term: 'Wronskian', cat: 'Differential Equations', def: 'Determinant used to test linear independence of ODE solutions.' },
+  { term: 'Augmented Matrix', cat: 'Linear Algebra', def: '[A|b] — a matrix with the right-hand side of a linear system appended as an extra column; used in row reduction.' },
+  { term: 'Basis', cat: 'Linear Algebra', def: 'A linearly independent set that spans the vector space; every vector has a unique representation in terms of the basis.' },
+  { term: 'Column Space', cat: 'Linear Algebra', def: 'The set of all linear combinations of the columns of a matrix; equals the image of the corresponding linear map.' },
+  { term: 'Diagonalisation', cat: 'Linear Algebra', def: 'Writing A = PDP⁻¹ where D is diagonal; possible when A has n linearly independent eigenvectors.' },
+  { term: 'Dot Product', cat: 'Linear Algebra', def: 'v·w = Σ vᵢwᵢ = |v||w|cosθ; measures alignment between vectors; zero means orthogonal.' },
+  { term: 'Eigenspace', cat: 'Linear Algebra', def: 'The set of all eigenvectors for a given eigenvalue λ, plus the zero vector; a subspace of the domain.' },
+  { term: 'Eigenvector', cat: 'Linear Algebra', def: 'A nonzero vector v such that Av = λv; the matrix only scales it, never rotates it off its line.' },
+  { term: 'Gaussian Elimination', cat: 'Linear Algebra', def: 'Row-reduction algorithm that transforms an augmented matrix to row echelon form to solve a linear system.' },
+  { term: 'Identity Matrix', cat: 'Linear Algebra', def: 'Square matrix with 1s on the diagonal and 0s elsewhere; AI = IA = A for any compatible matrix A.' },
+  { term: 'Inverse Matrix', cat: 'Linear Algebra', def: 'A⁻¹ such that AA⁻¹ = A⁻¹A = I; exists iff det(A) ≠ 0.' },
+  { term: 'Kernel', cat: 'Linear Algebra', def: 'ker(T) = {v : Tv = 0} — the null space; its dimension is the nullity.' },
+  { term: 'Linear Independence', cat: 'Linear Algebra', def: 'A set of vectors is linearly independent if no vector is a linear combination of the others; Σ cᵢvᵢ = 0 implies all cᵢ = 0.' },
+  { term: 'Linear Transformation', cat: 'Linear Algebra', def: 'A map T: V→W satisfying T(u+v)=T(u)+T(v) and T(cv)=cT(v); represented by a matrix.' },
+  { term: 'Null Space', cat: 'Linear Algebra', def: 'Same as kernel; {x : Ax = 0}. Its dimension (nullity) satisfies rank + nullity = n.' },
+  { term: 'Orthogonal', cat: 'Linear Algebra', def: 'Two vectors are orthogonal if v·w = 0. An orthogonal matrix Q satisfies QᵀQ = I.' },
+  { term: 'Pivot', cat: 'Linear Algebra', def: 'The leading nonzero entry in a row after row reduction; pivot columns correspond to basic variables.' },
+  { term: 'Projection', cat: 'Linear Algebra', def: 'projᵥu = (u·v/|v|²)v — the component of u along v; the orthogonal shadow of u onto the subspace spanned by v.' },
+  { term: 'Rank', cat: 'Linear Algebra', def: 'The number of pivot columns (= dim of column space = dim of row space); measures how non-degenerate a matrix is.' },
+  { term: 'Row Echelon Form', cat: 'Linear Algebra', def: 'Matrix form where each leading entry is to the right of the one above; RREF further requires leading 1s and zeros above each pivot.' },
+  { term: 'Span', cat: 'Linear Algebra', def: 'The set of all linear combinations of a given collection of vectors; the smallest subspace containing them.' },
+  { term: 'Symmetric Matrix', cat: 'Linear Algebra', def: 'A matrix where Aᵀ = A; symmetric matrices always have real eigenvalues and orthogonal eigenvectors.' },
+  { term: 'Trace', cat: 'Linear Algebra', def: 'tr(A) = Σ aᵢᵢ — sum of diagonal entries; equals the sum of eigenvalues.' },
+  { term: 'Transpose', cat: 'Linear Algebra', def: 'Aᵀ flips rows and columns: (Aᵀ)ᵢⱼ = Aⱼᵢ. (AB)ᵀ = BᵀAᵀ.' },
+  { term: 'Vector Space', cat: 'Linear Algebra', def: 'A set closed under addition and scalar multiplication satisfying 8 axioms; examples: ℝⁿ, polynomials, matrices, functions.' },
 ];
 
 // ─── CURRICULUM RENDER ─────────────────────────────────────────────────────────
