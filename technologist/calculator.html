@@ -1563,6 +1563,1070 @@ const CURRICULUM = [
 </svg>`
       }
     ]
+  },
+  {
+    id: 'linalg', label: 'Linear Algebra', color: '#90caf9',
+    tagline: 'Vectors, matrices, transformations, and the geometry of n-dimensional space.',
+    lessons: [
+      {
+        title: 'Vectors and Vector Spaces',
+        body: `A vector is an ordered list of numbers representing magnitude and direction. A vector space V over ℝ is a set closed under addition and scalar multiplication. Key ideas: span (all linear combinations of a set), linear independence (no vector is a combination of the others), basis (a minimal spanning set), and dimension (number of basis vectors). The standard basis of ℝⁿ is the set of unit vectors e₁, e₂, ..., eₙ.`,
+        practical: `Computer graphics encodes positions, colours, and normals as vectors. Machine learning represents data points as vectors in high-dimensional space — PCA finds the basis directions that capture the most variance.`,
+        formulas: ['v = (v₁, v₂, ..., vₙ)', '|v| = √(v₁²+v₂²+...+vₙ²)', 'v·w = v₁w₁+...+vₙwₙ', 'cos θ = v·w / (|v||w|)'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <line x1="30" y1="130" x2="200" y2="130" stroke="#333" stroke-width="1.5"/>
+  <line x1="50" y1="145" x2="50" y2="15" stroke="#333" stroke-width="1.5"/>
+  <text x="202" y="134" fill="#555" font-size="9" font-family="monospace">x</text>
+  <text x="54" y="13" fill="#555" font-size="9" font-family="monospace">y</text>
+  <line x1="50" y1="130" x2="140" y2="100" stroke="#90caf9" stroke-width="2"/>
+  <polygon points="140,100 133,107 145,108" fill="#90caf9"/>
+  <text x="143" y="98" fill="#90caf9" font-size="9" font-family="monospace">v=(3,1)</text>
+  <line x1="50" y1="130" x2="80" y2="70" stroke="#a5d6a7" stroke-width="2"/>
+  <polygon points="80,70 73,80 83,78" fill="#a5d6a7"/>
+  <text x="83" y="68" fill="#a5d6a7" font-size="9" font-family="monospace">w=(1,2)</text>
+  <line x1="50" y1="130" x2="170" y2="40" stroke="#ffcc80" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <polygon points="170,40 161,49 172,50" fill="#ffcc80"/>
+  <text x="173" y="39" fill="#ffcc80" font-size="9" font-family="monospace">v+w</text>
+  <line x1="140" y1="100" x2="170" y2="40" stroke="#333" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="80" y1="70" x2="170" y2="40" stroke="#333" stroke-width="1" stroke-dasharray="3,3"/>
+  <rect x="215" y="15" width="195" height="128" rx="6" fill="#0d1520" stroke="#1e3050" stroke-width="1"/>
+  <text x="312" y="33" text-anchor="middle" fill="#90caf9" font-size="10" font-family="monospace">Vector Space Basics</text>
+  <line x1="225" y1="40" x2="400" y2="40" stroke="#1e3050" stroke-width="1"/>
+  <text x="225" y="55" fill="#888" font-size="9" font-family="monospace">Span: all c₁v+c₂w+...</text>
+  <text x="225" y="70" fill="#888" font-size="9" font-family="monospace">Indep: no redundant vectors</text>
+  <text x="225" y="85" fill="#888" font-size="9" font-family="monospace">Basis: indep + spans V</text>
+  <text x="225" y="100" fill="#888" font-size="9" font-family="monospace">Dim(V): # basis vectors</text>
+  <line x1="225" y1="109" x2="400" y2="109" stroke="#1e3050" stroke-width="1"/>
+  <text x="225" y="123" fill="#555" font-size="9" font-family="monospace">ℝ²: dim=2, basis {e₁,e₂}</text>
+  <text x="225" y="137" fill="#555" font-size="9" font-family="monospace">v·w = |v||w|cosθ</text>
+</svg>`
+      },
+      {
+        title: 'Matrix Operations',
+        body: `A matrix is a rectangular array of numbers with m rows and n columns. Addition and scalar multiplication are element-wise. Matrix multiplication (AB)ᵢⱼ = row i of A · column j of B requires the inner dimensions to match: if A is m×n and B is n×p, then AB is m×p. Multiplication is associative but not commutative: AB ≠ BA in general. The transpose Aᵀ flips rows and columns; for orthogonal matrices Aᵀ = A⁻¹.`,
+        practical: `Neural networks are entirely matrix multiplications — each layer computes Wx+b. 3D graphics pipelines apply sequences of 4×4 transformation matrices to every vertex on the GPU each frame.`,
+        formulas: ['(AB)ᵢⱼ = Σₖ AᵢₖBₖⱼ', '(AB)ᵀ = BᵀAᵀ', '(AB)⁻¹ = B⁻¹A⁻¹', 'A·I = I·A = A'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <rect x="20" y="35" width="80" height="80" rx="4" fill="#0d1520" stroke="#1e3050" stroke-width="1"/>
+  <text x="60" y="26" text-anchor="middle" fill="#90caf9" font-size="10" font-family="monospace">A</text>
+  <text x="38" y="68" fill="#ccc" font-size="12" font-family="monospace">2  1</text>
+  <text x="38" y="94" fill="#ccc" font-size="12" font-family="monospace">0  3</text>
+  <text x="112" y="82" fill="#555" font-size="16" font-family="monospace">×</text>
+  <rect x="130" y="35" width="80" height="80" rx="4" fill="#0d1520" stroke="#2a1e30" stroke-width="1"/>
+  <text x="170" y="26" text-anchor="middle" fill="#a5d6a7" font-size="10" font-family="monospace">B</text>
+  <text x="148" y="68" fill="#ccc" font-size="12" font-family="monospace">1  4</text>
+  <text x="148" y="94" fill="#ccc" font-size="12" font-family="monospace">2  0</text>
+  <text x="222" y="82" fill="#555" font-size="16" font-family="monospace">=</text>
+  <rect x="244" y="35" width="80" height="80" rx="4" fill="#0d1520" stroke="#303010" stroke-width="1"/>
+  <text x="284" y="26" text-anchor="middle" fill="#ffcc80" font-size="10" font-family="monospace">C=AB</text>
+  <text x="256" y="68" fill="#ffcc80" font-size="12" font-family="monospace">4  8</text>
+  <text x="256" y="94" fill="#ffcc80" font-size="12" font-family="monospace">6  0</text>
+  <text x="344" y="50" fill="#555" font-size="8" font-family="monospace">row 1 · col 1:</text>
+  <text x="344" y="62" fill="#555" font-size="8" font-family="monospace">(2)(1)+(1)(2)=4</text>
+  <line x1="340" y1="70" x2="405" y2="70" stroke="#333" stroke-width="1"/>
+  <text x="344" y="83" fill="#555" font-size="8" font-family="monospace">row 1 · col 2:</text>
+  <text x="344" y="95" fill="#555" font-size="8" font-family="monospace">(2)(4)+(1)(0)=8</text>
+  <line x1="340" y1="103" x2="405" y2="103" stroke="#333" stroke-width="1"/>
+  <text x="344" y="116" fill="#ef5350" font-size="8" font-family="monospace">AB ≠ BA</text>
+  <text x="344" y="128" fill="#555" font-size="8" font-family="monospace">(non-commutative)</text>
+  <text x="60" y="130" text-anchor="middle" fill="#444" font-size="8" font-family="monospace">2×2</text>
+  <text x="170" y="130" text-anchor="middle" fill="#444" font-size="8" font-family="monospace">2×2</text>
+  <text x="284" y="130" text-anchor="middle" fill="#444" font-size="8" font-family="monospace">2×2</text>
+</svg>`
+      },
+      {
+        title: 'Systems of Linear Equations & Row Reduction',
+        body: `A system of m equations in n unknowns is encoded as an augmented matrix [A|b]. Row operations — swap two rows, scale a row, add a multiple of one row to another — preserve the solution set. Applying them systematically produces row echelon form, then reduced row echelon form (RREF) with leading 1s and zeros above and below each pivot. The outcome: unique solution when rank(A) = n, infinitely many solutions when rank(A) < n (free variables exist), or no solution when rank(A) ≠ rank([A|b]).`,
+        practical: `Circuit analysis uses Kirchhoff's laws to form a linear system solved by row reduction. Computer graphics solves linear systems to find where rays intersect surfaces in ray-tracing renderers.`,
+        formulas: ['rank(A) = n → unique solution', 'rank(A) < n → free variables (∞ solutions)', 'rank(A) ≠ rank([A|b]) → inconsistent', 'Rᵢ ← Rᵢ − (aᵢⱼ/aₖⱼ)Rₖ'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <text x="20" y="22" fill="#555" font-size="8" font-family="monospace">Original [A|b]</text>
+  <rect x="15" y="28" width="110" height="70" rx="3" fill="#0d1520" stroke="#1e3050" stroke-width="1"/>
+  <text x="25" y="48" fill="#ccc" font-size="9" font-family="monospace">1  2  1 | 4</text>
+  <text x="25" y="63" fill="#ccc" font-size="9" font-family="monospace">2  1  1 | 5</text>
+  <text x="25" y="78" fill="#ccc" font-size="9" font-family="monospace">0  1  2 | 3</text>
+  <text x="136" y="65" fill="#555" font-size="14" font-family="monospace">→</text>
+  <text x="155" y="22" fill="#555" font-size="8" font-family="monospace">R₂←R₂-2R₁</text>
+  <rect x="150" y="28" width="110" height="70" rx="3" fill="#0d1520" stroke="#1e3050" stroke-width="1"/>
+  <text x="160" y="48" fill="#ccc" font-size="9" font-family="monospace">1  2  1 | 4</text>
+  <text x="160" y="63" fill="#90caf9" font-size="9" font-family="monospace">0 -3 -1 |-3</text>
+  <text x="160" y="78" fill="#ccc" font-size="9" font-family="monospace">0  1  2 | 3</text>
+  <text x="271" y="65" fill="#555" font-size="14" font-family="monospace">→</text>
+  <text x="290" y="22" fill="#555" font-size="8" font-family="monospace">RREF</text>
+  <rect x="285" y="28" width="115" height="70" rx="3" fill="#0d1520" stroke="#303010" stroke-width="1"/>
+  <text x="295" y="48" fill="#ffcc80" font-size="9" font-family="monospace">1  0  0 | 1</text>
+  <text x="295" y="63" fill="#ffcc80" font-size="9" font-family="monospace">0  1  0 | 2</text>
+  <text x="295" y="78" fill="#ffcc80" font-size="9" font-family="monospace">0  0  1 | 0</text>
+  <text x="295" y="100" fill="#a5d6a7" font-size="9" font-family="monospace">x₁=1, x₂=2, x₃=0</text>
+  <text x="20" y="115" fill="#555" font-size="8" font-family="monospace">Rank = number of pivots (leading 1s)</text>
+  <text x="20" y="128" fill="#555" font-size="8" font-family="monospace">Free columns → infinitely many solutions</text>
+  <text x="20" y="141" fill="#ef5350" font-size="8" font-family="monospace">Row [0 0 0 | c], c≠0 → no solution</text>
+</svg>`
+      },
+      {
+        title: 'Determinants',
+        body: `The determinant det(A) is a scalar that encodes how a matrix scales area (in 2D) or volume (in 3D). For a 2×2 matrix [[a,b],[c,d]], det = ad−bc. For 3×3, expand by cofactors along any row. Key properties: det(AB) = det(A)det(B); det(Aᵀ) = det(A); swapping rows negates the determinant; scaling a row scales the determinant. A matrix is invertible if and only if its determinant is nonzero. Geometrically, |det(A)| is the area scale factor of the linear map.`,
+        practical: `Cramer's Rule expresses solutions as ratios of determinants. Computer vision uses determinants in camera calibration matrices. Physics uses the Jacobian determinant when changing variables in multi-dimensional integrals.`,
+        formulas: ['det[[a,b],[c,d]] = ad−bc', 'det(AB) = det(A)·det(B)', 'A⁻¹ = adj(A) / det(A)', 'A invertible ↔ det(A) ≠ 0'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <rect x="20" y="30" width="80" height="70" rx="4" fill="#0d1520" stroke="#1e3050" stroke-width="1"/>
+  <text x="60" y="22" text-anchor="middle" fill="#90caf9" font-size="9" font-family="monospace">A = [[a,b],[c,d]]</text>
+  <text x="38" y="62" fill="#ccc" font-size="14" font-family="monospace">a  b</text>
+  <text x="38" y="86" fill="#ccc" font-size="14" font-family="monospace">c  d</text>
+  <text x="60" y="116" text-anchor="middle" fill="#ffcc80" font-size="10" font-family="monospace">det = ad − bc</text>
+  <text x="130" y="22" fill="#555" font-size="8" font-family="monospace">Geometric interpretation</text>
+  <line x1="130" y1="130" x2="260" y2="130" stroke="#333" stroke-width="1"/>
+  <line x1="145" y1="140" x2="145" y2="20" stroke="#333" stroke-width="1"/>
+  <line x1="145" y1="130" x2="205" y2="110" stroke="#90caf9" stroke-width="2"/>
+  <polygon points="205,110 197,116 207,119" fill="#90caf9"/>
+  <text x="208" y="108" fill="#90caf9" font-size="8" font-family="monospace">col 1</text>
+  <line x1="145" y1="130" x2="165" y2="70" stroke="#a5d6a7" stroke-width="2"/>
+  <polygon points="165,70 158,80 168,78" fill="#a5d6a7"/>
+  <text x="168" y="68" fill="#a5d6a7" font-size="8" font-family="monospace">col 2</text>
+  <polygon points="145,130 205,110 225,50 165,70" fill="rgba(144,202,249,0.12)" stroke="#90caf9" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="195" y="100" fill="#ffcc80" font-size="9" font-family="monospace">area=|det|</text>
+  <rect x="270" y="20" width="140" height="120" rx="6" fill="#0d1520" stroke="#1e3050" stroke-width="1"/>
+  <text x="340" y="37" text-anchor="middle" fill="#90caf9" font-size="10" font-family="monospace">Properties</text>
+  <line x1="280" y1="43" x2="400" y2="43" stroke="#1e3050" stroke-width="1"/>
+  <text x="280" y="57" fill="#888" font-size="8" font-family="monospace">det(I) = 1</text>
+  <text x="280" y="70" fill="#888" font-size="8" font-family="monospace">row swap → negate det</text>
+  <text x="280" y="83" fill="#888" font-size="8" font-family="monospace">scale row → scale det</text>
+  <text x="280" y="96" fill="#888" font-size="8" font-family="monospace">det(AB)=det(A)det(B)</text>
+  <text x="280" y="109" fill="#888" font-size="8" font-family="monospace">det(Aᵀ) = det(A)</text>
+  <text x="280" y="122" fill="#ef5350" font-size="8" font-family="monospace">det=0 → singular (no inv)</text>
+  <text x="280" y="135" fill="#a5d6a7" font-size="8" font-family="monospace">det≠0 → invertible</text>
+</svg>`
+      },
+      {
+        title: 'Eigenvalues and Eigenvectors',
+        body: `A nonzero vector v is an eigenvector of A if Av = λv — the matrix only stretches or flips it, never rotates it off its span. The scalar λ is the eigenvalue. Find eigenvalues by solving the characteristic equation det(A − λI) = 0, an nth-degree polynomial. Each eigenvalue λᵢ has a corresponding eigenspace (set of all eigenvectors). If A has n linearly independent eigenvectors it is diagonalisable: A = PDP⁻¹ where D is diagonal with eigenvalues on the diagonal. The trace equals the sum of eigenvalues; the determinant equals their product.`,
+        practical: `Google's PageRank is the dominant eigenvector of the web's link matrix. PCA computes eigenvectors of the covariance matrix to find directions of maximum variance. Quantum states are eigenvectors of observable operators.`,
+        formulas: ['Av = λv', 'det(A − λI) = 0', 'A = PDP⁻¹', 'tr(A) = Σλᵢ,  det(A) = Πλᵢ'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <line x1="30" y1="120" x2="200" y2="120" stroke="#333" stroke-width="1"/>
+  <line x1="50" y1="135" x2="50" y2="15" stroke="#333" stroke-width="1"/>
+  <line x1="50" y1="120" x2="140" y2="80" stroke="#90caf9" stroke-width="2.5"/>
+  <polygon points="140,80 131,87 141,90" fill="#90caf9"/>
+  <text x="143" y="78" fill="#90caf9" font-size="8" font-family="monospace">v₁ (λ=2)</text>
+  <line x1="50" y1="120" x2="170" y2="40" stroke="#90caf9" stroke-width="1" stroke-dasharray="3,2" opacity="0.45"/>
+  <text x="172" y="39" fill="#555" font-size="7" font-family="monospace">Av₁=2v₁</text>
+  <line x1="50" y1="120" x2="70" y2="55" stroke="#a5d6a7" stroke-width="2.5"/>
+  <polygon points="70,55 63,64 73,63" fill="#a5d6a7"/>
+  <text x="73" y="53" fill="#a5d6a7" font-size="8" font-family="monospace">v₂ (λ=-1)</text>
+  <line x1="50" y1="120" x2="130" y2="58" stroke="#ffcc80" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <polygon points="130,58 121,65 130,70" fill="#ffcc80"/>
+  <text x="132" y="56" fill="#ffcc80" font-size="8" font-family="monospace">u (rotates)</text>
+  <rect x="215" y="15" width="195" height="128" rx="6" fill="#0d1520" stroke="#1e3050" stroke-width="1"/>
+  <text x="312" y="33" text-anchor="middle" fill="#90caf9" font-size="10" font-family="monospace">Finding Eigenvalues</text>
+  <line x1="225" y1="40" x2="400" y2="40" stroke="#1e3050" stroke-width="1"/>
+  <text x="230" y="56" fill="#888" font-size="9" font-family="monospace">1. Form A − λI</text>
+  <text x="230" y="70" fill="#888" font-size="9" font-family="monospace">2. det(A−λI) = 0</text>
+  <text x="230" y="84" fill="#888" font-size="9" font-family="monospace">3. Solve for λ₁, λ₂, ...</text>
+  <text x="230" y="98" fill="#888" font-size="9" font-family="monospace">4. (A−λᵢI)v = 0 → vᵢ</text>
+  <line x1="225" y1="107" x2="400" y2="107" stroke="#1e3050" stroke-width="1"/>
+  <text x="230" y="121" fill="#555" font-size="9" font-family="monospace">Diag: A = PDP⁻¹</text>
+  <text x="230" y="136" fill="#555" font-size="9" font-family="monospace">D = diag(λ₁, λ₂, ...)</text>
+</svg>`
+      },
+      {
+        title: 'Linear Transformations & the Rank-Nullity Theorem',
+        body: `A function T: V → W is a linear transformation if T(u+v) = T(u)+T(v) and T(cv) = cT(v). Every linear map from ℝⁿ to ℝᵐ is represented by an m×n matrix. The kernel (null space) is the set of all vectors mapped to zero — its dimension is the nullity. The image (column space) is the set of all possible outputs — its dimension is the rank. The Rank-Nullity Theorem states rank(T) + nullity(T) = n. A transformation is injective iff ker = {0}, surjective iff rank = m, bijective (invertible) iff both.`,
+        practical: `JPEG compression projects image data onto a low-rank subspace, discarding small singular values. Robotics uses transformation matrices to convert between coordinate frames of joints and the world. Signal processing filters lie in the kernel of a linear operator.`,
+        formulas: ['rank(A) + nullity(A) = n', 'ker(T) = {v : Tv = 0}', 'im(T) = {Tv : v ∈ V}', 'T(cu+dv) = cT(u)+dT(v)'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <text x="40" y="18" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">Domain ℝ²</text>
+  <rect x="15" y="25" width="50" height="50" fill="rgba(144,202,249,0.1)" stroke="#90caf9" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <text x="40" y="84" text-anchor="middle" fill="#90caf9" font-size="8" font-family="monospace">unit square</text>
+  <text x="83" y="48" fill="#ffcc80" font-size="11" font-family="monospace">T</text>
+  <line x1="70" y1="50" x2="103" y2="50" stroke="#ffcc80" stroke-width="1.5"/>
+  <polygon points="103,50 96,46 96,54" fill="#ffcc80"/>
+  <text x="155" y="18" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">Image (col space)</text>
+  <polygon points="115,72 155,30 185,42 145,82" fill="rgba(165,214,167,0.12)" stroke="#a5d6a7" stroke-width="1.5"/>
+  <text x="153" y="100" text-anchor="middle" fill="#a5d6a7" font-size="8" font-family="monospace">rank = dim(im)</text>
+  <text x="240" y="18" fill="#555" font-size="8" font-family="monospace">Kernel (null space)</text>
+  <line x1="225" y1="55" x2="288" y2="55" stroke="#ef5350" stroke-width="2"/>
+  <circle cx="225" cy="55" r="3" fill="#ef5350"/>
+  <text x="225" y="70" fill="#ef5350" font-size="8" font-family="monospace">{v : Tv = 0}</text>
+  <text x="225" y="83" fill="#555" font-size="8" font-family="monospace">nullity = dim(ker)</text>
+  <rect x="300" y="20" width="112" height="115" rx="6" fill="#0d1520" stroke="#1e3050" stroke-width="1"/>
+  <text x="356" y="38" text-anchor="middle" fill="#90caf9" font-size="9" font-family="monospace">Rank-Nullity</text>
+  <line x1="310" y1="44" x2="402" y2="44" stroke="#1e3050" stroke-width="1"/>
+  <text x="356" y="60" text-anchor="middle" fill="#ffcc80" font-size="11" font-family="monospace">r + n = dim(V)</text>
+  <line x1="310" y1="68" x2="402" y2="68" stroke="#1e3050" stroke-width="1"/>
+  <text x="356" y="83" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">rank: # pivot cols</text>
+  <text x="356" y="96" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">nullity: # free cols</text>
+  <text x="356" y="109" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">injective: ker={0}</text>
+  <text x="356" y="122" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">surjective: rank=m</text>
+</svg>`
+      }
+    ]
+  },
+  {
+    id: 'multicalc', label: 'Multivariable Calculus', color: '#ce93d8',
+    tagline: 'Calculus extended to functions of several variables, surfaces, and vector fields.',
+    lessons: [
+      {
+        title: 'Partial Derivatives & the Gradient',
+        body: `The partial derivative ∂f/∂x holds all variables except x constant and differentiates normally. The gradient ∇f = (∂f/∂x, ∂f/∂y, ...) is a vector pointing in the direction of steepest increase of f; its magnitude is the rate of that increase. The gradient is always perpendicular to level curves (2D) or level surfaces (3D). Setting ∇f = 0 locates critical points.`,
+        practical: `Gradient descent — the backbone of neural network training — steps opposite to ∇L to minimise the loss function L. Heat flow and diffusion follow the negative gradient of temperature.`,
+        formulas: ['∂f/∂x: hold y,z,... constant', '∇f = (∂f/∂x, ∂f/∂y, ∂f/∂z)', '|∇f| = rate of steepest ascent', 'x ← x − α∇f (gradient descent)'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- contour ellipses -->
+  <ellipse cx="130" cy="85" rx="100" ry="65" fill="none" stroke="#2a1a40" stroke-width="1.5"/>
+  <ellipse cx="130" cy="85" rx="70" ry="45" fill="none" stroke="#3a2050" stroke-width="1.5"/>
+  <ellipse cx="130" cy="85" rx="42" ry="27" fill="none" stroke="#5a3070" stroke-width="1.5"/>
+  <ellipse cx="130" cy="85" rx="18" ry="12" fill="none" stroke="#8050a0" stroke-width="1.5"/>
+  <!-- gradient arrows (outward from centre) -->
+  <line x1="130" y1="85" x2="178" y2="62" stroke="#ce93d8" stroke-width="1.5"/>
+  <polygon points="178,62 169,65 172,73" fill="#ce93d8"/>
+  <line x1="130" y1="85" x2="130" y2="30" stroke="#ce93d8" stroke-width="1.5"/>
+  <polygon points="130,30 125,39 135,39" fill="#ce93d8"/>
+  <line x1="130" y1="85" x2="75" y2="62" stroke="#ce93d8" stroke-width="1.5"/>
+  <polygon points="75,62 81,71 88,63" fill="#ce93d8"/>
+  <text x="130" y="92" text-anchor="middle" fill="#666" font-size="8" font-family="monospace">minimum</text>
+  <text x="182" y="58" fill="#ce93d8" font-size="8" font-family="monospace">∇f</text>
+  <!-- panel -->
+  <rect x="248" y="15" width="162" height="130" rx="6" fill="#150d20" stroke="#3a1a50" stroke-width="1"/>
+  <text x="329" y="33" text-anchor="middle" fill="#ce93d8" font-size="10" font-family="monospace">Gradient Facts</text>
+  <line x1="258" y1="40" x2="400" y2="40" stroke="#3a1a50" stroke-width="1"/>
+  <text x="258" y="55" fill="#888" font-size="8" font-family="monospace">∇f ⊥ level curves</text>
+  <text x="258" y="68" fill="#888" font-size="8" font-family="monospace">∇f = 0 → critical point</text>
+  <text x="258" y="81" fill="#888" font-size="8" font-family="monospace">-∇f → steepest descent</text>
+  <line x1="258" y1="90" x2="400" y2="90" stroke="#3a1a50" stroke-width="1"/>
+  <text x="258" y="103" fill="#555" font-size="8" font-family="monospace">∂f/∂x ≈ (f(x+h,y)-f(x,y))/h</text>
+  <text x="258" y="116" fill="#555" font-size="8" font-family="monospace">Chain rule:</text>
+  <text x="258" y="129" fill="#555" font-size="8" font-family="monospace">df/dt = ∇f · r'(t)</text>
+</svg>`
+      },
+      {
+        title: 'Directional Derivatives & Critical Points',
+        body: `The directional derivative Dᵤf = ∇f · û measures the rate of change of f in the direction of unit vector û. It is maximised when û = ∇f/|∇f|. A critical point has ∇f = 0. The second derivative test uses the Hessian matrix H = [[fₓₓ, fₓᵧ],[fᵧₓ, fᵧᵧ]]: if det(H) > 0 and fₓₓ > 0 → local min; fₓₓ < 0 → local max; det(H) < 0 → saddle point.`,
+        practical: `Structural engineering optimises beam shapes at critical points of stress functions. Game AI uses gradient information to find shortest paths on terrain height maps.`,
+        formulas: ['Dᵤf = ∇f · û, |û|=1', 'Max Dᵤf when û = ∇f/|∇f|', 'H = [[fₓₓ,fₓᵧ],[fᵧₓ,fᵧᵧ]]', 'det(H)>0,fₓₓ>0→min; det(H)<0→saddle'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- axes -->
+  <line x1="20" y1="130" x2="200" y2="130" stroke="#333" stroke-width="1.5"/>
+  <line x1="40" y1="145" x2="40" y2="15" stroke="#333" stroke-width="1.5"/>
+  <text x="202" y="134" fill="#555" font-size="9" font-family="monospace">x</text>
+  <text x="44" y="13" fill="#555" font-size="9" font-family="monospace">y</text>
+  <!-- critical point: local min -->
+  <circle cx="100" cy="110" r="4" fill="#a5d6a7"/>
+  <text x="103" y="108" fill="#a5d6a7" font-size="8" font-family="monospace">min</text>
+  <!-- critical point: local max -->
+  <circle cx="65" cy="55" r="4" fill="#ce93d8"/>
+  <text x="68" y="53" fill="#ce93d8" font-size="8" font-family="monospace">max</text>
+  <!-- critical point: saddle -->
+  <circle cx="150" cy="75" r="4" fill="#ffcc80"/>
+  <text x="153" y="73" fill="#ffcc80" font-size="8" font-family="monospace">saddle</text>
+  <!-- directional derivative arrow -->
+  <line x1="100" y1="110" x2="135" y2="88" stroke="#ef5350" stroke-width="1.5"/>
+  <polygon points="135,88 126,92 130,100" fill="#ef5350"/>
+  <text x="138" y="86" fill="#ef5350" font-size="8" font-family="monospace">û</text>
+  <!-- Hessian panel -->
+  <rect x="215" y="15" width="195" height="128" rx="6" fill="#150d20" stroke="#3a1a50" stroke-width="1"/>
+  <text x="312" y="33" text-anchor="middle" fill="#ce93d8" font-size="10" font-family="monospace">Second Derivative Test</text>
+  <line x1="225" y1="40" x2="400" y2="40" stroke="#3a1a50" stroke-width="1"/>
+  <text x="230" y="55" fill="#888" font-size="8" font-family="monospace">D = fₓₓfᵧᵧ − fₓᵧ²</text>
+  <text x="230" y="68" fill="#a5d6a7" font-size="8" font-family="monospace">D>0, fₓₓ>0 → local min</text>
+  <text x="230" y="81" fill="#ce93d8" font-size="8" font-family="monospace">D>0, fₓₓ<0 → local max</text>
+  <text x="230" y="94" fill="#ffcc80" font-size="8" font-family="monospace">D<0 → saddle point</text>
+  <text x="230" y="107" fill="#555" font-size="8" font-family="monospace">D=0 → inconclusive</text>
+  <line x1="225" y1="115" x2="400" y2="115" stroke="#3a1a50" stroke-width="1"/>
+  <text x="230" y="130" fill="#555" font-size="8" font-family="monospace">Dᵤf = ∇f·û maximised</text>
+  <text x="230" y="141" fill="#555" font-size="8" font-family="monospace">when û ∥ ∇f</text>
+</svg>`
+      },
+      {
+        title: 'Double & Triple Integrals',
+        body: `A double integral ∬_R f(x,y) dA integrates f over a 2D region R, computing volume beneath a surface. Fubini's theorem lets us iterate: ∫∫ f(x,y) dx dy. For circular regions, polar coordinates (x=rcosθ, y=rsinθ, dA=r dr dθ) simplify the bounds. Triple integrals extend to 3D regions; cylindrical and spherical coordinates handle symmetric regions efficiently.`,
+        practical: `Computing mass and centre of mass of laminas; probability over 2D distributions; expected values in statistics; fluid volume calculations in engineering.`,
+        formulas: ['∬R f dA = ∫ₐᵇ ∫_{g(x)}^{h(x)} f dy dx', 'Polar: dA = r dr dθ', 'Spherical: dV = ρ²sinφ dρ dφ dθ', 'Jacobian handles coordinate changes'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- integration region filled grid -->
+  <rect x="30" y="40" width="150" height="100" fill="rgba(206,147,216,0.08)" stroke="#3a1a50" stroke-width="1"/>
+  <!-- vertical grid lines -->
+  <line x1="55" y1="40" x2="55" y2="140" stroke="#2a1040" stroke-width="1"/>
+  <line x1="80" y1="40" x2="80" y2="140" stroke="#2a1040" stroke-width="1"/>
+  <line x1="105" y1="40" x2="105" y2="140" stroke="#2a1040" stroke-width="1"/>
+  <line x1="130" y1="40" x2="130" y2="140" stroke="#2a1040" stroke-width="1"/>
+  <line x1="155" y1="40" x2="155" y2="140" stroke="#2a1040" stroke-width="1"/>
+  <!-- horizontal grid lines -->
+  <line x1="30" y1="65" x2="180" y2="65" stroke="#2a1040" stroke-width="1"/>
+  <line x1="30" y1="90" x2="180" y2="90" stroke="#2a1040" stroke-width="1"/>
+  <line x1="30" y1="115" x2="180" y2="115" stroke="#2a1040" stroke-width="1"/>
+  <!-- axes labels -->
+  <text x="183" y="144" fill="#555" font-size="9" font-family="monospace">x</text>
+  <text x="18" y="38" fill="#555" font-size="9" font-family="monospace">y</text>
+  <text x="30" y="155" fill="#555" font-size="8" font-family="monospace">a</text>
+  <text x="175" y="155" fill="#555" font-size="8" font-family="monospace">b</text>
+  <text x="10" y="44" fill="#555" font-size="8" font-family="monospace">d</text>
+  <text x="10" y="144" fill="#555" font-size="8" font-family="monospace">c</text>
+  <text x="95" y="92" text-anchor="middle" fill="#ce93d8" font-size="10" font-family="monospace">∬R f dA</text>
+  <!-- dA cell highlight -->
+  <rect x="105" y="65" width="25" height="25" fill="rgba(206,147,216,0.3)" stroke="#ce93d8" stroke-width="1"/>
+  <text x="114" y="84" fill="#ce93d8" font-size="7" font-family="monospace">dA</text>
+  <!-- panel -->
+  <rect x="205" y="15" width="205" height="128" rx="6" fill="#150d20" stroke="#3a1a50" stroke-width="1"/>
+  <text x="307" y="33" text-anchor="middle" fill="#ce93d8" font-size="10" font-family="monospace">Coordinate Systems</text>
+  <line x1="215" y1="40" x2="400" y2="40" stroke="#3a1a50" stroke-width="1"/>
+  <text x="215" y="55" fill="#888" font-size="8" font-family="monospace">Cartesian: dA = dx dy</text>
+  <text x="215" y="68" fill="#888" font-size="8" font-family="monospace">Polar: dA = r dr dθ</text>
+  <text x="215" y="81" fill="#888" font-size="8" font-family="monospace">Cylindrical: r dr dθ dz</text>
+  <text x="215" y="94" fill="#888" font-size="8" font-family="monospace">Spherical: ρ²sinφ dρdφdθ</text>
+  <line x1="215" y1="102" x2="400" y2="102" stroke="#3a1a50" stroke-width="1"/>
+  <text x="215" y="115" fill="#555" font-size="8" font-family="monospace">Fubini: iterate integrals</text>
+  <text x="215" y="128" fill="#555" font-size="8" font-family="monospace">Jacobian: |∂(x,y)/∂(u,v)|</text>
+</svg>`
+      },
+      {
+        title: 'Vector Fields & Line Integrals',
+        body: `A vector field F(x,y) = (P, Q) assigns a vector to each point. The line integral ∫_C F·dr measures the work done by F along curve C. If F = ∇f (a conservative field), then ∫_C F·dr = f(B) − f(A) — path-independent. A field is conservative iff curl F = 0 (in ℝ²: ∂Q/∂x = ∂P/∂y). The curl measures rotation; the divergence div F = ∂P/∂x + ∂Q/∂y measures outflow.`,
+        practical: `Work by gravity and electrostatic forces are conservative line integrals. Fluid circulation around an airfoil determines lift via the Kutta-Joukowski theorem.`,
+        formulas: ['∫_C F·dr = ∫_a^b F(r(t))·r\'(t)dt', 'Conservative: F=∇f → path-indep.', 'curl F = ∂Q/∂x − ∂P/∂y', 'div F = ∂P/∂x + ∂Q/∂y'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- rotational vector field arrows -->
+  <line x1="60" y1="50" x2="75" y2="35" stroke="#ce93d8" stroke-width="1.5"/>
+  <polygon points="75,35 66,38 69,47" fill="#ce93d8"/>
+  <line x1="110" y1="35" x2="130" y2="42" stroke="#ce93d8" stroke-width="1.5"/>
+  <polygon points="130,42 120,38 122,48" fill="#ce93d8"/>
+  <line x1="155" y1="55" x2="155" y2="75" stroke="#ce93d8" stroke-width="1.5"/>
+  <polygon points="155,75 150,65 160,65" fill="#ce93d8"/>
+  <line x1="145" y1="110" x2="125" y2="120" stroke="#ce93d8" stroke-width="1.5"/>
+  <polygon points="125,120 133,112 135,122" fill="#ce93d8"/>
+  <line x1="90" y1="130" x2="70" y2="122" stroke="#ce93d8" stroke-width="1.5"/>
+  <polygon points="70,122 79,130 80,120" fill="#ce93d8"/>
+  <line x1="48" y1="105" x2="42" y2="85" stroke="#ce93d8" stroke-width="1.5"/>
+  <polygon points="42,85 38,95 48,93" fill="#ce93d8"/>
+  <!-- centre -->
+  <circle cx="100" cy="83" r="3" fill="#666"/>
+  <!-- curve C -->
+  <ellipse cx="100" cy="83" rx="55" ry="40" fill="none" stroke="#ffcc80" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="152" y="75" fill="#ffcc80" font-size="9" font-family="monospace">C</text>
+  <text x="82" y="126" fill="#555" font-size="8" font-family="monospace">curl≠0</text>
+  <!-- panel -->
+  <rect x="200" y="15" width="210" height="128" rx="6" fill="#150d20" stroke="#3a1a50" stroke-width="1"/>
+  <text x="305" y="33" text-anchor="middle" fill="#ce93d8" font-size="10" font-family="monospace">Line Integrals</text>
+  <line x1="210" y1="40" x2="400" y2="40" stroke="#3a1a50" stroke-width="1"/>
+  <text x="210" y="55" fill="#888" font-size="8" font-family="monospace">Work = ∫C F·dr</text>
+  <text x="210" y="68" fill="#888" font-size="8" font-family="monospace">Conservative: F=∇f</text>
+  <text x="210" y="81" fill="#a5d6a7" font-size="8" font-family="monospace">  → ∫C F·dr=f(B)-f(A)</text>
+  <text x="210" y="94" fill="#888" font-size="8" font-family="monospace">curl=0 ↔ conservative</text>
+  <line x1="210" y1="102" x2="400" y2="102" stroke="#3a1a50" stroke-width="1"/>
+  <text x="210" y="115" fill="#555" font-size="8" font-family="monospace">div F: outflow per vol</text>
+  <text x="210" y="128" fill="#555" font-size="8" font-family="monospace">curl F: rotation</text>
+</svg>`
+      },
+      {
+        title: "Green's, Stokes' & the Divergence Theorem",
+        body: `These three theorems relate integrals over regions to integrals over their boundaries. Green's theorem: ∮_C (P dx + Q dy) = ∬_D (∂Q/∂x − ∂P/∂y) dA. Stokes' theorem generalises this to surfaces: ∮_C F·dr = ∬_S (curl F)·dS. The Divergence theorem: ∯_S F·dS = ∭_V div F dV. All three are special cases of the generalised Stokes' theorem ∫_∂Ω ω = ∫_Ω dω from differential geometry.`,
+        practical: `Maxwell's equations in integral form (Gauss's law, Faraday's law) are direct applications. Fluid mechanics uses the Divergence theorem to relate surface flux to volume sources.`,
+        formulas: ["Green's: ∮C P dx+Q dy = ∬D(Qₓ-Pᵧ)dA", "Stokes': ∮C F·dr = ∬S curl F·dS", 'Divergence: ∯S F·dS = ∭V div F dV', '∫∂Ω ω = ∫Ω dω (generalised)'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- Green's: region D with boundary C -->
+  <text x="55" y="18" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">Green's</text>
+  <rect x="20" y="25" width="70" height="55" rx="6" fill="rgba(206,147,216,0.1)" stroke="#ce93d8" stroke-width="1.5"/>
+  <text x="55" y="55" text-anchor="middle" fill="#ce93d8" font-size="9" font-family="monospace">D</text>
+  <text x="55" y="68" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">∬(Qₓ-Pᵧ)dA</text>
+  <text x="55" y="90" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">=∮C</text>
+  <!-- Stokes: surface with boundary -->
+  <text x="185" y="18" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">Stokes'</text>
+  <ellipse cx="185" cy="55" rx="55" ry="28" fill="rgba(206,147,216,0.08)" stroke="#ce93d8" stroke-width="1" stroke-dasharray="3,2"/>
+  <ellipse cx="185" cy="55" rx="55" ry="13" fill="none" stroke="#ffcc80" stroke-width="1.5"/>
+  <text x="185" y="58" text-anchor="middle" fill="#ce93d8" font-size="8" font-family="monospace">S</text>
+  <text x="225" y="45" fill="#ffcc80" font-size="8" font-family="monospace">∂S=C</text>
+  <text x="185" y="88" text-anchor="middle" fill="#888" font-size="8" font-family="monospace">∬S curlF·dS = ∮C F·dr</text>
+  <!-- Divergence: sphere with outward flux arrows -->
+  <text x="340" y="18" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">Divergence</text>
+  <circle cx="340" cy="60" r="30" fill="rgba(206,147,216,0.08)" stroke="#ce93d8" stroke-width="1.5"/>
+  <text x="340" y="63" text-anchor="middle" fill="#ce93d8" font-size="8" font-family="monospace">V</text>
+  <!-- flux arrows outward -->
+  <line x1="340" y1="30" x2="340" y2="18" stroke="#a5d6a7" stroke-width="1.5"/>
+  <polygon points="340,18 336,26 344,26" fill="#a5d6a7"/>
+  <line x1="368" y1="48" x2="382" y2="40" stroke="#a5d6a7" stroke-width="1.5"/>
+  <polygon points="382,40 374,45 378,53" fill="#a5d6a7"/>
+  <line x1="312" y1="48" x2="298" y2="40" stroke="#a5d6a7" stroke-width="1.5"/>
+  <polygon points="298,40 306,45 302,53" fill="#a5d6a7"/>
+  <text x="340" y="106" text-anchor="middle" fill="#888" font-size="8" font-family="monospace">∯S F·dS = ∭V div F dV</text>
+  <!-- unifying label -->
+  <text x="210" y="135" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">All cases of: ∫∂Ω ω = ∫Ω dω</text>
+</svg>`
+      }
+    ]
+  },
+  {
+    id: 'realanalysis', label: 'Real Analysis', color: '#f48fb1',
+    tagline: 'The rigorous foundations of calculus — limits, continuity, and integration proved from first principles.',
+    lessons: [
+      {
+        title: 'Epsilon-Delta Limits & Continuity',
+        body: `The formal definition: lim_{x→a} f(x) = L means for every ε > 0 there exists δ > 0 such that 0 < |x − a| < δ implies |f(x) − L| < ε. This replaces informal notions of "approaching" with a precise challenge-response game. Continuity at a requires the limit to equal f(a). Uniform continuity strengthens this: the same δ works for every point in the domain.`,
+        practical: `Proving convergence of numerical algorithms requires ε-δ arguments. The ε-δ framework underpins every theorem in analysis — the IVT, EVT, and FTC all rest on it.`,
+        formulas: ['∀ε>0 ∃δ>0: 0<|x−a|<δ → |f(x)−L|<ε', 'Continuous at a: lim f(x) = f(a)', 'Uniformly continuous: δ independent of a', 'Lipschitz: |f(x)−f(y)| ≤ K|x−y|'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- x-axis -->
+  <line x1="20" y1="130" x2="200" y2="130" stroke="#333" stroke-width="1.5"/>
+  <!-- y-axis -->
+  <line x1="30" y1="145" x2="30" y2="10" stroke="#333" stroke-width="1.5"/>
+  <!-- curve f(x) -->
+  <polyline points="40,120 65,105 90,85 115,60 140,45 165,38 190,35" fill="none" stroke="#888" stroke-width="1.5"/>
+  <!-- a on x-axis -->
+  <line x1="100" y1="126" x2="100" y2="134" stroke="#f48fb1" stroke-width="1.5"/>
+  <text x="97" y="145" fill="#f48fb1" font-size="9" font-family="monospace">a</text>
+  <!-- delta region on x -->
+  <rect x="82" y="124" width="36" height="8" fill="rgba(244,143,177,0.2)" stroke="none"/>
+  <line x1="82" y1="128" x2="118" y2="128" stroke="#f48fb1" stroke-width="1" stroke-dasharray="2,2"/>
+  <text x="68" y="120" fill="#f48fb1" font-size="8" font-family="monospace">δ</text>
+  <text x="120" y="120" fill="#f48fb1" font-size="8" font-family="monospace">δ</text>
+  <!-- L on y-axis -->
+  <line x1="26" y1="72" x2="34" y2="72" stroke="#a5d6a7" stroke-width="1.5"/>
+  <text x="10" y="75" fill="#a5d6a7" font-size="9" font-family="monospace">L</text>
+  <!-- epsilon region on y -->
+  <rect x="23" y="56" width="8" height="32" fill="rgba(165,214,167,0.2)" stroke="none"/>
+  <line x1="27" y1="56" x2="27" y2="88" stroke="#a5d6a7" stroke-width="1" stroke-dasharray="2,2"/>
+  <text x="5" y="60" fill="#a5d6a7" font-size="8" font-family="monospace">ε</text>
+  <text x="5" y="89" fill="#a5d6a7" font-size="8" font-family="monospace">ε</text>
+  <!-- dashed lines to point -->
+  <line x1="100" y1="72" x2="100" y2="130" stroke="#444" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="30" y1="72" x2="100" y2="72" stroke="#444" stroke-width="1" stroke-dasharray="3,3"/>
+  <circle cx="100" cy="72" r="3" fill="#f48fb1"/>
+  <!-- panel -->
+  <rect x="215" y="15" width="195" height="128" rx="6" fill="#200d14" stroke="#501a30" stroke-width="1"/>
+  <text x="312" y="33" text-anchor="middle" fill="#f48fb1" font-size="10" font-family="monospace">ε-δ Definition</text>
+  <line x1="225" y1="40" x2="400" y2="40" stroke="#501a30" stroke-width="1"/>
+  <text x="225" y="55" fill="#888" font-size="8" font-family="monospace">Given any ε>0 (output tol.)</text>
+  <text x="225" y="68" fill="#888" font-size="8" font-family="monospace">find δ>0 (input tol.)</text>
+  <text x="225" y="81" fill="#888" font-size="8" font-family="monospace">so |x-a|<δ → |f(x)-L|<ε</text>
+  <line x1="225" y1="90" x2="400" y2="90" stroke="#501a30" stroke-width="1"/>
+  <text x="225" y="103" fill="#555" font-size="8" font-family="monospace">Continuity: δ depends on ε</text>
+  <text x="225" y="116" fill="#555" font-size="8" font-family="monospace">Uniform: δ works everywhere</text>
+  <text x="225" y="129" fill="#555" font-size="8" font-family="monospace">Lipschitz: δ = ε/K</text>
+</svg>`
+      },
+      {
+        title: 'Sequences, Convergence & Completeness',
+        body: `A sequence (aₙ) converges to L if for every ε > 0 there exists N such that n > N implies |aₙ − L| < ε. A Cauchy sequence has terms that get arbitrarily close to each other: for every ε > 0 there exists N such that m, n > N implies |aₘ − aₙ| < ε. ℝ is complete: every Cauchy sequence converges. The Bolzano-Weierstrass theorem guarantees every bounded sequence has a convergent subsequence.`,
+        practical: `Iterative algorithms (Newton's method, gradient descent) generate sequences — proving they converge requires Cauchy arguments. Completeness of ℝ is why numerical computation works.`,
+        formulas: ['∀ε>0 ∃N: n>N → |aₙ−L|<ε', 'Cauchy: |aₘ−aₙ|<ε for m,n>N', 'Complete: Cauchy ↔ convergent', 'Bolzano-Weierstrass: bounded → has conv. subsequence'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- number line -->
+  <line x1="20" y1="85" x2="200" y2="85" stroke="#333" stroke-width="1.5"/>
+  <!-- L marker -->
+  <line x1="170" y1="79" x2="170" y2="91" stroke="#a5d6a7" stroke-width="2"/>
+  <text x="166" y="105" fill="#a5d6a7" font-size="9" font-family="monospace">L</text>
+  <!-- epsilon band -->
+  <rect x="158" y="78" width="24" height="14" fill="rgba(165,214,167,0.15)" stroke="#a5d6a7" stroke-width="1" stroke-dasharray="2,2"/>
+  <text x="140" y="72" fill="#a5d6a7" font-size="8" font-family="monospace">ε</text>
+  <text x="186" y="72" fill="#a5d6a7" font-size="8" font-family="monospace">ε</text>
+  <!-- sequence dots converging -->
+  <circle cx="35" cy="85" r="4" fill="#f48fb1"/>
+  <text x="32" y="65" fill="#555" font-size="8" font-family="monospace">a₁</text>
+  <circle cx="70" cy="85" r="4" fill="#f48fb1"/>
+  <text x="67" y="65" fill="#555" font-size="8" font-family="monospace">a₂</text>
+  <circle cx="100" cy="85" r="3.5" fill="#f48fb1"/>
+  <circle cx="122" cy="85" r="3" fill="#f48fb1"/>
+  <circle cx="140" cy="85" r="2.5" fill="#f48fb1"/>
+  <circle cx="153" cy="85" r="2" fill="#f48fb1"/>
+  <circle cx="162" cy="85" r="1.5" fill="#f48fb1"/>
+  <circle cx="167" cy="85" r="1" fill="#f48fb1"/>
+  <text x="100" y="65" fill="#555" font-size="8" font-family="monospace">a₃ a₄ ...</text>
+  <!-- N marker -->
+  <line x1="122" y1="90" x2="122" y2="112" stroke="#666" stroke-width="1" stroke-dasharray="2,2"/>
+  <text x="112" y="122" fill="#666" font-size="8" font-family="monospace">n=N</text>
+  <text x="125" y="122" fill="#666" font-size="8" font-family="monospace">→ inside ε</text>
+  <!-- panel -->
+  <rect x="215" y="15" width="195" height="128" rx="6" fill="#200d14" stroke="#501a30" stroke-width="1"/>
+  <text x="312" y="33" text-anchor="middle" fill="#f48fb1" font-size="10" font-family="monospace">Convergence Types</text>
+  <line x1="225" y1="40" x2="400" y2="40" stroke="#501a30" stroke-width="1"/>
+  <text x="225" y="55" fill="#888" font-size="8" font-family="monospace">Convergent: aₙ→L (limit)</text>
+  <text x="225" y="68" fill="#888" font-size="8" font-family="monospace">Cauchy: terms cluster</text>
+  <text x="225" y="81" fill="#a5d6a7" font-size="8" font-family="monospace">ℝ complete: Cauchy=conv.</text>
+  <line x1="225" y1="90" x2="400" y2="90" stroke="#501a30" stroke-width="1"/>
+  <text x="225" y="103" fill="#555" font-size="8" font-family="monospace">Monotone + bounded → conv.</text>
+  <text x="225" y="116" fill="#555" font-size="8" font-family="monospace">Bolzano-Weierstrass:</text>
+  <text x="225" y="129" fill="#555" font-size="8" font-family="monospace">bounded → conv. subsequence</text>
+</svg>`
+      },
+      {
+        title: 'Differentiation: The MVT & Taylor's Theorem',
+        body: `The Mean Value Theorem: if f is continuous on [a,b] and differentiable on (a,b), there exists c where f'(c) = (f(b)−f(a))/(b−a). This proves monotonicity: f' > 0 everywhere implies f is increasing. Taylor's theorem with remainder gives f(x) = Σ f⁽ⁿ⁾(a)/n! (x−a)ⁿ + Rₙ where Rₙ = f⁽ⁿ⁺¹⁾(c)/(n+1)! (x−a)ⁿ⁺¹ for some c — a rigorous error bound.`,
+        practical: `Taylor remainder bounds quantify the error in numerical approximations. The MVT is used to prove convergence rates of Newton's method and other root-finding algorithms.`,
+        formulas: ['f\'(c) = (f(b)−f(a))/(b−a)', 'f(x) = Σₖ f⁽ᵏ⁾(a)/k! (x−a)ᵏ + Rₙ', 'Rₙ = f⁽ⁿ⁺¹⁾(c)/(n+1)! (x−a)ⁿ⁺¹', 'f\'>0 on (a,b) → f strictly increasing'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- axes -->
+  <line x1="20" y1="130" x2="210" y2="130" stroke="#333" stroke-width="1.5"/>
+  <line x1="30" y1="145" x2="30" y2="15" stroke="#333" stroke-width="1.5"/>
+  <!-- curve -->
+  <polyline points="45,115 70,95 100,68 135,48 170,38" fill="none" stroke="#f48fb1" stroke-width="2"/>
+  <!-- a and b markers -->
+  <line x1="45" y1="126" x2="45" y2="134" stroke="#888" stroke-width="1.5"/>
+  <text x="42" y="145" fill="#888" font-size="9" font-family="monospace">a</text>
+  <line x1="170" y1="126" x2="170" y2="134" stroke="#888" stroke-width="1.5"/>
+  <text x="167" y="145" fill="#888" font-size="9" font-family="monospace">b</text>
+  <!-- secant line -->
+  <line x1="45" y1="115" x2="170" y2="38" stroke="#ffcc80" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="175" y="36" fill="#ffcc80" font-size="8" font-family="monospace">secant</text>
+  <!-- tangent at c (parallel to secant) -->
+  <line x1="80" y1="100" x2="150" y2="56" stroke="#a5d6a7" stroke-width="1.5"/>
+  <text x="152" y="54" fill="#a5d6a7" font-size="8" font-family="monospace">f'(c)</text>
+  <!-- c marker -->
+  <line x1="110" y1="126" x2="110" y2="134" stroke="#a5d6a7" stroke-width="1.5"/>
+  <text x="107" y="145" fill="#a5d6a7" font-size="9" font-family="monospace">c</text>
+  <circle cx="110" cy="63" r="3" fill="#a5d6a7"/>
+  <!-- panel -->
+  <rect x="218" y="15" width="192" height="128" rx="6" fill="#200d14" stroke="#501a30" stroke-width="1"/>
+  <text x="314" y="33" text-anchor="middle" fill="#f48fb1" font-size="10" font-family="monospace">MVT &amp; Taylor</text>
+  <line x1="228" y1="40" x2="400" y2="40" stroke="#501a30" stroke-width="1"/>
+  <text x="228" y="55" fill="#888" font-size="8" font-family="monospace">MVT: f'(c)=(f(b)-f(a))/(b-a)</text>
+  <text x="228" y="68" fill="#888" font-size="8" font-family="monospace">tangent ∥ secant at some c</text>
+  <line x1="228" y1="77" x2="400" y2="77" stroke="#501a30" stroke-width="1"/>
+  <text x="228" y="91" fill="#888" font-size="8" font-family="monospace">Taylor: f≈Σ f⁽ᵏ⁾(a)/k!(x-a)ᵏ</text>
+  <text x="228" y="104" fill="#888" font-size="8" font-family="monospace">Error: Rₙ=O((x-a)ⁿ⁺¹)</text>
+  <line x1="228" y1="113" x2="400" y2="113" stroke="#501a30" stroke-width="1"/>
+  <text x="228" y="127" fill="#555" font-size="8" font-family="monospace">Rolle's: f(a)=f(b)→f'(c)=0</text>
+</svg>`
+      },
+      {
+        title: 'The Riemann Integral & Integrability',
+        body: `For a bounded function f on [a,b], a partition P = {x₀,x₁,...,xₙ} defines upper and lower Darboux sums U(f,P) and L(f,P). f is Riemann integrable iff inf U = sup L — they meet at the integral value. Continuous functions on closed intervals are always integrable. The Fundamental Theorem of Calculus rigorously connects antiderivatives to definite integrals. The Lebesgue integral later extended this to a much larger class of functions.`,
+        practical: `The ε-partition definition underpins numerical integration error analysis. Lebesgue integration is essential for modern probability theory and functional analysis.`,
+        formulas: ['L(f,P) = Σ mᵢ Δxᵢ', 'U(f,P) = Σ Mᵢ Δxᵢ', 'Integrable: inf U(f,P) = sup L(f,P)', 'FTC: d/dx ∫ₐˣ f(t)dt = f(x)'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- axes -->
+  <line x1="20" y1="130" x2="210" y2="130" stroke="#333" stroke-width="1.5"/>
+  <line x1="30" y1="145" x2="30" y2="15" stroke="#333" stroke-width="1.5"/>
+  <!-- upper sum rectangles -->
+  <rect x="40" y="50" width="28" height="80" fill="rgba(244,143,177,0.15)" stroke="#f48fb1" stroke-width="1"/>
+  <rect x="68" y="42" width="28" height="88" fill="rgba(244,143,177,0.15)" stroke="#f48fb1" stroke-width="1"/>
+  <rect x="96" y="36" width="28" height="94" fill="rgba(244,143,177,0.15)" stroke="#f48fb1" stroke-width="1"/>
+  <rect x="124" y="30" width="28" height="100" fill="rgba(244,143,177,0.15)" stroke="#f48fb1" stroke-width="1"/>
+  <rect x="152" y="28" width="28" height="102" fill="rgba(244,143,177,0.15)" stroke="#f48fb1" stroke-width="1"/>
+  <!-- curve on top -->
+  <polyline points="40,68 68,56 96,46 124,36 152,30 180,28" fill="none" stroke="#f48fb1" stroke-width="2"/>
+  <text x="185" y="28" fill="#f48fb1" font-size="8" font-family="monospace">f(x)</text>
+  <!-- lower sum top edges -->
+  <line x1="40" y1="68" x2="68" y2="68" stroke="#a5d6a7" stroke-width="1.5"/>
+  <line x1="68" y1="56" x2="96" y2="56" stroke="#a5d6a7" stroke-width="1.5"/>
+  <line x1="96" y1="46" x2="124" y2="46" stroke="#a5d6a7" stroke-width="1.5"/>
+  <line x1="124" y1="36" x2="152" y2="36" stroke="#a5d6a7" stroke-width="1.5"/>
+  <line x1="152" y1="30" x2="180" y2="30" stroke="#a5d6a7" stroke-width="1.5"/>
+  <text x="40" y="145" fill="#888" font-size="8" font-family="monospace">a</text>
+  <text x="177" y="145" fill="#888" font-size="8" font-family="monospace">b</text>
+  <text x="95" y="118" fill="#f48fb1" font-size="8" font-family="monospace">U(f,P)</text>
+  <text x="95" y="108" fill="#a5d6a7" font-size="8" font-family="monospace">L(f,P)</text>
+  <!-- panel -->
+  <rect x="218" y="15" width="192" height="128" rx="6" fill="#200d14" stroke="#501a30" stroke-width="1"/>
+  <text x="314" y="33" text-anchor="middle" fill="#f48fb1" font-size="10" font-family="monospace">Riemann Integrability</text>
+  <line x1="228" y1="40" x2="400" y2="40" stroke="#501a30" stroke-width="1"/>
+  <text x="228" y="55" fill="#888" font-size="8" font-family="monospace">L(f,P) ≤ ∫f ≤ U(f,P)</text>
+  <text x="228" y="68" fill="#888" font-size="8" font-family="monospace">Integrable: inf U = sup L</text>
+  <text x="228" y="81" fill="#a5d6a7" font-size="8" font-family="monospace">Continuous → integrable</text>
+  <line x1="228" y1="90" x2="400" y2="90" stroke="#501a30" stroke-width="1"/>
+  <text x="228" y="104" fill="#555" font-size="8" font-family="monospace">FTC I: ∫ₐˣ f(t)dt diff.→f(x)</text>
+  <text x="228" y="117" fill="#555" font-size="8" font-family="monospace">FTC II: ∫ₐᵇ f=F(b)-F(a)</text>
+  <text x="228" y="130" fill="#555" font-size="8" font-family="monospace">Lebesgue extends further</text>
+</svg>`
+      }
+    ]
+  },
+  {
+    id: 'complexanalysis', label: 'Complex Analysis', color: '#80deea',
+    tagline: 'Calculus over the complex plane — where differentiability becomes far more powerful.',
+    lessons: [
+      {
+        title: 'Complex Numbers & the Complex Plane',
+        body: `A complex number z = a + bi has real part a and imaginary part b, with i² = −1. The modulus |z| = √(a²+b²) is the distance from the origin; the argument arg(z) = θ is the angle from the positive real axis. Polar form z = re^{iθ} uses Euler's formula e^{iθ} = cosθ + isinθ. Multiplication in polar form: multiply moduli and add arguments. De Moivre's theorem: (cosθ + isinθ)ⁿ = cosnθ + isinnθ.`,
+        practical: `AC circuit analysis uses impedance Z = R + iX. Signal processing represents sinusoids as e^{iωt}. Quantum mechanics uses complex probability amplitudes — |ψ|² gives probability.`,
+        formulas: ['z = a+bi, i²=−1', '|z| = √(a²+b²)', 'e^{iθ} = cosθ+isinθ', 'z·z̄ = |z|², arg(z₁z₂)=arg(z₁)+arg(z₂)'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- axes -->
+  <line x1="20" y1="85" x2="200" y2="85" stroke="#333" stroke-width="1.5"/>
+  <line x1="110" y1="150" x2="110" y2="10" stroke="#333" stroke-width="1.5"/>
+  <text x="202" y="89" fill="#555" font-size="9" font-family="monospace">Re</text>
+  <text x="113" y="10" fill="#555" font-size="9" font-family="monospace">Im</text>
+  <!-- unit circle -->
+  <circle cx="110" cy="85" r="55" fill="none" stroke="#2a3a3a" stroke-width="1" stroke-dasharray="3,3"/>
+  <!-- point z -->
+  <line x1="110" y1="85" x2="165" y2="45" stroke="#80deea" stroke-width="2"/>
+  <circle cx="165" cy="45" r="4" fill="#80deea"/>
+  <text x="168" y="43" fill="#80deea" font-size="9" font-family="monospace">z=a+bi</text>
+  <!-- modulus label -->
+  <text x="128" y="62" fill="#80deea" font-size="8" font-family="monospace">|z|=r</text>
+  <!-- angle arc -->
+  <path d="M 130 85 A 20 20 0 0 0 117 68" fill="none" stroke="#ffcc80" stroke-width="1.5"/>
+  <text x="132" y="75" fill="#ffcc80" font-size="8" font-family="monospace">θ</text>
+  <!-- a and b projections -->
+  <line x1="165" y1="45" x2="165" y2="85" stroke="#555" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="110" y1="45" x2="165" y2="45" stroke="#555" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="165" y="98" text-anchor="middle" fill="#888" font-size="8" font-family="monospace">a</text>
+  <text x="100" y="48" fill="#888" font-size="8" font-family="monospace">b</text>
+  <!-- e^iθ on circle -->
+  <circle cx="141" cy="37" r="3" fill="#a5d6a7"/>
+  <text x="143" y="35" fill="#a5d6a7" font-size="7" font-family="monospace">e^iθ</text>
+  <!-- panel -->
+  <rect x="215" y="15" width="195" height="128" rx="6" fill="#0d1e20" stroke="#1a3a3a" stroke-width="1"/>
+  <text x="312" y="33" text-anchor="middle" fill="#80deea" font-size="10" font-family="monospace">Key Identities</text>
+  <line x1="225" y1="40" x2="400" y2="40" stroke="#1a3a3a" stroke-width="1"/>
+  <text x="225" y="55" fill="#888" font-size="8" font-family="monospace">e^{iπ}+1=0 (Euler's identity)</text>
+  <text x="225" y="68" fill="#888" font-size="8" font-family="monospace">z·z̄ = a²+b² = |z|²</text>
+  <text x="225" y="81" fill="#888" font-size="8" font-family="monospace">1/z = z̄/|z|²</text>
+  <text x="225" y="94" fill="#888" font-size="8" font-family="monospace">De Moivre: (e^iθ)ⁿ=e^{inθ}</text>
+  <line x1="225" y1="103" x2="400" y2="103" stroke="#1a3a3a" stroke-width="1"/>
+  <text x="225" y="117" fill="#555" font-size="8" font-family="monospace">nth roots: r^{1/n} e^{i(θ+2πk)/n}</text>
+  <text x="225" y="130" fill="#555" font-size="8" font-family="monospace">Triangle ineq: |z+w|≤|z|+|w|</text>
+</svg>`
+      },
+      {
+        title: 'Holomorphic Functions & Cauchy-Riemann Equations',
+        body: `A complex function f(z) = u(x,y) + iv(x,y) is holomorphic (complex-differentiable) at z₀ if the limit (f(z)−f(z₀))/(z−z₀) exists as z→z₀ from any direction. This is far more restrictive than real differentiability. The necessary and sufficient condition is the Cauchy-Riemann equations: ∂u/∂x = ∂v/∂y and ∂u/∂y = −∂v/∂x. Holomorphic functions are automatically infinitely differentiable, conformal (angle-preserving), and equal their Taylor series everywhere they converge.`,
+        practical: `Conformal mappings transform complex fluid-flow and electromagnetic problems to simpler geometries. Wing design in aeronautics historically used Joukowski conformal maps.`,
+        formulas: ['∂u/∂x = ∂v/∂y', '∂u/∂y = −∂v/∂x', 'f holomorphic → f analytic', 'Conformal: preserves angles'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- Domain -->
+  <text x="55" y="18" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">z-plane (domain)</text>
+  <rect x="15" y="25" width="80" height="80" rx="4" fill="#0d1e20" stroke="#1a3a3a" stroke-width="1"/>
+  <!-- grid in domain -->
+  <line x1="35" y1="25" x2="35" y2="105" stroke="#1a3a3a" stroke-width="1"/>
+  <line x1="55" y1="25" x2="55" y2="105" stroke="#1a3a3a" stroke-width="1"/>
+  <line x1="75" y1="25" x2="75" y2="105" stroke="#1a3a3a" stroke-width="1"/>
+  <line x1="15" y1="45" x2="95" y2="45" stroke="#1a3a3a" stroke-width="1"/>
+  <line x1="15" y1="65" x2="95" y2="65" stroke="#1a3a3a" stroke-width="1"/>
+  <line x1="15" y1="85" x2="95" y2="85" stroke="#1a3a3a" stroke-width="1"/>
+  <text x="55" y="120" text-anchor="middle" fill="#80deea" font-size="9" font-family="monospace">f(z)</text>
+  <line x1="100" y1="65" x2="130" y2="65" stroke="#ffcc80" stroke-width="1.5"/>
+  <polygon points="130,65 122,61 122,69" fill="#ffcc80"/>
+  <!-- Range: curved grid (conformal image) -->
+  <text x="185" y="18" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">w-plane (range)</text>
+  <!-- curved grid lines -->
+  <path d="M 140 30 Q 165 55 155 105" fill="none" stroke="#1a3a3a" stroke-width="1"/>
+  <path d="M 160 28 Q 190 50 178 105" fill="none" stroke="#1a3a3a" stroke-width="1"/>
+  <path d="M 182 27 Q 212 52 200 105" fill="none" stroke="#1a3a3a" stroke-width="1"/>
+  <path d="M 140 40 Q 195 42 215 45" fill="none" stroke="#1a3a3a" stroke-width="1"/>
+  <path d="M 142 58 Q 195 60 218 65" fill="none" stroke="#1a3a3a" stroke-width="1"/>
+  <path d="M 145 76 Q 196 80 220 85" fill="none" stroke="#1a3a3a" stroke-width="1"/>
+  <!-- right angle preserved -->
+  <text x="160" y="52" fill="#80deea" font-size="7" font-family="monospace">90°</text>
+  <!-- panel -->
+  <rect x="232" y="15" width="178" height="128" rx="6" fill="#0d1e20" stroke="#1a3a3a" stroke-width="1"/>
+  <text x="321" y="33" text-anchor="middle" fill="#80deea" font-size="10" font-family="monospace">Cauchy-Riemann</text>
+  <line x1="242" y1="40" x2="400" y2="40" stroke="#1a3a3a" stroke-width="1"/>
+  <text x="242" y="55" fill="#888" font-size="8" font-family="monospace">f=u+iv holomorphic iff:</text>
+  <text x="242" y="70" fill="#a5d6a7" font-size="9" font-family="monospace">∂u/∂x = ∂v/∂y</text>
+  <text x="242" y="84" fill="#a5d6a7" font-size="9" font-family="monospace">∂u/∂y = −∂v/∂x</text>
+  <line x1="242" y1="93" x2="400" y2="93" stroke="#1a3a3a" stroke-width="1"/>
+  <text x="242" y="107" fill="#555" font-size="8" font-family="monospace">Holomorphic → C∞</text>
+  <text x="242" y="120" fill="#555" font-size="8" font-family="monospace">Holomorphic → analytic</text>
+  <text x="242" y="133" fill="#555" font-size="8" font-family="monospace">Conformal: angles preserved</text>
+</svg>`
+      },
+      {
+        title: "Contour Integration & Cauchy's Theorem",
+        body: `A contour integral ∮_C f(z) dz integrates f along a curve C in ℂ, parameterised as z(t). Cauchy's theorem states: if f is holomorphic everywhere inside and on a simple closed contour C, then ∮_C f(z) dz = 0. The remarkable Cauchy integral formula follows: f(z₀) = (1/2πi) ∮_C f(z)/(z−z₀) dz — values of f inside C are completely determined by its values on C. Higher derivatives: f⁽ⁿ⁾(z₀) = n!/(2πi) ∮ f(z)/(z−z₀)ⁿ⁺¹ dz.`,
+        practical: `Real integrals like ∫_{-∞}^{∞} sin(x)/x dx are evaluated by closing the contour in ℂ. Inverse Laplace transforms use Bromwich contour integrals.`,
+        formulas: ['∮C f dz = 0 (if f holomorphic inside)', 'f(z₀) = (1/2πi) ∮ f(z)/(z−z₀) dz', 'f⁽ⁿ⁾(z₀) = n!/(2πi) ∮ f(z)/(z−z₀)ⁿ⁺¹ dz', 'Max modulus: |f| attained on boundary'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- complex plane -->
+  <line x1="20" y1="85" x2="200" y2="85" stroke="#333" stroke-width="1.5"/>
+  <line x1="110" y1="150" x2="110" y2="15" stroke="#333" stroke-width="1.5"/>
+  <text x="202" y="89" fill="#555" font-size="9" font-family="monospace">Re</text>
+  <text x="113" y="14" fill="#555" font-size="9" font-family="monospace">Im</text>
+  <!-- simple closed contour -->
+  <ellipse cx="110" cy="80" rx="65" ry="50" fill="rgba(128,222,234,0.06)" stroke="#80deea" stroke-width="1.5"/>
+  <!-- direction arrows on contour -->
+  <polygon points="175,80 168,74 168,86" fill="#80deea"/>
+  <polygon points="110,30 116,37 104,37" fill="#80deea"/>
+  <text x="176" y="68" fill="#80deea" font-size="8" font-family="monospace">C</text>
+  <!-- pole z0 inside -->
+  <circle cx="120" cy="72" r="4" fill="#ef5350"/>
+  <text x="124" y="70" fill="#ef5350" font-size="8" font-family="monospace">z₀</text>
+  <line x1="118" y1="76" x2="118" y2="86" stroke="#ef5350" stroke-width="1" stroke-dasharray="2,2"/>
+  <line x1="118" y1="66" x2="118" y2="56" stroke="#ef5350" stroke-width="1" stroke-dasharray="2,2"/>
+  <line x1="112" y1="72" x2="102" y2="72" stroke="#ef5350" stroke-width="1" stroke-dasharray="2,2"/>
+  <line x1="128" y1="72" x2="138" y2="72" stroke="#ef5350" stroke-width="1" stroke-dasharray="2,2"/>
+  <text x="85" y="115" fill="#555" font-size="8" font-family="monospace">holomorphic inside → ∮C f dz=0</text>
+  <!-- panel -->
+  <rect x="215" y="15" width="195" height="128" rx="6" fill="#0d1e20" stroke="#1a3a3a" stroke-width="1"/>
+  <text x="312" y="33" text-anchor="middle" fill="#80deea" font-size="10" font-family="monospace">Cauchy's Theorem</text>
+  <line x1="225" y1="40" x2="400" y2="40" stroke="#1a3a3a" stroke-width="1"/>
+  <text x="225" y="55" fill="#888" font-size="8" font-family="monospace">Holomorphic inside C:</text>
+  <text x="225" y="68" fill="#a5d6a7" font-size="8" font-family="monospace">  ∮C f dz = 0</text>
+  <line x1="225" y1="77" x2="400" y2="77" stroke="#1a3a3a" stroke-width="1"/>
+  <text x="225" y="91" fill="#888" font-size="8" font-family="monospace">Cauchy integral formula:</text>
+  <text x="225" y="104" fill="#80deea" font-size="8" font-family="monospace">f(z₀)=(1/2πi)∮f/(z-z₀)dz</text>
+  <line x1="225" y1="113" x2="400" y2="113" stroke="#1a3a3a" stroke-width="1"/>
+  <text x="225" y="127" fill="#555" font-size="8" font-family="monospace">f holomorphic → analytic</text>
+  <text x="225" y="140" fill="#555" font-size="8" font-family="monospace">(equal to its power series)</text>
+</svg>`
+      },
+      {
+        title: 'Laurent Series & the Residue Theorem',
+        body: `In an annulus r < |z−z₀| < R, a function analytic there has a Laurent series: Σ_{n=−∞}^{∞} cₙ(z−z₀)ⁿ, with both positive and negative powers. An isolated singularity at z₀ is a pole of order m if c₋ₘ ≠ 0 and cₙ = 0 for n < −m. The residue Res(f, z₀) = c₋₁ is the coefficient of (z−z₀)⁻¹. The Residue Theorem: ∮_C f dz = 2πi times the sum of residues of poles inside C. This evaluates huge classes of real integrals and inverse transforms.`,
+        practical: `Computing ∫_{-∞}^{∞} P(x)/Q(x) dx by closing the contour and summing residues. Control-system stability via pole locations. Inverse Laplace transforms in signal processing.`,
+        formulas: ['Laurent: Σcₙ(z-z₀)ⁿ (n from -∞)', 'Res(f,z₀) = c₋₁', '∮C f dz = 2πi Σ Res(f,zₖ)', 'Simple pole: Res = lim_{z→z₀}(z-z₀)f(z)'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- annulus -->
+  <circle cx="100" cy="82" r="60" fill="rgba(128,222,234,0.04)" stroke="#80deea" stroke-width="1.5"/>
+  <circle cx="100" cy="82" r="25" fill="#0d0d12" stroke="#80deea" stroke-width="1.5"/>
+  <!-- singularity at centre -->
+  <text x="97" y="86" fill="#ef5350" font-size="10" font-family="monospace">×</text>
+  <text x="102" y="78" fill="#ef5350" font-size="7" font-family="monospace">z₀</text>
+  <!-- contour C -->
+  <circle cx="100" cy="82" r="42" fill="none" stroke="#ffcc80" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <polygon points="142,82 136,76 136,88" fill="#ffcc80"/>
+  <text x="145" y="78" fill="#ffcc80" font-size="8" font-family="monospace">C</text>
+  <!-- R and r labels -->
+  <line x1="100" y1="82" x2="160" y2="82" stroke="#555" stroke-width="1"/>
+  <text x="130" y="93" fill="#555" font-size="8" font-family="monospace">R</text>
+  <line x1="100" y1="82" x2="125" y2="82" stroke="#555" stroke-width="1"/>
+  <text x="110" y="93" fill="#555" font-size="8" font-family="monospace">r</text>
+  <text x="55" y="148" fill="#888" font-size="8" font-family="monospace">Laurent valid in annulus</text>
+  <!-- panel -->
+  <rect x="200" y="15" width="210" height="128" rx="6" fill="#0d1e20" stroke="#1a3a3a" stroke-width="1"/>
+  <text x="305" y="33" text-anchor="middle" fill="#80deea" font-size="10" font-family="monospace">Residue Theorem</text>
+  <line x1="210" y1="40" x2="400" y2="40" stroke="#1a3a3a" stroke-width="1"/>
+  <text x="210" y="55" fill="#888" font-size="8" font-family="monospace">Laurent: Σcₙ(z-z₀)ⁿ</text>
+  <text x="210" y="68" fill="#888" font-size="8" font-family="monospace">Res(f,z₀) = c₋₁</text>
+  <text x="210" y="81" fill="#80deea" font-size="9" font-family="monospace">∮C f dz = 2πi ΣRes</text>
+  <line x1="210" y1="90" x2="400" y2="90" stroke="#1a3a3a" stroke-width="1"/>
+  <text x="210" y="104" fill="#555" font-size="8" font-family="monospace">Pole order m: c₋ₘ≠0</text>
+  <text x="210" y="117" fill="#555" font-size="8" font-family="monospace">Simple pole:</text>
+  <text x="210" y="130" fill="#555" font-size="8" font-family="monospace">Res=lim(z-z₀)f(z)</text>
+  <text x="210" y="143" fill="#555" font-size="7" font-family="monospace">→ evaluates real integrals</text>
+</svg>`
+      }
+    ]
+  },
+  {
+    id: 'abstractalgebra', label: 'Abstract Algebra', color: '#ffab91',
+    tagline: 'The algebra of symmetry — groups, rings, fields, and the structure of mathematical operations.',
+    lessons: [
+      {
+        title: 'Groups & Group Axioms',
+        body: `A group (G, *) is a set with a binary operation satisfying four axioms: closure (a*b ∈ G), associativity ((a*b)*c = a*(b*c)), identity (there exists e with e*g = g*e = g), and inverses (every element g has g⁻¹ with g*g⁻¹ = e). A group is abelian if also commutative. The order |G| is the number of elements. Examples: (ℤ, +), the symmetric group Sₙ of all permutations of n objects, and cyclic groups ℤₙ = {0,1,...,n−1} under addition mod n.`,
+        practical: `Cryptography exploits the group structure of elliptic curves and modular arithmetic. Molecular symmetry groups (point groups) determine which transitions are allowed in spectroscopy.`,
+        formulas: ['Closure: a,b∈G → a*b∈G', 'Associativity: (a*b)*c = a*(b*c)', 'Identity: e*g = g*e = g', 'Inverse: g*g⁻¹ = g⁻¹*g = e'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- Cayley table for Z4 -->
+  <text x="100" y="18" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">Cayley table: ℤ₄ = {0,1,2,3}</text>
+  <!-- table grid -->
+  <rect x="18" y="22" width="165" height="125" rx="3" fill="#100808" stroke="#3a1a10" stroke-width="1"/>
+  <!-- header row -->
+  <rect x="18" y="22" width="165" height="22" rx="3" fill="#1e0e08" stroke="none"/>
+  <text x="55" y="37" text-anchor="middle" fill="#ffab91" font-size="10" font-family="monospace">+</text>
+  <text x="90" y="37" text-anchor="middle" fill="#ffab91" font-size="10" font-family="monospace">0</text>
+  <text x="118" y="37" text-anchor="middle" fill="#ffab91" font-size="10" font-family="monospace">1</text>
+  <text x="146" y="37" text-anchor="middle" fill="#ffab91" font-size="10" font-family="monospace">2</text>
+  <text x="173" y="37" text-anchor="middle" fill="#ffab91" font-size="10" font-family="monospace">3</text>
+  <!-- header col -->
+  <text x="38" y="62" text-anchor="middle" fill="#ffab91" font-size="10" font-family="monospace">0</text>
+  <text x="38" y="89" text-anchor="middle" fill="#ffab91" font-size="10" font-family="monospace">1</text>
+  <text x="38" y="116" text-anchor="middle" fill="#ffab91" font-size="10" font-family="monospace">2</text>
+  <text x="38" y="143" text-anchor="middle" fill="#ffab91" font-size="10" font-family="monospace">3</text>
+  <!-- table body -->
+  <text x="90" y="62" text-anchor="middle" fill="#ccc" font-size="10" font-family="monospace">0</text>
+  <text x="118" y="62" text-anchor="middle" fill="#ccc" font-size="10" font-family="monospace">1</text>
+  <text x="146" y="62" text-anchor="middle" fill="#ccc" font-size="10" font-family="monospace">2</text>
+  <text x="173" y="62" text-anchor="middle" fill="#ccc" font-size="10" font-family="monospace">3</text>
+  <text x="90" y="89" text-anchor="middle" fill="#ccc" font-size="10" font-family="monospace">1</text>
+  <text x="118" y="89" text-anchor="middle" fill="#ccc" font-size="10" font-family="monospace">2</text>
+  <text x="146" y="89" text-anchor="middle" fill="#ccc" font-size="10" font-family="monospace">3</text>
+  <text x="173" y="89" text-anchor="middle" fill="#a5d6a7" font-size="10" font-family="monospace">0</text>
+  <text x="90" y="116" text-anchor="middle" fill="#ccc" font-size="10" font-family="monospace">2</text>
+  <text x="118" y="116" text-anchor="middle" fill="#ccc" font-size="10" font-family="monospace">3</text>
+  <text x="146" y="116" text-anchor="middle" fill="#a5d6a7" font-size="10" font-family="monospace">0</text>
+  <text x="173" y="116" text-anchor="middle" fill="#ccc" font-size="10" font-family="monospace">1</text>
+  <text x="90" y="143" text-anchor="middle" fill="#ccc" font-size="10" font-family="monospace">3</text>
+  <text x="118" y="143" text-anchor="middle" fill="#a5d6a7" font-size="10" font-family="monospace">0</text>
+  <text x="146" y="143" text-anchor="middle" fill="#ccc" font-size="10" font-family="monospace">1</text>
+  <text x="173" y="143" text-anchor="middle" fill="#ccc" font-size="10" font-family="monospace">2</text>
+  <!-- panel -->
+  <rect x="200" y="15" width="210" height="128" rx="6" fill="#1e0808" stroke="#3a1a10" stroke-width="1"/>
+  <text x="305" y="33" text-anchor="middle" fill="#ffab91" font-size="10" font-family="monospace">Group Axioms</text>
+  <line x1="210" y1="40" x2="400" y2="40" stroke="#3a1a10" stroke-width="1"/>
+  <text x="210" y="55" fill="#888" font-size="8" font-family="monospace">1. Closure</text>
+  <text x="210" y="68" fill="#888" font-size="8" font-family="monospace">2. Associativity</text>
+  <text x="210" y="81" fill="#888" font-size="8" font-family="monospace">3. Identity element e</text>
+  <text x="210" y="94" fill="#888" font-size="8" font-family="monospace">4. Inverses g⁻¹</text>
+  <line x1="210" y1="103" x2="400" y2="103" stroke="#3a1a10" stroke-width="1"/>
+  <text x="210" y="117" fill="#555" font-size="8" font-family="monospace">Abelian: also commutative</text>
+  <text x="210" y="130" fill="#555" font-size="8" font-family="monospace">Each row/col: permutation</text>
+  <text x="210" y="143" fill="#555" font-size="8" font-family="monospace">of elements (Latin square)</text>
+</svg>`
+      },
+      {
+        title: 'Subgroups, Cosets & Lagrange's Theorem',
+        body: `H is a subgroup of G (H ≤ G) if H is itself a group under the same operation. The left coset gH = {gh : h ∈ H} is a translate of H by g. Cosets partition G into disjoint equal-size pieces — you either are in the same coset or in entirely different ones. Lagrange's Theorem: |H| divides |G|. Normal subgroups N ⊴ G (where gN = Ng for all g) allow forming the quotient group G/N with |G/N| = |G|/|N|. The first isomorphism theorem: G/ker(φ) ≅ im(φ).`,
+        practical: `In coding theory, a linear code C is a subgroup of ℤ₂ⁿ; cosets represent error patterns. RSA relies on Lagrange's theorem applied to the multiplicative group mod n.`,
+        formulas: ['|H| divides |G|', 'Coset: gH = {gh : h∈H}', '|G/N| = |G|/|N|', 'G/ker(φ) ≅ im(φ)'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- G as large rectangle -->
+  <rect x="15" y="20" width="185" height="128" rx="6" fill="#1e0808" stroke="#3a1a10" stroke-width="1.5"/>
+  <text x="22" y="35" fill="#ffab91" font-size="9" font-family="monospace">G</text>
+  <!-- H subgroup -->
+  <rect x="25" y="42" width="55" height="95" rx="4" fill="rgba(255,171,145,0.15)" stroke="#ffab91" stroke-width="1.5"/>
+  <text x="52" y="57" text-anchor="middle" fill="#ffab91" font-size="8" font-family="monospace">H</text>
+  <text x="52" y="70" text-anchor="middle" fill="#ccc" font-size="8" font-family="monospace">e</text>
+  <text x="52" y="83" text-anchor="middle" fill="#ccc" font-size="8" font-family="monospace">h₁</text>
+  <text x="52" y="96" text-anchor="middle" fill="#ccc" font-size="8" font-family="monospace">h₂</text>
+  <text x="52" y="109" text-anchor="middle" fill="#ccc" font-size="8" font-family="monospace">h₃</text>
+  <!-- coset g₁H -->
+  <rect x="88" y="42" width="55" height="95" rx="4" fill="rgba(165,214,167,0.12)" stroke="#a5d6a7" stroke-width="1.5"/>
+  <text x="115" y="57" text-anchor="middle" fill="#a5d6a7" font-size="8" font-family="monospace">g₁H</text>
+  <text x="115" y="70" text-anchor="middle" fill="#ccc" font-size="8" font-family="monospace">g₁</text>
+  <text x="115" y="83" text-anchor="middle" fill="#ccc" font-size="8" font-family="monospace">g₁h₁</text>
+  <text x="115" y="96" text-anchor="middle" fill="#ccc" font-size="8" font-family="monospace">g₁h₂</text>
+  <text x="115" y="109" text-anchor="middle" fill="#ccc" font-size="8" font-family="monospace">g₁h₃</text>
+  <!-- coset g₂H -->
+  <rect x="151" y="42" width="40" height="95" rx="4" fill="rgba(255,204,128,0.12)" stroke="#ffcc80" stroke-width="1.5"/>
+  <text x="171" y="57" text-anchor="middle" fill="#ffcc80" font-size="8" font-family="monospace">g₂H</text>
+  <text x="171" y="75" text-anchor="middle" fill="#ccc" font-size="8" font-family="monospace">...</text>
+  <text x="25" y="152" fill="#888" font-size="8" font-family="monospace">Cosets partition G (no overlap)</text>
+  <!-- panel -->
+  <rect x="215" y="15" width="195" height="128" rx="6" fill="#1e0808" stroke="#3a1a10" stroke-width="1"/>
+  <text x="312" y="33" text-anchor="middle" fill="#ffab91" font-size="10" font-family="monospace">Lagrange's Theorem</text>
+  <line x1="225" y1="40" x2="400" y2="40" stroke="#3a1a10" stroke-width="1"/>
+  <text x="225" y="55" fill="#888" font-size="8" font-family="monospace">|H| divides |G|</text>
+  <text x="225" y="68" fill="#888" font-size="8" font-family="monospace">|G| = |H| × (# cosets)</text>
+  <text x="225" y="81" fill="#888" font-size="8" font-family="monospace">Index [G:H] = |G|/|H|</text>
+  <line x1="225" y1="90" x2="400" y2="90" stroke="#3a1a10" stroke-width="1"/>
+  <text x="225" y="104" fill="#555" font-size="8" font-family="monospace">Normal N: gN=Ng for all g</text>
+  <text x="225" y="117" fill="#555" font-size="8" font-family="monospace">Quotient G/N: cosets as elems</text>
+  <text x="225" y="130" fill="#555" font-size="8" font-family="monospace">1st iso thm: G/ker≅im(φ)</text>
+</svg>`
+      },
+      {
+        title: 'Rings, Fields & Homomorphisms',
+        body: `A ring (R, +, ·) has two operations forming an abelian group under + and an associative monoid under ·, with distributivity. A commutative ring where every nonzero element has a multiplicative inverse is a field. Containment: ℕ ⊂ ℤ (ring) ⊂ ℚ ⊂ ℝ ⊂ ℂ (all fields). A ring homomorphism φ: R → S preserves both operations. The kernel ker(φ) = {r : φ(r) = 0} is an ideal — a subring closed under multiplication by any ring element.`,
+        practical: `Reed-Solomon codes and AES encryption use arithmetic in finite fields GF(2ⁿ). Computer algebra systems represent polynomials as elements of polynomial rings.`,
+        formulas: ['Ring: (R,+) abelian + (R,·) monoid', 'Field: ring + every a≠0 has a⁻¹', 'Hom: φ(a+b)=φ(a)+φ(b), φ(ab)=φ(a)φ(b)', 'Ideal: rI ⊆ I and Ir ⊆ I for all r∈R'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- containment diagram -->
+  <ellipse cx="95" cy="82" rx="88" ry="64" fill="rgba(255,171,145,0.05)" stroke="#ffab91" stroke-width="1"/>
+  <ellipse cx="95" cy="82" rx="70" ry="50" fill="rgba(255,171,145,0.05)" stroke="#ffcc80" stroke-width="1"/>
+  <ellipse cx="95" cy="82" rx="52" ry="36" fill="rgba(255,171,145,0.05)" stroke="#a5d6a7" stroke-width="1"/>
+  <ellipse cx="95" cy="82" rx="34" ry="22" fill="rgba(255,171,145,0.05)" stroke="#80deea" stroke-width="1"/>
+  <ellipse cx="95" cy="82" rx="16" ry="10" fill="rgba(255,171,145,0.1)" stroke="#ce93d8" stroke-width="1"/>
+  <text x="95" y="86" text-anchor="middle" fill="#ce93d8" font-size="8" font-family="monospace">ℕ</text>
+  <text x="95" y="68" text-anchor="middle" fill="#80deea" font-size="8" font-family="monospace">ℤ</text>
+  <text x="95" y="52" text-anchor="middle" fill="#a5d6a7" font-size="8" font-family="monospace">ℚ</text>
+  <text x="95" y="38" text-anchor="middle" fill="#ffcc80" font-size="8" font-family="monospace">ℝ</text>
+  <text x="95" y="22" text-anchor="middle" fill="#ffab91" font-size="8" font-family="monospace">ℂ (field)</text>
+  <text x="155" y="148" fill="#555" font-size="7" font-family="monospace">ℤ: ring, not field (no 1/2 ∈ ℤ)</text>
+  <!-- panel -->
+  <rect x="200" y="15" width="210" height="128" rx="6" fill="#1e0808" stroke="#3a1a10" stroke-width="1"/>
+  <text x="305" y="33" text-anchor="middle" fill="#ffab91" font-size="10" font-family="monospace">Rings &amp; Fields</text>
+  <line x1="210" y1="40" x2="400" y2="40" stroke="#3a1a10" stroke-width="1"/>
+  <text x="210" y="55" fill="#888" font-size="8" font-family="monospace">Ring: + and · with distrib.</text>
+  <text x="210" y="68" fill="#888" font-size="8" font-family="monospace">Integral domain: no zero divs</text>
+  <text x="210" y="81" fill="#a5d6a7" font-size="8" font-family="monospace">Field: every a≠0 invertible</text>
+  <line x1="210" y1="90" x2="400" y2="90" stroke="#3a1a10" stroke-width="1"/>
+  <text x="210" y="104" fill="#555" font-size="8" font-family="monospace">Hom: φ(a+b)=φ(a)+φ(b)</text>
+  <text x="210" y="117" fill="#555" font-size="8" font-family="monospace">Ideal: I closed under rI,Ir</text>
+  <text x="210" y="130" fill="#555" font-size="8" font-family="monospace">GF(2⁸): finite field in AES</text>
+</svg>`
+      },
+      {
+        title: 'Polynomial Rings & Galois Theory',
+        body: `The polynomial ring F[x] over a field F consists of polynomials with coefficients in F. A polynomial p(x) is irreducible if it has no nontrivial factor. Galois theory asks: when is a polynomial solvable by radicals? The Galois group Gal(E/F) is the group of field automorphisms of the splitting field E that fix F. A polynomial is solvable by radicals iff its Galois group is a solvable group. Since S₅ is not solvable, no general formula exists for degree ≥ 5 polynomials.`,
+        practical: `Galois theory explains why the quadratic, cubic, and quartic formulas exist but no quintic formula does. Finite field extensions underpin modern cryptography and error-correcting codes.`,
+        formulas: ['Gal(E/F) = Aut(E) fixing F', '[E:F] = |Gal(E/F)| (Galois ext.)', 'Solvable Gal group → solvable poly', 'S₅ not solvable → no quintic formula'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- polynomial with roots shown -->
+  <text x="20" y="20" fill="#555" font-size="8" font-family="monospace">p(x) = x⁴-5x²+6 = (x²-2)(x²-3)</text>
+  <!-- axes for plot -->
+  <line x1="20" y1="100" x2="195" y2="100" stroke="#333" stroke-width="1.5"/>
+  <line x1="108" y1="145" x2="108" y2="30" stroke="#333" stroke-width="1.5"/>
+  <!-- curve -->
+  <polyline points="25,80 45,55 65,92 88,100 108,68 128,100 152,92 172,55 193,80" fill="none" stroke="#ffab91" stroke-width="2"/>
+  <!-- roots -->
+  <circle cx="65" cy="100" r="3" fill="#a5d6a7"/>
+  <text x="60" y="115" fill="#a5d6a7" font-size="7" font-family="monospace">-√3</text>
+  <circle cx="88" cy="100" r="3" fill="#a5d6a7"/>
+  <text x="83" y="115" fill="#a5d6a7" font-size="7" font-family="monospace">-√2</text>
+  <circle cx="128" cy="100" r="3" fill="#a5d6a7"/>
+  <text x="123" y="115" fill="#a5d6a7" font-size="7" font-family="monospace">√2</text>
+  <circle cx="152" cy="100" r="3" fill="#a5d6a7"/>
+  <text x="147" y="115" fill="#a5d6a7" font-size="7" font-family="monospace">√3</text>
+  <!-- panel -->
+  <rect x="210" y="15" width="200" height="128" rx="6" fill="#1e0808" stroke="#3a1a10" stroke-width="1"/>
+  <text x="310" y="33" text-anchor="middle" fill="#ffab91" font-size="10" font-family="monospace">Galois Theory</text>
+  <line x1="220" y1="40" x2="400" y2="40" stroke="#3a1a10" stroke-width="1"/>
+  <text x="220" y="55" fill="#888" font-size="8" font-family="monospace">Splitting field E of p over F</text>
+  <text x="220" y="68" fill="#888" font-size="8" font-family="monospace">Gal(E/F): automorphisms</text>
+  <text x="220" y="81" fill="#888" font-size="8" font-family="monospace">permuting roots of p</text>
+  <line x1="220" y1="90" x2="400" y2="90" stroke="#3a1a10" stroke-width="1"/>
+  <text x="220" y="104" fill="#a5d6a7" font-size="8" font-family="monospace">Solvable group → formula</text>
+  <text x="220" y="117" fill="#ef5350" font-size="8" font-family="monospace">S₅ unsolvable → no quintic</text>
+  <text x="220" y="130" fill="#555" font-size="8" font-family="monospace">Degree 2,3,4: formulas exist</text>
+</svg>`
+      }
+    ]
+  },
+  {
+    id: 'topology', label: 'Topology', color: '#b0bec5',
+    tagline: 'The mathematics of shape and continuity — studying spaces up to continuous deformation.',
+    lessons: [
+      {
+        title: 'Metric Spaces & Open/Closed Sets',
+        body: `A metric space (X, d) pairs a set with a distance function d satisfying: d(x,y) ≥ 0 (equality iff x=y), d(x,y) = d(y,x), and the triangle inequality d(x,z) ≤ d(x,y) + d(y,z). The open ball B(x,r) = {y : d(x,y) < r} is the set of points within radius r of x. A set U is open if every point has an open ball inside U. A set is closed if it contains all its limit points. A topological space axiomatises "open set" directly without any metric.`,
+        practical: `Nearest-neighbour search in databases lives in metric spaces. Convergence in machine learning (sequence of parameter vectors) is defined metrically. The p-norm metrics Lp give rise to different geometries.`,
+        formulas: ['d(x,y)≥0; =0 iff x=y', 'd(x,y) = d(y,x)', 'd(x,z) ≤ d(x,y)+d(y,z)', 'B(x,r) = {y : d(x,y)<r}'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- open ball -->
+  <circle cx="100" cy="82" r="60" fill="rgba(176,190,197,0.07)" stroke="#b0bec5" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="100" y="32" text-anchor="middle" fill="#b0bec5" font-size="8" font-family="monospace">B(x,r) — open ball</text>
+  <!-- centre point x -->
+  <circle cx="100" cy="82" r="3" fill="#b0bec5"/>
+  <text x="104" y="80" fill="#b0bec5" font-size="9" font-family="monospace">x</text>
+  <!-- radius r -->
+  <line x1="100" y1="82" x2="155" y2="68" stroke="#555" stroke-width="1"/>
+  <text x="128" y="68" fill="#555" font-size="8" font-family="monospace">r</text>
+  <!-- points inside / outside -->
+  <circle cx="78" cy="60" r="2.5" fill="#a5d6a7"/>
+  <text x="81" y="58" fill="#a5d6a7" font-size="7" font-family="monospace">y∈B</text>
+  <circle cx="165" cy="45" r="2.5" fill="#ef5350"/>
+  <text x="168" y="43" fill="#ef5350" font-size="7" font-family="monospace">z∉B</text>
+  <!-- triangle inequality illustration -->
+  <line x1="100" y1="82" x2="78" y2="60" stroke="#888" stroke-width="1" stroke-dasharray="2,2"/>
+  <line x1="78" y1="60" x2="165" y2="45" stroke="#888" stroke-width="1" stroke-dasharray="2,2"/>
+  <line x1="100" y1="82" x2="165" y2="45" stroke="#555" stroke-width="1" stroke-dasharray="2,2"/>
+  <!-- panel -->
+  <rect x="215" y="15" width="195" height="128" rx="6" fill="#141618" stroke="#2a3035" stroke-width="1"/>
+  <text x="312" y="33" text-anchor="middle" fill="#b0bec5" font-size="10" font-family="monospace">Open vs Closed</text>
+  <line x1="225" y1="40" x2="400" y2="40" stroke="#2a3035" stroke-width="1"/>
+  <text x="225" y="55" fill="#888" font-size="8" font-family="monospace">Open: every pt has ball inside</text>
+  <text x="225" y="68" fill="#888" font-size="8" font-family="monospace">Closed: contains limit points</text>
+  <text x="225" y="81" fill="#888" font-size="8" font-family="monospace">Clopen: open AND closed</text>
+  <line x1="225" y1="90" x2="400" y2="90" stroke="#2a3035" stroke-width="1"/>
+  <text x="225" y="104" fill="#555" font-size="8" font-family="monospace">Topology: axioms on open sets</text>
+  <text x="225" y="117" fill="#555" font-size="8" font-family="monospace">No metric needed!</text>
+  <text x="225" y="130" fill="#555" font-size="8" font-family="monospace">Interior: largest open subset</text>
+  <text x="225" y="143" fill="#555" font-size="8" font-family="monospace">Closure: smallest closed supset</text>
+</svg>`
+      },
+      {
+        title: 'Continuity & Homeomorphisms',
+        body: `Topologically, f: X → Y is continuous if for every open set V in Y, the preimage f⁻¹(V) is open in X. This generalises the ε-δ definition without requiring a metric. A homeomorphism is a continuous bijection with a continuous inverse — it is the topological notion of "same shape." A coffee mug and a donut are homeomorphic (both have genus 1: one hole). A sphere and a cube are homeomorphic; a sphere and a torus are not. Topological invariants (like the number of holes) distinguish non-homeomorphic spaces.`,
+        practical: `Manifold learning algorithms (t-SNE, UMAP) find low-dimensional homeomorphic representations of high-dimensional data. Topological data analysis detects shape features invariant under deformation.`,
+        formulas: ['Continuous: V open → f⁻¹(V) open', 'Homeo: bijective + f,f⁻¹ continuous', 'Genus: # handles on a surface', 'Euler char: χ = V − E + F'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- Mug (genus 1) -->
+  <text x="55" y="18" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">Mug (genus 1)</text>
+  <rect x="25" y="28" width="50" height="70" rx="6" fill="#141618" stroke="#b0bec5" stroke-width="1.5"/>
+  <!-- handle -->
+  <path d="M 75 45 Q 95 55 95 70 Q 95 85 75 92" fill="none" stroke="#b0bec5" stroke-width="1.5"/>
+  <text x="55" y="115" text-anchor="middle" fill="#b0bec5" font-size="8" font-family="monospace">1 hole</text>
+  <!-- homeomorphic arrow -->
+  <text x="107" y="72" fill="#ffcc80" font-size="14" font-family="monospace">≅</text>
+  <text x="103" y="90" fill="#555" font-size="7" font-family="monospace">homeo</text>
+  <!-- Torus (genus 1) -->
+  <text x="175" y="18" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">Torus (genus 1)</text>
+  <ellipse cx="175" cy="72" rx="50" ry="28" fill="#141618" stroke="#b0bec5" stroke-width="1.5"/>
+  <ellipse cx="175" cy="72" rx="20" ry="12" fill="#0d0d12" stroke="#b0bec5" stroke-width="1"/>
+  <text x="175" y="115" text-anchor="middle" fill="#b0bec5" font-size="8" font-family="monospace">1 hole</text>
+  <!-- NOT homeomorphic -->
+  <text x="240" y="18" fill="#555" font-size="8" font-family="monospace">Sphere (genus 0)</text>
+  <circle cx="275" cy="72" r="35" fill="#141618" stroke="#ef5350" stroke-width="1.5"/>
+  <text x="275" y="115" text-anchor="middle" fill="#ef5350" font-size="8" font-family="monospace">0 holes ≇ torus</text>
+  <!-- panel -->
+  <rect x="320" y="28" width="90" height="100" rx="6" fill="#141618" stroke="#2a3035" stroke-width="1"/>
+  <text x="365" y="44" text-anchor="middle" fill="#b0bec5" font-size="8" font-family="monospace">Invariants</text>
+  <line x1="330" y1="50" x2="400" y2="50" stroke="#2a3035" stroke-width="1"/>
+  <text x="330" y="63" fill="#555" font-size="7" font-family="monospace">Genus g</text>
+  <text x="330" y="75" fill="#555" font-size="7" font-family="monospace">Euler χ=V-E+F</text>
+  <text x="330" y="87" fill="#555" font-size="7" font-family="monospace">Betti numbers</text>
+  <text x="330" y="99" fill="#555" font-size="7" font-family="monospace">Fund. group π₁</text>
+  <text x="330" y="111" fill="#555" font-size="7" font-family="monospace">Orientability</text>
+</svg>`
+      },
+      {
+        title: 'Compactness & Connectedness',
+        body: `A topological space is compact if every open cover has a finite subcover. In ℝⁿ, the Heine-Borel theorem gives the clean characterisation: compact ↔ closed and bounded. Compactness ensures continuous functions attain their maximum and minimum (Extreme Value Theorem) and are uniformly continuous. A space is connected if it cannot be split into two disjoint nonempty open sets. Path-connectedness (any two points joined by a continuous path) implies connectedness. The intermediate value theorem follows from connectedness of intervals.`,
+        practical: `The Extreme Value Theorem (continuous function on compact set attains max/min) is used in optimisation proofs. Compactness arguments prove existence of solutions in ODEs and PDEs.`,
+        formulas: ['Compact: every open cover has finite subcover', 'Heine-Borel: compact ↔ closed+bounded (ℝⁿ)', 'EVT: f cont. on compact K → attains max, min', 'Connected: not split into 2 disjoint open sets'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- compact: closed bounded disk -->
+  <text x="60" y="18" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">Compact (closed+bounded)</text>
+  <circle cx="60" cy="80" r="48" fill="rgba(176,190,197,0.1)" stroke="#b0bec5" stroke-width="2"/>
+  <text x="60" y="84" text-anchor="middle" fill="#b0bec5" font-size="8" font-family="monospace">closed disk</text>
+  <text x="60" y="140" text-anchor="middle" fill="#a5d6a7" font-size="8" font-family="monospace">EVT applies</text>
+  <!-- not compact: open disk -->
+  <text x="175" y="18" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">Not compact (open)</text>
+  <circle cx="175" cy="80" r="48" fill="rgba(239,83,80,0.06)" stroke="#ef5350" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="175" y="84" text-anchor="middle" fill="#ef5350" font-size="8" font-family="monospace">open disk</text>
+  <text x="175" y="140" text-anchor="middle" fill="#ef5350" font-size="8" font-family="monospace">no max attained</text>
+  <!-- connected vs disconnected -->
+  <text x="320" y="18" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">Connectedness</text>
+  <!-- connected -->
+  <ellipse cx="305" cy="70" rx="28" ry="20" fill="rgba(176,190,197,0.1)" stroke="#b0bec5" stroke-width="1.5"/>
+  <text x="305" y="73" text-anchor="middle" fill="#b0bec5" font-size="7" font-family="monospace">conn.</text>
+  <!-- disconnected -->
+  <ellipse cx="350" cy="58" rx="18" ry="13" fill="rgba(239,83,80,0.08)" stroke="#ef5350" stroke-width="1.5"/>
+  <ellipse cx="385" cy="82" rx="18" ry="13" fill="rgba(239,83,80,0.08)" stroke="#ef5350" stroke-width="1.5"/>
+  <text x="367" y="112" text-anchor="middle" fill="#ef5350" font-size="7" font-family="monospace">disconnected</text>
+  <text x="270" y="140" fill="#555" font-size="7" font-family="monospace">IVT: connected interval → f hits all values</text>
+</svg>`
+      },
+      {
+        title: 'The Fundamental Group & Homotopy',
+        body: `Two continuous paths f, g: [0,1] → X with the same endpoints are homotopic if one can be continuously deformed into the other. The fundamental group π₁(X, x₀) consists of homotopy classes of loops based at x₀, with composition as the operation. π₁(circle S¹) = ℤ — loops are classified by how many times they wind. π₁(ℝⁿ) = {e} (trivial — all loops contract to a point). Simply connected means π₁ = {e}. The Poincaré conjecture (proved by Perelman 2003): the only simply connected compact 3-manifold without boundary is the 3-sphere.`,
+        practical: `Robotics uses the fundamental group to classify topologically distinct paths around obstacles. Persistent homology in data analysis counts holes of all dimensions in datasets.`,
+        formulas: ['π₁(X,x₀): homotopy classes of loops', 'π₁(S¹) = ℤ (winding number)', 'π₁(ℝⁿ) = {e} (simply connected)', 'Simply connected: every loop contracts'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- simply connected: sphere with contractible loop -->
+  <text x="55" y="18" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">Simply connected</text>
+  <circle cx="55" cy="82" r="45" fill="rgba(176,190,197,0.07)" stroke="#b0bec5" stroke-width="1.5"/>
+  <!-- loop that contracts -->
+  <ellipse cx="55" cy="72" rx="22" ry="15" fill="none" stroke="#a5d6a7" stroke-width="1.5"/>
+  <text x="55" y="110" text-anchor="middle" fill="#a5d6a7" font-size="8" font-family="monospace">loop contracts</text>
+  <text x="55" y="122" text-anchor="middle" fill="#a5d6a7" font-size="8" font-family="monospace">π₁ = {e}</text>
+  <!-- not simply connected: torus with winding loop -->
+  <text x="185" y="18" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">π₁(S¹) = ℤ</text>
+  <circle cx="185" cy="82" r="45" fill="rgba(176,190,197,0.04)" stroke="#b0bec5" stroke-width="1.5"/>
+  <circle cx="185" cy="82" r="18" fill="#0d0d12" stroke="#b0bec5" stroke-width="1"/>
+  <!-- winding loop -->
+  <ellipse cx="185" cy="82" rx="38" ry="25" fill="none" stroke="#ffcc80" stroke-width="1.5"/>
+  <text x="185" y="120" text-anchor="middle" fill="#ffcc80" font-size="8" font-family="monospace">winds once: class 1∈ℤ</text>
+  <!-- winding number panel -->
+  <rect x="248" y="22" width="162" height="118" rx="6" fill="#141618" stroke="#2a3035" stroke-width="1"/>
+  <text x="329" y="40" text-anchor="middle" fill="#b0bec5" font-size="10" font-family="monospace">Homotopy</text>
+  <line x1="258" y1="47" x2="400" y2="47" stroke="#2a3035" stroke-width="1"/>
+  <text x="258" y="61" fill="#888" font-size="8" font-family="monospace">Homotopy: continuous</text>
+  <text x="258" y="74" fill="#888" font-size="8" font-family="monospace">deformation of paths</text>
+  <text x="258" y="87" fill="#888" font-size="8" font-family="monospace">π₁: loops up to homotopy</text>
+  <line x1="258" y1="96" x2="400" y2="96" stroke="#2a3035" stroke-width="1"/>
+  <text x="258" y="110" fill="#555" font-size="8" font-family="monospace">Higher homotopy: πₙ(X)</text>
+  <text x="258" y="123" fill="#555" font-size="8" font-family="monospace">Homology: counts holes</text>
+  <text x="258" y="136" fill="#555" font-size="8" font-family="monospace">Poincaré conj.: proved 2003</text>
+</svg>`
+      }
+    ]
   }
 ];
 
@@ -1643,6 +2707,94 @@ const REFERENCE = [
       { name: 'RK4 (k₁)', f: 'k₁ = h·f(xₙ, yₙ)', note: '' },
       { name: 'RK4 (k₂)', f: 'k₂ = h·f(xₙ+h/2, yₙ+k₁/2)', note: '' },
       { name: 'RK4 (final)', f: 'yₙ₊₁ = yₙ+(k₁+2k₂+2k₃+k₄)/6', note: 'O(h⁴) error' },
+    ]
+  },
+  {
+    title: 'Linear Algebra', formulas: [
+      { name: 'Dot Product', f: 'v·w = Σ vᵢwᵢ = |v||w|cosθ', note: '' },
+      { name: 'Cross Product (3D)', f: '|v×w| = |v||w|sinθ', note: 'Perpendicular to both v and w' },
+      { name: 'Matrix Multiply', f: '(AB)ᵢⱼ = Σₖ AᵢₖBₖⱼ', note: 'A: m×n, B: n×p → AB: m×p' },
+      { name: 'Determinant 2×2', f: 'det[[a,b],[c,d]] = ad − bc', note: '' },
+      { name: 'Inverse 2×2', f: 'A⁻¹ = (1/det)·[[d,−b],[−c,a]]', note: '' },
+      { name: 'Characteristic Equation', f: 'det(A − λI) = 0', note: 'Yields the eigenvalues' },
+      { name: 'Diagonalisation', f: 'A = PDP⁻¹', note: 'D=diag(λᵢ), cols of P = eigenvectors' },
+      { name: 'Rank-Nullity', f: 'rank(A) + nullity(A) = n', note: 'n = number of columns' },
+      { name: 'Trace', f: 'tr(A) = Σ aᵢᵢ = Σ λᵢ', note: 'Sum of diagonal = sum of eigenvalues' },
+      { name: 'Determinant Product', f: 'det(AB) = det(A)·det(B)', note: '' },
+      { name: 'Orthogonal Matrix', f: 'QᵀQ = I  →  Q⁻¹ = Qᵀ', note: 'Preserves lengths and angles' },
+      { name: 'Projection onto v', f: 'projᵥu = (u·v / |v|²) v', note: '' },
+    ]
+  },
+  {
+    title: 'Multivariable Calculus', formulas: [
+      { name: 'Partial Derivative', f: '∂f/∂x: differentiate holding y,z,... constant', note: '' },
+      { name: 'Gradient', f: '∇f = (∂f/∂x, ∂f/∂y, ∂f/∂z)', note: 'Points in direction of steepest ascent' },
+      { name: 'Directional Derivative', f: 'Dᵤf = ∇f · û, where |û|=1', note: '' },
+      { name: 'Chain Rule (multivar)', f: 'df/dt = ∇f · r\'(t)', note: '' },
+      { name: 'Hessian Matrix', f: 'H = [[fₓₓ,fₓᵧ],[fᵧₓ,fᵧᵧ]]', note: 'Second derivative test uses det(H)' },
+      { name: 'Double Integral', f: '∬R f dA = ∫ₐᵇ ∫_{g(x)}^{h(x)} f dy dx', note: "Fubini's theorem" },
+      { name: 'Polar Coordinates', f: 'x=rcosθ, y=rsinθ, dA = r dr dθ', note: '' },
+      { name: 'Line Integral', f: '∫C F·dr = ∫_a^b F(r(t))·r\'(t) dt', note: '' },
+      { name: 'Conservative Field', f: 'F=∇f → ∫C F·dr = f(B)−f(A)', note: 'Path-independent' },
+      { name: "Green's Theorem", f: '∮C P dx+Q dy = ∬D (∂Q/∂x−∂P/∂y) dA', note: '' },
+      { name: "Stokes' Theorem", f: '∮C F·dr = ∬S (curl F)·dS', note: '' },
+      { name: 'Divergence Theorem', f: '∯S F·dS = ∭V div F dV', note: '' },
+    ]
+  },
+  {
+    title: 'Real Analysis', formulas: [
+      { name: 'ε-δ Limit', f: '∀ε>0 ∃δ>0: 0<|x−a|<δ → |f(x)−L|<ε', note: '' },
+      { name: 'Sequence Convergence', f: '∀ε>0 ∃N: n>N → |aₙ−L|<ε', note: '' },
+      { name: 'Cauchy Sequence', f: '∀ε>0 ∃N: m,n>N → |aₘ−aₙ|<ε', note: 'Convergent ↔ Cauchy in ℝ' },
+      { name: 'Mean Value Theorem', f: 'f\'(c) = (f(b)−f(a))/(b−a)', note: 'Some c ∈ (a,b)' },
+      { name: "Taylor's Theorem", f: 'f(x) = Σ f⁽ᵏ⁾(a)/k! (x−a)ᵏ + Rₙ', note: '' },
+      { name: 'Taylor Remainder', f: 'Rₙ = f⁽ⁿ⁺¹⁾(c)/(n+1)! (x−a)ⁿ⁺¹', note: 'Some c between a and x' },
+      { name: 'Lower Darboux Sum', f: 'L(f,P) = Σ mᵢ Δxᵢ', note: 'mᵢ = inf of f on subinterval' },
+      { name: 'Upper Darboux Sum', f: 'U(f,P) = Σ Mᵢ Δxᵢ', note: 'Mᵢ = sup of f on subinterval' },
+      { name: 'Riemann Integrable', f: 'inf U(f,P) = sup L(f,P)', note: '' },
+      { name: 'Lipschitz Condition', f: '|f(x)−f(y)| ≤ K|x−y|', note: 'Implies uniform continuity' },
+    ]
+  },
+  {
+    title: 'Complex Analysis', formulas: [
+      { name: 'Modulus', f: '|z| = √(a²+b²)', note: 'z = a+bi' },
+      { name: "Euler's Formula", f: 'e^{iθ} = cosθ + isinθ', note: '' },
+      { name: "Euler's Identity", f: 'e^{iπ} + 1 = 0', note: '' },
+      { name: 'Polar Form', f: 'z = re^{iθ}, r=|z|, θ=arg(z)', note: '' },
+      { name: 'Cauchy-Riemann', f: '∂u/∂x = ∂v/∂y,  ∂u/∂y = −∂v/∂x', note: 'Holomorphic iff C-R holds' },
+      { name: "Cauchy's Theorem", f: '∮C f dz = 0  (f holomorphic inside C)', note: '' },
+      { name: 'Cauchy Integral Formula', f: 'f(z₀) = (1/2πi) ∮C f(z)/(z−z₀) dz', note: '' },
+      { name: 'nth Derivative Formula', f: 'f⁽ⁿ⁾(z₀) = n!/(2πi) ∮ f(z)/(z−z₀)ⁿ⁺¹ dz', note: '' },
+      { name: 'Residue', f: 'Res(f,z₀) = c₋₁  (Laurent coeff)', note: '' },
+      { name: 'Residue Theorem', f: '∮C f dz = 2πi Σ Res(f,zₖ)', note: '' },
+    ]
+  },
+  {
+    title: 'Abstract Algebra', formulas: [
+      { name: 'Group Axioms', f: 'Closure, Associativity, Identity, Inverses', note: '' },
+      { name: "Lagrange's Theorem", f: '|H| divides |G|', note: 'H ≤ G' },
+      { name: 'Index', f: '[G:H] = |G|/|H| = number of cosets', note: '' },
+      { name: 'Quotient Group', f: '|G/N| = |G|/|N|', note: 'N ⊴ G (normal subgroup)' },
+      { name: '1st Isomorphism Thm', f: 'G/ker(φ) ≅ im(φ)', note: '' },
+      { name: "Cayley's Theorem", f: 'Every group G embeds in Sym(G)', note: '' },
+      { name: 'Ring Axioms', f: '(R,+) abelian group + (R,·) monoid + distrib.', note: '' },
+      { name: 'Field', f: 'Commutative ring where every a≠0 is invertible', note: '' },
+      { name: 'Ideal', f: 'I ⊆ R: rI ⊆ I and Ir ⊆ I for all r ∈ R', note: '' },
+      { name: 'Galois Correspondence', f: '[E:F] = |Gal(E/F)|', note: 'For Galois extensions' },
+    ]
+  },
+  {
+    title: 'Topology', formulas: [
+      { name: 'Triangle Inequality', f: 'd(x,z) ≤ d(x,y) + d(y,z)', note: '' },
+      { name: 'Open Ball', f: 'B(x,r) = {y : d(x,y) < r}', note: '' },
+      { name: 'Continuous (topological)', f: 'f cts ↔ f⁻¹(V) open for all open V', note: '' },
+      { name: 'Homeomorphism', f: 'Bijective f with f,f⁻¹ both continuous', note: '' },
+      { name: 'Euler Characteristic', f: 'χ = V − E + F', note: 'Sphere: χ=2, Torus: χ=0' },
+      { name: 'Heine-Borel', f: 'Compact ↔ closed + bounded (in ℝⁿ)', note: '' },
+      { name: 'Extreme Value Thm', f: 'f cts on compact K → f attains max and min', note: '' },
+      { name: 'Fundamental Group', f: 'π₁(X,x₀): homotopy classes of loops at x₀', note: '' },
+      { name: 'π₁ of circle', f: 'π₁(S¹) = ℤ', note: 'Winding number' },
+      { name: 'Simply Connected', f: 'π₁(X) = {e} — all loops contractible', note: '' },
     ]
   }
 ];
@@ -1733,6 +2885,81 @@ const GLOSSARY = [
   { term: 'Unit Circle', cat: 'Trigonometry', def: 'Circle of radius 1 centred at origin; coordinates are (cosθ, sinθ).' },
   { term: 'Vector', cat: 'Algebra', def: 'Quantity with both magnitude and direction; generalises scalar to higher dimensions.' },
   { term: 'Wronskian', cat: 'Differential Equations', def: 'Determinant used to test linear independence of ODE solutions.' },
+  { term: 'Augmented Matrix', cat: 'Linear Algebra', def: '[A|b] — a matrix with the right-hand side of a linear system appended as an extra column; used in row reduction.' },
+  { term: 'Basis', cat: 'Linear Algebra', def: 'A linearly independent set that spans the vector space; every vector has a unique representation in terms of the basis.' },
+  { term: 'Column Space', cat: 'Linear Algebra', def: 'The set of all linear combinations of the columns of a matrix; equals the image of the corresponding linear map.' },
+  { term: 'Diagonalisation', cat: 'Linear Algebra', def: 'Writing A = PDP⁻¹ where D is diagonal; possible when A has n linearly independent eigenvectors.' },
+  { term: 'Dot Product', cat: 'Linear Algebra', def: 'v·w = Σ vᵢwᵢ = |v||w|cosθ; measures alignment between vectors; zero means orthogonal.' },
+  { term: 'Eigenspace', cat: 'Linear Algebra', def: 'The set of all eigenvectors for a given eigenvalue λ, plus the zero vector; a subspace of the domain.' },
+  { term: 'Eigenvector', cat: 'Linear Algebra', def: 'A nonzero vector v such that Av = λv; the matrix only scales it, never rotates it off its line.' },
+  { term: 'Gaussian Elimination', cat: 'Linear Algebra', def: 'Row-reduction algorithm that transforms an augmented matrix to row echelon form to solve a linear system.' },
+  { term: 'Identity Matrix', cat: 'Linear Algebra', def: 'Square matrix with 1s on the diagonal and 0s elsewhere; AI = IA = A for any compatible matrix A.' },
+  { term: 'Inverse Matrix', cat: 'Linear Algebra', def: 'A⁻¹ such that AA⁻¹ = A⁻¹A = I; exists iff det(A) ≠ 0.' },
+  { term: 'Kernel', cat: 'Linear Algebra', def: 'ker(T) = {v : Tv = 0} — the null space; its dimension is the nullity.' },
+  { term: 'Linear Independence', cat: 'Linear Algebra', def: 'A set of vectors is linearly independent if no vector is a linear combination of the others; Σ cᵢvᵢ = 0 implies all cᵢ = 0.' },
+  { term: 'Linear Transformation', cat: 'Linear Algebra', def: 'A map T: V→W satisfying T(u+v)=T(u)+T(v) and T(cv)=cT(v); represented by a matrix.' },
+  { term: 'Null Space', cat: 'Linear Algebra', def: 'Same as kernel; {x : Ax = 0}. Its dimension (nullity) satisfies rank + nullity = n.' },
+  { term: 'Orthogonal', cat: 'Linear Algebra', def: 'Two vectors are orthogonal if v·w = 0. An orthogonal matrix Q satisfies QᵀQ = I.' },
+  { term: 'Pivot', cat: 'Linear Algebra', def: 'The leading nonzero entry in a row after row reduction; pivot columns correspond to basic variables.' },
+  { term: 'Projection', cat: 'Linear Algebra', def: 'projᵥu = (u·v/|v|²)v — the component of u along v; the orthogonal shadow of u onto the subspace spanned by v.' },
+  { term: 'Rank', cat: 'Linear Algebra', def: 'The number of pivot columns (= dim of column space = dim of row space); measures how non-degenerate a matrix is.' },
+  { term: 'Row Echelon Form', cat: 'Linear Algebra', def: 'Matrix form where each leading entry is to the right of the one above; RREF further requires leading 1s and zeros above each pivot.' },
+  { term: 'Span', cat: 'Linear Algebra', def: 'The set of all linear combinations of a given collection of vectors; the smallest subspace containing them.' },
+  { term: 'Symmetric Matrix', cat: 'Linear Algebra', def: 'A matrix where Aᵀ = A; symmetric matrices always have real eigenvalues and orthogonal eigenvectors.' },
+  { term: 'Trace', cat: 'Linear Algebra', def: 'tr(A) = Σ aᵢᵢ — sum of diagonal entries; equals the sum of eigenvalues.' },
+  { term: 'Transpose', cat: 'Linear Algebra', def: 'Aᵀ flips rows and columns: (Aᵀ)ᵢⱼ = Aⱼᵢ. (AB)ᵀ = BᵀAᵀ.' },
+  { term: 'Vector Space', cat: 'Linear Algebra', def: 'A set closed under addition and scalar multiplication satisfying 8 axioms; examples: ℝⁿ, polynomials, matrices, functions.' },
+  { term: 'Abelian Group', cat: 'Abstract Algebra', def: 'A group (G,*) where a*b = b*a for all a,b; also called a commutative group.' },
+  { term: 'Annulus', cat: 'Complex Analysis', def: 'The region r < |z−z₀| < R in the complex plane; the domain of a Laurent series.' },
+  { term: 'Bolzano-Weierstrass', cat: 'Real Analysis', def: 'Every bounded sequence in ℝⁿ has a convergent subsequence.' },
+  { term: 'Cauchy Sequence', cat: 'Real Analysis', def: 'A sequence where terms eventually get arbitrarily close to each other; in ℝ, equivalent to convergence.' },
+  { term: "Cauchy's Theorem", cat: 'Complex Analysis', def: 'If f is holomorphic inside and on a simple closed contour C, then ∮C f dz = 0.' },
+  { term: "Cauchy-Riemann Equations", cat: 'Complex Analysis', def: '∂u/∂x=∂v/∂y and ∂u/∂y=−∂v/∂x; necessary and sufficient for f=u+iv to be holomorphic.' },
+  { term: 'Closed Set', cat: 'Topology', def: 'A set containing all its limit points; equivalently, its complement is open.' },
+  { term: 'Compact Space', cat: 'Topology', def: 'Every open cover has a finite subcover; in ℝⁿ equivalent to closed and bounded (Heine-Borel).' },
+  { term: 'Complete Metric Space', cat: 'Real Analysis', def: 'Every Cauchy sequence converges; ℝ is complete, ℚ is not.' },
+  { term: 'Conformal Map', cat: 'Complex Analysis', def: 'An angle-preserving map; holomorphic functions with nonzero derivative are conformal.' },
+  { term: 'Connected Space', cat: 'Topology', def: 'Cannot be split into two disjoint nonempty open sets; implies the intermediate value theorem.' },
+  { term: 'Conservative Field', cat: 'Multivariable Calculus', def: 'A vector field F = ∇f for some scalar potential f; line integrals are path-independent.' },
+  { term: 'Coset', cat: 'Abstract Algebra', def: 'A translate gH = {gh : h∈H} of a subgroup H; cosets partition the group G.' },
+  { term: 'Curl', cat: 'Multivariable Calculus', def: 'curl F = ∂Q/∂x − ∂P/∂y in 2D; measures rotation of a vector field.' },
+  { term: 'Cyclic Group', cat: 'Abstract Algebra', def: 'A group generated by a single element: G = {e, g, g², ...}; isomorphic to ℤₙ or ℤ.' },
+  { term: 'Directional Derivative', cat: 'Multivariable Calculus', def: 'Dᵤf = ∇f·û; rate of change of f in direction û.' },
+  { term: 'Divergence', cat: 'Multivariable Calculus', def: 'div F = ∂P/∂x + ∂Q/∂y + ∂R/∂z; measures outflow per unit volume of a vector field.' },
+  { term: 'Essential Singularity', cat: 'Complex Analysis', def: 'An isolated singularity with infinitely many negative-power terms in the Laurent series; behaviour is chaotic (Picard).' },
+  { term: 'Euler Characteristic', cat: 'Topology', def: 'χ = V − E + F; a topological invariant. Sphere: χ=2, torus: χ=0.' },
+  { term: 'Extreme Value Theorem', cat: 'Topology', def: 'A continuous function on a compact set attains its maximum and minimum.' },
+  { term: 'Field (algebra)', cat: 'Abstract Algebra', def: 'A commutative ring where every nonzero element has a multiplicative inverse; e.g. ℚ, ℝ, ℂ, GF(2ⁿ).' },
+  { term: 'Fundamental Group', cat: 'Topology', def: 'π₁(X,x₀): the group of homotopy classes of loops based at x₀; measures 1D holes in X.' },
+  { term: 'Galois Group', cat: 'Abstract Algebra', def: 'Gal(E/F): the group of field automorphisms of splitting field E that fix base field F.' },
+  { term: 'Genus', cat: 'Topology', def: 'The number of handles on a surface; sphere has genus 0, torus genus 1.' },
+  { term: 'Gradient', cat: 'Multivariable Calculus', def: '∇f = (∂f/∂x, ∂f/∂y, ...); points in direction of steepest increase; magnitude is that rate.' },
+  { term: 'Hessian', cat: 'Multivariable Calculus', def: 'Matrix H of second partial derivatives; det(H) and sign of Hₓₓ determine type of critical point.' },
+  { term: 'Holomorphic', cat: 'Complex Analysis', def: 'Complex-differentiable at every point in a region; implies analytic, C∞, and conformal.' },
+  { term: 'Homeomorphism', cat: 'Topology', def: 'A continuous bijection with a continuous inverse; the notion of "same shape" in topology.' },
+  { term: 'Homomorphism', cat: 'Abstract Algebra', def: 'A map φ: G→H preserving structure; φ(ab)=φ(a)φ(b). Kernel and image are subgroups.' },
+  { term: 'Homotopy', cat: 'Topology', def: 'A continuous deformation of one map into another; homotopic maps are topologically equivalent.' },
+  { term: 'Ideal', cat: 'Abstract Algebra', def: 'A subring I ⊆ R closed under multiplication by any ring element; kernels of ring homomorphisms are ideals.' },
+  { term: 'Jacobian', cat: 'Multivariable Calculus', def: 'Matrix of partial derivatives ∂(f₁,...,fₘ)/∂(x₁,...,xₙ); its determinant gives the volume scale factor for coordinate changes.' },
+  { term: 'Laurent Series', cat: 'Complex Analysis', def: 'Σcₙ(z-z₀)ⁿ for n from -∞ to ∞; extends power series to functions with singularities.' },
+  { term: 'Level Set', cat: 'Multivariable Calculus', def: 'The set {x : f(x) = c}; the gradient is always perpendicular to level sets.' },
+  { term: 'Line Integral', cat: 'Multivariable Calculus', def: '∫C F·dr; the work done by vector field F along curve C.' },
+  { term: 'Lipschitz Continuity', cat: 'Real Analysis', def: '|f(x)−f(y)| ≤ K|x−y|; stronger than uniform continuity, implies bounded derivative.' },
+  { term: 'Metric Space', cat: 'Topology', def: 'A set X with distance function d satisfying non-negativity, symmetry, and triangle inequality.' },
+  { term: 'Normal Subgroup', cat: 'Abstract Algebra', def: 'N ⊴ G: gN = Ng for all g; allows forming the quotient group G/N.' },
+  { term: 'Open Set', cat: 'Topology', def: 'A set where every point has an open ball contained in it; the fundamental object of topology.' },
+  { term: 'Partial Derivative', cat: 'Multivariable Calculus', def: '∂f/∂x: derivative of f with respect to x, treating all other variables as constants.' },
+  { term: 'Path-Connected', cat: 'Topology', def: 'Any two points can be joined by a continuous path; implies connected.' },
+  { term: 'Pole', cat: 'Complex Analysis', def: 'An isolated singularity where f(z)→∞ as z→z₀; has finitely many negative Laurent coefficients.' },
+  { term: 'Quotient Group', cat: 'Abstract Algebra', def: 'G/N: the group whose elements are cosets of a normal subgroup N; |G/N|=|G|/|N|.' },
+  { term: 'Residue', cat: 'Complex Analysis', def: 'Res(f,z₀) = c₋₁; the coefficient of (z−z₀)⁻¹ in the Laurent expansion; used in the Residue Theorem.' },
+  { term: 'Ring', cat: 'Abstract Algebra', def: 'A set with + (abelian group) and · (associative, distributive); need not have multiplicative inverses.' },
+  { term: 'Simply Connected', cat: 'Topology', def: 'Path-connected with trivial fundamental group π₁={e}; every loop can be contracted to a point.' },
+  { term: 'Splitting Field', cat: 'Abstract Algebra', def: 'The smallest field extension over which a polynomial factors completely into linear factors.' },
+  { term: 'Subgroup', cat: 'Abstract Algebra', def: 'H ≤ G: a subset of G that is itself a group under the same operation.' },
+  { term: 'Uniform Continuity', cat: 'Real Analysis', def: 'Continuity where the same δ works for every point; continuous functions on compact sets are uniformly continuous.' },
+  { term: 'Upper Half-Plane', cat: 'Complex Analysis', def: 'The set {z ∈ ℂ : Im(z) > 0}; a model for hyperbolic geometry under the Poincaré metric.' },
+  { term: 'Vector Field', cat: 'Multivariable Calculus', def: 'A function F(x,y,...) assigning a vector to each point; conservative if F=∇f for some scalar f.' },
 ];
 
 // ─── CURRICULUM RENDER ─────────────────────────────────────────────────────────

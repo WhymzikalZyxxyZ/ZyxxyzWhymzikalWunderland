@@ -29,7 +29,10 @@
       "Bash(curl -s https://api.github.com/repos/SamKirkland/FTP-Deploy-Action/releases/latest)",
       "Bash(grep -v \"\\\\\\\\&#\")",
       "Bash(npm audit *)",
-      "Bash(grep -E \"\\\\.html$|^d\")"
+      "Bash(grep -E \"\\\\.html$|^d\")",
+      "Bash(gh pr create --title 'version/1.0.2 — Canvas coordinate fix & README' --body ' *)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(where.exe curl.exe 2>$null; curl.exe --version 2>&1 | Select-Object -First 1)"
     ]
   }
 }
