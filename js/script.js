@@ -136,6 +136,31 @@ function buildNavbar() {
     });
 }
 
+function buildBackLink() {
+    const path = window.location.pathname;
+    const map = [
+        { match: p => p.includes('/gamer/')        && !p.endsWith('/games.html'),    href: '/gamer/games.html',         label: '← Games' },
+        { match: p => p.includes('/technologist/') && !p.endsWith('/apps.html'),     href: '/technologist/apps.html',   label: '← Technologist' },
+        { match: p => p.includes('/virtuoso/')     && !p.endsWith('/virtuoso.html'), href: '/virtuoso/virtuoso.html',   label: '← Virtuoso' },
+        { match: p => p.includes('/community/')    && !p.endsWith('/forum.html'),    href: '/community/forum.html',     label: '← Community' },
+    ];
+    const entry = map.find(m => m.match(path));
+    if (!entry) return;
+    const bar = document.createElement('div');
+    bar.className = 'back-bar';
+    const link = document.createElement('a');
+    link.className = 'back-bar-link';
+    link.href = entry.href;
+    link.textContent = entry.label;
+    bar.appendChild(link);
+    const navbar = document.querySelector('.navbar');
+    if (navbar && navbar.nextSibling) {
+        document.body.insertBefore(bar, navbar.nextSibling);
+    } else {
+        document.body.appendChild(bar);
+    }
+}
+
 function navigateToPage(url) {
     if (!url || typeof url !== 'string') return;
     if (/^[\s ]*(?:javascript|data|vbscript):/i.test(url)) return;
@@ -151,6 +176,7 @@ function navigateToPage(url) {
 if (typeof document !== 'undefined') {
     document.addEventListener('DOMContentLoaded', () => {
         buildNavbar();
+        buildBackLink();
 
         document.addEventListener('click', e => {
             const a = e.target.closest('a[href]');
