@@ -204,7 +204,7 @@
             position: relative; display: block; line-height: 0;
             border: 2px solid #2a2a2a; border-radius: 3px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5); overflow: hidden;
-            max-width: 100%;
+            max-width: 480px; width: 100%;
         }
         #anim-canvas { display: block; max-width: 100%; height: auto; }
         #anim-overlay {
@@ -1004,7 +1004,7 @@
         // ── Drawing utilities ────────────────────────────────────────────────
 
         function getPos(e) {
-            const r = overlay.getBoundingClientRect();
+            const r = canvas.getBoundingClientRect();
             return {
                 x: (e.clientX - r.left) * (CANVAS_W / r.width),
                 y: (e.clientY - r.top)  * (CANVAS_H / r.height)
