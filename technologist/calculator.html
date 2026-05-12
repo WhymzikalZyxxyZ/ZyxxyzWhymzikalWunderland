@@ -162,6 +162,10 @@
         .gloss-cat { font-size: 0.7rem; color: #444; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
         .gloss-def { color: #888; font-size: 0.82rem; line-height: 1.55; }
         .gloss-card.hidden { display: none; }
+
+        /* Lesson SVG illustrations */
+        .lesson-svg { margin: 14px 0 10px; }
+        .lesson-svg svg { width: 100%; height: auto; border-radius: 8px; display: block; }
     </style>
 </head>
 <body class="wunderBody">
@@ -359,25 +363,115 @@ const CURRICULUM = [
         title: 'Natural Numbers & Place Value',
         body: `Numbers are abstract representations of quantity. The Hindu-Arabic numeral system uses place value — each position represents a power of 10. The digit 4 in 400 represents 4×10² = 400; the same digit in 40 means 4×10 = 40.`,
         practical: `Engineering drawings use precise tolerances (0.001 mm); financial systems track currency to two decimal places. Understanding place value prevents costly off-by-one errors in software that handles money or physical dimensions.`,
-        formulas: ['Place value: dₙ×10ⁿ + ... + d₁×10 + d₀']
+        formulas: ['Place value: dₙ×10ⁿ + ... + d₁×10 + d₀'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg" style="background:#0d0d12">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- column boxes -->
+  <rect x="30" y="30" width="100" height="90" rx="6" fill="#111" stroke="#80cbc4" stroke-width="1.5"/>
+  <rect x="160" y="30" width="100" height="90" rx="6" fill="#111" stroke="#80cbc4" stroke-width="1.5"/>
+  <rect x="290" y="30" width="100" height="90" rx="6" fill="#111" stroke="#80cbc4" stroke-width="1.5"/>
+  <!-- labels -->
+  <text x="80" y="52" text-anchor="middle" fill="#80cbc4" font-size="11" font-family="monospace">Hundreds</text>
+  <text x="210" y="52" text-anchor="middle" fill="#80cbc4" font-size="11" font-family="monospace">Tens</text>
+  <text x="340" y="52" text-anchor="middle" fill="#80cbc4" font-size="11" font-family="monospace">Ones</text>
+  <!-- digits -->
+  <text x="80" y="98" text-anchor="middle" fill="#fff" font-size="38" font-weight="bold" font-family="monospace">4</text>
+  <text x="210" y="98" text-anchor="middle" fill="#fff" font-size="38" font-weight="bold" font-family="monospace">3</text>
+  <text x="340" y="98" text-anchor="middle" fill="#fff" font-size="38" font-weight="bold" font-family="monospace">7</text>
+  <!-- sub-values -->
+  <text x="80" y="115" text-anchor="middle" fill="#666" font-size="10" font-family="monospace">4×10² = 400</text>
+  <text x="210" y="115" text-anchor="middle" fill="#666" font-size="10" font-family="monospace">3×10¹ = 30</text>
+  <text x="340" y="115" text-anchor="middle" fill="#666" font-size="10" font-family="monospace">7×10⁰ = 7</text>
+  <!-- total -->
+  <text x="210" y="148" text-anchor="middle" fill="#80cbc4" font-size="13" font-family="monospace">437 = 400 + 30 + 7</text>
+</svg>`
       },
       {
         title: 'The Four Operations',
         body: `Addition, subtraction, multiplication, and division are the bedrock operations. Multiplication is repeated addition; division is repeated subtraction. The order of operations (PEMDAS/BODMAS) resolves ambiguity: Parentheses, Exponents, Multiplication/Division (left to right), Addition/Subtraction.`,
         practical: `Every algorithm in computing eventually reduces to these operations. CPUs execute billions of additions and multiplications per second. When you compress a video or render 3D graphics, matrix multiplication — thousands of multiply-then-add steps — is what's happening.`,
-        formulas: ['a×(b+c) = a×b + a×c', 'a÷b = a × (1/b)']
+        formulas: ['a×(b+c) = a×b + a×c', 'a÷b = a × (1/b)'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <rect x="20" y="20" width="88" height="56" rx="6" fill="#111" stroke="#80cbc4" stroke-width="1.2"/>
+  <text x="64" y="44" text-anchor="middle" fill="#80cbc4" font-size="11" font-family="monospace">Addition</text>
+  <text x="64" y="66" text-anchor="middle" fill="#eee" font-size="18" font-family="monospace">3 + 5</text>
+  <rect x="120" y="20" width="88" height="56" rx="6" fill="#111" stroke="#80cbc4" stroke-width="1.2"/>
+  <text x="164" y="44" text-anchor="middle" fill="#80cbc4" font-size="11" font-family="monospace">Subtraction</text>
+  <text x="164" y="66" text-anchor="middle" fill="#eee" font-size="18" font-family="monospace">8 − 3</text>
+  <rect x="220" y="20" width="88" height="56" rx="6" fill="#111" stroke="#80cbc4" stroke-width="1.2"/>
+  <text x="264" y="44" text-anchor="middle" fill="#80cbc4" font-size="11" font-family="monospace">Multiply</text>
+  <text x="264" y="66" text-anchor="middle" fill="#eee" font-size="18" font-family="monospace">4 × 6</text>
+  <rect x="320" y="20" width="88" height="56" rx="6" fill="#111" stroke="#80cbc4" stroke-width="1.2"/>
+  <text x="364" y="44" text-anchor="middle" fill="#80cbc4" font-size="11" font-family="monospace">Division</text>
+  <text x="364" y="66" text-anchor="middle" fill="#eee" font-size="18" font-family="monospace">12 ÷ 4</text>
+  <!-- PEMDAS row -->
+  <rect x="20" y="90" width="388" height="50" rx="6" fill="#0f1a19" stroke="#2a3a39" stroke-width="1"/>
+  <text x="214" y="108" text-anchor="middle" fill="#666" font-size="10" font-family="monospace">Order of Operations (PEMDAS)</text>
+  <text x="50" y="130" text-anchor="middle" fill="#80cbc4" font-size="12" font-weight="bold" font-family="monospace">P</text>
+  <text x="50" y="130" text-anchor="middle" fill="#555" font-size="10" font-family="monospace" dy="0">  </text>
+  <text x="50" y="130" text-anchor="middle" fill="#80cbc4" font-size="12" font-weight="bold" font-family="monospace">P</text>
+  <text x="56" y="130" text-anchor="start" fill="#888" font-size="10" font-family="monospace">arentheses</text>
+  <text x="160" y="130" text-anchor="middle" fill="#80cbc4" font-size="12" font-weight="bold" font-family="monospace">E</text>
+  <text x="166" y="130" text-anchor="start" fill="#888" font-size="10" font-family="monospace">xponents</text>
+  <text x="260" y="130" text-anchor="middle" fill="#80cbc4" font-size="12" font-weight="bold" font-family="monospace">MD</text>
+  <text x="276" y="130" text-anchor="start" fill="#888" font-size="10" font-family="monospace"> ×÷</text>
+  <text x="340" y="130" text-anchor="middle" fill="#80cbc4" font-size="12" font-weight="bold" font-family="monospace">AS</text>
+  <text x="356" y="130" text-anchor="start" fill="#888" font-size="10" font-family="monospace"> ±</text>
+</svg>`
       },
       {
         title: 'Fractions, Decimals & Percentages',
         body: `A fraction a/b expresses a parts of a whole divided into b equal parts. Decimals are fractions with powers-of-10 denominators. Percentages are fractions out of 100. They are three notations for the same idea and can be converted freely.`,
         practical: `Interest rates, tax calculations, and data compression ratios all rely on fractions and percentages. A 3.5% annual interest rate compounds as (1 + 0.035)ⁿ — understanding the decimal form is essential for financial modelling.`,
-        formulas: ['a/b × c/d = ac/bd', 'x% = x/100', 'Decimal ↔ Fraction: multiply/divide by 10ⁿ']
+        formulas: ['a/b × c/d = ac/bd', 'x% = x/100', 'Decimal ↔ Fraction: multiply/divide by 10ⁿ'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- Pie chart: 3/4 shaded -->
+  <circle cx="80" cy="82" r="55" fill="#111" stroke="#333" stroke-width="1"/>
+  <path d="M80,82 L80,27 A55,55 0 1,1 25.1,57 Z" fill="#80cbc4" opacity="0.7"/>
+  <path d="M80,82 L25.1,57 A55,55 0 0,1 80,27 Z" fill="#2a4a48"/>
+  <text x="80" y="160" text-anchor="middle" fill="#80cbc4" font-size="10" font-family="monospace">3/4 = 0.75 = 75%</text>
+  <!-- Conversion table -->
+  <rect x="160" y="18" width="240" height="120" rx="6" fill="#0f1a19" stroke="#2a3a39" stroke-width="1"/>
+  <text x="280" y="36" text-anchor="middle" fill="#80cbc4" font-size="11" font-family="monospace">Fraction → Decimal → %</text>
+  <line x1="160" y1="42" x2="400" y2="42" stroke="#1e2e2d" stroke-width="1"/>
+  <text x="200" y="58" fill="#888" font-size="11" font-family="monospace">1/2</text><text x="280" y="58" fill="#ccc" font-size="11" font-family="monospace">0.5</text><text x="350" y="58" fill="#80cbc4" font-size="11" font-family="monospace">50%</text>
+  <text x="200" y="76" fill="#888" font-size="11" font-family="monospace">1/4</text><text x="280" y="76" fill="#ccc" font-size="11" font-family="monospace">0.25</text><text x="350" y="76" fill="#80cbc4" font-size="11" font-family="monospace">25%</text>
+  <text x="200" y="94" fill="#888" font-size="11" font-family="monospace">1/3</text><text x="280" y="94" fill="#ccc" font-size="11" font-family="monospace">0.333…</text><text x="350" y="94" fill="#80cbc4" font-size="11" font-family="monospace">33.3%</text>
+  <text x="200" y="112" fill="#888" font-size="11" font-family="monospace">3/5</text><text x="280" y="112" fill="#ccc" font-size="11" font-family="monospace">0.6</text><text x="350" y="112" fill="#80cbc4" font-size="11" font-family="monospace">60%</text>
+  <text x="200" y="130" fill="#888" font-size="11" font-family="monospace">7/8</text><text x="280" y="130" fill="#ccc" font-size="11" font-family="monospace">0.875</text><text x="350" y="130" fill="#80cbc4" font-size="11" font-family="monospace">87.5%</text>
+</svg>`
       },
       {
         title: 'Prime Numbers & Factorisation',
         body: `A prime number has exactly two divisors: 1 and itself. Every integer greater than 1 can be written uniquely as a product of primes (Fundamental Theorem of Arithmetic). The GCD and LCM of numbers are found via prime factorisation.`,
         practical: `RSA encryption — the backbone of HTTPS — relies on the fact that multiplying two large primes is easy, but factoring the product back is computationally infeasible. Prime factorisation is also used in simplifying fractions and solving Diophantine equations.`,
-        formulas: ['n = p₁^a₁ × p₂^a₂ × ...', 'GCD(a,b) × LCM(a,b) = a×b']
+        formulas: ['n = p₁^a₁ × p₂^a₂ × ...', 'GCD(a,b) × LCM(a,b) = a×b'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- Factor tree for 60 -->
+  <text x="210" y="28" text-anchor="middle" fill="#fff" font-size="16" font-weight="bold" font-family="monospace">60</text>
+  <line x1="210" y1="32" x2="155" y2="58" stroke="#80cbc4" stroke-width="1.5"/>
+  <line x1="210" y1="32" x2="265" y2="58" stroke="#80cbc4" stroke-width="1.5"/>
+  <text x="150" y="70" text-anchor="middle" fill="#fff" font-size="14" font-family="monospace">2</text>
+  <text x="265" y="70" text-anchor="middle" fill="#fff" font-size="14" font-family="monospace">30</text>
+  <circle cx="150" cy="64" r="12" fill="none" stroke="#80cbc4" stroke-width="1.5" opacity="0.7"/>
+  <line x1="265" y1="74" x2="220" y2="100" stroke="#80cbc4" stroke-width="1.5"/>
+  <line x1="265" y1="74" x2="310" y2="100" stroke="#80cbc4" stroke-width="1.5"/>
+  <text x="220" y="112" text-anchor="middle" fill="#fff" font-size="14" font-family="monospace">2</text>
+  <text x="310" y="112" text-anchor="middle" fill="#fff" font-size="14" font-family="monospace">15</text>
+  <circle cx="220" cy="106" r="12" fill="none" stroke="#80cbc4" stroke-width="1.5" opacity="0.7"/>
+  <line x1="310" y1="116" x2="278" y2="140" stroke="#80cbc4" stroke-width="1.5"/>
+  <line x1="310" y1="116" x2="342" y2="140" stroke="#80cbc4" stroke-width="1.5"/>
+  <text x="278" y="152" text-anchor="middle" fill="#fff" font-size="14" font-family="monospace">3</text>
+  <text x="342" y="152" text-anchor="middle" fill="#fff" font-size="14" font-family="monospace">5</text>
+  <circle cx="278" cy="146" r="12" fill="none" stroke="#80cbc4" stroke-width="1.5" opacity="0.7"/>
+  <circle cx="342" cy="146" r="12" fill="none" stroke="#80cbc4" stroke-width="1.5" opacity="0.7"/>
+  <!-- result -->
+  <text x="72" y="120" text-anchor="middle" fill="#80cbc4" font-size="11" font-family="monospace">60 =</text>
+  <text x="72" y="138" text-anchor="middle" fill="#80cbc4" font-size="11" font-family="monospace">2²×3×5</text>
+</svg>`
       }
     ]
   },
@@ -389,31 +483,174 @@ const CURRICULUM = [
         title: 'Variables & Expressions',
         body: `Algebra replaces specific numbers with variables — symbols that stand for unknown or changing quantities. An algebraic expression combines variables, constants, and operations. Simplification uses the distributive, commutative, and associative laws.`,
         practical: `Every formula in physics, finance, or programming is an algebraic expression. A database query filter WHERE price * quantity > budget is algebra. So is the formula for calculating a monthly mortgage payment.`,
-        formulas: ['(a+b)² = a²+2ab+b²', '(a-b)(a+b) = a²-b²']
+        formulas: ['(a+b)² = a²+2ab+b²', '(a-b)(a+b) = a²-b²'],
+        svg: `<svg viewBox="0 0 420 170" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="170" fill="#0d0d12" rx="8"/>
+  <!-- Geometric proof of (a+b)² -->
+  <!-- outer square (a+b) × (a+b) -->
+  <rect x="30" y="20" width="140" height="140" fill="none" stroke="#a5d6a7" stroke-width="2"/>
+  <!-- a×a square -->
+  <rect x="30" y="20" width="90" height="90" fill="#1a2e1a" stroke="#a5d6a7" stroke-width="1"/>
+  <text x="75" y="70" text-anchor="middle" fill="#a5d6a7" font-size="16" font-family="monospace">a²</text>
+  <!-- a×b top right -->
+  <rect x="120" y="20" width="50" height="90" fill="#112211" stroke="#a5d6a7" stroke-width="1"/>
+  <text x="145" y="70" text-anchor="middle" fill="#a5d6a7" font-size="13" font-family="monospace">ab</text>
+  <!-- b×a bottom left -->
+  <rect x="30" y="110" width="90" height="50" fill="#112211" stroke="#a5d6a7" stroke-width="1"/>
+  <text x="75" y="140" text-anchor="middle" fill="#a5d6a7" font-size="13" font-family="monospace">ab</text>
+  <!-- b×b bottom right -->
+  <rect x="120" y="110" width="50" height="50" fill="#1a2e1a" stroke="#a5d6a7" stroke-width="1"/>
+  <text x="145" y="140" text-anchor="middle" fill="#a5d6a7" font-size="13" font-family="monospace">b²</text>
+  <!-- labels -->
+  <text x="75" y="15" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">a</text>
+  <text x="145" y="15" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">b</text>
+  <text x="14" y="70" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">a</text>
+  <text x="14" y="138" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">b</text>
+  <!-- equation -->
+  <text x="290" y="55" text-anchor="middle" fill="#a5d6a7" font-size="14" font-family="monospace">(a+b)²</text>
+  <text x="290" y="78" text-anchor="middle" fill="#666" font-size="12" font-family="monospace">= a² + ab</text>
+  <text x="290" y="98" text-anchor="middle" fill="#666" font-size="12" font-family="monospace">  + ab + b²</text>
+  <text x="290" y="122" text-anchor="middle" fill="#a5d6a7" font-size="14" font-family="monospace">= a²+2ab+b²</text>
+  <text x="290" y="150" text-anchor="middle" fill="#555" font-size="10" font-family="monospace">geometric proof</text>
+</svg>`
       },
       {
         title: 'Linear Equations & Inequalities',
         body: `A linear equation in one variable (ax + b = 0) has exactly one solution. Linear inequalities define ranges. In two variables, a linear equation describes a straight line; solving a system finds the intersection point.`,
         practical: `Break-even analysis in business: Revenue = Cost → Price×Units = FixedCost + VariableCost×Units is a linear equation solved for Units. Network traffic shaping rules are linear inequalities.`,
-        formulas: ['ax + b = 0 → x = -b/a', 'Slope: m = (y₂-y₁)/(x₂-x₁)', 'y = mx + b']
+        formulas: ['ax + b = 0 → x = -b/a', 'Slope: m = (y₂-y₁)/(x₂-x₁)', 'y = mx + b'],
+        svg: `<svg viewBox="0 0 420 170" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="170" fill="#0d0d12" rx="8"/>
+  <!-- axes -->
+  <line x1="40" y1="140" x2="260" y2="140" stroke="#333" stroke-width="1.5"/>
+  <line x1="60" y1="20" x2="60" y2="155" stroke="#333" stroke-width="1.5"/>
+  <!-- axis labels -->
+  <text x="265" y="144" fill="#555" font-size="11" font-family="monospace">x</text>
+  <text x="62" y="16" fill="#555" font-size="11" font-family="monospace">y</text>
+  <!-- grid -->
+  <line x1="40" y1="100" x2="260" y2="100" stroke="#1a1a2a" stroke-width="1"/>
+  <line x1="40" y1="60" x2="260" y2="60" stroke="#1a1a2a" stroke-width="1"/>
+  <line x1="120" y1="20" x2="120" y2="155" stroke="#1a1a2a" stroke-width="1"/>
+  <line x1="180" y1="20" x2="180" y2="155" stroke="#1a1a2a" stroke-width="1"/>
+  <!-- line y = 0.8x + 20 (in SVG coords: y = -0.8x + 120, x from 60 to 240) -->
+  <line x1="60" y1="120" x2="240" y2="32" stroke="#a5d6a7" stroke-width="2.5"/>
+  <!-- slope annotation -->
+  <line x1="120" y1="72" x2="180" y2="72" stroke="#666" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="180" y1="72" x2="180" y2="24" stroke="#666" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="148" y="85" fill="#888" font-size="10" font-family="monospace">run</text>
+  <text x="183" y="52" fill="#888" font-size="10" font-family="monospace">rise</text>
+  <!-- y-intercept dot -->
+  <circle cx="60" cy="120" r="4" fill="#a5d6a7"/>
+  <text x="64" y="118" fill="#a5d6a7" font-size="10" font-family="monospace">b</text>
+  <!-- equation panel -->
+  <rect x="280" y="30" width="125" height="100" rx="6" fill="#0f1a12" stroke="#2a3a2a" stroke-width="1"/>
+  <text x="342" y="52" text-anchor="middle" fill="#a5d6a7" font-size="13" font-family="monospace">y = mx + b</text>
+  <line x1="292" y1="60" x2="393" y2="60" stroke="#1e2e1e" stroke-width="1"/>
+  <text x="342" y="78" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">m = slope</text>
+  <text x="342" y="94" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">b = y-intercept</text>
+  <text x="342" y="118" text-anchor="middle" fill="#555" font-size="10" font-family="monospace">e.g. y = 0.8x + 20</text>
+</svg>`
       },
       {
         title: 'Quadratic Equations',
         body: `A quadratic (degree-2) equation ax²+bx+c=0 can have two, one, or zero real solutions depending on the discriminant Δ = b²-4ac. Solutions come from factoring, completing the square, or the quadratic formula. The parabola it graphs has a vertex at x = -b/2a.`,
         practical: `Projectile motion is governed by a quadratic: h(t) = h₀ + v₀t - ½gt². Engineers calculating the trajectory of a thrown object, a water jet, or a satellite re-entry solve quadratics. Quadratics also appear in optimising profit functions.`,
-        formulas: ['x = (-b ± √(b²-4ac)) / 2a', 'Δ>0: 2 real roots, Δ=0: 1, Δ<0: complex']
+        formulas: ['x = (-b ± √(b²-4ac)) / 2a', 'Δ>0: 2 real roots, Δ=0: 1, Δ<0: complex'],
+        svg: `<svg viewBox="0 0 420 170" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="170" fill="#0d0d12" rx="8"/>
+  <!-- axes -->
+  <line x1="30" y1="140" x2="280" y2="140" stroke="#333" stroke-width="1.5"/>
+  <line x1="50" y1="15" x2="50" y2="150" stroke="#333" stroke-width="1.5"/>
+  <text x="283" y="144" fill="#555" font-size="11" font-family="monospace">x</text>
+  <text x="52" y="13" fill="#555" font-size="11" font-family="monospace">y</text>
+  <!-- parabola y = -(x-3)²/8 + 100 mapped: cx=50+(x*30), cy=140-y -->
+  <!-- roots at x=1 and x=5, vertex at x=3 -->
+  <polyline points="50,140 80,96 110,68 140,56 170,68 200,96 230,140" fill="none" stroke="#a5d6a7" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- roots -->
+  <circle cx="50" cy="140" r="4" fill="#ef9a9a"/>
+  <text x="44" y="158" fill="#ef9a9a" font-size="10" font-family="monospace">x₁</text>
+  <circle cx="230" cy="140" r="4" fill="#ef9a9a"/>
+  <text x="226" y="158" fill="#ef9a9a" font-size="10" font-family="monospace">x₂</text>
+  <!-- vertex -->
+  <circle cx="140" cy="56" r="4" fill="#a5d6a7"/>
+  <line x1="140" y1="56" x2="140" y2="140" stroke="#333" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="144" y="52" fill="#a5d6a7" font-size="10" font-family="monospace">vertex (−b/2a, Δ)</text>
+  <!-- axis of symmetry -->
+  <text x="130" y="155" fill="#555" font-size="9" font-family="monospace">x = −b/2a</text>
+  <!-- panel -->
+  <rect x="295" y="20" width="115" height="120" rx="6" fill="#0f1a12" stroke="#2a3a2a" stroke-width="1"/>
+  <text x="352" y="38" text-anchor="middle" fill="#a5d6a7" font-size="11" font-family="monospace">ax²+bx+c=0</text>
+  <line x1="305" y1="44" x2="400" y2="44" stroke="#1e2e1e" stroke-width="1"/>
+  <text x="352" y="60" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">Δ = b²−4ac</text>
+  <text x="352" y="76" text-anchor="middle" fill="#a5d6a7" font-size="9" font-family="monospace">Δ&gt;0 → 2 roots</text>
+  <text x="352" y="92" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">Δ=0 → 1 root</text>
+  <text x="352" y="108" text-anchor="middle" fill="#666" font-size="9" font-family="monospace">Δ&lt;0 → complex</text>
+  <text x="352" y="130" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">x=(−b±√Δ)/2a</text>
+</svg>`
       },
       {
         title: 'Polynomials & Factoring',
         body: `A polynomial is a sum of terms aₙxⁿ + ... + a₁x + a₀. Factoring reverses multiplication — it expresses a polynomial as a product of lower-degree polynomials. The Factor Theorem: (x-r) is a factor if and only if r is a root.`,
         practical: `Polynomial interpolation fits a curve through data points — used in computer graphics for smooth animations (Bézier curves are polynomials) and in numerical methods to approximate complex functions.`,
-        formulas: ['aⁿ-bⁿ = (a-b)(aⁿ⁻¹+...+bⁿ⁻¹)', 'Remainder Theorem: f(r) = 0 ↔ (x-r)|f(x)']
+        formulas: ['aⁿ-bⁿ = (a-b)(aⁿ⁻¹+...+bⁿ⁻¹)', 'Remainder Theorem: f(r) = 0 ↔ (x-r)|f(x)'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <line x1="30" y1="120" x2="260" y2="120" stroke="#333" stroke-width="1.5"/>
+  <line x1="50" y1="10" x2="50" y2="130" stroke="#333" stroke-width="1.5"/>
+  <text x="263" y="124" fill="#555" font-size="10" font-family="monospace">x</text>
+  <!-- cubic f(x)=(x-1)(x+1)(x-3) roots at -1,1,3; mapped: px=50+x*40, py=120-f*12 -->
+  <polyline points="50,28 70,96 90,116 130,120 170,80 210,36 250,120" fill="none" stroke="#a5d6a7" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- roots -->
+  <circle cx="90" cy="120" r="4" fill="#ef9a9a"/>
+  <text x="82" y="138" fill="#ef9a9a" font-size="9" font-family="monospace">−1</text>
+  <circle cx="130" cy="120" r="4" fill="#ef9a9a"/>
+  <text x="126" y="138" fill="#ef9a9a" font-size="9" font-family="monospace">1</text>
+  <circle cx="210" cy="120" r="4" fill="#ef9a9a"/>
+  <text x="206" y="138" fill="#ef9a9a" font-size="9" font-family="monospace">3</text>
+  <!-- label -->
+  <text x="60" y="24" fill="#a5d6a7" font-size="10" font-family="monospace">f(x)=(x+1)(x−1)(x−3)</text>
+  <!-- factored form panel -->
+  <rect x="278" y="20" width="132" height="110" rx="6" fill="#0f1a12" stroke="#2a3a2a" stroke-width="1"/>
+  <text x="344" y="38" text-anchor="middle" fill="#a5d6a7" font-size="10" font-family="monospace">Factor Theorem</text>
+  <line x1="288" y1="44" x2="400" y2="44" stroke="#1e2e1e" stroke-width="1"/>
+  <text x="344" y="60" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">if f(r) = 0</text>
+  <text x="344" y="76" text-anchor="middle" fill="#a5d6a7" font-size="9" font-family="monospace">then (x−r) is</text>
+  <text x="344" y="92" text-anchor="middle" fill="#a5d6a7" font-size="9" font-family="monospace">a factor of f</text>
+  <text x="344" y="116" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">roots ↔ factors</text>
+</svg>`
       },
       {
         title: 'Systems of Equations',
         body: `Multiple equations in multiple unknowns. 2×2 systems are solved by substitution or elimination; larger systems use Gaussian elimination. Matrix form Ax = b is the foundation of linear algebra. The system has a unique solution when det(A) ≠ 0.`,
         practical: `Every structural engineering FEM simulation solves massive systems of linear equations (millions of unknowns). Machine learning's least-squares regression and network flow optimisation are systems of equations.`,
-        formulas: ['Ax = b → x = A⁻¹b (if det A ≠ 0)', 'Cramer: xᵢ = det(Aᵢ)/det(A)']
+        formulas: ['Ax = b → x = A⁻¹b (if det A ≠ 0)', 'Cramer: xᵢ = det(Aᵢ)/det(A)'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- axes -->
+  <line x1="30" y1="120" x2="220" y2="120" stroke="#333" stroke-width="1.5"/>
+  <line x1="50" y1="15" x2="50" y2="130" stroke="#333" stroke-width="1.5"/>
+  <!-- line 1: y = 0.5x + 10 → in SVG: py=120-(0.5*px_off+10)*1.5, mapped loosely -->
+  <line x1="30" y1="110" x2="220" y2="20" stroke="#a5d6a7" stroke-width="2"/>
+  <text x="222" y="20" fill="#a5d6a7" font-size="10" font-family="monospace">L₁</text>
+  <!-- line 2: y = -0.3x + 70 -->
+  <line x1="30" y1="50" x2="220" y2="110" stroke="#ce93d8" stroke-width="2"/>
+  <text x="222" y="112" fill="#ce93d8" font-size="10" font-family="monospace">L₂</text>
+  <!-- intersection point -->
+  <circle cx="128" cy="66" r="6" fill="#fff" stroke="#a5d6a7" stroke-width="2"/>
+  <text x="134" y="60" fill="#fff" font-size="10" font-family="monospace">solution</text>
+  <line x1="128" y1="72" x2="128" y2="120" stroke="#333" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="50" y1="66" x2="128" y2="66" stroke="#333" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="122" y="132" fill="#666" font-size="9" font-family="monospace">x*</text>
+  <text x="32" y="70" fill="#666" font-size="9" font-family="monospace">y*</text>
+  <!-- matrix form -->
+  <rect x="240" y="20" width="165" height="110" rx="6" fill="#0f1a12" stroke="#2a3a2a" stroke-width="1"/>
+  <text x="322" y="38" text-anchor="middle" fill="#a5d6a7" font-size="10" font-family="monospace">Matrix Form: Ax = b</text>
+  <line x1="250" y1="44" x2="395" y2="44" stroke="#1e2e1e" stroke-width="1"/>
+  <text x="265" y="64" fill="#888" font-size="10" font-family="monospace">⌈ 2  1 ⌉⌈x⌉   ⌈5⌉</text>
+  <text x="265" y="82" fill="#888" font-size="10" font-family="monospace">⌊ 1 −1 ⌋⌊y⌋ = ⌊1⌋</text>
+  <text x="322" y="106" text-anchor="middle" fill="#a5d6a7" font-size="10" font-family="monospace">x = A⁻¹b</text>
+  <text x="322" y="122" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">det(A)≠0 → unique sol.</text>
+</svg>`
       }
     ]
   },
@@ -425,25 +662,134 @@ const CURRICULUM = [
         title: 'Euclidean Geometry & Proofs',
         body: `Euclidean geometry builds from five axioms. Theorems are logical consequences — proven, not assumed. Key results: vertical angles are equal, angles in a triangle sum to 180°, the exterior angle equals the sum of the two non-adjacent interior angles.`,
         practical: `Computer vision uses geometric invariants to recognise objects regardless of rotation. Architecture and CAD rely on geometric constructions. GPS trilateration is pure 3D Euclidean geometry.`,
-        formulas: ['Triangle angles: A+B+C = 180°', 'Exterior angle = sum of remote interior angles']
+        formulas: ['Triangle angles: A+B+C = 180°', 'Exterior angle = sum of remote interior angles'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- triangle -->
+  <polygon points="160,20 40,140 280,140" fill="#111820" stroke="#ffcc80" stroke-width="2"/>
+  <!-- angle arcs -->
+  <path d="M160,20 m-14,18 a22,22 0 0,1 28,0" fill="none" stroke="#ffcc80" stroke-width="1.5"/>
+  <path d="M40,140 m18,-14 a22,22 0 0,1 0,-22" fill="none" stroke="#ffcc80" stroke-width="1.5"/>
+  <path d="M280,140 m-22,-14 a22,22 0 0,0 -18,14" fill="none" stroke="#ffcc80" stroke-width="1.5"/>
+  <!-- labels -->
+  <text x="158" y="16" text-anchor="middle" fill="#ffcc80" font-size="13" font-family="monospace">A</text>
+  <text x="28" y="152" fill="#ffcc80" font-size="13" font-family="monospace">B</text>
+  <text x="278" y="155" fill="#ffcc80" font-size="13" font-family="monospace">C</text>
+  <!-- sides -->
+  <text x="96" y="88" fill="#888" font-size="11" font-family="monospace" transform="rotate(-51,96,88)">a</text>
+  <text x="218" y="78" fill="#888" font-size="11" font-family="monospace" transform="rotate(30,218,78)">b</text>
+  <text x="160" y="152" text-anchor="middle" fill="#888" font-size="11" font-family="monospace">c</text>
+  <!-- theorem box -->
+  <rect x="305" y="30" width="105" height="80" rx="6" fill="#1a1608" stroke="#3a3010" stroke-width="1"/>
+  <text x="357" y="50" text-anchor="middle" fill="#ffcc80" font-size="11" font-family="monospace">A + B + C</text>
+  <text x="357" y="68" text-anchor="middle" fill="#ffcc80" font-size="18" font-weight="bold" font-family="monospace">= 180°</text>
+  <text x="357" y="100" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">always, for any triangle</text>
+</svg>`
       },
       {
         title: 'Area, Perimeter & Volume',
         body: `Area measures 2D surface; volume measures 3D space. Perimeter measures boundary length. Formulas differ by shape but derive from first principles — a circle's area πr² comes from summing concentric rings via integration.`,
         practical: `Civil engineering: calculating material quantities for construction. Game development: collision detection uses bounding volumes. Medical imaging: volumetric MRI scans compute tissue volumes from cross-sections.`,
-        formulas: ['Circle: A=πr², C=2πr', 'Sphere: V=4πr³/3', 'Cylinder: V=πr²h', 'Triangle: A=½bh']
+        formulas: ['Circle: A=πr², C=2πr', 'Sphere: V=4πr³/3', 'Cylinder: V=πr²h', 'Triangle: A=½bh'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- circle -->
+  <circle cx="70" cy="82" r="48" fill="#111820" stroke="#ffcc80" stroke-width="2"/>
+  <line x1="70" y1="82" x2="118" y2="82" stroke="#ffcc80" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="94" y="76" fill="#ffcc80" font-size="10" font-family="monospace">r</text>
+  <text x="70" y="148" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">A=πr²  C=2πr</text>
+  <!-- rectangle -->
+  <rect x="148" y="50" width="80" height="56" fill="#111820" stroke="#ffcc80" stroke-width="2"/>
+  <text x="182" y="74" text-anchor="middle" fill="#ffcc80" font-size="11" font-family="monospace">l</text>
+  <text x="196" y="90" text-anchor="middle" fill="#ffcc80" font-size="11" font-family="monospace">w</text>
+  <text x="188" y="122" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">A = l × w</text>
+  <!-- triangle -->
+  <polygon points="272,40 232,136 312,136" fill="#111820" stroke="#ffcc80" stroke-width="2"/>
+  <line x1="272" y1="40" x2="272" y2="136" stroke="#ffcc80" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="276" y="92" fill="#ffcc80" font-size="10" font-family="monospace">h</text>
+  <text x="268" y="148" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">A = ½bh</text>
+  <!-- cylinder 3D -->
+  <ellipse cx="368" cy="58" rx="30" ry="10" fill="#111820" stroke="#ffcc80" stroke-width="1.5"/>
+  <rect x="338" y="58" width="60" height="60" fill="#111820" stroke="#ffcc80" stroke-width="1.5"/>
+  <ellipse cx="368" cy="118" rx="30" ry="10" fill="#1a1810" stroke="#ffcc80" stroke-width="1.5"/>
+  <text x="368" y="148" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">V=πr²h</text>
+</svg>`
       },
       {
         title: 'The Pythagorean Theorem',
         body: `In a right triangle, a²+b²=c² where c is the hypotenuse. Conversely, if a²+b²=c² then the angle opposite c is 90°. Extensions: the distance formula in the plane is the Pythagorean theorem; the 3D distance is √(Δx²+Δy²+Δz²).`,
         practical: `Every 2D/3D distance calculation in software uses this theorem — pathfinding, collision detection, nearest-neighbour search. Surveyors use it to check right angles. It's foundational to the dot product definition.`,
-        formulas: ['a²+b²=c²', 'Distance: d=√((x₂-x₁)²+(y₂-y₁)²)', 'Pythagorean triples: 3-4-5, 5-12-13']
+        formulas: ['a²+b²=c²', 'Distance: d=√((x₂-x₁)²+(y₂-y₁)²)', 'Pythagorean triples: 3-4-5, 5-12-13'],
+        svg: `<svg viewBox="0 0 420 170" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="170" fill="#0d0d12" rx="8"/>
+  <!-- right triangle 3-4-5 scaled *20 -->
+  <polygon points="60,140 60,60 140,140" fill="#111820" stroke="#ffcc80" stroke-width="2"/>
+  <!-- right angle mark -->
+  <polyline points="60,120 80,120 80,140" fill="none" stroke="#ffcc80" stroke-width="1.5"/>
+  <!-- squares on each side -->
+  <!-- square on 'a' (vertical, 80 units) -->
+  <rect x="20" y="60" width="40" height="80" fill="#1a1608" stroke="#ffcc80" stroke-width="1.5" opacity="0.6"/>
+  <text x="40" y="103" text-anchor="middle" fill="#ffcc80" font-size="12" font-family="monospace">a²</text>
+  <!-- square on 'b' (horizontal, 80 units) -->
+  <rect x="60" y="140" width="80" height="40" fill="#1a1608" stroke="#ffcc80" stroke-width="1.5" opacity="0.6"/>
+  <text x="100" y="163" text-anchor="middle" fill="#ffcc80" font-size="12" font-family="monospace">b²</text>
+  <!-- square on hypotenuse c: ~100 units, rotated -->
+  <g transform="rotate(-36.87, 100, 100)">
+    <rect x="100" y="40" width="100" height="100" fill="#241a00" stroke="#ffcc80" stroke-width="1.5" opacity="0.5"/>
+    <text x="150" y="96" text-anchor="middle" fill="#ffcc80" font-size="14" font-family="monospace">c²</text>
+  </g>
+  <!-- labels -->
+  <text x="48" y="100" fill="#888" font-size="11" font-family="monospace">a</text>
+  <text x="95" y="155" fill="#888" font-size="11" font-family="monospace">b</text>
+  <!-- theorem -->
+  <rect x="285" y="35" width="120" height="80" rx="6" fill="#1a1608" stroke="#3a3010" stroke-width="1"/>
+  <text x="345" y="55" text-anchor="middle" fill="#ffcc80" font-size="14" font-weight="bold" font-family="monospace">a²+b²=c²</text>
+  <line x1="295" y1="63" x2="395" y2="63" stroke="#3a3010" stroke-width="1"/>
+  <text x="345" y="82" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">3-4-5 triangle:</text>
+  <text x="345" y="100" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">9 + 16 = 25 ✓</text>
+</svg>`
       },
       {
         title: 'Coordinate Geometry',
         body: `Cartesian coordinates assign ordered pairs (x,y) to points in a plane, bridging algebra and geometry. Lines, circles, and parabolas become equations. The midpoint formula and distance formula are direct applications of the Pythagorean theorem.`,
         practical: `Every computer screen is a coordinate system — pixels are integer (x,y) pairs. Mapping software (Google Maps) uses projected coordinate systems. Physics simulations track object positions as coordinate pairs.`,
-        formulas: ['Midpoint: ((x₁+x₂)/2, (y₁+y₂)/2)', 'Circle: (x-h)²+(y-k)²=r²']
+        formulas: ['Midpoint: ((x₁+x₂)/2, (y₁+y₂)/2)', 'Circle: (x-h)²+(y-k)²=r²'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- grid -->
+  <line x1="20" y1="80" x2="270" y2="80" stroke="#222" stroke-width="1"/>
+  <line x1="20" y1="40" x2="270" y2="40" stroke="#1a1a1a" stroke-width="1"/>
+  <line x1="20" y1="120" x2="270" y2="120" stroke="#1a1a1a" stroke-width="1"/>
+  <line x1="80" y1="10" x2="80" y2="150" stroke="#1a1a1a" stroke-width="1"/>
+  <line x1="140" y1="10" x2="140" y2="150" stroke="#1a1a1a" stroke-width="1"/>
+  <line x1="200" y1="10" x2="200" y2="150" stroke="#1a1a1a" stroke-width="1"/>
+  <!-- axes -->
+  <line x1="20" y1="80" x2="270" y2="80" stroke="#333" stroke-width="1.5"/>
+  <line x1="140" y1="10" x2="140" y2="150" stroke="#333" stroke-width="1.5"/>
+  <text x="273" y="84" fill="#555" font-size="10" font-family="monospace">x</text>
+  <text x="143" y="8" fill="#555" font-size="10" font-family="monospace">y</text>
+  <!-- tick labels -->
+  <text x="78" y="92" fill="#444" font-size="9" font-family="monospace">−1</text>
+  <text x="198" y="92" fill="#444" font-size="9" font-family="monospace">1</text>
+  <!-- two points -->
+  <circle cx="80" cy="40" r="5" fill="#ffcc80"/>
+  <text x="56" y="36" fill="#ffcc80" font-size="10" font-family="monospace">A(−1,1)</text>
+  <circle cx="200" cy="120" r="5" fill="#ffcc80"/>
+  <text x="204" y="124" fill="#ffcc80" font-size="10" font-family="monospace">B(1,−1)</text>
+  <!-- line between them -->
+  <line x1="80" y1="40" x2="200" y2="120" stroke="#ffcc80" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <!-- midpoint -->
+  <circle cx="140" cy="80" r="4" fill="#fff" stroke="#ffcc80" stroke-width="1.5"/>
+  <text x="144" y="72" fill="#fff" font-size="9" font-family="monospace">M(0,0)</text>
+  <!-- distance formula panel -->
+  <rect x="285" y="20" width="125" height="110" rx="6" fill="#1a1608" stroke="#3a3010" stroke-width="1"/>
+  <text x="347" y="38" text-anchor="middle" fill="#ffcc80" font-size="10" font-family="monospace">Distance</text>
+  <text x="347" y="56" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">d=√(Δx²+Δy²)</text>
+  <line x1="295" y1="64" x2="400" y2="64" stroke="#3a3010" stroke-width="1"/>
+  <text x="347" y="82" text-anchor="middle" fill="#ffcc80" font-size="10" font-family="monospace">Midpoint</text>
+  <text x="347" y="100" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">M=((x₁+x₂)/2,</text>
+  <text x="347" y="116" text-anchor="middle" fill="#888" font-size="9" font-family="monospace"> (y₁+y₂)/2)</text>
+</svg>`
       }
     ]
   },
@@ -455,25 +801,127 @@ const CURRICULUM = [
         title: 'The Unit Circle & Radian Measure',
         body: `Radians measure angles as arc length on a unit circle (radius = 1). 2π radians = 360°. The unit circle maps every angle θ to a point (cos θ, sin θ). Radians are dimensionless and natural — calculus derivatives of trig functions are clean only in radians.`,
         practical: `Radians are used in every physics and engineering formula involving rotation — angular velocity ω (rad/s), torque, and wave equations. All programming languages' math libraries expect radians.`,
-        formulas: ['θ(rad) = θ(°)×π/180', 'Arc length: s = rθ', 'Unit circle: x=cosθ, y=sinθ']
+        formulas: ['θ(rad) = θ(°)×π/180', 'Arc length: s = rθ', 'Unit circle: x=cosθ, y=sinθ'],
+        svg: `<svg viewBox="0 0 420 170" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="170" fill="#0d0d12" rx="8"/>
+  <!-- unit circle -->
+  <circle cx="110" cy="88" r="68" fill="#110a0a" stroke="#333" stroke-width="1"/>
+  <!-- axes through circle -->
+  <line x1="36" y1="88" x2="184" y2="88" stroke="#333" stroke-width="1.2"/>
+  <line x1="110" y1="16" x2="110" y2="160" stroke="#333" stroke-width="1.2"/>
+  <!-- radius at ~45° -->
+  <line x1="110" y1="88" x2="158" y2="40" stroke="#ef9a9a" stroke-width="2"/>
+  <!-- angle arc -->
+  <path d="M130,88 A20,20 0 0,0 124,71" fill="none" stroke="#ef9a9a" stroke-width="1.5"/>
+  <text x="136" y="82" fill="#ef9a9a" font-size="11" font-family="monospace">θ</text>
+  <!-- point on circle -->
+  <circle cx="158" cy="40" r="4" fill="#ef9a9a"/>
+  <!-- cos and sin projections -->
+  <line x1="110" y1="40" x2="158" y2="40" stroke="#ef9a9a" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="158" y1="40" x2="158" y2="88" stroke="#ef9a9a" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="130" y="36" fill="#ef9a9a" font-size="10" font-family="monospace">sinθ</text>
+  <text x="160" y="68" fill="#ef9a9a" font-size="10" font-family="monospace">cosθ</text>
+  <!-- label radius=1 -->
+  <text x="125" y="63" fill="#888" font-size="10" font-family="monospace">r=1</text>
+  <!-- key angles panel -->
+  <rect x="200" y="15" width="210" height="140" rx="6" fill="#170a0a" stroke="#2a1010" stroke-width="1"/>
+  <text x="305" y="33" text-anchor="middle" fill="#ef9a9a" font-size="11" font-family="monospace">Key Angles</text>
+  <line x1="210" y1="40" x2="400" y2="40" stroke="#2a1010" stroke-width="1"/>
+  <text x="222" y="57" fill="#888" font-size="10" font-family="monospace">Degrees</text><text x="308" y="57" fill="#888" font-size="10" font-family="monospace">Radians</text><text x="370" y="57" fill="#888" font-size="10" font-family="monospace">sin / cos</text>
+  <text x="222" y="74" fill="#ccc" font-size="10" font-family="monospace">0°</text><text x="308" y="74" fill="#ccc" font-size="10" font-family="monospace">0</text><text x="370" y="74" fill="#ef9a9a" font-size="10" font-family="monospace">0 / 1</text>
+  <text x="222" y="91" fill="#ccc" font-size="10" font-family="monospace">30°</text><text x="308" y="91" fill="#ccc" font-size="10" font-family="monospace">π/6</text><text x="370" y="91" fill="#ef9a9a" font-size="10" font-family="monospace">½ / √3/2</text>
+  <text x="222" y="108" fill="#ccc" font-size="10" font-family="monospace">45°</text><text x="308" y="108" fill="#ccc" font-size="10" font-family="monospace">π/4</text><text x="370" y="108" fill="#ef9a9a" font-size="10" font-family="monospace">√2/2</text>
+  <text x="222" y="125" fill="#ccc" font-size="10" font-family="monospace">90°</text><text x="308" y="125" fill="#ccc" font-size="10" font-family="monospace">π/2</text><text x="370" y="125" fill="#ef9a9a" font-size="10" font-family="monospace">1 / 0</text>
+  <text x="222" y="142" fill="#ccc" font-size="10" font-family="monospace">180°</text><text x="308" y="142" fill="#ccc" font-size="10" font-family="monospace">π</text><text x="370" y="142" fill="#ef9a9a" font-size="10" font-family="monospace">0 / −1</text>
+</svg>`
       },
       {
         title: 'Sine, Cosine & Tangent',
         body: `In a right triangle: sin = opposite/hypotenuse, cos = adjacent/hypotenuse, tan = opposite/adjacent (SOH-CAH-TOA). As functions of a continuous angle, they produce smooth periodic waves — sin completes a full cycle every 2π.`,
         practical: `Audio processing, alternating current (AC circuits), and signal analysis all describe waves with sin and cos. The amplitude, frequency, and phase of a sinusoidal wave directly correspond to A·sin(ωt + φ).`,
-        formulas: ['sin²θ + cos²θ = 1', 'tan θ = sin θ / cos θ', 'SOHCAHTOA']
+        formulas: ['sin²θ + cos²θ = 1', 'tan θ = sin θ / cos θ', 'SOHCAHTOA'],
+        svg: `<svg viewBox="0 0 420 170" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="170" fill="#0d0d12" rx="8"/>
+  <!-- right triangle SOH-CAH-TOA -->
+  <polygon points="40,140 40,40 200,140" fill="#170a0a" stroke="#ef9a9a" stroke-width="2"/>
+  <!-- right angle box -->
+  <polyline points="40,120 60,120 60,140" fill="none" stroke="#ef9a9a" stroke-width="1.5"/>
+  <!-- labels -->
+  <text x="28" y="92" fill="#ef9a9a" font-size="11" font-family="monospace">Opp</text>
+  <text x="110" y="155" text-anchor="middle" fill="#ef9a9a" font-size="11" font-family="monospace">Adjacent</text>
+  <text x="108" y="82" fill="#ef9a9a" font-size="11" font-family="monospace" transform="rotate(-27,108,82)">Hypotenuse</text>
+  <!-- angle theta at bottom right -->
+  <path d="M180,140 A22,22 0 0,0 166,118" fill="none" stroke="#ef9a9a" stroke-width="1.5"/>
+  <text x="170" y="130" fill="#ef9a9a" font-size="12" font-family="monospace">θ</text>
+  <!-- SOH CAH TOA panel -->
+  <rect x="225" y="15" width="185" height="135" rx="6" fill="#170a0a" stroke="#2a1010" stroke-width="1"/>
+  <text x="317" y="33" text-anchor="middle" fill="#ef9a9a" font-size="12" font-weight="bold" font-family="monospace">SOH·CAH·TOA</text>
+  <line x1="235" y1="40" x2="400" y2="40" stroke="#2a1010" stroke-width="1"/>
+  <text x="317" y="62" text-anchor="middle" fill="#888" font-size="11" font-family="monospace">sin θ = Opp / Hyp</text>
+  <text x="317" y="82" text-anchor="middle" fill="#888" font-size="11" font-family="monospace">cos θ = Adj / Hyp</text>
+  <text x="317" y="102" text-anchor="middle" fill="#888" font-size="11" font-family="monospace">tan θ = Opp / Adj</text>
+  <line x1="235" y1="112" x2="400" y2="112" stroke="#2a1010" stroke-width="1"/>
+  <text x="317" y="130" text-anchor="middle" fill="#ef9a9a" font-size="11" font-family="monospace">sin²θ + cos²θ = 1</text>
+</svg>`
       },
       {
         title: 'Trigonometric Identities',
         body: `Identities are equations true for all valid inputs. Sum-to-product and product-to-sum formulas transform expressions. The double-angle formulas sin(2θ)=2sinθcosθ and cos(2θ)=cos²θ-sin²θ appear constantly in calculus and physics.`,
         practical: `In signal processing, product-to-sum identities are used in amplitude modulation (AM radio). In calculus, identities simplify integrals that would otherwise be intractable.`,
-        formulas: ['sin(A±B)=sinAcosB±cosAsinB', 'cos(2θ)=cos²θ-sin²θ=1-2sin²θ', 'tan(A+B)=(tanA+tanB)/(1-tanAtanB)']
+        formulas: ['sin(A±B)=sinAcosB±cosAsinB', 'cos(2θ)=cos²θ-sin²θ=1-2sin²θ', 'tan(A+B)=(tanA+tanB)/(1-tanAtanB)'],
+        svg: `<svg viewBox="0 0 420 150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="150" fill="#0d0d12" rx="8"/>
+  <!-- sine wave -->
+  <line x1="20" y1="75" x2="280" y2="75" stroke="#333" stroke-width="1.2"/>
+  <polyline points="20,75 40,40 60,75 80,110 100,75 120,40 140,75 160,110 180,75 200,40 220,75 240,110 260,75 280,40" fill="none" stroke="#ef9a9a" stroke-width="2.2" stroke-linejoin="round"/>
+  <!-- amplitude annotation -->
+  <line x1="20" y1="75" x2="20" y2="40" stroke="#888" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="6" y="58" fill="#888" font-size="9" font-family="monospace">A</text>
+  <!-- period annotation -->
+  <line x1="20" y1="120" x2="100" y2="120" stroke="#888" stroke-width="1"/>
+  <line x1="20" y1="116" x2="20" y2="124" stroke="#888" stroke-width="1"/>
+  <line x1="100" y1="116" x2="100" y2="124" stroke="#888" stroke-width="1"/>
+  <text x="56" y="134" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">T = 2π/ω</text>
+  <!-- formula label -->
+  <text x="150" y="18" text-anchor="middle" fill="#ef9a9a" font-size="11" font-family="monospace">y = A·sin(ωt + φ)</text>
+  <!-- identity panel -->
+  <rect x="295" y="15" width="115" height="115" rx="6" fill="#170a0a" stroke="#2a1010" stroke-width="1"/>
+  <text x="352" y="32" text-anchor="middle" fill="#ef9a9a" font-size="10" font-family="monospace">Identities</text>
+  <line x1="305" y1="38" x2="400" y2="38" stroke="#2a1010" stroke-width="1"/>
+  <text x="352" y="54" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">sin²+cos²=1</text>
+  <text x="352" y="70" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">sin(2θ)=2sinθcosθ</text>
+  <text x="352" y="86" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">cos(2θ)=1−2sin²θ</text>
+  <text x="352" y="102" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">sin(A+B)=</text>
+  <text x="352" y="116" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">sinAcosB+cosAsinB</text>
+</svg>`
       },
       {
         title: 'Laws of Sines & Cosines',
         body: `The Law of Sines relates sides and angles of any triangle: a/sinA = b/sinB = c/sinC. The Law of Cosines generalises the Pythagorean theorem: c²=a²+b²-2ab·cosC. Together they solve any triangle given sufficient information.`,
         practical: `Surveying and navigation use these laws constantly. GPS receivers use them in triangulation. 3D rendering engines compute lighting with the dot product, which is derived from the Law of Cosines.`,
-        formulas: ['a/sinA = b/sinB = c/sinC', 'c² = a²+b²-2ab·cosC']
+        formulas: ['a/sinA = b/sinB = c/sinC', 'c² = a²+b²-2ab·cosC'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- general triangle -->
+  <polygon points="100,20 20,140 230,140" fill="#170a0a" stroke="#ef9a9a" stroke-width="2"/>
+  <!-- angle labels -->
+  <text x="90" y="16" fill="#ef9a9a" font-size="12" font-family="monospace">A</text>
+  <text x="8" y="148" fill="#ef9a9a" font-size="12" font-family="monospace">B</text>
+  <text x="228" y="152" fill="#ef9a9a" font-size="12" font-family="monospace">C</text>
+  <!-- side labels -->
+  <text x="52" y="86" fill="#888" font-size="11" font-family="monospace" transform="rotate(-58,52,86)">a</text>
+  <text x="172" y="75" fill="#888" font-size="11" font-family="monospace" transform="rotate(25,172,75)">b</text>
+  <text x="122" y="152" text-anchor="middle" fill="#888" font-size="11" font-family="monospace">c</text>
+  <!-- law panels -->
+  <rect x="250" y="15" width="160" height="60" rx="6" fill="#170a0a" stroke="#2a1010" stroke-width="1"/>
+  <text x="330" y="32" text-anchor="middle" fill="#ef9a9a" font-size="10" font-family="monospace">Law of Sines</text>
+  <text x="330" y="52" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">a/sinA = b/sinB = c/sinC</text>
+  <text x="330" y="68" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">(ratios equal circumradius×2)</text>
+  <rect x="250" y="88" width="160" height="60" rx="6" fill="#170a0a" stroke="#2a1010" stroke-width="1"/>
+  <text x="330" y="105" text-anchor="middle" fill="#ef9a9a" font-size="10" font-family="monospace">Law of Cosines</text>
+  <text x="330" y="124" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">c²=a²+b²−2ab·cosC</text>
+  <text x="330" y="140" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">(Pythagoras when C=90°)</text>
+</svg>`
       }
     ]
   },
@@ -485,25 +933,127 @@ const CURRICULUM = [
         title: 'Functions & Their Graphs',
         body: `A function maps each input to exactly one output. Key concepts: domain (valid inputs), range (possible outputs), composition f(g(x)), and inverse f⁻¹. Transformations — shifting, reflecting, scaling — modify the graph predictably.`,
         practical: `Every computation is a function call. A compiler maps source code → machine code. A hash function maps a key → bucket index. Understanding function composition is essential for understanding how pipelines and middleware chains work.`,
-        formulas: ['(f∘g)(x) = f(g(x))', 'f⁻¹(f(x)) = x', 'Even: f(-x)=f(x), Odd: f(-x)=-f(x)']
+        formulas: ['(f∘g)(x) = f(g(x))', 'f⁻¹(f(x)) = x', 'Even: f(-x)=f(x), Odd: f(-x)=-f(x)'],
+        svg: `<svg viewBox="0 0 420 150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="150" fill="#0d0d12" rx="8"/>
+  <!-- Domain oval -->
+  <ellipse cx="80" cy="75" rx="55" ry="55" fill="#0f0a18" stroke="#ce93d8" stroke-width="1.5"/>
+  <text x="80" y="22" text-anchor="middle" fill="#ce93d8" font-size="10" font-family="monospace">Domain</text>
+  <!-- input points -->
+  <circle cx="80" cy="50" r="3" fill="#ce93d8"/><text x="88" y="54" fill="#ccc" font-size="10" font-family="monospace">x₁</text>
+  <circle cx="65" cy="75" r="3" fill="#ce93d8"/><text x="73" y="79" fill="#ccc" font-size="10" font-family="monospace">x₂</text>
+  <circle cx="85" cy="100" r="3" fill="#ce93d8"/><text x="93" y="104" fill="#ccc" font-size="10" font-family="monospace">x₃</text>
+  <!-- function box -->
+  <rect x="152" y="55" width="80" height="40" rx="8" fill="#1a0f28" stroke="#ce93d8" stroke-width="2"/>
+  <text x="192" y="80" text-anchor="middle" fill="#ce93d8" font-size="14" font-weight="bold" font-family="monospace">f(x)</text>
+  <!-- Range oval -->
+  <ellipse cx="340" cy="75" rx="55" ry="55" fill="#0f0a18" stroke="#ce93d8" stroke-width="1.5"/>
+  <text x="340" y="22" text-anchor="middle" fill="#ce93d8" font-size="10" font-family="monospace">Range</text>
+  <!-- output points -->
+  <circle cx="330" cy="50" r="3" fill="#ce93d8"/><text x="338" y="54" fill="#ccc" font-size="10" font-family="monospace">y₁</text>
+  <circle cx="316" cy="75" r="3" fill="#ce93d8"/><text x="324" y="79" fill="#ccc" font-size="10" font-family="monospace">y₂</text>
+  <circle cx="335" cy="100" r="3" fill="#ce93d8"/><text x="343" y="104" fill="#ccc" font-size="10" font-family="monospace">y₃</text>
+  <!-- arrows -->
+  <line x1="108" y1="50" x2="152" y2="68" stroke="#ce93d8" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="108" y1="75" x2="152" y2="75" stroke="#ce93d8" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="108" y1="100" x2="152" y2="82" stroke="#ce93d8" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="232" y1="68" x2="276" y2="50" stroke="#ce93d8" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="232" y1="75" x2="276" y2="75" stroke="#ce93d8" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="232" y1="82" x2="276" y2="100" stroke="#ce93d8" stroke-width="1.2" marker-end="url(#arr)"/>
+  <defs><marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ce93d8"/></marker></defs>
+  <!-- label -->
+  <text x="192" y="138" text-anchor="middle" fill="#555" font-size="10" font-family="monospace">each input maps to exactly one output</text>
+</svg>`
       },
       {
         title: 'Exponentials & Logarithms',
         body: `Exponential functions bˣ model growth and decay. The natural base e ≈ 2.718 arises naturally wherever a quantity's rate of change is proportional to its value. Logarithms are inverses of exponentials: logb(x) = y ↔ bʸ = x. The change-of-base formula connects any two bases.`,
         practical: `Compound interest uses eʳᵗ (continuous) or (1+r/n)ⁿᵗ (discrete). Database B-trees have height O(log n). Signal decibels use log₁₀. The Richter scale and pH are logarithmic. Big-O notation's log n means log₂ in CS.`,
-        formulas: ['ln(ab)=ln(a)+ln(b)', 'logb(x) = ln(x)/ln(b)', 'eˣ = 1 + x + x²/2! + ...']
+        formulas: ['ln(ab)=ln(a)+ln(b)', 'logb(x) = ln(x)/ln(b)', 'eˣ = 1 + x + x²/2! + ...'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <line x1="20" y1="130" x2="210" y2="130" stroke="#333" stroke-width="1.5"/>
+  <line x1="30" y1="10" x2="30" y2="140" stroke="#333" stroke-width="1.5"/>
+  <text x="213" y="134" fill="#555" font-size="10" font-family="monospace">x</text>
+  <text x="33" y="8" fill="#555" font-size="10" font-family="monospace">y</text>
+  <!-- eˣ curve (exponential): rises steeply -->
+  <polyline points="30,130 60,128 90,122 110,112 130,96 145,76 158,52 168,26" fill="none" stroke="#ce93d8" stroke-width="2.2" stroke-linejoin="round"/>
+  <text x="170" y="24" fill="#ce93d8" font-size="11" font-family="monospace">eˣ</text>
+  <!-- ln curve: starts at (1,0) goes up slowly -->
+  <polyline points="30,130 50,114 70,103 90,95 110,89 130,84 150,80 170,76 190,73" fill="none" stroke="#80cbc4" stroke-width="2.2" stroke-linejoin="round"/>
+  <text x="192" y="76" fill="#80cbc4" font-size="11" font-family="monospace">ln x</text>
+  <!-- mirror line y=x -->
+  <line x1="30" y1="130" x2="185" y2="10" stroke="#333" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="140" y="30" fill="#444" font-size="9" font-family="monospace">y=x</text>
+  <!-- inverse annotation -->
+  <text x="105" y="148" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">eˣ and ln(x) are inverses — mirror in y=x</text>
+  <!-- key panel -->
+  <rect x="228" y="15" width="182" height="110" rx="6" fill="#170a18" stroke="#2a102a" stroke-width="1"/>
+  <text x="319" y="33" text-anchor="middle" fill="#ce93d8" font-size="10" font-family="monospace">Exponential Laws</text>
+  <line x1="238" y1="40" x2="400" y2="40" stroke="#2a102a" stroke-width="1"/>
+  <text x="319" y="58" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">eᵃeᵇ = eᵃ⁺ᵇ</text>
+  <text x="319" y="76" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">ln(ab) = ln a + ln b</text>
+  <text x="319" y="94" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">logb(x) = ln x / ln b</text>
+  <text x="319" y="112" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">e ≈ 2.71828...</text>
+</svg>`
       },
       {
         title: 'Sequences & Series',
         body: `A sequence is an ordered list of numbers. An arithmetic sequence adds a constant difference d; a geometric sequence multiplies by constant ratio r. A series is the sum of a sequence. Infinite geometric series converge when |r| < 1.`,
         practical: `Loan amortisation schedules are arithmetic/geometric series. Recursive algorithms have complexity described by recurrence relations (sequences). The binary search running time is T(n) = T(n/2) + 1 — a geometric series whose closed form is O(log n).`,
-        formulas: ['Arithmetic sum: n/2×(a₁+aₙ)', 'Geometric sum: a₁×(1-rⁿ)/(1-r)', 'Infinite geo: a/(1-r) if |r|<1']
+        formulas: ['Arithmetic sum: n/2×(a₁+aₙ)', 'Geometric sum: a₁×(1-rⁿ)/(1-r)', 'Infinite geo: a/(1-r) if |r|<1'],
+        svg: `<svg viewBox="0 0 420 150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="150" fill="#0d0d12" rx="8"/>
+  <!-- arithmetic sequence bars (constant height difference) -->
+  <text x="105" y="18" text-anchor="middle" fill="#ce93d8" font-size="10" font-family="monospace">Arithmetic (+4 each)</text>
+  <rect x="20" y="100" width="24" height="30" fill="#ce93d8" opacity="0.5"/><text x="32" y="96" text-anchor="middle" fill="#ccc" font-size="9" font-family="monospace">2</text>
+  <rect x="50" y="84" width="24" height="46" fill="#ce93d8" opacity="0.6"/><text x="62" y="80" text-anchor="middle" fill="#ccc" font-size="9" font-family="monospace">6</text>
+  <rect x="80" y="68" width="24" height="62" fill="#ce93d8" opacity="0.7"/><text x="92" y="64" text-anchor="middle" fill="#ccc" font-size="9" font-family="monospace">10</text>
+  <rect x="110" y="52" width="24" height="78" fill="#ce93d8" opacity="0.8"/><text x="122" y="48" text-anchor="middle" fill="#ccc" font-size="9" font-family="monospace">14</text>
+  <rect x="140" y="36" width="24" height="94" fill="#ce93d8" opacity="0.9"/><text x="152" y="32" text-anchor="middle" fill="#ccc" font-size="9" font-family="monospace">18</text>
+  <line x1="20" y1="130" x2="190" y2="130" stroke="#333" stroke-width="1"/>
+  <!-- geometric sequence bars (×0.5 each) -->
+  <text x="315" y="18" text-anchor="middle" fill="#80cbc4" font-size="10" font-family="monospace">Geometric (×½ each)</text>
+  <rect x="230" y="50" width="28" height="80" fill="#80cbc4" opacity="0.9"/><text x="244" y="46" text-anchor="middle" fill="#ccc" font-size="9" font-family="monospace">80</text>
+  <rect x="264" y="90" width="28" height="40" fill="#80cbc4" opacity="0.8"/><text x="278" y="86" text-anchor="middle" fill="#ccc" font-size="9" font-family="monospace">40</text>
+  <rect x="298" y="110" width="28" height="20" fill="#80cbc4" opacity="0.7"/><text x="312" y="106" text-anchor="middle" fill="#ccc" font-size="9" font-family="monospace">20</text>
+  <rect x="332" y="120" width="28" height="10" fill="#80cbc4" opacity="0.6"/><text x="346" y="116" text-anchor="middle" fill="#ccc" font-size="9" font-family="monospace">10</text>
+  <rect x="366" y="125" width="28" height="5" fill="#80cbc4" opacity="0.5"/><text x="380" y="121" text-anchor="middle" fill="#ccc" font-size="9" font-family="monospace">5</text>
+  <line x1="230" y1="130" x2="410" y2="130" stroke="#333" stroke-width="1"/>
+  <text x="210" y="148" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">converges to 160</text>
+</svg>`
       },
       {
         title: 'Limits',
         body: `A limit describes the value a function approaches as x approaches a point, without needing to evaluate at that point. lim(x→c) f(x) = L means f(x) gets arbitrarily close to L. Limits formalise the intuition behind calculus and handle discontinuities.`,
         practical: `Limits underpin every numerical algorithm that converges — gradient descent, Newton's method, iterative solvers. The definition of a derivative is a limit. Understanding limits is why a 0/0 form from L'Hôpital's rule gives a useful answer.`,
-        formulas: ['lim(x→0) sinx/x = 1', 'lim(x→∞)(1+1/x)ˣ = e', 'L\'Hôpital: lim f/g = lim f\'/g\'']
+        formulas: ['lim(x→0) sinx/x = 1', 'lim(x→∞)(1+1/x)ˣ = e', 'L\'Hôpital: lim f/g = lim f\'/g\''],
+        svg: `<svg viewBox="0 0 420 150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="150" fill="#0d0d12" rx="8"/>
+  <line x1="20" y1="100" x2="250" y2="100" stroke="#333" stroke-width="1.5"/>
+  <line x1="40" y1="15" x2="40" y2="110" stroke="#333" stroke-width="1.5"/>
+  <!-- curve sin(x)/x approaching 1 as x→0 -->
+  <polyline points="42,100 60,60 80,44 100,38 120,36 140,37 160,40 180,45 200,52 220,60 240,68" fill="none" stroke="#ce93d8" stroke-width="2" stroke-linejoin="round"/>
+  <!-- horizontal dashed line at L=1 (y=36) -->
+  <line x1="20" y1="36" x2="250" y2="36" stroke="#666" stroke-width="1" stroke-dasharray="5,4"/>
+  <text x="254" y="40" fill="#666" font-size="10" font-family="monospace">L = 1</text>
+  <!-- arrows converging from both sides to x=0 -->
+  <text x="136" y="14" text-anchor="middle" fill="#555" font-size="10" font-family="monospace">sin(x)/x → 1 as x → 0</text>
+  <!-- hole at x=0 (x=40 in SVG) -->
+  <circle cx="40" cy="36" r="5" fill="#0d0d12" stroke="#ce93d8" stroke-width="2"/>
+  <text x="30" y="30" fill="#ce93d8" font-size="9" font-family="monospace">hole</text>
+  <!-- arrow annotations -->
+  <text x="26" y="112" fill="#888" font-size="9" font-family="monospace">0</text>
+  <!-- limit panel -->
+  <rect x="268" y="15" width="142" height="115" rx="6" fill="#170a18" stroke="#2a102a" stroke-width="1"/>
+  <text x="339" y="33" text-anchor="middle" fill="#ce93d8" font-size="10" font-family="monospace">Limit Definition</text>
+  <line x1="278" y1="40" x2="400" y2="40" stroke="#2a102a" stroke-width="1"/>
+  <text x="339" y="58" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">lim f(x) = L</text>
+  <text x="339" y="72" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">x → c</text>
+  <text x="339" y="90" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">f(x) gets arbitrarily</text>
+  <text x="339" y="104" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">close to L as x→c</text>
+  <text x="339" y="122" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">(never needs f(c))</text>
+</svg>`
       }
     ]
   },
@@ -515,25 +1065,137 @@ const CURRICULUM = [
         title: 'The Derivative',
         body: `The derivative f'(x) is the instantaneous rate of change of f at x — defined as the limit of the difference quotient: f'(x) = lim(h→0) [f(x+h) - f(x)] / h. Geometrically it is the slope of the tangent line to the curve at that point.`,
         practical: `Velocity is the derivative of position with respect to time. Current is the derivative of charge. In machine learning, the gradient of the loss function is a vector of partial derivatives, used to update weights during backpropagation.`,
-        formulas: ['f\'(x) = lim(h→0)[f(x+h)-f(x)]/h', 'd/dx[xⁿ]=nxⁿ⁻¹', 'd/dx[eˣ]=eˣ', 'd/dx[sinx]=cosx']
+        formulas: ['f\'(x) = lim(h→0)[f(x+h)-f(x)]/h', 'd/dx[xⁿ]=nxⁿ⁻¹', 'd/dx[eˣ]=eˣ', 'd/dx[sinx]=cosx'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <line x1="20" y1="130" x2="250" y2="130" stroke="#333" stroke-width="1.5"/>
+  <line x1="40" y1="10" x2="40" y2="140" stroke="#333" stroke-width="1.5"/>
+  <!-- curve y = x² roughly -->
+  <polyline points="40,130 70,120 100,100 130,72 160,36 185,14" fill="none" stroke="#80deea" stroke-width="2.2" stroke-linejoin="round"/>
+  <!-- tangent line at x=100 (point ~(100,100)) slope ~2 -->
+  <line x1="60" y1="140" x2="190" y2="10" stroke="#80deea" stroke-width="1.5" stroke-dasharray="5,4" opacity="0.8"/>
+  <!-- point of tangency -->
+  <circle cx="100" cy="100" r="5" fill="#80deea"/>
+  <text x="104" y="96" fill="#80deea" font-size="10" font-family="monospace">(x, f(x))</text>
+  <!-- secant h annotation -->
+  <line x1="100" y1="100" x2="130" y2="100" stroke="#666" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="130" y1="100" x2="130" y2="72" stroke="#666" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="114" y="115" fill="#555" font-size="9" font-family="monospace">h</text>
+  <text x="133" y="88" fill="#555" font-size="9" font-family="monospace">Δy</text>
+  <!-- tangent label -->
+  <text x="192" y="14" fill="#80deea" font-size="9" font-family="monospace">tangent line</text>
+  <text x="192" y="26" fill="#80deea" font-size="9" font-family="monospace">slope = f'(x)</text>
+  <!-- formula panel -->
+  <rect x="268" y="20" width="142" height="110" rx="6" fill="#081618" stroke="#103030" stroke-width="1"/>
+  <text x="339" y="38" text-anchor="middle" fill="#80deea" font-size="10" font-family="monospace">Power Rule</text>
+  <line x1="278" y1="44" x2="400" y2="44" stroke="#103030" stroke-width="1"/>
+  <text x="339" y="62" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">d/dx[xⁿ] = nxⁿ⁻¹</text>
+  <text x="339" y="80" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">x² → 2x</text>
+  <text x="339" y="96" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">x³ → 3x²</text>
+  <text x="339" y="112" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">eˣ → eˣ</text>
+  <text x="339" y="124" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">sin x → cos x</text>
+</svg>`
       },
       {
         title: 'Differentiation Rules',
         body: `Rules eliminate the need to evaluate the limit every time. The product rule, quotient rule, and chain rule handle compound expressions. The chain rule d/dx[f(g(x))] = f'(g(x))·g'(x) is the most important — it governs how derivatives propagate through composed functions.`,
         practical: `Automatic differentiation in deep learning frameworks (TensorFlow, PyTorch) applies the chain rule symbolically through computational graphs. Backpropagation is literally repeated application of the chain rule from output to input.`,
-        formulas: ['Product: (fg)\'=f\'g+fg\'', 'Quotient: (f/g)\'=(f\'g-fg\')/g²', 'Chain: (f∘g)\'=f\'(g)·g\'']
+        formulas: ['Product: (fg)\'=f\'g+fg\'', 'Quotient: (f/g)\'=(f\'g-fg\')/g²', 'Chain: (f∘g)\'=f\'(g)·g\''],
+        svg: `<svg viewBox="0 0 420 150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="150" fill="#0d0d12" rx="8"/>
+  <!-- chain rule diagram: x → g → u → f → y -->
+  <circle cx="40" cy="75" r="18" fill="#081618" stroke="#80deea" stroke-width="1.5"/>
+  <text x="40" y="79" text-anchor="middle" fill="#80deea" font-size="11" font-family="monospace">x</text>
+  <line x1="58" y1="75" x2="95" y2="75" stroke="#80deea" stroke-width="1.5" marker-end="url(#da)"/>
+  <rect x="100" y="58" width="56" height="34" rx="8" fill="#0f2020" stroke="#80deea" stroke-width="1.5"/>
+  <text x="128" y="79" text-anchor="middle" fill="#80deea" font-size="13" font-weight="bold" font-family="monospace">g</text>
+  <line x1="156" y1="75" x2="195" y2="75" stroke="#80deea" stroke-width="1.5" marker-end="url(#da)"/>
+  <circle cx="210" cy="75" r="18" fill="#081618" stroke="#80deea" stroke-width="1.5"/>
+  <text x="210" y="79" text-anchor="middle" fill="#80deea" font-size="11" font-family="monospace">u</text>
+  <line x1="228" y1="75" x2="267" y2="75" stroke="#80deea" stroke-width="1.5" marker-end="url(#da)"/>
+  <rect x="272" y="58" width="56" height="34" rx="8" fill="#0f2020" stroke="#80deea" stroke-width="1.5"/>
+  <text x="300" y="79" text-anchor="middle" fill="#80deea" font-size="13" font-weight="bold" font-family="monospace">f</text>
+  <line x1="328" y1="75" x2="367" y2="75" stroke="#80deea" stroke-width="1.5" marker-end="url(#da)"/>
+  <circle cx="382" cy="75" r="18" fill="#081618" stroke="#80deea" stroke-width="1.5"/>
+  <text x="382" y="79" text-anchor="middle" fill="#80deea" font-size="11" font-family="monospace">y</text>
+  <defs><marker id="da" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#80deea"/></marker></defs>
+  <!-- labels under arrows -->
+  <text x="77" y="68" fill="#555" font-size="9" font-family="monospace">g'(x)</text>
+  <text x="175" y="68" fill="#555" font-size="9" font-family="monospace">du</text>
+  <text x="247" y="68" fill="#555" font-size="9" font-family="monospace">f'(u)</text>
+  <text x="347" y="68" fill="#555" font-size="9" font-family="monospace">dy</text>
+  <!-- chain rule formula -->
+  <rect x="60" y="108" width="300" height="32" rx="6" fill="#0f2020" stroke="#103030" stroke-width="1"/>
+  <text x="210" y="128" text-anchor="middle" fill="#80deea" font-size="13" font-family="monospace">dy/dx = f'(g(x)) · g'(x)</text>
+</svg>`
       },
       {
         title: 'Optimisation',
         body: `A function has a local extremum where f'(x) = 0 (critical point). The second derivative test confirms: f''(x) > 0 means local minimum, f''(x) < 0 means local maximum. Optimisation is finding the input that maximises or minimises an output.`,
         practical: `Engineering design optimises material use, strength-to-weight ratio, or cost. Machine learning minimises a loss function. Resource allocation in operating systems and logistics planning all reduce to constrained optimisation.`,
-        formulas: ['Critical pts: f\'(x)=0', 'f\'\'(x)>0 → min, f\'\'(x)<0 → max', 'Concavity changes at inflection pts']
+        formulas: ['Critical pts: f\'(x)=0', 'f\'\'(x)>0 → min, f\'\'(x)<0 → max', 'Concavity changes at inflection pts'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <line x1="20" y1="120" x2="290" y2="120" stroke="#333" stroke-width="1.5"/>
+  <line x1="40" y1="10" x2="40" y2="130" stroke="#333" stroke-width="1.5"/>
+  <!-- curve with local max and min -->
+  <polyline points="40,100 70,60 100,40 130,50 160,90 190,70 220,30 250,80 280,120" fill="none" stroke="#80deea" stroke-width="2.2" stroke-linejoin="round"/>
+  <!-- local max at ~x=100,y=40 -->
+  <circle cx="100" cy="40" r="5" fill="#a5d6a7"/>
+  <text x="96" y="30" fill="#a5d6a7" font-size="9" font-family="monospace">max</text>
+  <text x="88" y="20" fill="#555" font-size="9" font-family="monospace">f''&lt;0</text>
+  <!-- local min at ~x=160,y=90 -->
+  <circle cx="160" cy="90" r="5" fill="#ef9a9a"/>
+  <text x="155" y="108" fill="#ef9a9a" font-size="9" font-family="monospace">min</text>
+  <text x="148" y="118" fill="#555" font-size="9" font-family="monospace">f''&gt;0</text>
+  <!-- global max at ~x=220,y=30 -->
+  <circle cx="220" cy="30" r="5" fill="#ffcc80"/>
+  <text x="216" y="20" fill="#ffcc80" font-size="9" font-family="monospace">global max</text>
+  <!-- vertical dashed lines at critical pts -->
+  <line x1="100" y1="40" x2="100" y2="120" stroke="#333" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="160" y1="90" x2="160" y2="120" stroke="#333" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="220" y1="30" x2="220" y2="120" stroke="#333" stroke-width="1" stroke-dasharray="3,3"/>
+  <!-- panel -->
+  <rect x="300" y="15" width="110" height="100" rx="6" fill="#081618" stroke="#103030" stroke-width="1"/>
+  <text x="355" y="33" text-anchor="middle" fill="#80deea" font-size="10" font-family="monospace">2nd Deriv. Test</text>
+  <line x1="310" y1="40" x2="400" y2="40" stroke="#103030" stroke-width="1"/>
+  <text x="355" y="58" text-anchor="middle" fill="#a5d6a7" font-size="9" font-family="monospace">f''&lt;0 → max</text>
+  <text x="355" y="74" text-anchor="middle" fill="#ef9a9a" font-size="9" font-family="monospace">f''&gt;0 → min</text>
+  <text x="355" y="90" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">f'=0 at both</text>
+  <text x="355" y="106" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">(critical points)</text>
+</svg>`
       },
       {
         title: 'Implicit Differentiation & Related Rates',
         body: `When y is defined implicitly by F(x,y)=0, differentiate both sides with respect to x and solve for dy/dx. Related rates problems use the chain rule to relate rates of change of two quantities connected by an equation.`,
         practical: `Constraint-based design in CAD systems uses implicit functions. In physics, the ideal gas law PV=nRT relates pressure, volume, and temperature — related rates tell you how fast pressure changes as volume decreases at a known rate.`,
-        formulas: ['d/dx[F(x,y)=0]: differentiate both sides, solve for dy/dx', 'Related: dV/dt = (dV/dr)(dr/dt)']
+        formulas: ['d/dx[F(x,y)=0]: differentiate both sides, solve for dy/dx', 'Related: dV/dt = (dV/dr)(dr/dt)'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <line x1="20" y1="80" x2="210" y2="80" stroke="#333" stroke-width="1.5"/>
+  <line x1="110" y1="10" x2="110" y2="150" stroke="#333" stroke-width="1.5"/>
+  <!-- circle x²+y²=r² -->
+  <circle cx="110" cy="80" r="58" fill="#081618" stroke="#80deea" stroke-width="2"/>
+  <!-- point on circle at ~45° -->
+  <circle cx="151" cy="39" r="5" fill="#80deea"/>
+  <!-- tangent line at that point (perpendicular to radius) -->
+  <line x1="110" y1="39" x2="151" y2="39" stroke="#555" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="110" y1="80" x2="151" y2="39" stroke="#555" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="100" y1="10" x2="200" y2="68" stroke="#80deea" stroke-width="1.8" stroke-dasharray="5,3" opacity="0.8"/>
+  <text x="155" y="34" fill="#80deea" font-size="9" font-family="monospace">(x,y)</text>
+  <text x="154" y="22" fill="#555" font-size="9" font-family="monospace">tangent</text>
+  <!-- label circle equation -->
+  <text x="35" y="145" fill="#80deea" font-size="10" font-family="monospace">x²+y²=r²</text>
+  <!-- derivation panel -->
+  <rect x="228" y="15" width="182" height="120" rx="6" fill="#081618" stroke="#103030" stroke-width="1"/>
+  <text x="319" y="33" text-anchor="middle" fill="#80deea" font-size="10" font-family="monospace">Implicit Differentiation</text>
+  <line x1="238" y1="40" x2="400" y2="40" stroke="#103030" stroke-width="1"/>
+  <text x="319" y="58" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">x²+y²=r²</text>
+  <text x="319" y="74" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">d/dx both sides:</text>
+  <text x="319" y="90" text-anchor="middle" fill="#80deea" font-size="9" font-family="monospace">2x + 2y·(dy/dx) = 0</text>
+  <text x="319" y="106" text-anchor="middle" fill="#80deea" font-size="9" font-family="monospace">dy/dx = −x/y</text>
+  <text x="319" y="126" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">(slope of tangent)</text>
+</svg>`
       }
     ]
   },
@@ -545,25 +1207,123 @@ const CURRICULUM = [
         title: 'Antiderivatives & Indefinite Integrals',
         body: `An antiderivative F(x) of f(x) satisfies F'(x) = f(x). The indefinite integral ∫f(x)dx = F(x) + C, where C is an arbitrary constant of integration. The power rule reverses: ∫xⁿdx = xⁿ⁺¹/(n+1) + C.`,
         practical: `Finding position from velocity, or velocity from acceleration, requires integration. In signal processing, integration smooths signals and computes cumulative sums. Digital PID controllers integrate error over time for the I (integral) term.`,
-        formulas: ['∫xⁿdx = xⁿ⁺¹/(n+1)+C', '∫eˣdx = eˣ+C', '∫sinx dx = -cosx+C', '∫1/x dx = ln|x|+C']
+        formulas: ['∫xⁿdx = xⁿ⁺¹/(n+1)+C', '∫eˣdx = eˣ+C', '∫sinx dx = -cosx+C', '∫1/x dx = ln|x|+C'],
+        svg: `<svg viewBox="0 0 420 150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="150" fill="#0d0d12" rx="8"/>
+  <!-- antiderivative table -->
+  <rect x="20" y="15" width="200" height="120" rx="6" fill="#0a120a" stroke="#1e2e1e" stroke-width="1"/>
+  <text x="120" y="33" text-anchor="middle" fill="#a5d6a7" font-size="11" font-family="monospace">∫ f(x) dx</text>
+  <line x1="30" y1="40" x2="210" y2="40" stroke="#1e2e1e" stroke-width="1"/>
+  <text x="80" y="57" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">f(x)</text>
+  <text x="160" y="57" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">F(x) + C</text>
+  <line x1="30" y1="63" x2="210" y2="63" stroke="#1e2e1e" stroke-width="1"/>
+  <text x="80" y="79" text-anchor="middle" fill="#ccc" font-size="10" font-family="monospace">xⁿ</text><text x="160" y="79" text-anchor="middle" fill="#a5d6a7" font-size="10" font-family="monospace">xⁿ⁺¹/(n+1)</text>
+  <text x="80" y="95" text-anchor="middle" fill="#ccc" font-size="10" font-family="monospace">eˣ</text><text x="160" y="95" text-anchor="middle" fill="#a5d6a7" font-size="10" font-family="monospace">eˣ</text>
+  <text x="80" y="111" text-anchor="middle" fill="#ccc" font-size="10" font-family="monospace">sin x</text><text x="160" y="111" text-anchor="middle" fill="#a5d6a7" font-size="10" font-family="monospace">−cos x</text>
+  <text x="80" y="127" text-anchor="middle" fill="#ccc" font-size="10" font-family="monospace">1/x</text><text x="160" y="127" text-anchor="middle" fill="#a5d6a7" font-size="10" font-family="monospace">ln|x|</text>
+  <!-- reverse arrow -->
+  <rect x="236" y="55" width="148" height="50" rx="8" fill="#0a120a" stroke="#1e2e1e" stroke-width="1"/>
+  <text x="310" y="75" text-anchor="middle" fill="#a5d6a7" font-size="11" font-family="monospace">d/dx F(x) = f(x)</text>
+  <text x="310" y="95" text-anchor="middle" fill="#555" font-size="10" font-family="monospace">integration reverses</text>
+  <text x="310" y="107" text-anchor="middle" fill="#555" font-size="10" font-family="monospace">differentiation</text>
+  <!-- +C note -->
+  <text x="310" y="130" text-anchor="middle" fill="#666" font-size="9" font-family="monospace">+C = constant family</text>
+</svg>`
       },
       {
         title: 'The Fundamental Theorem of Calculus',
         body: `The FTC has two parts: (1) if F(x) = ∫ₐˣ f(t)dt then F'(x) = f(x) — differentiation undoes integration. (2) ∫ₐᵇ f(x)dx = F(b) - F(a). This connects the geometric area interpretation to the algebraic antiderivative.`,
         practical: `The FTC is why numerical integration works: every quadrature algorithm (Simpson's, Gaussian) approximates ∫ₐᵇf(x)dx. In probability, the CDF is the integral of the PDF — the FTC relates them directly.`,
-        formulas: ['∫ₐᵇ f(x)dx = F(b)-F(a)', 'd/dx ∫ₐˣ f(t)dt = f(x)']
+        formulas: ['∫ₐᵇ f(x)dx = F(b)-F(a)', 'd/dx ∫ₐˣ f(t)dt = f(x)'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <line x1="20" y1="130" x2="260" y2="130" stroke="#333" stroke-width="1.5"/>
+  <line x1="40" y1="10" x2="40" y2="140" stroke="#333" stroke-width="1.5"/>
+  <!-- curve y = x² / 4 + 10 roughly -->
+  <polyline points="50,120 80,108 110,90 140,68 170,46 200,28" fill="none" stroke="#a5d6a7" stroke-width="2.2" stroke-linejoin="round"/>
+  <!-- shaded area under curve from a to b -->
+  <polygon points="80,130 80,108 110,90 140,68 170,46 170,130" fill="#a5d6a7" opacity="0.18"/>
+  <!-- vertical lines at a and b -->
+  <line x1="80" y1="108" x2="80" y2="130" stroke="#a5d6a7" stroke-width="1.5"/>
+  <line x1="170" y1="46" x2="170" y2="130" stroke="#a5d6a7" stroke-width="1.5"/>
+  <text x="75" y="143" fill="#a5d6a7" font-size="10" font-family="monospace">a</text>
+  <text x="166" y="143" fill="#a5d6a7" font-size="10" font-family="monospace">b</text>
+  <!-- area label -->
+  <text x="125" y="110" text-anchor="middle" fill="#a5d6a7" font-size="12" font-family="monospace">Area</text>
+  <!-- FTC panel -->
+  <rect x="278" y="20" width="132" height="110" rx="6" fill="#0a120a" stroke="#1e2e1e" stroke-width="1"/>
+  <text x="344" y="38" text-anchor="middle" fill="#a5d6a7" font-size="10" font-family="monospace">Fund. Theorem</text>
+  <line x1="288" y1="44" x2="400" y2="44" stroke="#1e2e1e" stroke-width="1"/>
+  <text x="344" y="62" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">∫ₐᵇ f(x)dx</text>
+  <text x="344" y="78" text-anchor="middle" fill="#a5d6a7" font-size="12" font-weight="bold" font-family="monospace">= F(b)−F(a)</text>
+  <line x1="288" y1="88" x2="400" y2="88" stroke="#1e2e1e" stroke-width="1"/>
+  <text x="344" y="104" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">F'(x) = f(x)</text>
+  <text x="344" y="120" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">area ↔ antideriv.</text>
+</svg>`
       },
       {
         title: 'Integration Techniques',
         body: `Substitution (u-sub) reverses the chain rule. Integration by parts ∫u dv = uv - ∫v du reverses the product rule. Partial fractions decompose rational functions. Trigonometric substitution handles integrands with √(a²-x²) forms.`,
         practical: `In control systems, the Laplace transform (which integrates) converts differential equations to algebra. Fourier transforms use integration over trig functions. Partial fractions appear in transfer function analysis of circuits.`,
-        formulas: ['∫u dv = uv - ∫v du', 'u-sub: ∫f(g(x))g\'(x)dx = ∫f(u)du', '∫sin²x dx = x/2 - sin(2x)/4 + C']
+        formulas: ['∫u dv = uv - ∫v du', 'u-sub: ∫f(g(x))g\'(x)dx = ∫f(u)du', '∫sin²x dx = x/2 - sin(2x)/4 + C'],
+        svg: `<svg viewBox="0 0 420 150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="150" fill="#0d0d12" rx="8"/>
+  <!-- u-substitution box -->
+  <rect x="15" y="15" width="180" height="118" rx="6" fill="#0a120a" stroke="#1e2e1e" stroke-width="1"/>
+  <text x="105" y="33" text-anchor="middle" fill="#a5d6a7" font-size="10" font-family="monospace">u-Substitution</text>
+  <line x1="25" y1="40" x2="185" y2="40" stroke="#1e2e1e" stroke-width="1"/>
+  <text x="105" y="58" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">∫2x·cos(x²)dx</text>
+  <text x="105" y="74" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">let u = x², du = 2x dx</text>
+  <text x="105" y="90" text-anchor="middle" fill="#a5d6a7" font-size="9" font-family="monospace">= ∫cos(u)du</text>
+  <text x="105" y="106" text-anchor="middle" fill="#a5d6a7" font-size="9" font-family="monospace">= sin(u) + C</text>
+  <text x="105" y="122" text-anchor="middle" fill="#a5d6a7" font-size="9" font-family="monospace">= sin(x²) + C</text>
+  <!-- integration by parts box -->
+  <rect x="210" y="15" width="195" height="118" rx="6" fill="#0a120a" stroke="#1e2e1e" stroke-width="1"/>
+  <text x="307" y="33" text-anchor="middle" fill="#a5d6a7" font-size="10" font-family="monospace">Integration by Parts</text>
+  <line x1="220" y1="40" x2="395" y2="40" stroke="#1e2e1e" stroke-width="1"/>
+  <text x="307" y="57" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">∫u dv = uv − ∫v du</text>
+  <line x1="220" y1="65" x2="395" y2="65" stroke="#0e1e0e" stroke-width="1"/>
+  <text x="307" y="80" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">∫x·eˣ dx</text>
+  <text x="307" y="96" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">u=x, dv=eˣdx</text>
+  <text x="307" y="112" text-anchor="middle" fill="#a5d6a7" font-size="9" font-family="monospace">= xeˣ − eˣ + C</text>
+  <text x="307" y="128" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">LIATE guides u choice</text>
+</svg>`
       },
       {
         title: 'Applications of Integration',
         body: `Definite integrals compute area between curves, arc length, surface area, and volume (disk/shell methods). Work done by a variable force is W = ∫F(x)dx. The average value of f on [a,b] is (1/(b-a))∫ₐᵇf(x)dx.`,
         practical: `Fluid dynamics: pressure force on a dam is an integral of pressure×area over depth. Electrical energy consumed is ∫P(t)dt. Computer graphics uses integration to compute physically-based lighting (rendering equation is an integral).`,
-        formulas: ['Area: ∫ₐᵇ|f(x)-g(x)|dx', 'Volume (disk): π∫ₐᵇ[f(x)]²dx', 'Arc length: ∫ₐᵇ√(1+[f\'(x)]²)dx']
+        formulas: ['Area: ∫ₐᵇ|f(x)-g(x)|dx', 'Volume (disk): π∫ₐᵇ[f(x)]²dx', 'Arc length: ∫ₐᵇ√(1+[f\'(x)]²)dx'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <line x1="20" y1="130" x2="210" y2="130" stroke="#333" stroke-width="1.5"/>
+  <line x1="40" y1="10" x2="40" y2="140" stroke="#333" stroke-width="1.5"/>
+  <!-- upper curve f(x) -->
+  <polyline points="50,100 80,70 110,50 140,40 170,48 195,60" fill="none" stroke="#a5d6a7" stroke-width="2"/>
+  <text x="198" y="58" fill="#a5d6a7" font-size="10" font-family="monospace">f(x)</text>
+  <!-- lower curve g(x) -->
+  <polyline points="50,120 80,110 110,105 140,108 170,115 195,122" fill="none" stroke="#ce93d8" stroke-width="2"/>
+  <text x="198" y="124" fill="#ce93d8" font-size="10" font-family="monospace">g(x)</text>
+  <!-- shaded area between -->
+  <polygon points="50,120 50,100 80,70 110,50 140,40 170,48 195,60 195,122 170,115 140,108 110,105 80,110" fill="#a5d6a7" opacity="0.15"/>
+  <!-- a and b markers -->
+  <line x1="50" y1="100" x2="50" y2="130" stroke="#888" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="195" y1="60" x2="195" y2="130" stroke="#888" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="46" y="142" fill="#888" font-size="9" font-family="monospace">a</text>
+  <text x="191" y="142" fill="#888" font-size="9" font-family="monospace">b</text>
+  <text x="120" y="92" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">∫ₐᵇ(f−g)dx</text>
+  <!-- volume of revolution panel -->
+  <rect x="228" y="15" width="182" height="120" rx="6" fill="#0a120a" stroke="#1e2e1e" stroke-width="1"/>
+  <text x="319" y="33" text-anchor="middle" fill="#a5d6a7" font-size="10" font-family="monospace">Volume (Disk Method)</text>
+  <line x1="238" y1="40" x2="400" y2="40" stroke="#1e2e1e" stroke-width="1"/>
+  <!-- disk stack illustration -->
+  <ellipse cx="319" cy="80" rx="35" ry="10" fill="#0f2018" stroke="#a5d6a7" stroke-width="1.2"/>
+  <ellipse cx="319" cy="68" rx="30" ry="8" fill="#0f2018" stroke="#a5d6a7" stroke-width="1"/>
+  <ellipse cx="319" cy="58" rx="22" ry="7" fill="#0f2018" stroke="#a5d6a7" stroke-width="1"/>
+  <ellipse cx="319" cy="50" rx="14" ry="5" fill="#0f2018" stroke="#a5d6a7" stroke-width="1"/>
+  <text x="319" y="108" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">V = π∫ₐᵇ [f(x)]² dx</text>
+  <text x="319" y="124" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">sum of thin disk volumes</text>
+</svg>`
       }
     ]
   },
@@ -575,37 +1335,232 @@ const CURRICULUM = [
         title: 'What is a Differential Equation?',
         body: `A differential equation (DE) relates a function to its own derivatives. An ODE involves one independent variable; a PDE involves partial derivatives with multiple variables. Order is the highest derivative present. A solution is a function (not a number) satisfying the equation.`,
         practical: `Nearly every fundamental law in physics is a differential equation: Newton's second law F=ma is F=m(d²x/dt²), Maxwell's equations govern electromagnetism, Schrödinger's equation governs quantum mechanics. Financial models (Black-Scholes) use stochastic DEs.`,
-        formulas: ['ODE: F(x, y, y\', y\'\', ...) = 0', 'Order = highest derivative', 'General solution has arbitrary constants']
+        formulas: ['ODE: F(x, y, y\', y\'\', ...) = 0', 'Order = highest derivative', 'General solution has arbitrary constants'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- slope field grid (dy/dx = slope encoded in each segment) -->
+  <text x="130" y="14" text-anchor="middle" fill="#ffcc80" font-size="10" font-family="monospace">Slope Field: dy/dx = y</text>
+  <line x1="13" y1="30" x2="27" y2="20" stroke="#ffcc80" stroke-width="1.2" opacity="0.5"/>
+  <line x1="51" y1="30" x2="65" y2="20" stroke="#ffcc80" stroke-width="1.2" opacity="0.5"/>
+  <line x1="89" y1="30" x2="103" y2="20" stroke="#ffcc80" stroke-width="1.2" opacity="0.5"/>
+  <line x1="127" y1="30" x2="141" y2="20" stroke="#ffcc80" stroke-width="1.2" opacity="0.5"/>
+  <line x1="165" y1="30" x2="179" y2="20" stroke="#ffcc80" stroke-width="1.2" opacity="0.5"/>
+  <line x1="203" y1="30" x2="217" y2="20" stroke="#ffcc80" stroke-width="1.2" opacity="0.5"/>
+  <line x1="13" y1="52" x2="27" y2="45" stroke="#ffcc80" stroke-width="1.2" opacity="0.45"/>
+  <line x1="51" y1="52" x2="65" y2="45" stroke="#ffcc80" stroke-width="1.2" opacity="0.45"/>
+  <line x1="89" y1="52" x2="103" y2="45" stroke="#ffcc80" stroke-width="1.2" opacity="0.45"/>
+  <line x1="127" y1="52" x2="141" y2="45" stroke="#ffcc80" stroke-width="1.2" opacity="0.45"/>
+  <line x1="165" y1="52" x2="179" y2="45" stroke="#ffcc80" stroke-width="1.2" opacity="0.45"/>
+  <line x1="13" y1="74" x2="27" y2="70" stroke="#ffcc80" stroke-width="1.2" opacity="0.4"/>
+  <line x1="51" y1="74" x2="65" y2="70" stroke="#ffcc80" stroke-width="1.2" opacity="0.4"/>
+  <line x1="89" y1="74" x2="103" y2="70" stroke="#ffcc80" stroke-width="1.2" opacity="0.4"/>
+  <line x1="127" y1="74" x2="141" y2="74" stroke="#ffcc80" stroke-width="1.2" opacity="0.35"/>
+  <line x1="165" y1="96" x2="179" y2="100" stroke="#ffcc80" stroke-width="1.2" opacity="0.35"/>
+  <line x1="13" y1="118" x2="27" y2="126" stroke="#ffcc80" stroke-width="1.2" opacity="0.4"/>
+  <line x1="51" y1="118" x2="65" y2="126" stroke="#ffcc80" stroke-width="1.2" opacity="0.4"/>
+  <line x1="89" y1="118" x2="103" y2="126" stroke="#ffcc80" stroke-width="1.2" opacity="0.4"/>
+  <line x1="127" y1="118" x2="141" y2="130" stroke="#ffcc80" stroke-width="1.2" opacity="0.45"/>
+  <line x1="165" y1="118" x2="179" y2="134" stroke="#ffcc80" stroke-width="1.2" opacity="0.5"/>
+  <!-- solution curves -->
+  <polyline points="20,130 58,118 96,100 134,76 172,46 210,18" fill="none" stroke="#ffcc80" stroke-width="2" stroke-linejoin="round"/>
+  <polyline points="20,110 58,98 96,82 134,60 172,32" fill="none" stroke="#ffcc80" stroke-width="1.5" opacity="0.6" stroke-linejoin="round"/>
+  <polyline points="20,150 58,140 96,126 134,108 172,84 210,54" fill="none" stroke="#ffcc80" stroke-width="1.5" opacity="0.6" stroke-linejoin="round"/>
+  <!-- panel -->
+  <rect x="268" y="20" width="142" height="110" rx="6" fill="#1a1608" stroke="#3a3010" stroke-width="1"/>
+  <text x="339" y="38" text-anchor="middle" fill="#ffcc80" font-size="10" font-family="monospace">dy/dx = f(x,y)</text>
+  <line x1="278" y1="44" x2="400" y2="44" stroke="#3a3010" stroke-width="1"/>
+  <text x="339" y="60" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">solution is a</text>
+  <text x="339" y="76" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">function, not a #</text>
+  <text x="339" y="94" text-anchor="middle" fill="#ffcc80" font-size="9" font-family="monospace">dy/dx = y →</text>
+  <text x="339" y="110" text-anchor="middle" fill="#ffcc80" font-size="9" font-family="monospace">y = Ceˣ</text>
+  <text x="339" y="124" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">(family of solutions)</text>
+</svg>`
       },
       {
         title: 'Separation of Variables',
         body: `For equations of the form dy/dx = f(x)g(y), separate: dy/g(y) = f(x)dx and integrate both sides. This works when variables can be fully separated. The general solution contains a constant C determined by an initial condition.`,
         practical: `Population growth: dP/dt = kP separates to dP/P = k dt → ln P = kt + C → P = P₀eᵏᵗ. Radioactive decay, Newton's law of cooling, and capacitor charging/discharging all use separation of variables.`,
-        formulas: ['dP/dt = kP → P(t) = P₀eᵏᵗ', 'Newton cooling: dT/dt = -k(T-Tₐ)']
+        formulas: ['dP/dt = kP → P(t) = P₀eᵏᵗ', 'Newton cooling: dT/dt = -k(T-Tₐ)'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <line x1="20" y1="130" x2="220" y2="130" stroke="#333" stroke-width="1.5"/>
+  <line x1="40" y1="10" x2="40" y2="140" stroke="#333" stroke-width="1.5"/>
+  <text x="223" y="134" fill="#555" font-size="10" font-family="monospace">t</text>
+  <text x="44" y="8" fill="#555" font-size="10" font-family="monospace">P</text>
+  <!-- exponential growth curve P=P0*e^(kt) -->
+  <polyline points="40,120 65,116 90,108 115,94 140,74 165,46 190,16" fill="none" stroke="#ffcc80" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- P0 marker -->
+  <circle cx="40" cy="120" r="4" fill="#ffcc80"/>
+  <text x="44" y="116" fill="#ffcc80" font-size="10" font-family="monospace">P₀</text>
+  <!-- decay curve -->
+  <polyline points="40,30 65,40 90,56 115,76 140,98 165,116 190,126" fill="none" stroke="#80cbc4" stroke-width="2" stroke-linejoin="round" stroke-dasharray="6,4"/>
+  <text x="192" y="126" fill="#80cbc4" font-size="9" font-family="monospace">decay</text>
+  <text x="192" y="16" fill="#ffcc80" font-size="9" font-family="monospace">growth</text>
+  <!-- panel -->
+  <rect x="238" y="15" width="172" height="125" rx="6" fill="#1a1608" stroke="#3a3010" stroke-width="1"/>
+  <text x="324" y="33" text-anchor="middle" fill="#ffcc80" font-size="10" font-family="monospace">Separation of Variables</text>
+  <line x1="248" y1="40" x2="400" y2="40" stroke="#3a3010" stroke-width="1"/>
+  <text x="324" y="57" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">dP/dt = kP</text>
+  <text x="324" y="71" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">dP/P = k dt</text>
+  <text x="324" y="85" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">∫dP/P = ∫k dt</text>
+  <text x="324" y="99" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">ln P = kt + C</text>
+  <text x="324" y="116" text-anchor="middle" fill="#ffcc80" font-size="10" font-weight="bold" font-family="monospace">P(t) = P₀eᵏᵗ</text>
+  <text x="324" y="132" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">k&gt;0 growth, k&lt;0 decay</text>
+</svg>`
       },
       {
         title: 'First-Order Linear ODEs',
         body: `Form: dy/dx + P(x)y = Q(x). Solved using an integrating factor μ(x) = e^∫P(x)dx, which transforms the left side into d/dx[μy]. Solution: y = (1/μ)∫μQ dx + C. This handles equations not separable by variables.`,
         practical: `RL circuits: L(dI/dt) + RI = V(t) is a first-order linear ODE. Mixing problems (salt dissolved in a tank), pharmacokinetics (drug concentration over time), and simple economic growth models all use this form.`,
-        formulas: ['Integrating factor: μ = e^∫P(x)dx', 'd/dx[μy] = μQ', 'y = (1/μ)∫μQ dx + C']
+        formulas: ['Integrating factor: μ = e^∫P(x)dx', 'd/dx[μy] = μQ', 'y = (1/μ)∫μQ dx + C'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- RL circuit diagram -->
+  <text x="100" y="18" text-anchor="middle" fill="#ffcc80" font-size="10" font-family="monospace">RL Circuit: L·dI/dt + R·I = V</text>
+  <!-- battery -->
+  <line x1="20" y1="40" x2="20" y2="120" stroke="#ffcc80" stroke-width="2"/>
+  <line x1="14" y1="68" x2="26" y2="68" stroke="#ffcc80" stroke-width="3"/>
+  <line x1="16" y1="80" x2="24" y2="80" stroke="#ffcc80" stroke-width="1.5"/>
+  <text x="7" y="76" fill="#ffcc80" font-size="9" font-family="monospace">V</text>
+  <!-- top wire -->
+  <line x1="20" y1="40" x2="90" y2="40" stroke="#ffcc80" stroke-width="2"/>
+  <!-- inductor (coils) -->
+  <path d="M90,40 q5,-10 10,0 q5,-10 10,0 q5,-10 10,0 q5,-10 10,0" fill="none" stroke="#ffcc80" stroke-width="2"/>
+  <text x="110" y="28" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">L</text>
+  <line x1="130" y1="40" x2="180" y2="40" stroke="#ffcc80" stroke-width="2"/>
+  <!-- resistor (zigzag) -->
+  <polyline points="180,40 186,30 192,50 198,30 204,50 210,30 216,40" fill="none" stroke="#ffcc80" stroke-width="2"/>
+  <text x="198" y="26" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">R</text>
+  <line x1="216" y1="40" x2="230" y2="40" stroke="#ffcc80" stroke-width="2"/>
+  <!-- bottom wire -->
+  <line x1="20" y1="120" x2="230" y2="120" stroke="#ffcc80" stroke-width="2"/>
+  <line x1="230" y1="40" x2="230" y2="120" stroke="#ffcc80" stroke-width="2"/>
+  <!-- current annotation -->
+  <text x="125" y="135" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">→ I(t) current</text>
+  <!-- solution curve -->
+  <rect x="250" y="15" width="160" height="125" rx="6" fill="#1a1608" stroke="#3a3010" stroke-width="1"/>
+  <text x="330" y="33" text-anchor="middle" fill="#ffcc80" font-size="10" font-family="monospace">Solution I(t)</text>
+  <line x1="260" y1="40" x2="400" y2="40" stroke="#3a3010" stroke-width="1"/>
+  <!-- mini plot of I(t) = V/R(1-e^{-Rt/L}) -->
+  <polyline points="262,110 278,90 294,76 310,66 326,60 342,56 358,54 374,53 390,52" fill="none" stroke="#ffcc80" stroke-width="1.8" stroke-linejoin="round"/>
+  <line x1="262" y1="52" x2="400" y2="52" stroke="#555" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="393" y="50" fill="#555" font-size="8" font-family="monospace">V/R</text>
+  <text x="262" y="128" fill="#888" font-size="8" font-family="monospace">I(t) = (V/R)(1−e^{−Rt/L})</text>
+</svg>`
       },
       {
         title: 'Second-Order Linear ODEs',
         body: `Form: ay''+by'+cy = f(x). The homogeneous case (f=0) has solutions based on the characteristic equation ar²+br+c=0. Three cases: two distinct real roots (overdamped), repeated root (critically damped), complex conjugate roots (oscillatory). The general solution is a superposition.`,
         practical: `Spring-mass-damper systems: m(d²x/dt²) + c(dx/dt) + kx = F(t) is a 2nd-order ODE. It models car suspensions, building sway, circuit resonance (RLC circuits), and the vibration of bridges.`,
-        formulas: ['Char. eq: ar²+br+c=0', 'Overdamped: y=c₁e^r₁x+c₂e^r₂x', 'Oscillatory: y=e^αx(c₁cosβx+c₂sinβx)']
+        formulas: ['Char. eq: ar²+br+c=0', 'Overdamped: y=c₁e^r₁x+c₂e^r₂x', 'Oscillatory: y=e^αx(c₁cosβx+c₂sinβx)'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- spring-mass-damper schematic -->
+  <!-- ceiling -->
+  <line x1="20" y1="20" x2="120" y2="20" stroke="#ffcc80" stroke-width="2"/>
+  <line x1="20" y1="20" x2="20" y2="30" stroke="#ffcc80" stroke-width="1"/>
+  <line x1="120" y1="20" x2="120" y2="30" stroke="#ffcc80" stroke-width="1"/>
+  <!-- spring (zigzag) -->
+  <polyline points="70,20 70,28 62,32 78,36 62,40 78,44 62,48 78,52 62,56 78,60 70,64" fill="none" stroke="#ffcc80" stroke-width="1.8"/>
+  <text x="50" y="46" fill="#888" font-size="9" font-family="monospace">k</text>
+  <!-- mass block -->
+  <rect x="50" y="64" width="40" height="30" rx="4" fill="#1a1608" stroke="#ffcc80" stroke-width="2"/>
+  <text x="70" y="83" text-anchor="middle" fill="#ffcc80" font-size="11" font-family="monospace">m</text>
+  <!-- damper (parallel lines) -->
+  <line x1="70" y1="94" x2="70" y2="104" stroke="#ffcc80" stroke-width="1.8"/>
+  <line x1="56" y1="104" x2="84" y2="104" stroke="#ffcc80" stroke-width="2"/>
+  <line x1="60" y1="108" x2="80" y2="108" stroke="#ffcc80" stroke-width="3"/>
+  <line x1="60" y1="112" x2="80" y2="112" stroke="#ffcc80" stroke-width="1"/>
+  <line x1="70" y1="112" x2="70" y2="118" stroke="#ffcc80" stroke-width="1.8"/>
+  <text x="86" y="110" fill="#888" font-size="9" font-family="monospace">c</text>
+  <!-- ground -->
+  <line x1="50" y1="118" x2="90" y2="118" stroke="#ffcc80" stroke-width="1.5"/>
+  <!-- response curves panel -->
+  <rect x="140" y="15" width="270" height="130" rx="6" fill="#1a1608" stroke="#3a3010" stroke-width="1"/>
+  <text x="275" y="30" text-anchor="middle" fill="#ffcc80" font-size="10" font-family="monospace">Response Types</text>
+  <line x1="150" y1="36" x2="400" y2="36" stroke="#3a3010" stroke-width="1"/>
+  <line x1="150" y1="75" x2="400" y2="75" stroke="#1a1608" stroke-width="1"/>
+  <!-- underdamped (oscillatory) -->
+  <polyline points="152,55 168,42 184,57 200,50 216,55 232,52 248,54" fill="none" stroke="#a5d6a7" stroke-width="1.5" stroke-linejoin="round"/>
+  <text x="252" y="53" fill="#a5d6a7" font-size="8" font-family="monospace">underdamped</text>
+  <!-- critically damped -->
+  <polyline points="152,110 168,88 184,82 200,80 220,79 248,78" fill="none" stroke="#ffcc80" stroke-width="1.5" stroke-linejoin="round"/>
+  <text x="252" y="84" fill="#ffcc80" font-size="8" font-family="monospace">critical</text>
+  <!-- overdamped -->
+  <polyline points="152,110 172,96 196,90 224,87 252,85" fill="none" stroke="#ef9a9a" stroke-width="1.5" stroke-linejoin="round"/>
+  <text x="252" y="100" fill="#ef9a9a" font-size="8" font-family="monospace">overdamped</text>
+  <line x1="152" y1="78" x2="400" y2="78" stroke="#333" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="275" y="136" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">Δ = b²−4ac determines case</text>
+</svg>`
       },
       {
         title: 'Systems of ODEs & Phase Planes',
         body: `Multiple coupled ODEs in several dependent variables. Written as x' = Ax in matrix form. Eigenvalues of A determine the qualitative behaviour — stable node, saddle, spiral, centre. Phase plane diagrams visualise all solution trajectories.`,
         practical: `Predator-prey dynamics (Lotka-Volterra), epidemic models (SIR), and coupled electrical networks are all systems of ODEs. In robotics, the equations of motion for a multi-link arm are a system of 2nd-order ODEs.`,
-        formulas: ['x\' = Ax → solutions involve eigenvalues/vectors of A', 'Stability: Re(λ)<0 → stable, Re(λ)>0 → unstable']
+        formulas: ['x\' = Ax → solutions involve eigenvalues/vectors of A', 'Stability: Re(λ)<0 → stable, Re(λ)>0 → unstable'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <!-- phase plane: stable spiral -->
+  <line x1="20" y1="80" x2="210" y2="80" stroke="#333" stroke-width="1.5"/>
+  <line x1="115" y1="10" x2="115" y2="150" stroke="#333" stroke-width="1.5"/>
+  <text x="213" y="84" fill="#555" font-size="10" font-family="monospace">x</text>
+  <text x="118" y="8" fill="#555" font-size="10" font-family="monospace">y</text>
+  <!-- spiral trajectory (stable) -->
+  <polyline points="185,50 175,40 155,38 130,45 112,62 104,82 108,102 120,116 138,120 158,114 170,100 172,82 164,66 150,56 134,54 120,60 112,72 110,86 116,98 128,106 142,106 154,98 158,84 152,72 142,66 132,66 124,72 122,82 126,90 134,92 140,88 140,82" fill="none" stroke="#ffcc80" stroke-width="1.8" stroke-linejoin="round"/>
+  <!-- equilibrium point -->
+  <circle cx="140" cy="82" r="5" fill="#ffcc80"/>
+  <text x="144" y="78" fill="#ffcc80" font-size="9" font-family="monospace">eq.</text>
+  <text x="115" y="154" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">stable spiral (Re(λ)&lt;0)</text>
+  <!-- Lotka-Volterra panel -->
+  <rect x="228" y="15" width="182" height="130" rx="6" fill="#1a1608" stroke="#3a3010" stroke-width="1"/>
+  <text x="319" y="33" text-anchor="middle" fill="#ffcc80" font-size="10" font-family="monospace">Lotka-Volterra</text>
+  <line x1="238" y1="40" x2="400" y2="40" stroke="#3a3010" stroke-width="1"/>
+  <!-- prey/predator cycle curves -->
+  <polyline points="240,100 260,70 280,55 300,65 320,90 340,108 360,100 380,75 400,62" fill="none" stroke="#a5d6a7" stroke-width="1.5"/>
+  <text x="402" y="62" fill="#a5d6a7" font-size="8" font-family="monospace">prey</text>
+  <polyline points="240,110 270,108 295,90 315,68 335,58 355,68 375,90 395,106" fill="none" stroke="#ef9a9a" stroke-width="1.5"/>
+  <text x="238" y="122" fill="#ef9a9a" font-size="8" font-family="monospace">predator</text>
+  <text x="319" y="138" text-anchor="middle" fill="#555" font-size="8" font-family="monospace">dx/dt = ax−bxy, dy/dt = cxy−dy</text>
+</svg>`
       },
       {
         title: 'Numerical Methods for ODEs',
         body: `Most ODEs lack closed-form solutions. Euler's method: yₙ₊₁ = yₙ + h·f(xₙ,yₙ). Runge-Kutta (RK4) takes a weighted average of four slope estimates for much greater accuracy at the same step size. Adaptive step-size methods adjust h automatically.`,
         practical: `Every physics engine in game development uses numerical ODE integration — usually Verlet or RK4 — to advance positions and velocities. Climate models, flight simulators, and orbital mechanics all rely on numerical ODE solvers.`,
-        formulas: ['Euler: yₙ₊₁ = yₙ+h·f(xₙ,yₙ)', 'RK4: k₁=hf(xₙ,yₙ), k₂=hf(xₙ+h/2, yₙ+k₁/2), ...', 'Error: Euler O(h), RK4 O(h⁴)']
+        formulas: ['Euler: yₙ₊₁ = yₙ+h·f(xₙ,yₙ)', 'RK4: k₁=hf(xₙ,yₙ), k₂=hf(xₙ+h/2, yₙ+k₁/2), ...', 'Error: Euler O(h), RK4 O(h⁴)'],
+        svg: `<svg viewBox="0 0 420 160" xmlns="http://www.w3.org/2000/svg">
+  <rect width="420" height="160" fill="#0d0d12" rx="8"/>
+  <line x1="20" y1="130" x2="260" y2="130" stroke="#333" stroke-width="1.5"/>
+  <line x1="40" y1="10" x2="40" y2="140" stroke="#333" stroke-width="1.5"/>
+  <text x="263" y="134" fill="#555" font-size="10" font-family="monospace">x</text>
+  <!-- true solution curve -->
+  <polyline points="40,110 70,100 100,86 130,68 160,50 190,36 220,28" fill="none" stroke="#a5d6a7" stroke-width="2" stroke-linejoin="round"/>
+  <text x="222" y="28" fill="#a5d6a7" font-size="9" font-family="monospace">true</text>
+  <!-- Euler steps (large h) -->
+  <polyline points="40,110 80,94 120,74 160,50 200,30" fill="none" stroke="#ffcc80" stroke-width="2" stroke-linejoin="round" stroke-dasharray="1,0"/>
+  <text x="202" y="32" fill="#ffcc80" font-size="9" font-family="monospace">Euler</text>
+  <!-- step markers -->
+  <circle cx="40" cy="110" r="3" fill="#ffcc80"/>
+  <circle cx="80" cy="94" r="3" fill="#ffcc80"/>
+  <circle cx="120" cy="74" r="3" fill="#ffcc80"/>
+  <circle cx="160" cy="50" r="3" fill="#ffcc80"/>
+  <!-- h annotation -->
+  <line x1="40" y1="140" x2="80" y2="140" stroke="#666" stroke-width="1"/>
+  <line x1="40" y1="136" x2="40" y2="144" stroke="#666" stroke-width="1"/>
+  <line x1="80" y1="136" x2="80" y2="144" stroke="#666" stroke-width="1"/>
+  <text x="60" y="152" text-anchor="middle" fill="#666" font-size="9" font-family="monospace">h</text>
+  <!-- panel -->
+  <rect x="275" y="15" width="135" height="120" rx="6" fill="#1a1608" stroke="#3a3010" stroke-width="1"/>
+  <text x="342" y="33" text-anchor="middle" fill="#ffcc80" font-size="10" font-family="monospace">Euler's Method</text>
+  <line x1="285" y1="40" x2="400" y2="40" stroke="#3a3010" stroke-width="1"/>
+  <text x="342" y="57" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">yₙ₊₁ = yₙ + h·f(xₙ,yₙ)</text>
+  <line x1="285" y1="66" x2="400" y2="66" stroke="#3a3010" stroke-width="1"/>
+  <text x="342" y="82" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">smaller h → more</text>
+  <text x="342" y="96" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">accurate, slower</text>
+  <line x1="285" y1="104" x2="400" y2="104" stroke="#3a3010" stroke-width="1"/>
+  <text x="342" y="120" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">RK4: O(h⁴) error</text>
+  <text x="342" y="132" text-anchor="middle" fill="#555" font-size="9" font-family="monospace">Euler: O(h) error</text>
+</svg>`
       }
     ]
   }
@@ -810,6 +1765,7 @@ function showLessons(id) {
             </div>
             <div class="lesson-body">
                 <p>${l.body.replace(/\n\n/g, '</p><p>')}</p>
+                ${l.svg ? `<div class="lesson-svg">${l.svg}</div>` : ''}
                 <div class="practical">
                     <strong>Real-World Application</strong>
                     <p>${l.practical}</p>
