@@ -325,6 +325,27 @@ a.nav-link.nav-active {
     }
 }
 
+/* ── Back navigation bar ────────────────────────────────────────────────── */
+.back-bar {
+    width: 100%;
+    background-color: rgba(14, 8, 24, 0.85);
+    border-bottom: 1px solid rgba(244, 162, 97, 0.12);
+    padding: 6px 20px;
+    box-sizing: border-box;
+}
+
+.back-bar-link {
+    color: #c8b0d8;
+    font-family: Papyrus, fantasy;
+    font-size: 13px;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.back-bar-link:hover {
+    color: #f4a261;
+}
+
 /* ── Page transitions ───────────────────────────────────────────────────── */
 body.page-fade-out {
     opacity: 0 !important;
