@@ -21,8 +21,8 @@ const FIREBASE_CONFIG = {
     measurementId: "G-KNX537QQ8G"
 };
 
-const FIREBASE_READY = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
+window.FIREBASE_READY = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
 
-if (FIREBASE_READY && !firebase.apps.length) {
+if (window.FIREBASE_READY && !firebase.apps.length) {
     firebase.initializeApp(FIREBASE_CONFIG);
 }

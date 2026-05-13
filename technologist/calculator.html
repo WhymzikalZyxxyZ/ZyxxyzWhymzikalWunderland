@@ -172,7 +172,7 @@
 <div class="navbar"></div>
 <div class="calc-wrap">
     <h2 style="margin-bottom:4px;">The Calculator</h2>
-    <p style="color:#888;margin-top:0;">A complete mathematics curriculum from arithmetic to differential equations — with interactive tools, a formula reference, and a glossary of 90+ terms.</p>
+    <p style="color:#888;margin-top:0;">A complete mathematics curriculum spanning 14 subjects from arithmetic to topology — 62 lessons with interactive tools, a formula reference, and a glossary of 150+ terms.</p>
 
     <div class="calc-tabs">
         <button class="calc-tab active" onclick="switchMain('curriculum')">Curriculum</button>
@@ -2060,7 +2060,7 @@ const CURRICULUM = [
 </svg>`
       },
       {
-        title: 'Differentiation: The MVT & Taylor's Theorem',
+        title: "Differentiation: The MVT & Taylor's Theorem",
         body: `The Mean Value Theorem: if f is continuous on [a,b] and differentiable on (a,b), there exists c where f'(c) = (f(b)−f(a))/(b−a). This proves monotonicity: f' > 0 everywhere implies f is increasing. Taylor's theorem with remainder gives f(x) = Σ f⁽ⁿ⁾(a)/n! (x−a)ⁿ + Rₙ where Rₙ = f⁽ⁿ⁺¹⁾(c)/(n+1)! (x−a)ⁿ⁺¹ for some c — a rigorous error bound.`,
         practical: `Taylor remainder bounds quantify the error in numerical approximations. The MVT is used to prove convergence rates of Newton's method and other root-finding algorithms.`,
         formulas: ['f\'(c) = (f(b)−f(a))/(b−a)', 'f(x) = Σₖ f⁽ᵏ⁾(a)/k! (x−a)ᵏ + Rₙ', 'Rₙ = f⁽ⁿ⁺¹⁾(c)/(n+1)! (x−a)ⁿ⁺¹', 'f\'>0 on (a,b) → f strictly increasing'],
@@ -2373,7 +2373,7 @@ const CURRICULUM = [
 </svg>`
       },
       {
-        title: 'Subgroups, Cosets & Lagrange's Theorem',
+        title: "Subgroups, Cosets & Lagrange's Theorem",
         body: `H is a subgroup of G (H ≤ G) if H is itself a group under the same operation. The left coset gH = {gh : h ∈ H} is a translate of H by g. Cosets partition G into disjoint equal-size pieces — you either are in the same coset or in entirely different ones. Lagrange's Theorem: |H| divides |G|. Normal subgroups N ⊴ G (where gN = Ng for all g) allow forming the quotient group G/N with |G/N| = |G|/|N|. The first isomorphism theorem: G/ker(φ) ≅ im(φ).`,
         practical: `In coding theory, a linear code C is a subgroup of ℤ₂ⁿ; cosets represent error patterns. RSA relies on Lagrange's theorem applied to the multiplicative group mod n.`,
         formulas: ['|H| divides |G|', 'Coset: gH = {gh : h∈H}', '|G/N| = |G|/|N|', 'G/ker(φ) ≅ im(φ)'],
