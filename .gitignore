@@ -25,3 +25,6 @@ js/firebase-config.js
 .idea/
 *.sublime-project
 *.sublime-workspace
+
+# Claude Code local config
+.claude/

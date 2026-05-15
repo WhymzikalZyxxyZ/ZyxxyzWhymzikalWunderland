@@ -230,16 +230,16 @@ const DIRS = [N, S, E, W];
 //   fog: vision radius in cells (0 = none)
 //   speed: enemy move interval ms (0 = no enemies)
 const LEVELS = [
-    { rows:  9, cols:  9, fog: 0, nEnemies: 0, speed: 0   },
-    { rows: 11, cols: 11, fog: 0, nEnemies: 0, speed: 0   },
-    { rows: 13, cols: 13, fog: 0, nEnemies: 0, speed: 0   },
-    { rows: 15, cols: 15, fog: 0, nEnemies: 0, speed: 0   },
-    { rows: 17, cols: 17, fog: 0, nEnemies: 0, speed: 0   },
-    { rows: 19, cols: 19, fog: 5, nEnemies: 0, speed: 0   },
-    { rows: 21, cols: 21, fog: 5, nEnemies: 1, speed: 650 },
-    { rows: 23, cols: 23, fog: 4, nEnemies: 2, speed: 540 },
-    { rows: 25, cols: 25, fog: 4, nEnemies: 3, speed: 470 },
-    { rows: 29, cols: 29, fog: 3, nEnemies: 4, speed: 410 },
+    { rows:  9, cols:  9, fog: 0, nEnemies: 0, speed: 0,   braid: 0    },
+    { rows: 11, cols: 11, fog: 0, nEnemies: 0, speed: 0,   braid: 0    },
+    { rows: 13, cols: 13, fog: 0, nEnemies: 0, speed: 0,   braid: 0    },
+    { rows: 15, cols: 15, fog: 0, nEnemies: 0, speed: 0,   braid: 0    },
+    { rows: 17, cols: 17, fog: 0, nEnemies: 0, speed: 0,   braid: 0    },
+    { rows: 19, cols: 19, fog: 5, nEnemies: 0, speed: 0,   braid: 0    },
+    { rows: 21, cols: 21, fog: 5, nEnemies: 1, speed: 650, braid: 0.55 },
+    { rows: 23, cols: 23, fog: 4, nEnemies: 2, speed: 540, braid: 0.65 },
+    { rows: 25, cols: 25, fog: 4, nEnemies: 3, speed: 470, braid: 0.75 },
+    { rows: 29, cols: 29, fog: 3, nEnemies: 4, speed: 410, braid: 0.85 },
 ];
 
 const PENALTY_MS  = 10000;
@@ -391,6 +391,33 @@ function generateMaze(rows, cols) {
     return grid;
 }
 
+// ── Maze braiding: knock down dead-end walls to create loops ─────────────────
+function braidMaze(grid, rows, cols, factor) {
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const passages = DIRS.filter(d => !(grid[r][c] & d));
+            if (passages.length !== 1) continue;
+            if (Math.random() > factor) continue;
+            const walls = DIRS.filter(d => {
+                if (!(grid[r][c] & d)) return false;
+                const nr = r + DR[d], nc = c + DC[d];
+                return nr >= 0 && nr < rows && nc >= 0 && nc < cols;
+            });
+            if (!walls.length) continue;
+            // Prefer connecting two dead-ends together (tightest loop)
+            const deadEndWalls = walls.filter(d => {
+                const nr = r + DR[d], nc = c + DC[d];
+                return DIRS.filter(dd => !(grid[nr][nc] & dd)).length === 1;
+            });
+            const candidates = deadEndWalls.length ? deadEndWalls : walls;
+            const d  = candidates[Math.floor(Math.random() * candidates.length)];
+            const nr = r + DR[d], nc = c + DC[d];
+            grid[r][c]   &= ~d;
+            grid[nr][nc] &= ~OPP[d];
+        }
+    }
+}
+
 // ── BFS: first step toward target ────────────────────────────────────────────
 function bfsStep(grid, rows, cols, sr, sc, tr, tc) {
     if (sr === tr && sc === tc) return null;
@@ -492,6 +519,7 @@ function startLevel(idx) {
     const cfg    = LEVELS[idx];
     resizeCanvas(cfg.rows, cfg.cols);
     grid  = generateMaze(cfg.rows, cfg.cols);
+    if (cfg.braid > 0) braidMaze(grid, cfg.rows, cfg.cols, cfg.braid);
     pR    = 0; pC = 0;
     exitR = cfg.rows - 1; exitC = cfg.cols - 1;
     resetEnemies(cfg);
