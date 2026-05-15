@@ -123,6 +123,20 @@
     var ROSE     = '#ffb3c6';
     var FCOLS    = [GOLD, MAGENTA, LAVENDER, TEAL, ROSE, '#ffffff'];
 
+    // ── rabbit sprite (actual character image) ────────────────────────────────
+    // Fractions that crop just the rabbit+hat area from the bottom of comebacklater.jpg
+    // (the top ~52% is the sign; we want the bottom ~48%)
+    var CROP_SY = 0.52, CROP_SH = 0.48;
+    var CROP_SX = 0.05, CROP_SW = 0.90;
+    // Within that crop: where the hat brim sits (rel) and hat bottom (rel)
+    var HAT_BRIM_REL   = 0.52;
+    var HAT_BOTTOM_REL = 0.93;
+
+    var rabbitImg      = new Image();
+    var rabbitImgReady = false;
+    rabbitImg.onload   = function () { rabbitImgReady = true; };
+    rabbitImg.src      = '/images/comebacklater.jpg';
+
     // ── twinkling stars ───────────────────────────────────────────────────────
     var stars = (function () {
         var out = [];
@@ -227,7 +241,7 @@
                 var a  = (bi / 48) * Math.PI * 2;
                 var sp = Math.random() * 4.5 + 1;
                 burst.push({
-                    x: cx0, y: baseY - 76 * sc,
+                    x: cx0, y: baseY - HAT_BOTTOM_REL * 220 * sc + HAT_BRIM_REL * 220 * sc,
                     vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 2.5,
                     life: 1, r: Math.random() * 3 + 1,
                     col: FCOLS[Math.floor(Math.random() * FCOLS.length)]
@@ -256,8 +270,7 @@
         drawFloaters(W, H, t);
         drawFlies();
         drawBurst();
-        drawRabbit(hx, baseY, sc, t, emerge);
-        drawHat(hx, baseY + idleBob, sc, t);
+        drawRabbitSprite(hx, baseY, sc, t, emerge);
         drawWelcome(W, H, t);
 
         requestAnimationFrame(frame);
@@ -363,164 +376,64 @@
         ctx.globalAlpha = 1;
     }
 
-    // ── top hat ───────────────────────────────────────────────────────────────
-    function drawHat(hx, hy, s, t) {
-        var brimW = 96 * s, brimH = 11 * s;
-        var bodyW = 62 * s, bodyH = 78 * s;
+    // ── rabbit sprite (image-based) ───────────────────────────────────────────
+    function drawRabbitSprite(hx, baseY, sc, t, emerge) {
+        // Display height for the cropped rabbit+hat area
+        var dispH = 220 * sc;
+        var hatRimY    = baseY - HAT_BOTTOM_REL * dispH + HAT_BRIM_REL * dispH;
+        var idleBob    = emerge > 0.99 ? Math.sin(t * 1.6) * 2.5 * sc : 0;
 
-        // glow pooled below brim
-        var glow = ctx.createRadialGradient(hx, hy + 4*s, 0, hx, hy + 4*s, 58*s);
-        glow.addColorStop(0, 'rgba(180,90,255,0.22)');
-        glow.addColorStop(1, 'transparent');
-        ctx.fillStyle = glow;
-        ctx.beginPath();
-        ctx.ellipse(hx, hy + 4*s, 58*s, 18*s, 0, 0, Math.PI * 2);
-        ctx.fill();
+        // Magical aura around the rabbit once it's emerging
+        if (emerge > 0.3) {
+            var ao  = Math.min(1, (emerge - 0.3) / 0.7);
+            var auraY = hatRimY - (hatRimY - (baseY - HAT_BOTTOM_REL * dispH)) * 0.5;
+            var ag  = ctx.createRadialGradient(hx, auraY, 6*sc, hx, auraY, 62*sc);
+            ag.addColorStop(0, 'rgba(192,130,255,' + (ao * 0.22).toFixed(2) + ')');
+            ag.addColorStop(1, 'transparent');
+            ctx.fillStyle = ag;
+            ctx.beginPath(); ctx.arc(hx, auraY, 62*sc, 0, Math.PI * 2); ctx.fill();
+        }
 
-        // shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.4)';
-        ctx.beginPath();
-        ctx.ellipse(hx + 3*s, hy + 5*s, brimW / 2, brimH / 2, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // brim
-        ctx.fillStyle = '#111111';
-        ctx.beginPath();
-        ctx.ellipse(hx, hy, brimW / 2, brimH / 2, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#2a2a2a';
-        ctx.lineWidth   = 1;
-        ctx.stroke();
-
-        // body
-        ctx.fillStyle = '#0d0d0d';
-        ctx.fillRect(hx - bodyW / 2, hy - bodyH, bodyW, bodyH);
-
-        // gold band
-        var band = ctx.createLinearGradient(hx - bodyW/2, 0, hx + bodyW/2, 0);
-        band.addColorStop(0,   '#8a6800');
-        band.addColorStop(0.5, GOLD);
-        band.addColorStop(1,   '#8a6800');
-        ctx.fillStyle = band;
-        ctx.fillRect(hx - bodyW/2, hy - 15*s, bodyW, 8*s);
-
-        // top ellipse
-        ctx.fillStyle = '#0d0d0d';
-        ctx.beginPath();
-        ctx.ellipse(hx, hy - bodyH, bodyW/2, 8*s, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#222222';
-        ctx.lineWidth   = 1;
-        ctx.stroke();
-
-        // orbiting sparkles on the band
+        // Orbiting sparkles on hat band once visible
         if (t > 1.0) {
             for (var i = 0; i < 4; i++) {
-                var a  = t * 1.4 + i * Math.PI / 2;
-                var sx = hx + Math.cos(a) * (bodyW / 2 + 6*s);
-                var sy = hy - 11*s + Math.sin(a) * 3*s;
-                ctx.globalAlpha = 0.5 + Math.sin(t * 3 + i) * 0.45;
+                var ang = t * 1.4 + i * Math.PI / 2;
+                var sx  = hx + Math.cos(ang) * 48 * sc;
+                var sy  = hatRimY - 14 * sc + Math.sin(ang) * 4 * sc;
+                ctx.globalAlpha = Math.max(0, Math.min(1, 0.5 + Math.sin(t * 3 + i) * 0.45));
                 ctx.fillStyle   = GOLD;
-                ctx.beginPath();
-                ctx.arc(sx, sy, 2*s, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(sx, sy, 2*sc, 0, Math.PI * 2); ctx.fill();
             }
             ctx.globalAlpha = 1;
         }
-    }
 
-    // ── rabbit ────────────────────────────────────────────────────────────────
-    function drawRabbit(hx, baseY, s, t, emerge) {
-        if (emerge < 0.01) { return; }
+        if (!rabbitImgReady) { return; }
 
-        var bodyH   = 78 * s;
-        var targetY = baseY - bodyH * 0.82;
-        var hiddenY = baseY + 5 * s;
-        var idleBob = emerge > 0.99 ? Math.sin(t * 1.6) * 2.5 * s : 0;
-        var ry      = hiddenY + (targetY - hiddenY) * emerge + idleBob;
+        var IW   = rabbitImg.naturalWidth;
+        var IH   = rabbitImg.naturalHeight;
+        var srcX = IW * CROP_SX,  srcY = IH * CROP_SY;
+        var srcW = IW * CROP_SW,  srcH = IH * CROP_SH;
 
-        ctx.globalAlpha = Math.min(1, emerge * 3);
+        var dispW  = dispH * (srcW / srcH);
+        var drawX  = hx - dispW / 2;
+        // Align hat bottom (HAT_BOTTOM_REL of dispH) with baseY
+        var drawY0 = baseY - HAT_BOTTOM_REL * dispH;
+        // Pop offset: image rises slightly as rabbit emerges; also idle bob
+        var drawY  = drawY0 - emerge * 10 * sc + idleBob;
 
-        // magical aura
-        if (emerge > 0.4) {
-            var ao = (emerge - 0.4) / 0.6;
-            var ag = ctx.createRadialGradient(hx, ry, 8*s, hx, ry, 55*s);
-            ag.addColorStop(0, 'rgba(192,130,255,' + (ao * 0.18).toFixed(2) + ')');
-            ag.addColorStop(1, 'transparent');
-            ctx.globalAlpha = 1;
-            ctx.fillStyle   = ag;
-            ctx.beginPath();
-            ctx.arc(hx, ry, 55*s, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.globalAlpha = Math.min(1, emerge * 3);
-        }
+        // Clip: at emerge=0 show only hat (from hatRim down);
+        //       at emerge=1 show full crop from top
+        var clipTop = hatRimY - emerge * (hatRimY - drawY);
+        // Always show the hat brim (few px above rim)
+        clipTop = Math.min(clipTop, hatRimY - 6 * sc);
 
-        // ears
-        var earWig = emerge > 0.9 ? Math.sin(t * 2.2) * 0.07 : 0;
-        [[-9, -0.17 + earWig], [9, 0.17 - earWig * 0.8]].forEach(function (ear) {
-            var ox = ear[0], rot = ear[1];
-            ctx.save();
-            ctx.translate(hx + ox*s, ry - 17*s);
-            ctx.rotate(rot);
-            ctx.fillStyle = '#eeeeee';
-            ctx.beginPath(); ctx.ellipse(0, -20*s, 6*s, 16*s, 0, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = '#ffb0c0';
-            ctx.beginPath(); ctx.ellipse(0, -20*s, 3.2*s, 10*s, 0, 0, Math.PI*2); ctx.fill();
-            ctx.restore();
-        });
-
-        // body
-        ctx.fillStyle = '#f0f0f0';
-        ctx.beginPath(); ctx.ellipse(hx, ry+24*s, 19*s, 25*s, 0, 0, Math.PI*2); ctx.fill();
-
-        // head
-        ctx.fillStyle = '#f8f8f8';
-        ctx.beginPath(); ctx.ellipse(hx, ry, 19*s, 17*s, 0, 0, Math.PI*2); ctx.fill();
-
-        // waving paw
-        if (emerge > 0.72) {
-            var wave = Math.sin(t * 4.5) * 0.5;
-            ctx.save();
-            ctx.translate(hx + 23*s, ry + 9*s);
-            ctx.rotate(-0.4 + wave);
-            ctx.fillStyle = '#f0f0f0';
-            ctx.beginPath(); ctx.ellipse(0, 0, 7*s, 5*s, 0, 0, Math.PI*2); ctx.fill();
-            ctx.restore();
-        }
-
-        // eyes — outer
-        ctx.fillStyle = '#1a1a1a';
-        ctx.beginPath(); ctx.arc(hx - 6.5*s, ry - 2*s, 4*s,   0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(hx + 6.5*s, ry - 2*s, 4*s,   0, Math.PI*2); ctx.fill();
-        // iris
-        ctx.fillStyle = LAVENDER;
-        ctx.beginPath(); ctx.arc(hx - 6.5*s, ry - 2*s, 2.4*s, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(hx + 6.5*s, ry - 2*s, 2.4*s, 0, Math.PI*2); ctx.fill();
-        // pupil
-        ctx.fillStyle = '#111111';
-        ctx.beginPath(); ctx.arc(hx - 6.5*s, ry - 2*s, 1.2*s, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(hx + 6.5*s, ry - 2*s, 1.2*s, 0, Math.PI*2); ctx.fill();
-        // shine
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath(); ctx.arc(hx - 5.2*s, ry - 3.3*s, 1.1*s, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(hx + 7.7*s, ry - 3.3*s, 1.1*s, 0, Math.PI*2); ctx.fill();
-
-        // rosy cheeks
-        ctx.globalAlpha = Math.min(1, emerge * 3) * 0.32;
-        ctx.fillStyle   = MAGENTA;
-        ctx.beginPath(); ctx.arc(hx - 13*s, ry + 2*s, 5*s, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(hx + 13*s, ry + 2*s, 5*s, 0, Math.PI*2); ctx.fill();
-        ctx.globalAlpha = Math.min(1, emerge * 3);
-
-        // nose
-        ctx.fillStyle = '#ff8fa3';
-        ctx.beginPath(); ctx.arc(hx, ry + 5*s, 2.2*s, 0, Math.PI*2); ctx.fill();
-
-        // smile
-        ctx.strokeStyle = '#aaaaaa';
-        ctx.lineWidth   = 1.5;
-        ctx.beginPath(); ctx.arc(hx, ry + 6*s, 4.5*s, 0.2, Math.PI - 0.2); ctx.stroke();
-
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, emerge * 1.8 + 0.10);
+        ctx.beginPath();
+        ctx.rect(drawX - 4, clipTop, dispW + 8, cvs.height);
+        ctx.clip();
+        ctx.drawImage(rabbitImg, srcX, srcY, srcW, srcH, drawX, drawY, dispW, dispH);
+        ctx.restore();
         ctx.globalAlpha = 1;
     }
 
