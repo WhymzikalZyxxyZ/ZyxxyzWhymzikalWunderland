@@ -173,16 +173,13 @@ describe('evaluateBoard', () => {
 });
 
 describe('getChessAIMove', () => {
-    test('returns a move at game start for all difficulties', () => {
+    test('returns a move at game start for each depth (one per unique depth)', () => {
         const g = updateStatus(newChessGame());
-        for (let d = 0; d <= 9; d++) {
-            const m = getChessAIMove({ ...g, turn: CH_BLACK }, d);
-            // At start white has already moved in this sim — but testing from initial:
-            // Black has 20 moves too — but state.turn is white, so use as-is
-            const wm = getChessAIMove(g, d);
-            expect(wm).not.toBeNull();
+        // CHESS_DEPTH_MAP = [0,1,1,2,2,2,3,3,4,4] — test one representative per unique depth
+        for (const d of [0, 1, 3, 6, 8]) {
+            expect(getChessAIMove(g, d)).not.toBeNull();
         }
-    }, 30000);
+    }, 10000);
 
     test('returns null when no legal moves', () => {
         const board = Array.from({ length: 8 }, () => new Array(8).fill(0));

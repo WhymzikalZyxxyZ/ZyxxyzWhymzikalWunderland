@@ -317,6 +317,16 @@ function evaluateBoard(board) {
     return score;
 }
 
+// ── Move ordering (MVV-LVA: captures of high-value pieces first) ──────────────
+function mvvLva(board, m) {
+    const victim = board[m.tr][m.tc];
+    return victim ? MATERIAL[abs(victim)] * 10 - MATERIAL[abs(board[m.r][m.c])] : 0;
+}
+
+function orderMoves(board, moves) {
+    return moves.sort((a, b) => mvvLva(board, b) - mvvLva(board, a));
+}
+
 // ── Minimax ───────────────────────────────────────────────────────────────────
 
 function minimax(state, depth, alpha, beta, maximizing) {
@@ -329,6 +339,7 @@ function minimax(state, depth, alpha, beta, maximizing) {
         }
         return evaluateBoard(state.board);
     }
+    orderMoves(state.board, legalMoves);
     if (maximizing) {
         let best = -Infinity;
         for (const m of legalMoves) {
@@ -356,6 +367,7 @@ function getChessAIMove(state, difficulty) {
     const d = CHESS_DEPTH_MAP[Math.max(0, Math.min(9, Math.floor(difficulty)))];
     if (d === 0) return moves[Math.floor(Math.random() * moves.length)];
 
+    orderMoves(state.board, moves);
     const maximizing = state.turn === CH_WHITE;
     let bestScore = maximizing ? -Infinity : Infinity;
     let bestMove  = moves[0];

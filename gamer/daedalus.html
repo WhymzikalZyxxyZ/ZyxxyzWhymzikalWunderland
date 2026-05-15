@@ -144,6 +144,20 @@
         }
         #penaltyLabel.show { opacity: 1; transition: opacity 0s; }
         #penaltyLabel.hide { opacity: 0; transition: opacity 0.5s; }
+
+        /* ── Cutscene overlay (no backdrop-filter — it breaks canvas compositing) */
+        #gcOverlay {
+            position: fixed; inset: 0; z-index: 500;
+            background: #000; display: none;
+        }
+        #csCanvas  { position: absolute; inset: 0; z-index: 1; }
+        #csScore   {
+            position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px 32px 40px; text-align: center;
+            opacity: 0; transition: opacity 0.8s; pointer-events: none;
+        }
+        #csScore button { pointer-events: auto; }
     </style>
 </head>
 <body class="wunderBody">
@@ -199,16 +213,14 @@
     </div>
 </div>
 
-<!-- Game complete overlay (cutscene) -->
-<div id="gcOverlay" class="dae-overlay" style="display:none; padding:0; overflow:hidden;">
-    <canvas id="csCanvas" style="position:absolute; inset:0; width:100%; height:100%;"></canvas>
-    <div id="csScore" style="position:absolute; bottom:0; left:0; right:0;
-         display:flex; flex-direction:column; align-items:center;
-         padding:20px 32px 40px; text-align:center; opacity:0; transition:opacity 0.8s;">
+<!-- Game complete cutscene overlay -->
+<div id="gcOverlay">
+    <canvas id="csCanvas"></canvas>
+    <div id="csScore">
         <div class="ovl-time" id="gcTime">00:00.0</div>
         <p class="ovl-newbest" id="gcNewBest">✦ NEW BEST TIME ✦</p>
         <p class="ovl-detail" id="gcPrev"></p>
-        <div class="ovl-btns" style="pointer-events:auto;">
+        <div class="ovl-btns">
             <button class="dae-btn" id="playAgainBtn">Play Again</button>
             <button class="dae-btn sec" id="quitBtn">Return to Games</button>
         </div>
@@ -394,12 +406,11 @@ function generateMaze(rows, cols) {
     return grid;
 }
 
-// ── Maze braiding: knock down dead-end walls to create loops ─────────────────
+// ── Maze braiding: remove dead-end walls to create converging loops ───────────
 function braidMaze(grid, rows, cols, factor) {
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
-            const passages = DIRS.filter(d => !(grid[r][c] & d));
-            if (passages.length !== 1) continue;
+            if (DIRS.filter(d => !(grid[r][c] & d)).length !== 1) continue;
             if (Math.random() > factor) continue;
             const walls = DIRS.filter(d => {
                 if (!(grid[r][c] & d)) return false;
@@ -407,16 +418,14 @@ function braidMaze(grid, rows, cols, factor) {
                 return nr >= 0 && nr < rows && nc >= 0 && nc < cols;
             });
             if (!walls.length) continue;
-            // Prefer connecting two dead-ends together (tightest loop)
-            const deadEndWalls = walls.filter(d => {
+            const deadEnds = walls.filter(d => {
                 const nr = r + DR[d], nc = c + DC[d];
                 return DIRS.filter(dd => !(grid[nr][nc] & dd)).length === 1;
             });
-            const candidates = deadEndWalls.length ? deadEndWalls : walls;
-            const d  = candidates[Math.floor(Math.random() * candidates.length)];
-            const nr = r + DR[d], nc = c + DC[d];
-            grid[r][c]   &= ~d;
-            grid[nr][nc] &= ~OPP[d];
+            const pick = (deadEnds.length ? deadEnds : walls);
+            const d    = pick[Math.floor(Math.random() * pick.length)];
+            grid[r][c]              &= ~d;
+            grid[r + DR[d]][c + DC[d]] &= ~OPP[d];
         }
     }
 }
@@ -629,54 +638,49 @@ function runCutscene() {
     const score = document.getElementById('csScore');
     score.style.opacity = '0';
 
+    // Size canvas to full viewport in physical pixels
     const W = window.innerWidth, H = window.innerHeight;
-    cvs.width = W * (window.devicePixelRatio || 1);
-    cvs.height = H * (window.devicePixelRatio || 1);
-    cvs.style.width  = W + 'px';
-    cvs.style.height = H + 'px';
+    cvs.width  = W; cvs.height = H;
+    cvs.style.width = W + 'px'; cvs.style.height = H + 'px';
     const cx = cvs.getContext('2d');
-    cx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
 
-    // Corridor strip
+    // Corridor geometry
     const cTop = H * 0.28, cBot = H * 0.72, cMid = (cTop + cBot) / 2, cH = cBot - cTop;
-    // Exit opening on right
+    // Exit opening occupies the right portion of the corridor
     const exitX = W * 0.80, exitW = W - exitX;
 
-    // Moving positions: fraction of W
     let playerX = 0.52, minoX = -0.18;
-
     const T0 = performance.now();
 
     function drawIcarus(x, y, sz, fp) {
-        // fp = fall progress 0→1
         cx.save();
         cx.translate(x, y);
-        const alpha = 0.9 - fp * 0.35;
-        cx.strokeStyle = `rgba(255,200,80,${alpha})`;
-        cx.fillStyle   = `rgba(255,200,80,${alpha})`;
+        const a = 0.9 - fp * 0.35;
+        cx.strokeStyle = `rgba(255,200,80,${a})`;
+        cx.fillStyle   = `rgba(255,200,80,${a})`;
         cx.lineWidth   = Math.max(1, sz * 0.07);
         cx.lineCap     = 'round';
 
         // Head
         cx.beginPath(); cx.arc(0, -sz * 0.52, sz * 0.13, 0, Math.PI * 2); cx.fill();
-        // Body
+        // Body + limbs
         cx.beginPath();
         cx.moveTo(0, -sz * 0.38); cx.lineTo(0, sz * 0.22);
-        cx.moveTo(-sz * 0.18, -sz * 0.08); cx.lineTo(sz * 0.18, -sz * 0.08); // arms
-        cx.moveTo(0, sz * 0.22); cx.lineTo(-sz * 0.12, sz * 0.48);
-        cx.moveTo(0, sz * 0.22); cx.lineTo( sz * 0.12, sz * 0.48);
+        cx.moveTo(-sz * 0.18, -sz * 0.08); cx.lineTo(sz * 0.18, -sz * 0.08);
+        cx.moveTo(0, sz * 0.22);  cx.lineTo(-sz * 0.12, sz * 0.48);
+        cx.moveTo(0, sz * 0.22);  cx.lineTo( sz * 0.12, sz * 0.48);
         cx.stroke();
 
-        // Wing bones — stripped frame, no feathers
+        // Wing skeleton — bare frame, feathers stripped by the sun
         cx.lineWidth = Math.max(1, sz * 0.055);
         const wLen = sz * 0.85;
-        [[-1, -1], [1, 1]].forEach(([side, ]) => {
+        [-1, 1].forEach(side => {
             // Main spar
             cx.beginPath();
             cx.moveTo(side * sz * 0.12, -sz * 0.18);
             cx.quadraticCurveTo(side * wLen * 0.5, -sz * 0.52, side * wLen, -sz * 0.04);
             cx.stroke();
-            // Rib stubs (bare bones — feathers gone)
+            // Rib stubs (bare bones)
             for (let i = 1; i <= 4; i++) {
                 const rt  = i / 5;
                 const rbx = side * (sz * 0.12 + (wLen - sz * 0.12) * rt);
@@ -690,7 +694,7 @@ function runCutscene() {
         });
         cx.restore();
 
-        // Scattered falling feathers (sparse — most already gone)
+        // Sparse falling feathers (most already burned away)
         for (let i = 0; i < 4; i++) {
             const ang = i * 1.57 + fp * 3.5;
             const d   = sz * (0.55 + (i % 2) * 0.28);
@@ -706,38 +710,35 @@ function runCutscene() {
     }
 
     function drawFrame(t) {
-        cx.clearRect(0, 0, W, H);
-
-        // Void outside corridor
+        // Background void
         cx.fillStyle = '#020104';
         cx.fillRect(0, 0, W, H);
 
         // ── Exit sky ──────────────────────────────────────────────
         const sky = cx.createLinearGradient(exitX, cTop, exitX, cBot);
-        sky.addColorStop(0,    '#0a0520');
-        sky.addColorStop(0.5,  '#2a1060');
-        sky.addColorStop(1,    '#c85000');
+        sky.addColorStop(0,   '#0a0520');
+        sky.addColorStop(0.5, '#2a1060');
+        sky.addColorStop(1,   '#c85000');
         cx.fillStyle = sky;
         cx.fillRect(exitX, cTop, exitW, cH);
 
-        // Sun glow at base of exit
+        // Sun glow at base of exit, clipped to opening
+        cx.save();
+        cx.beginPath(); cx.rect(exitX, cTop, exitW, cH); cx.clip();
         const sg = cx.createRadialGradient(W, cBot, 0, W, cBot, exitW * 1.3);
         sg.addColorStop(0,   'rgba(255,170,20,0.9)');
         sg.addColorStop(0.4, 'rgba(220,60,0,0.45)');
         sg.addColorStop(1,   'rgba(0,0,0,0)');
-        cx.save();
-        cx.beginPath(); cx.rect(exitX, cTop, exitW, cH); cx.clip();
         cx.fillStyle = sg; cx.fillRect(exitX, cTop, exitW, cH);
         cx.restore();
 
-        // ── Icarus (clips to exit opening) ───────────────────────
+        // ── Icarus falling through the exit ───────────────────────
         const iStart = 0.4, iDur = 2.8;
         if (t >= iStart) {
             const ip  = Math.min(1, (t - iStart) / iDur);
             const isz = cH * 0.30;
-            // Arc: enters top-right of exit, falls diagonally toward bottom-left of exit
             const ix  = exitX + exitW * (0.55 - ip * 0.38);
-            const iy  = cTop  + (cH + isz) * ip - isz * 0.5;
+            const iy  = cTop  - isz * 0.5 + (cH + isz) * ip;
             if (iy < cBot + isz * 0.5) {
                 cx.save();
                 cx.beginPath(); cx.rect(exitX, cTop, exitW, cH); cx.clip();
@@ -749,13 +750,10 @@ function runCutscene() {
         // ── Corridor ──────────────────────────────────────────────
         cx.fillStyle = '#0d0d0d';
         cx.fillRect(0, cTop, exitX, cH);
-
-        // Ceiling and floor slabs above/below corridor
         cx.fillStyle = '#050505';
         cx.fillRect(0, 0,    W, cTop);
         cx.fillRect(0, cBot, W, H - cBot);
 
-        // Wall lines
         cx.strokeStyle = '#5c4a34';
         cx.lineWidth   = 2;
         cx.beginPath(); cx.moveTo(0, cTop); cx.lineTo(exitX, cTop); cx.stroke();
@@ -784,9 +782,9 @@ function runCutscene() {
 
         // ── Minotaur ──────────────────────────────────────────────
         if (minoX > -0.12) {
-            const mx  = minoX * W;
-            const mr  = 40 + Math.sin(t * 9) * 3;
-            const mg  = cx.createRadialGradient(mx, cMid, 0, mx, cMid, mr);
+            const mx = minoX * W;
+            const mr = 40 + Math.sin(t * 9) * 3;
+            const mg = cx.createRadialGradient(mx, cMid, 0, mx, cMid, mr);
             mg.addColorStop(0,   'rgba(224,80,80,0.97)');
             mg.addColorStop(0.5, 'rgba(160,30,30,0.5)');
             mg.addColorStop(1,   'rgba(0,0,0,0)');
@@ -797,24 +795,24 @@ function runCutscene() {
             // Horns
             cx.fillStyle = '#c03030';
             cx.beginPath();
-            cx.moveTo(mx - 6, cMid - 9); cx.lineTo(mx - 14, cMid - 26); cx.lineTo(mx - 1, cMid - 11);
+            cx.moveTo(mx - 6, cMid - 9);  cx.lineTo(mx - 14, cMid - 26); cx.lineTo(mx - 1, cMid - 11);
             cx.fill();
             cx.beginPath();
-            cx.moveTo(mx + 6, cMid - 9); cx.lineTo(mx + 14, cMid - 26); cx.lineTo(mx + 1, cMid - 11);
+            cx.moveTo(mx + 6, cMid - 9);  cx.lineTo(mx + 14, cMid - 26); cx.lineTo(mx + 1, cMid - 11);
             cx.fill();
         }
     }
 
-    function tick() {
-        const t = (performance.now() - T0) / 1000;
+    function tick(ts) {
+        const t = (ts - T0) / 1000;
 
-        // Player runs toward exit (0.52 → 0.87 over 4.2 s)
-        if (t < 4.2) playerX = 0.52 + (t / 4.2) * 0.35;
+        // Player runs toward exit
+        playerX = Math.min(0.87, 0.52 + (t / 4.2) * 0.35);
 
         // Minotaur enters at t=1.4, accelerates, catches player at ~t=4.2
         if (t >= 1.4 && t < 4.2) {
             const p = (t - 1.4) / 2.8;
-            minoX = -0.04 + p * p * 0.93;
+            minoX = -0.04 + p * p * 0.91;
         } else if (t >= 4.2) {
             minoX = playerX;
         }
@@ -827,14 +825,14 @@ function runCutscene() {
             cx.fillRect(0, 0, W, H);
         }
 
-        // Fully black + typed text
+        // Fully black background + typed red text
         if (t >= 5.3) {
             cx.fillStyle = '#000';
             cx.fillRect(0, 0, W, H);
 
             if (t >= 5.6) {
-                const full   = 'There is no end to this maze…';
-                const shown  = full.slice(0, Math.min(Math.floor((t - 5.6) / 0.08), full.length));
+                const full  = 'There is no end to this maze…';
+                const shown = full.slice(0, Math.min(Math.floor((t - 5.6) / 0.08), full.length));
                 if (shown.length) {
                     cx.font        = `900 ${Math.min(W / 17, 28)}px monospace`;
                     cx.textAlign   = 'center';
@@ -847,8 +845,8 @@ function runCutscene() {
             }
         }
 
-        // Reveal score + buttons after text finishes
-        const textEnd = 5.6 + 'There is no end to this maze…'.length * 0.08;
+        // Reveal score and buttons after text finishes
+        const textEnd = 5.6 + '…There is no end to this maze'.length * 0.08;
         if (t >= textEnd + 1.0) {
             score.style.opacity = String(Math.min(1, (t - textEnd - 1.0) / 0.9));
         }
@@ -893,7 +891,7 @@ function onGameComplete() {
         ? (isNew ? 'Previous best: ' + fmtMs(+prev) : 'Best: ' + fmtMs(+prev))
         : '';
     document.getElementById('lcOverlay').style.display = 'none';
-    document.getElementById('gcOverlay').style.display = 'flex';
+    document.getElementById('gcOverlay').style.display = 'block';
     updateHudBest();
     runCutscene();
 }
