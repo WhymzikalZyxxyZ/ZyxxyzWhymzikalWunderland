@@ -7,6 +7,18 @@
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
     <style>
+        .about-anim-wrap {
+            max-width: 720px;
+            margin: 0 auto 24px;
+        }
+        #aboutCanvas {
+            width: 100%;
+            height: 360px;
+            display: block;
+            border: 1px solid rgba(0,229,255,0.3);
+            border-radius: 8px;
+            background: #050a0e;
+        }
         .about-card {
             max-width: 620px;
             margin: 40px auto;
@@ -55,6 +67,10 @@
             <a href="/technologist/apps.html">Technologist</a>
             <a href="/community/forum.html">Community</a>
         </div>
+    </div>
+
+    <div class="about-anim-wrap">
+        <canvas id="aboutCanvas"></canvas>
     </div>
 
     <div class="about-card">
