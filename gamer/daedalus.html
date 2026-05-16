@@ -638,54 +638,281 @@ function runCutscene() {
     const score = document.getElementById('csScore');
     score.style.opacity = '0';
 
-    // Size canvas to full viewport in physical pixels
     const W = window.innerWidth, H = window.innerHeight;
     cvs.width  = W; cvs.height = H;
     cvs.style.width = W + 'px'; cvs.style.height = H + 'px';
     const cx = cvs.getContext('2d');
 
-    // Corridor geometry
-    const cTop = H * 0.28, cBot = H * 0.72, cMid = (cTop + cBot) / 2, cH = cBot - cTop;
-    // Exit opening occupies the right portion of the corridor
-    const exitX = W * 0.80, exitW = W - exitX;
-
-    let playerX = 0.52, minoX = -0.18;
     const T0 = performance.now();
 
+    // ── Phase timings (seconds) ───────────────────────────────────────────────
+    const PH_RUN         = 1.8;   // panting sprint toward exit
+    const PH_LOOK_BACK   = 2.6;   // whip-pan: minotaur staring
+    const PH_GLANCE_EXIT = 3.4;   // glance aside: Icarus falls through doorway
+    const PH_CHARGING    = 4.5;   // face minotaur: charging, horns lowered
+    const PH_DESPERATE   = 5.8;   // turn back: jagged exhausted run
+    const PH_TRAMPLE     = 6.5;   // trampled
+    const PH_BLACK       = 7.1;   // black
+    const PH_TEXT        = 7.4;   // text types out
+
+    // ── First-person stone corridor ───────────────────────────────────────────
+    // direction: 'fwd' = exit light ahead; 'back' = darkness ahead (looking behind)
+    // depth  0..1  how close the far opening has grown (player proximity to exit)
+    // torchT used for flicker
+    function drawCorridor(direction, depth, torchT) {
+        const vx = W / 2, vy = H / 2;
+        const apt  = W  * (0.045 + depth * 0.22);  // aperture half-width at VP
+        const aptH = apt * 0.60;                    // aperture half-height
+        const aL = vx - apt, aR = vx + apt;
+        const aT = vy - aptH, aB = vy + aptH;
+
+        // Ceiling
+        cx.fillStyle = '#0d0b08';
+        cx.beginPath();
+        cx.moveTo(0, 0); cx.lineTo(W, 0); cx.lineTo(aR, aT); cx.lineTo(aL, aT);
+        cx.closePath(); cx.fill();
+
+        // Floor
+        const flG = cx.createLinearGradient(0, vy, 0, H);
+        flG.addColorStop(0,   '#201810'); flG.addColorStop(0.4, '#16100a');
+        flG.addColorStop(1,   '#0c0906');
+        cx.fillStyle = flG;
+        cx.beginPath();
+        cx.moveTo(0, H); cx.lineTo(W, H); cx.lineTo(aR, aB); cx.lineTo(aL, aB);
+        cx.closePath(); cx.fill();
+
+        // Left wall
+        const lwG = cx.createLinearGradient(0, vy, vx, vy);
+        lwG.addColorStop(0, '#221a12'); lwG.addColorStop(1, '#100d08');
+        cx.fillStyle = lwG;
+        cx.beginPath();
+        cx.moveTo(0, 0); cx.lineTo(aL, aT); cx.lineTo(aL, aB); cx.lineTo(0, H);
+        cx.closePath(); cx.fill();
+
+        // Right wall
+        const rwG = cx.createLinearGradient(W, vy, vx, vy);
+        rwG.addColorStop(0, '#221a12'); rwG.addColorStop(1, '#100d08');
+        cx.fillStyle = rwG;
+        cx.beginPath();
+        cx.moveTo(W, 0); cx.lineTo(aR, aT); cx.lineTo(aR, aB); cx.lineTo(W, H);
+        cx.closePath(); cx.fill();
+
+        // Stone mortar lines — perspective-correct across walls
+        cx.strokeStyle = 'rgba(255,240,200,0.055)'; cx.lineWidth = 1;
+        for (let i = 1; i < 8; i++) {
+            const fy = i / 8;
+            const wy = aT + (aB - aT) * fy;
+            cx.beginPath(); cx.moveTo(0, fy * H); cx.lineTo(aL, wy); cx.stroke();
+            cx.beginPath(); cx.moveTo(W, fy * H); cx.lineTo(aR, wy); cx.stroke();
+        }
+        for (let i = 1; i < 5; i++) {
+            const fx  = i / 5;
+            const cpx = aL + (aR - aL) * fx;
+            cx.beginPath(); cx.moveTo(fx * W, 0); cx.lineTo(cpx, aT); cx.stroke();
+        }
+
+        // Torches on left and right walls
+        const flicker = 0.75 + Math.sin(torchT * 17.4) * 0.13 + Math.sin(torchT * 8.1) * 0.12;
+        [{ wx: W * 0.10, wy: H * 0.40 }, { wx: W * 0.90, wy: H * 0.40 }].forEach(tp => {
+            const tg = cx.createRadialGradient(tp.wx, tp.wy, 0, tp.wx, tp.wy, 68 * flicker);
+            tg.addColorStop(0,    `rgba(255,185,45,${0.48 * flicker})`);
+            tg.addColorStop(0.35, `rgba(210,70,0,${0.18 * flicker})`);
+            tg.addColorStop(1,    'rgba(0,0,0,0)');
+            cx.fillStyle = tg;
+            cx.beginPath(); cx.arc(tp.wx, tp.wy, 68 * flicker, 0, Math.PI * 2); cx.fill();
+            cx.fillStyle = `rgba(255,210,70,${0.82 * flicker})`;
+            cx.beginPath(); cx.ellipse(tp.wx, tp.wy - 4, 4, 11 * flicker, 0, 0, Math.PI * 2); cx.fill();
+            cx.fillStyle = `rgba(255,255,200,${0.5 * flicker})`;
+            cx.beginPath(); cx.ellipse(tp.wx, tp.wy - 5, 2, 5, 0, 0, Math.PI * 2); cx.fill();
+        });
+
+        // Far opening
+        if (direction === 'fwd') {
+            // Warm sunset sky through exit
+            const sky = cx.createLinearGradient(vx, aT, vx, aB);
+            sky.addColorStop(0,    '#0a0520'); sky.addColorStop(0.45, '#2a1060');
+            sky.addColorStop(0.75, '#7a1850'); sky.addColorStop(1,    '#c85000');
+            cx.fillStyle = sky;
+            cx.fillRect(aL, aT, aR - aL, aB - aT);
+            const sg = cx.createRadialGradient(vx, aB, 0, vx, aB, apt * 1.8);
+            sg.addColorStop(0,   'rgba(255,165,30,0.88)');
+            sg.addColorStop(0.35,'rgba(200,55,0,0.38)');
+            sg.addColorStop(1,   'rgba(0,0,0,0)');
+            cx.save(); cx.beginPath(); cx.rect(aL, aT, aR - aL, aB - aT); cx.clip();
+            cx.fillStyle = sg; cx.fillRect(aL - 20, aT - 20, aR - aL + 40, aB - aT + 40);
+            cx.restore();
+        } else {
+            cx.fillStyle = '#060402';
+            cx.fillRect(aL, aT, aR - aL, aB - aT);
+        }
+
+        cx.strokeStyle = 'rgba(92,74,52,0.45)'; cx.lineWidth = 2;
+        cx.strokeRect(aL, aT, aR - aL, aB - aT);
+    }
+
+    // ── Minotaur face (first-person, grows as it charges) ────────────────────
+    // scale  0.2 (distant) → 1.2+ (fills screen)
+    // hornAngle  0 = natural upward horns; 1 = aimed at viewer (full charge)
+    // anger  0..1 drives eye glow and nostril flare
+    function drawMinotaur(scale, hornAngle, anger) {
+        const mx = W / 2, my = H * 0.50;
+        const sz = Math.min(W, H) * scale;
+
+        // Dark looming mass
+        const mass = cx.createRadialGradient(mx, my + sz * 0.12, sz * 0.04, mx, my + sz * 0.10, sz * 1.02);
+        mass.addColorStop(0,    `rgba(18,0,0,${Math.min(0.97, scale * 0.92)})`);
+        mass.addColorStop(0.55, `rgba(10,0,0,${Math.min(0.75, scale * 0.60)})`);
+        mass.addColorStop(1,    'rgba(0,0,0,0)');
+        cx.fillStyle = mass;
+        cx.beginPath(); cx.arc(mx, my + sz * 0.10, sz * 1.02, 0, Math.PI * 2); cx.fill();
+
+        // Shoulders
+        cx.fillStyle = '#100a06';
+        cx.beginPath(); cx.ellipse(mx, my + sz * 0.44, sz * 0.64, sz * 0.38, 0, 0, Math.PI * 2); cx.fill();
+
+        // Head
+        cx.fillStyle = '#191210';
+        cx.beginPath(); cx.ellipse(mx, my + sz * 0.03, sz * 0.40, sz * 0.38, 0, 0, Math.PI * 2); cx.fill();
+
+        // Horns — tilt from upward-out (hornAngle=0) to aimed-at-viewer (hornAngle=1)
+        cx.lineCap = 'round';
+        [-1, 1].forEach(side => {
+            const bx = mx + side * sz * 0.28;
+            const by = my - sz * 0.22;
+            // Natural tip: high and wide; charge tip: lower and more inward
+            const tipX = mx + side * sz * (0.72 - hornAngle * 0.24);
+            const tipY = by - sz * (0.44 - hornAngle * 0.38);
+            const ctX  = mx + side * sz * 0.42;
+            const ctY  = by - sz * 0.50;
+            cx.strokeStyle = '#1c1408'; cx.lineWidth = sz * 0.082;
+            cx.beginPath(); cx.moveTo(bx, by); cx.quadraticCurveTo(ctX, ctY, tipX, tipY); cx.stroke();
+            cx.strokeStyle = '#2e2010'; cx.lineWidth = sz * 0.026;
+            cx.beginPath(); cx.moveTo(bx, by); cx.quadraticCurveTo(ctX - side * sz * 0.04, ctY + sz * 0.04, tipX, tipY); cx.stroke();
+        });
+        cx.lineCap = 'butt';
+
+        // Snout
+        cx.fillStyle = '#231c14';
+        cx.beginPath(); cx.ellipse(mx, my + sz * 0.18, sz * 0.26, sz * 0.20, 0, 0, Math.PI * 2); cx.fill();
+
+        // Nostrils (flare when charging)
+        const flare = 1 + hornAngle * 0.45;
+        cx.fillStyle = '#0a0704';
+        cx.beginPath(); cx.ellipse(mx - sz * 0.11, my + sz * 0.20, sz * 0.058 * flare, sz * 0.042, -0.3, 0, Math.PI * 2); cx.fill();
+        cx.beginPath(); cx.ellipse(mx + sz * 0.11, my + sz * 0.20, sz * 0.058 * flare, sz * 0.042,  0.3, 0, Math.PI * 2); cx.fill();
+
+        // Breath vapour
+        if (hornAngle > 0.2) {
+            const vap = (hornAngle - 0.2) / 0.8;
+            cx.fillStyle = `rgba(220,215,210,${0.22 * vap})`;
+            cx.beginPath(); cx.ellipse(mx - sz * 0.13, my + sz * 0.30, sz * 0.04, sz * 0.10, -0.15, 0, Math.PI * 2); cx.fill();
+            cx.beginPath(); cx.ellipse(mx + sz * 0.13, my + sz * 0.30, sz * 0.04, sz * 0.10,  0.15, 0, Math.PI * 2); cx.fill();
+        }
+
+        // Eyes — glowing red
+        const eyeI = 0.55 + anger * 0.45;
+        [mx - sz * 0.19, mx + sz * 0.19].forEach(ex => {
+            const ey = my - sz * 0.06;
+            const eg = cx.createRadialGradient(ex, ey, 0, ex, ey, sz * 0.24);
+            eg.addColorStop(0,    `rgba(255,30,0,${eyeI * 0.88})`);
+            eg.addColorStop(0.28, `rgba(200,0,0,${eyeI * 0.38})`);
+            eg.addColorStop(1,    'rgba(0,0,0,0)');
+            cx.fillStyle = eg; cx.beginPath(); cx.arc(ex, ey, sz * 0.24, 0, Math.PI * 2); cx.fill();
+            cx.fillStyle = `rgba(230,25,0,${eyeI})`;
+            cx.beginPath(); cx.arc(ex, ey, sz * 0.070, 0, Math.PI * 2); cx.fill();
+            cx.fillStyle = '#080002';
+            cx.beginPath(); cx.arc(ex, ey, sz * 0.032, 0, Math.PI * 2); cx.fill();
+            cx.fillStyle = `rgba(255,140,80,${eyeI * 0.65})`;
+            cx.beginPath(); cx.arc(ex - sz * 0.022, ey - sz * 0.022, sz * 0.014, 0, Math.PI * 2); cx.fill();
+        });
+
+        // Coarse fur strokes
+        cx.strokeStyle = `rgba(6,3,2,${0.55 * Math.min(1, scale)})`;
+        cx.lineCap = 'round';
+        for (let i = 0; i < 10; i++) {
+            const fa = i * 0.628 + 0.3;
+            const fr = sz * (0.22 + (i % 3) * 0.06);
+            cx.lineWidth = sz * 0.018;
+            cx.beginPath();
+            cx.moveTo(mx + Math.cos(fa) * fr, my + sz * 0.10 + Math.sin(fa) * fr * 0.6);
+            cx.lineTo(mx + Math.cos(fa + 0.9) * fr + Math.cos(fa + 0.9) * sz * 0.055,
+                      my + sz * 0.10 + Math.sin(fa) * fr * 0.6 + Math.sin(fa + 0.9) * sz * 0.045);
+            cx.stroke();
+        }
+        cx.lineCap = 'butt';
+    }
+
+    // ── Look-aside: exit doorway with Icarus ─────────────────────────────────
+    function drawExitGlance(phase, icarusT) {
+        const dLeft = W * 0.30, dTop = H * 0.12, dBot = H * 0.88;
+        const dW = W - dLeft, dH = dBot - dTop;
+
+        const sky = cx.createLinearGradient(dLeft, dTop, dLeft, dBot);
+        sky.addColorStop(0,    '#0a0520'); sky.addColorStop(0.42, '#2a1060');
+        sky.addColorStop(0.72, '#7a1850'); sky.addColorStop(1,    '#c85000');
+        cx.fillStyle = sky; cx.fillRect(dLeft, dTop, dW, dH);
+
+        const hg = cx.createRadialGradient(W, dBot, 0, W, dBot, dW * 1.2);
+        hg.addColorStop(0,   'rgba(255,160,30,0.85)');
+        hg.addColorStop(0.4, 'rgba(200,60,0,0.38)');
+        hg.addColorStop(1,   'rgba(0,0,0,0)');
+        cx.save(); cx.beginPath(); cx.rect(dLeft, dTop, dW, dH); cx.clip();
+        cx.fillStyle = hg; cx.fillRect(dLeft, dTop, dW, dH); cx.restore();
+
+        if (icarusT >= 0) {
+            const ip  = Math.min(1, icarusT / 1.6);
+            const isz = dH * 0.28;
+            const ix  = dLeft + dW * (0.55 - ip * 0.30);
+            const iy  = dTop  - isz * 0.4 + (dH + isz) * ip;
+            if (iy < dBot + isz) {
+                cx.save(); cx.beginPath(); cx.rect(dLeft, dTop, dW, dH); cx.clip();
+                drawIcarus(ix, iy, isz, ip);
+                cx.restore();
+            }
+        }
+
+        // Stone wall on left
+        const wG = cx.createLinearGradient(0, 0, dLeft, 0);
+        wG.addColorStop(0, '#1c1610'); wG.addColorStop(1, '#0e0b08');
+        cx.fillStyle = wG; cx.fillRect(0, 0, dLeft, H);
+
+        cx.strokeStyle = '#5c4a34'; cx.lineWidth = 2.5;
+        cx.strokeRect(dLeft, dTop, dW, dH);
+        cx.beginPath(); cx.moveTo(dLeft, dTop); cx.lineTo(0, 0); cx.stroke();
+        cx.beginPath(); cx.moveTo(dLeft, dBot); cx.lineTo(0, H); cx.stroke();
+
+        // Fade in then hold
+        const fadeIn = Math.min(1, phase / 0.25);
+        if (fadeIn < 1) { cx.fillStyle = `rgba(0,0,0,${1 - fadeIn})`; cx.fillRect(0, 0, W, H); }
+        const fadeOut = phase > 0.78 ? (phase - 0.78) / 0.22 : 0;
+        if (fadeOut > 0) { cx.fillStyle = `rgba(0,0,0,${fadeOut})`; cx.fillRect(0, 0, W, H); }
+    }
+
+    // ── Icarus (unchanged from original) ─────────────────────────────────────
     function drawIcarus(x, y, sz, fp) {
-        cx.save();
-        cx.translate(x, y);
+        cx.save(); cx.translate(x, y);
         const a = 0.9 - fp * 0.35;
         cx.strokeStyle = `rgba(255,200,80,${a})`;
         cx.fillStyle   = `rgba(255,200,80,${a})`;
-        cx.lineWidth   = Math.max(1, sz * 0.07);
-        cx.lineCap     = 'round';
-
-        // Head
+        cx.lineWidth   = Math.max(1, sz * 0.07); cx.lineCap = 'round';
         cx.beginPath(); cx.arc(0, -sz * 0.52, sz * 0.13, 0, Math.PI * 2); cx.fill();
-        // Body + limbs
         cx.beginPath();
-        cx.moveTo(0, -sz * 0.38); cx.lineTo(0, sz * 0.22);
+        cx.moveTo(0, -sz * 0.38); cx.lineTo(0,  sz * 0.22);
         cx.moveTo(-sz * 0.18, -sz * 0.08); cx.lineTo(sz * 0.18, -sz * 0.08);
-        cx.moveTo(0, sz * 0.22);  cx.lineTo(-sz * 0.12, sz * 0.48);
-        cx.moveTo(0, sz * 0.22);  cx.lineTo( sz * 0.12, sz * 0.48);
+        cx.moveTo(0,  sz * 0.22);  cx.lineTo(-sz * 0.12, sz * 0.48);
+        cx.moveTo(0,  sz * 0.22);  cx.lineTo( sz * 0.12, sz * 0.48);
         cx.stroke();
-
-        // Wing skeleton — bare frame, feathers stripped by the sun
         cx.lineWidth = Math.max(1, sz * 0.055);
         const wLen = sz * 0.85;
         [-1, 1].forEach(side => {
-            // Main spar
             cx.beginPath();
             cx.moveTo(side * sz * 0.12, -sz * 0.18);
             cx.quadraticCurveTo(side * wLen * 0.5, -sz * 0.52, side * wLen, -sz * 0.04);
             cx.stroke();
-            // Rib stubs (bare bones)
             for (let i = 1; i <= 4; i++) {
                 const rt  = i / 5;
                 const rbx = side * (sz * 0.12 + (wLen - sz * 0.12) * rt);
-                const rby = -sz * 0.18 + (-sz * 0.04 + sz * 0.18) * rt
-                            - Math.sin(rt * Math.PI) * sz * 0.34;
+                const rby = -sz * 0.18 + (-sz * 0.04 + sz * 0.18) * rt - Math.sin(rt * Math.PI) * sz * 0.34;
                 cx.beginPath();
                 cx.moveTo(rbx, rby);
                 cx.lineTo(rbx + side * sz * 0.04, rby + sz * 0.16 * (1 - rt * 0.4));
@@ -693,8 +920,6 @@ function runCutscene() {
             }
         });
         cx.restore();
-
-        // Sparse falling feathers (most already burned away)
         for (let i = 0; i < 4; i++) {
             const ang = i * 1.57 + fp * 3.5;
             const d   = sz * (0.55 + (i % 2) * 0.28);
@@ -702,137 +927,124 @@ function runCutscene() {
             cx.translate(x + Math.cos(ang) * d, y + Math.sin(ang) * d * 0.5 + fp * sz * 1.8);
             cx.rotate(ang + fp * 2);
             cx.fillStyle = `rgba(255,190,60,${Math.max(0, 0.5 - fp * 0.35)})`;
-            cx.beginPath();
-            cx.ellipse(0, 0, sz * 0.035, sz * 0.10, 0, 0, Math.PI * 2);
-            cx.fill();
+            cx.beginPath(); cx.ellipse(0, 0, sz * 0.035, sz * 0.10, 0, 0, Math.PI * 2); cx.fill();
             cx.restore();
         }
     }
 
-    function drawFrame(t) {
-        // Background void
-        cx.fillStyle = '#020104';
-        cx.fillRect(0, 0, W, H);
-
-        // ── Exit sky ──────────────────────────────────────────────
-        const sky = cx.createLinearGradient(exitX, cTop, exitX, cBot);
-        sky.addColorStop(0,   '#0a0520');
-        sky.addColorStop(0.5, '#2a1060');
-        sky.addColorStop(1,   '#c85000');
-        cx.fillStyle = sky;
-        cx.fillRect(exitX, cTop, exitW, cH);
-
-        // Sun glow at base of exit, clipped to opening
-        cx.save();
-        cx.beginPath(); cx.rect(exitX, cTop, exitW, cH); cx.clip();
-        const sg = cx.createRadialGradient(W, cBot, 0, W, cBot, exitW * 1.3);
-        sg.addColorStop(0,   'rgba(255,170,20,0.9)');
-        sg.addColorStop(0.4, 'rgba(220,60,0,0.45)');
-        sg.addColorStop(1,   'rgba(0,0,0,0)');
-        cx.fillStyle = sg; cx.fillRect(exitX, cTop, exitW, cH);
-        cx.restore();
-
-        // ── Icarus falling through the exit ───────────────────────
-        const iStart = 0.4, iDur = 2.8;
-        if (t >= iStart) {
-            const ip  = Math.min(1, (t - iStart) / iDur);
-            const isz = cH * 0.30;
-            const ix  = exitX + exitW * (0.55 - ip * 0.38);
-            const iy  = cTop  - isz * 0.5 + (cH + isz) * ip;
-            if (iy < cBot + isz * 0.5) {
-                cx.save();
-                cx.beginPath(); cx.rect(exitX, cTop, exitW, cH); cx.clip();
-                drawIcarus(ix, iy, isz, ip);
-                cx.restore();
-            }
-        }
-
-        // ── Corridor ──────────────────────────────────────────────
-        cx.fillStyle = '#0d0d0d';
-        cx.fillRect(0, cTop, exitX, cH);
-        cx.fillStyle = '#050505';
-        cx.fillRect(0, 0,    W, cTop);
-        cx.fillRect(0, cBot, W, H - cBot);
-
-        cx.strokeStyle = '#5c4a34';
-        cx.lineWidth   = 2;
-        cx.beginPath(); cx.moveTo(0, cTop); cx.lineTo(exitX, cTop); cx.stroke();
-        cx.beginPath(); cx.moveTo(0, cBot); cx.lineTo(exitX, cBot); cx.stroke();
-        cx.strokeRect(exitX, cTop, exitW, cH);
-
-        // Depth-cue verticals
-        cx.strokeStyle = 'rgba(92,74,52,0.25)';
-        cx.lineWidth   = 1;
-        for (let i = 1; i < 6; i++) {
-            const vx = exitX * i / 6;
-            cx.beginPath(); cx.moveTo(vx, cTop); cx.lineTo(vx, cBot); cx.stroke();
-        }
-
-        // ── Player ────────────────────────────────────────────────
-        {
-            const px = playerX * W;
-            const pg = cx.createRadialGradient(px, cMid, 0, px, cMid, 22);
-            pg.addColorStop(0, 'rgba(212,168,83,0.92)');
-            pg.addColorStop(1, 'rgba(0,0,0,0)');
-            cx.fillStyle = pg;
-            cx.beginPath(); cx.arc(px, cMid, 22, 0, Math.PI * 2); cx.fill();
-            cx.fillStyle = '#d4a853';
-            cx.beginPath(); cx.arc(px, cMid, 5, 0, Math.PI * 2); cx.fill();
-        }
-
-        // ── Minotaur ──────────────────────────────────────────────
-        if (minoX > -0.12) {
-            const mx = minoX * W;
-            const mr = 40 + Math.sin(t * 9) * 3;
-            const mg = cx.createRadialGradient(mx, cMid, 0, mx, cMid, mr);
-            mg.addColorStop(0,   'rgba(224,80,80,0.97)');
-            mg.addColorStop(0.5, 'rgba(160,30,30,0.5)');
-            mg.addColorStop(1,   'rgba(0,0,0,0)');
-            cx.fillStyle = mg;
-            cx.beginPath(); cx.arc(mx, cMid, mr, 0, Math.PI * 2); cx.fill();
-            cx.fillStyle = '#e05050';
-            cx.beginPath(); cx.arc(mx, cMid, 10, 0, Math.PI * 2); cx.fill();
-            // Horns
-            cx.fillStyle = '#c03030';
-            cx.beginPath();
-            cx.moveTo(mx - 6, cMid - 9);  cx.lineTo(mx - 14, cMid - 26); cx.lineTo(mx - 1, cMid - 11);
-            cx.fill();
-            cx.beginPath();
-            cx.moveTo(mx + 6, cMid - 9);  cx.lineTo(mx + 14, cMid - 26); cx.lineTo(mx + 1, cMid - 11);
-            cx.fill();
-        }
+    // ── Radial vignette (r,g,b as ints) ──────────────────────────────────────
+    function drawVignette(intensity, r, g, b) {
+        const vg = cx.createRadialGradient(W/2, H/2, H * 0.18, W/2, H/2, Math.max(W, H) * 0.78);
+        vg.addColorStop(0,    'rgba(0,0,0,0)');
+        vg.addColorStop(0.65, `rgba(${r},${g},${b},${Math.min(1, intensity * 0.55)})`);
+        vg.addColorStop(1,    `rgba(${r},${g},${b},${Math.min(1, intensity)})`);
+        cx.fillStyle = vg; cx.fillRect(0, 0, W, H);
     }
 
+    // ── Main tick ─────────────────────────────────────────────────────────────
     function tick(ts) {
         const t = (ts - T0) / 1000;
 
-        // Player runs toward exit
-        playerX = Math.min(0.87, 0.52 + (t / 4.2) * 0.35);
+        cx.fillStyle = '#020104'; cx.fillRect(0, 0, W, H);
 
-        // Minotaur enters at t=1.4, accelerates, catches player at ~t=4.2
-        if (t >= 1.4 && t < 4.2) {
-            const p = (t - 1.4) / 2.8;
-            minoX = -0.04 + p * p * 0.91;
-        } else if (t >= 4.2) {
-            minoX = playerX;
+        // ── Phase 0: Panting sprint toward exit ───────────────────────────
+        if (t < PH_RUN) {
+            const p      = t / PH_RUN;
+            const depth  = 0.08 + p * 0.32;
+            const wobble = 0.7 + p * 0.6;
+            const bobY   = Math.sin(t * 7.8) * 15 * wobble;
+            const bobX   = Math.sin(t * 3.9 + 0.5) * 6 * wobble;
+            cx.save(); cx.translate(bobX, bobY);
+            drawCorridor('fwd', depth, t);
+            cx.restore();
+            const hb = Math.max(0, Math.sin(t * 5.0) * 0.6);
+            drawVignette(0.30 + hb * 0.28, 140, 0, 0);
         }
 
-        drawFrame(t);
-
-        // Fade to black
-        if (t >= 4.0 && t < 5.3) {
-            cx.fillStyle = `rgba(0,0,0,${Math.min(1, (t - 4.0) / 1.3)})`;
-            cx.fillRect(0, 0, W, H);
+        // ── Phase 1: Whip-pan back — minotaur revealed, staring ──────────
+        else if (t < PH_LOOK_BACK) {
+            const p = (t - PH_RUN) / (PH_LOOK_BACK - PH_RUN);
+            drawCorridor('back', 0.04, t);
+            drawMinotaur(0.28 + p * 0.14, p * 0.10, 0.35 + p * 0.50);
+            // Whip-pan flash
+            const flashA = t < PH_RUN + 0.16 ? (1 - (t - PH_RUN) / 0.16) * 0.88 : 0;
+            if (flashA > 0) { cx.fillStyle = `rgba(255,255,255,${flashA})`; cx.fillRect(0, 0, W, H); }
+            drawVignette(0.50 + p * 0.22, 120, 0, 0);
         }
 
-        // Fully black background + typed red text
-        if (t >= 5.3) {
-            cx.fillStyle = '#000';
-            cx.fillRect(0, 0, W, H);
+        // ── Phase 2: Look aside — exit doorway, Icarus falls ─────────────
+        else if (t < PH_GLANCE_EXIT) {
+            const phase  = (t - PH_LOOK_BACK) / (PH_GLANCE_EXIT - PH_LOOK_BACK);
+            drawExitGlance(phase, t - PH_LOOK_BACK);
+            drawVignette(0.45, 110, 0, 0);
+        }
 
-            if (t >= 5.6) {
+        // ── Phase 3: Back to minotaur — charging, horns lowering ─────────
+        else if (t < PH_CHARGING) {
+            const p = (t - PH_GLANCE_EXIT) / (PH_CHARGING - PH_GLANCE_EXIT);
+            // Footfall ground shake
+            const stepShake = Math.abs(Math.sin(t * 3.4 * Math.PI)) * p;
+            const shakeX = Math.sin(t * 31.5) * stepShake * 10;
+            const shakeY = stepShake * 7;
+            cx.save(); cx.translate(shakeX, shakeY);
+            drawCorridor('back', 0.04 + p * 0.05, t);
+            drawMinotaur(0.42 + p * 0.58, p * 0.95, 0.72 + p * 0.28);
+            cx.restore();
+            // Red eye-bleed onto walls
+            const bleed = cx.createRadialGradient(W/2, H * 0.45, 0, W/2, H * 0.45, W * 0.5);
+            bleed.addColorStop(0,   `rgba(180,0,0,${p * 0.24})`);
+            bleed.addColorStop(0.5, `rgba(120,0,0,${p * 0.11})`);
+            bleed.addColorStop(1,   'rgba(0,0,0,0)');
+            cx.fillStyle = bleed; cx.fillRect(0, 0, W, H);
+            drawVignette(0.58 + p * 0.32, 160, 0, 0);
+        }
+
+        // ── Phase 4: Desperate jagged run — minotaur closing in ──────────
+        else if (t < PH_DESPERATE) {
+            const p     = (t - PH_CHARGING) / (PH_DESPERATE - PH_CHARGING);
+            // Erratic exhausted camera: heavy primary bob + high-freq tremor
+            const bobY  = (Math.sin(t * 6.6) * 20 + Math.sin(t * 13.8) * 7) * (0.9 + p * 0.3);
+            const bobX  = (Math.sin(t * 3.4) * 12 + Math.sin(t * 10.2) * 5) * (0.9 + p * 0.3);
+            const depth = 0.38 + p * 0.08;  // exit barely gets closer — hopeless
+            cx.save(); cx.translate(bobX, bobY);
+            drawCorridor('fwd', depth, t);
+            cx.restore();
+            // Minotaur's silhouette bleeds in from behind as dark overlay
+            if (p > 0.25) {
+                const mp = (p - 0.25) / 0.75;
+                cx.globalAlpha = mp * 0.68;
+                drawMinotaur(0.40 + mp * 0.55, 0.92, 0.80 + mp * 0.20);
+                cx.globalAlpha = 1;
+            }
+            drawVignette(0.62 + p * 0.36, 160, 0, 0);
+            // Scene darkens at end — dread
+            if (p > 0.82) { cx.fillStyle = `rgba(0,0,0,${(p - 0.82) / 0.18 * 0.45})`; cx.fillRect(0, 0, W, H); }
+        }
+
+        // ── Phase 5: Trampled ─────────────────────────────────────────────
+        else if (t < PH_BLACK) {
+            const p = (t - PH_DESPERATE) / (PH_BLACK - PH_DESPERATE);
+            if (p < 0.28) {
+                // Minotaur rushes to fill screen
+                const mp = p / 0.28;
+                drawMinotaur(0.88 + mp * 0.65, 0.96 + mp * 0.04, 1.0);
+                cx.fillStyle = `rgba(200,0,0,${mp * 0.55})`; cx.fillRect(0, 0, W, H);
+            } else {
+                // Impact blast: red flash → black
+                const ip = (p - 0.28) / 0.72;
+                cx.fillStyle = ip < 0.20
+                    ? `rgb(${Math.round(200 * (1 - ip / 0.20))},0,0)`
+                    : `rgba(0,0,0,${(ip - 0.20) / 0.80})`;
+                cx.fillRect(0, 0, W, H);
+            }
+        }
+
+        // ── Phase 6: Black → text → score ────────────────────────────────
+        else {
+            cx.fillStyle = '#000'; cx.fillRect(0, 0, W, H);
+            if (t >= PH_TEXT) {
                 const full  = 'There is no end to this maze…';
-                const shown = full.slice(0, Math.min(Math.floor((t - 5.6) / 0.08), full.length));
+                const shown = full.slice(0, Math.min(Math.floor((t - PH_TEXT) / 0.08), full.length));
                 if (shown.length) {
                     cx.font        = `900 ${Math.min(W / 17, 28)}px monospace`;
                     cx.textAlign   = 'center';
@@ -845,10 +1057,10 @@ function runCutscene() {
             }
         }
 
-        // Reveal score and buttons after text finishes
-        const textEnd = 5.6 + '…There is no end to this maze'.length * 0.08;
-        if (t >= textEnd + 1.0) {
-            score.style.opacity = String(Math.min(1, (t - textEnd - 1.0) / 0.9));
+        // Reveal score + buttons once text finishes
+        const textEnd = PH_TEXT + 'There is no end to this maze…'.length * 0.08;
+        if (t >= textEnd + 0.8) {
+            score.style.opacity = String(Math.min(1, (t - textEnd - 0.8) / 0.9));
         }
 
         csRafId = requestAnimationFrame(tick);
