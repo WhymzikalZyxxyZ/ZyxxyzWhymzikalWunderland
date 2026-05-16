@@ -597,218 +597,227 @@
     // hatTop = Y of the hat opening (where rabbit emerges from)
     // rabbitSlide = extra downward offset that decreases to 0 as rabbit emerges
     function drawRabbit(hx, hatTop, sc, t, emerge, rabbitSlide) {
-        // All rabbit coordinates when fully emerged; rabbitSlide shifts them down
-        var HY   = hatTop - 62 * sc + rabbitSlide;   // head centre
-        var BY   = HY + 48 * sc;                      // torso centre
-        var BW   = 52 * sc;                            // torso half-width
-        var BH   = 60 * sc;                            // torso half-height
+        // Cartoon-style proportions: HUGE round head, tiny body, enormous eyes
+        var HR   = 58 * sc;                           // head radius — big!
+        var HY   = hatTop - 62 * sc + rabbitSlide;    // head centre
+        var BY   = HY + 42 * sc;                      // body centre (compact, hugs under head)
+        var BW   = 42 * sc;                            // body half-width
+        var BH   = 38 * sc;                            // body half-height
+        var ER   = 14 * sc;                            // eye radius (large cartoon eyes)
+        var EX   = 22 * sc;                            // eye x-offset from centre
 
         var baseA = Math.min(1, emerge * 1.8 + 0.05);
         ctx.globalAlpha = baseA;
 
-        // Arm wave (only when idle)
-        var wL = emerge > 0.98 ? Math.sin(t * 2.8)       * 0.18 : 0;
-        var wR = emerge > 0.98 ? Math.sin(t * 2.8 + 1.2) * 0.18 : 0;
+        // Arm wave when idle
+        var wL = emerge > 0.98 ? Math.sin(t * 2.6)       * 0.20 : 0;
+        var wR = emerge > 0.98 ? Math.sin(t * 2.6 + 1.1) * 0.20 : 0;
 
-        // ── ears (behind head) ────────────────────────────────────────────
-        var earH = 46 * sc;
-        var earW = 13 * sc;
+        // ── big floppy ears (behind head) ─────────────────────────────────
+        var earH = 62 * sc, earW = 17 * sc;
+        [{ dx: -26*sc, rot: -0.16 }, { dx: 26*sc, rot: 0.16 }].forEach(function(e) {
+            ctx.save();
+            ctx.translate(hx + e.dx, HY - HR * 0.52);
+            ctx.rotate(e.rot);
+            // Outer ear (fluffy white with warm shadow on edge)
+            var eG = ctx.createRadialGradient(-earW * 0.3, -earH * 0.5, 0, 0, -earH * 0.5, earW * 1.6);
+            eG.addColorStop(0,   '#FEFCF8');
+            eG.addColorStop(0.6, '#F5EFE6');
+            eG.addColorStop(1,   '#E8DDD0');
+            ctx.fillStyle = eG;
+            ctx.beginPath(); ctx.ellipse(0, -earH * 0.46, earW, earH, 0, 0, Math.PI * 2); ctx.fill();
+            // Ear outline
+            ctx.strokeStyle = 'rgba(200,185,168,0.50)'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.ellipse(0, -earH * 0.46, earW, earH, 0, 0, Math.PI * 2); ctx.stroke();
+            // Inner ear (warm pink)
+            ctx.fillStyle = '#FFB3C8';
+            ctx.beginPath(); ctx.ellipse(0, -earH * 0.46, earW * 0.55, earH * 0.70, 0, 0, Math.PI * 2); ctx.fill();
+            // Inner ear gradient shine
+            var igG = ctx.createLinearGradient(-earW * 0.3, -earH * 0.9, earW * 0.3, -earH * 0.1);
+            igG.addColorStop(0,   'rgba(255,200,220,0.55)');
+            igG.addColorStop(1,   'rgba(255,140,175,0.10)');
+            ctx.fillStyle = igG;
+            ctx.beginPath(); ctx.ellipse(0, -earH * 0.46, earW * 0.55, earH * 0.70, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+        });
 
-        ctx.save();
-        ctx.translate(hx - 17*sc, HY - 8*sc);
-        ctx.rotate(-0.13);
-        ctx.fillStyle = CREAM;
-        ctx.beginPath(); ctx.ellipse(0, -earH * 0.5, earW, earH, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#ffaabf';
-        ctx.beginPath(); ctx.ellipse(0, -earH * 0.5, earW * 0.52, earH * 0.68, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.restore();
-
-        ctx.save();
-        ctx.translate(hx + 17*sc, HY - 8*sc);
-        ctx.rotate(0.13);
-        ctx.fillStyle = CREAM;
-        ctx.beginPath(); ctx.ellipse(0, -earH * 0.5, earW, earH, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#ffaabf';
-        ctx.beginPath(); ctx.ellipse(0, -earH * 0.5, earW * 0.52, earH * 0.68, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.restore();
-
-        // ── tuxedo body ───────────────────────────────────────────────────
+        // ── compact tuxedo body ───────────────────────────────────────────
+        // Body shadow
+        ctx.fillStyle = '#d0cbc2';
+        ctx.beginPath(); ctx.ellipse(hx + 2*sc, BY + 2*sc, BW, BH, 0, 0, Math.PI * 2); ctx.fill();
         // Jacket
-        ctx.fillStyle = '#0e0e0e';
-        ctx.beginPath(); ctx.ellipse(hx, BY, BW, BH * 0.56, 0, 0, Math.PI * 2); ctx.fill();
-
-        // Shirt front (white)
-        ctx.fillStyle = '#eeeeee';
-        ctx.beginPath(); ctx.ellipse(hx, BY - BH * 0.06, BW * 0.37, BH * 0.42, 0, 0, Math.PI * 2); ctx.fill();
-
-        // Shirt buttons
+        ctx.fillStyle = '#161616';
+        ctx.beginPath(); ctx.ellipse(hx, BY, BW, BH, 0, 0, Math.PI * 2); ctx.fill();
+        // Shirt front
+        ctx.fillStyle = '#f0f0f0';
+        ctx.beginPath(); ctx.ellipse(hx, BY - BH * 0.08, BW * 0.40, BH * 0.52, 0, 0, Math.PI * 2); ctx.fill();
+        // Buttons
         for (var bi = 0; bi < 3; bi++) {
-            ctx.fillStyle = '#aaaaaa';
-            ctx.beginPath();
-            ctx.arc(hx, BY - BH * 0.28 + bi * BH * 0.18, 1.8*sc, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillStyle = '#bbbbbb';
+            ctx.beginPath(); ctx.arc(hx, BY - BH * 0.32 + bi * BH * 0.22, 2.0*sc, 0, Math.PI * 2); ctx.fill();
         }
 
-        // Lapels
-        ctx.fillStyle = '#0e0e0e';
-        ctx.beginPath();
-        ctx.moveTo(hx - 3*sc, BY - BH * 0.46);
-        ctx.lineTo(hx - BW * 0.46, BY - BH * 0.22);
-        ctx.lineTo(hx - BW * 0.26, BY - BH * 0.40);
-        ctx.closePath();
-        ctx.fill();
+        // ── stubby cartoon arms spread wide ──────────────────────────────
+        var aLs = { x: hx - BW * 0.90, y: BY - BH * 0.22 };
+        var aRs = { x: hx + BW * 0.90, y: BY - BH * 0.22 };
+        var aLE = { x: hx - 155*sc, y: BY - BH * 0.30 + wL * 28*sc };
+        var aRE = { x: hx + 155*sc, y: BY - BH * 0.30 + wR * 28*sc };
+        var aLC = { x: aLs.x - 42*sc, y: aLs.y - 16*sc + wL * 14*sc };
+        var aRC = { x: aRs.x + 42*sc, y: aRs.y - 16*sc + wR * 14*sc };
 
-        ctx.beginPath();
-        ctx.moveTo(hx + 3*sc, BY - BH * 0.46);
-        ctx.lineTo(hx + BW * 0.46, BY - BH * 0.22);
-        ctx.lineTo(hx + BW * 0.26, BY - BH * 0.40);
-        ctx.closePath();
-        ctx.fill();
-
-        // ── arms spread wide in greeting ──────────────────────────────────
-        var armStartL = { x: hx - BW * 0.88, y: BY - BH * 0.15 };
-        var armStartR = { x: hx + BW * 0.88, y: BY - BH * 0.15 };
-        var armEndL   = { x: hx - 148*sc,    y: BY - BH * 0.20 + wL * 22*sc };
-        var armEndR   = { x: hx + 148*sc,    y: BY - BH * 0.20 + wR * 22*sc };
-        var armCtrlL  = { x: armStartL.x - 50*sc, y: armStartL.y - 18*sc + wL * 10*sc };
-        var armCtrlR  = { x: armStartR.x + 50*sc, y: armStartR.y - 18*sc + wR * 10*sc };
-
-        // Sleeve shadow
-        ctx.strokeStyle = '#060606';
-        ctx.lineWidth   = 15 * sc;
-        ctx.lineCap     = 'round';
-        ctx.beginPath();
-        ctx.moveTo(armStartL.x + 2, armStartL.y + 2);
-        ctx.quadraticCurveTo(armCtrlL.x + 2, armCtrlL.y + 2, armEndL.x + 2, armEndL.y + 2);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(armStartR.x + 2, armStartR.y + 2);
-        ctx.quadraticCurveTo(armCtrlR.x + 2, armCtrlR.y + 2, armEndR.x + 2, armEndR.y + 2);
-        ctx.stroke();
-
-        // Sleeves
-        ctx.strokeStyle = '#111111';
-        ctx.lineWidth   = 13 * sc;
-        ctx.beginPath();
-        ctx.moveTo(armStartL.x, armStartL.y);
-        ctx.quadraticCurveTo(armCtrlL.x, armCtrlL.y, armEndL.x, armEndL.y);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(armStartR.x, armStartR.y);
-        ctx.quadraticCurveTo(armCtrlR.x, armCtrlR.y, armEndR.x, armEndR.y);
-        ctx.stroke();
-
+        ctx.lineCap = 'round';
+        // Arm shadow
+        ctx.strokeStyle = '#080808'; ctx.lineWidth = 19*sc;
+        ctx.beginPath(); ctx.moveTo(aLs.x+2, aLs.y+2); ctx.quadraticCurveTo(aLC.x+2, aLC.y+2, aLE.x+2, aLE.y+2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(aRs.x+2, aRs.y+2); ctx.quadraticCurveTo(aRC.x+2, aRC.y+2, aRE.x+2, aRE.y+2); ctx.stroke();
+        // Sleeve
+        ctx.strokeStyle = '#181818'; ctx.lineWidth = 16*sc;
+        ctx.beginPath(); ctx.moveTo(aLs.x, aLs.y); ctx.quadraticCurveTo(aLC.x, aLC.y, aLE.x, aLE.y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(aRs.x, aRs.y); ctx.quadraticCurveTo(aRC.x, aRC.y, aRE.x, aRE.y); ctx.stroke();
         ctx.lineCap = 'butt';
 
-        // White gloves
-        ctx.fillStyle = '#f2f2f2';
-        ctx.beginPath(); ctx.ellipse(armEndL.x, armEndL.y, 12*sc, 10*sc, -0.28 + wL * 0.25, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(armEndR.x, armEndR.y, 12*sc, 10*sc,  0.28 + wR * 0.25, 0, Math.PI * 2); ctx.fill();
+        // Cartoon round paws (fluffy toe-bumps)
+        [aLE, aRE].forEach(function(p) {
+            var pawR = 15 * sc;
+            // Shadow
+            ctx.fillStyle = '#d0cac2';
+            ctx.beginPath(); ctx.arc(p.x + 2, p.y + 2, pawR, 0, Math.PI * 2); ctx.fill();
+            // Main paw
+            var pG = ctx.createRadialGradient(p.x - pawR*0.3, p.y - pawR*0.3, 0, p.x, p.y, pawR);
+            pG.addColorStop(0,   '#FEFCF8');
+            pG.addColorStop(1,   '#EDE5D8');
+            ctx.fillStyle = pG;
+            ctx.beginPath(); ctx.arc(p.x, p.y, pawR, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = 'rgba(200,185,168,0.45)'; ctx.lineWidth = 1.2;
+            ctx.beginPath(); ctx.arc(p.x, p.y, pawR, 0, Math.PI * 2); ctx.stroke();
+            // Three toe bumps across top
+            [-5*sc, 0, 5*sc].forEach(function(ox) {
+                ctx.fillStyle = '#E8DDD0';
+                ctx.beginPath(); ctx.arc(p.x + ox, p.y - pawR * 0.78, 4.5*sc, 0, Math.PI * 2); ctx.fill();
+            });
+        });
 
-        // Glove finger lines
-        ctx.strokeStyle = '#cccccc';
-        ctx.lineWidth   = 1;
-        for (var gi = -1; gi <= 1; gi++) {
-            ctx.beginPath();
-            ctx.moveTo(armEndL.x + gi * 4*sc, armEndL.y - 10*sc);
-            ctx.lineTo(armEndL.x + gi * 4*sc, armEndL.y + 2*sc);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(armEndR.x + gi * 4*sc, armEndR.y - 10*sc);
-            ctx.lineTo(armEndR.x + gi * 4*sc, armEndR.y + 2*sc);
-            ctx.stroke();
-        }
+        // ── fluffy cheek puffs (extend beyond head outline) ──────────────
+        var cG = ctx.createRadialGradient(hx - HR * 0.80, HY + HR * 0.16, 0, hx - HR * 0.80, HY + HR * 0.16, HR * 0.42);
+        cG.addColorStop(0,   '#F9F5EE');
+        cG.addColorStop(1,   'rgba(245,240,235,0)');
+        ctx.fillStyle = cG;
+        ctx.beginPath(); ctx.arc(hx - HR * 0.80, HY + HR * 0.16, HR * 0.40, 0, Math.PI * 2); ctx.fill();
 
-        // ── head ─────────────────────────────────────────────────────────
-        // Shadow
-        ctx.fillStyle = '#ccc7be';
-        ctx.beginPath(); ctx.arc(hx + 3*sc, HY + 3*sc, 41*sc, 0, Math.PI * 2); ctx.fill();
+        var cGr = ctx.createRadialGradient(hx + HR * 0.80, HY + HR * 0.16, 0, hx + HR * 0.80, HY + HR * 0.16, HR * 0.42);
+        cGr.addColorStop(0,   '#F9F5EE');
+        cGr.addColorStop(1,   'rgba(245,240,235,0)');
+        ctx.fillStyle = cGr;
+        ctx.beginPath(); ctx.arc(hx + HR * 0.80, HY + HR * 0.16, HR * 0.40, 0, Math.PI * 2); ctx.fill();
 
-        // Head
-        ctx.fillStyle = CREAM;
-        ctx.beginPath(); ctx.arc(hx, HY, 41*sc, 0, Math.PI * 2); ctx.fill();
+        // ── head shadow ───────────────────────────────────────────────────
+        ctx.fillStyle = '#cec9c0';
+        ctx.beginPath(); ctx.arc(hx + 4*sc, HY + 5*sc, HR, 0, Math.PI * 2); ctx.fill();
 
-        // Rosy cheeks
-        ctx.globalAlpha = baseA * 0.26;
-        ctx.fillStyle   = '#ff69b4';
-        ctx.beginPath(); ctx.arc(hx - 25*sc, HY + 10*sc, 13*sc, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(hx + 25*sc, HY + 10*sc, 13*sc, 0, Math.PI * 2); ctx.fill();
+        // ── head (big round cartoon circle) ───────────────────────────────
+        var hG = ctx.createRadialGradient(hx - HR * 0.32, HY - HR * 0.28, 0, hx, HY, HR);
+        hG.addColorStop(0,   '#FEFCF8');
+        hG.addColorStop(0.50,'#FAF5EE');
+        hG.addColorStop(1,   '#EDE4D6');
+        ctx.fillStyle = hG;
+        ctx.beginPath(); ctx.arc(hx, HY, HR, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(195,182,165,0.40)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(hx, HY, HR, 0, Math.PI * 2); ctx.stroke();
+
+        // ── BIG cartoon eyes (Secret Life of Pets style) ─────────────────
+        var eyeY = HY - HR * 0.06;
+        [hx - EX, hx + EX].forEach(function(ex) {
+            // Thick dark outline ring
+            ctx.fillStyle = '#1a1a1a';
+            ctx.beginPath(); ctx.arc(ex, eyeY, ER + 2*sc, 0, Math.PI * 2); ctx.fill();
+            // White sclera (slightly warm white)
+            ctx.fillStyle = '#FEFEFE';
+            ctx.beginPath(); ctx.arc(ex, eyeY, ER, 0, Math.PI * 2); ctx.fill();
+            // Lower sclera shadow
+            var scG = ctx.createRadialGradient(ex, eyeY + ER * 0.4, 0, ex, eyeY + ER * 0.4, ER * 0.9);
+            scG.addColorStop(0,   'rgba(200,210,220,0.28)');
+            scG.addColorStop(1,   'rgba(200,210,220,0)');
+            ctx.fillStyle = scG;
+            ctx.beginPath(); ctx.arc(ex, eyeY, ER, 0, Math.PI * 2); ctx.fill();
+            // Sky-blue iris
+            ctx.fillStyle = '#5BBEF5';
+            ctx.beginPath(); ctx.arc(ex, eyeY + ER * 0.08, ER * 0.70, 0, Math.PI * 2); ctx.fill();
+            // Inner iris (deeper blue ring)
+            ctx.fillStyle = '#2E9ED8';
+            ctx.beginPath(); ctx.arc(ex, eyeY + ER * 0.08, ER * 0.52, 0, Math.PI * 2); ctx.fill();
+            // Large dark pupil
+            ctx.fillStyle = '#0d0d12';
+            ctx.beginPath(); ctx.arc(ex, eyeY + ER * 0.10, ER * 0.33, 0, Math.PI * 2); ctx.fill();
+            // Main large shine (upper-left)
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(ex - ER * 0.26, eyeY - ER * 0.28, ER * 0.22, 0, Math.PI * 2); ctx.fill();
+            // Small secondary shine
+            ctx.fillStyle = 'rgba(255,255,255,0.72)';
+            ctx.beginPath(); ctx.arc(ex + ER * 0.20, eyeY - ER * 0.10, ER * 0.09, 0, Math.PI * 2); ctx.fill();
+            // Bold upper eyelash arc
+            ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 2.8*sc; ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.arc(ex, eyeY, ER + 1*sc, Math.PI * 1.08, Math.PI * 1.92); ctx.stroke();
+            ctx.lineCap = 'butt';
+        });
+
+        // ── big rosy cartoon blush ────────────────────────────────────────
+        ctx.globalAlpha = baseA * 0.42;
+        ctx.fillStyle   = '#FF8EBE';
+        ctx.beginPath(); ctx.ellipse(hx - HR * 0.60, HY + HR * 0.22, HR * 0.26, HR * 0.18, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(hx + HR * 0.60, HY + HR * 0.22, HR * 0.26, HR * 0.18, 0, 0, Math.PI * 2); ctx.fill();
         ctx.globalAlpha = baseA;
 
-        // Eyes: outer dark, lavender iris, pupil, shine
-        var eyeY = HY - 7 * sc;
-        [hx - 15*sc, hx + 15*sc].forEach(function (ex) {
-            ctx.fillStyle = '#1a1a1a';
-            ctx.beginPath(); ctx.arc(ex, eyeY, 9.5*sc, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = LAVENDER;
-            ctx.beginPath(); ctx.arc(ex, eyeY, 5.8*sc, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#0a0a0a';
-            ctx.beginPath(); ctx.arc(ex, eyeY, 2.8*sc, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath(); ctx.arc(ex - 2.2*sc, eyeY - 2.8*sc, 2.2*sc, 0, Math.PI * 2); ctx.fill();
-        });
+        // ── tiny button nose ──────────────────────────────────────────────
+        ctx.fillStyle = '#FF6B9D';
+        ctx.beginPath(); ctx.ellipse(hx, HY + HR * 0.28, 5.5*sc, 4.2*sc, 0, 0, Math.PI * 2); ctx.fill();
+        // Nose highlight
+        ctx.fillStyle = 'rgba(255,200,220,0.60)';
+        ctx.beginPath(); ctx.ellipse(hx - 1.5*sc, HY + HR * 0.26, 2.2*sc, 1.6*sc, -0.3, 0, Math.PI * 2); ctx.fill();
 
-        // Nose (soft pink)
-        ctx.fillStyle = ROSE;
-        ctx.beginPath(); ctx.ellipse(hx, HY + 8*sc, 4.8*sc, 3.6*sc, 0, 0, Math.PI * 2); ctx.fill();
+        // Philtrum (Y-line from nose to mouth)
+        ctx.strokeStyle = 'rgba(160,140,125,0.55)'; ctx.lineWidth = 1.8*sc; ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(hx, HY + HR * 0.34);
+        ctx.lineTo(hx, HY + HR * 0.42);
+        ctx.stroke();
 
-        // Whiskers
-        ctx.strokeStyle = 'rgba(140,130,120,0.65)';
-        ctx.lineWidth   = 1.2;
-        ctx.lineCap     = 'round';
-        var whiskers = [[-1, 0.35], [-1, -0.15], [-1, 0.80], [1, -0.35], [1, 0.15], [1, -0.80]];
-        whiskers.forEach(function (w) {
+        // ── whiskers ──────────────────────────────────────────────────────
+        ctx.strokeStyle = 'rgba(180,168,152,0.58)'; ctx.lineWidth = 1.5;
+        [[-1, 0.28], [-1, -0.08], [1, -0.28], [1, 0.08]].forEach(function(w) {
             ctx.beginPath();
-            ctx.moveTo(hx + w[0] * 6*sc, HY + 8*sc);
-            ctx.lineTo(hx + w[0] * 33*sc, HY + 8*sc + w[1] * 9*sc);
+            ctx.moveTo(hx + w[0] * 7*sc,  HY + HR * 0.30);
+            ctx.lineTo(hx + w[0] * 38*sc, HY + HR * 0.30 + w[1] * 11*sc);
             ctx.stroke();
         });
+        ctx.lineCap = 'butt';
 
-        // Smile
-        ctx.strokeStyle = '#9a8880';
-        ctx.lineWidth   = 2.4;
+        // ── big wide cartoon smile ─────────────────────────────────────────
+        ctx.strokeStyle = '#7a6558'; ctx.lineWidth = 3.2*sc; ctx.lineCap = 'round';
         ctx.beginPath();
-        ctx.moveTo(hx - 14*sc, HY + 16*sc);
-        ctx.quadraticCurveTo(hx, HY + 26*sc, hx + 14*sc, HY + 16*sc);
+        ctx.moveTo(hx - HR * 0.46, HY + HR * 0.42);
+        ctx.quadraticCurveTo(hx, HY + HR * 0.66, hx + HR * 0.46, HY + HR * 0.42);
         ctx.stroke();
         ctx.lineCap = 'butt';
 
-        // ── bow tie (magenta with heart centre) ───────────────────────────
-        var bty = BY - BH * 0.46;
-        ctx.fillStyle = '#b83068';
-        // Left wing
-        ctx.beginPath();
-        ctx.moveTo(hx,        bty);
-        ctx.lineTo(hx - 16*sc, bty - 7*sc);
-        ctx.lineTo(hx - 15*sc, bty + 7*sc);
-        ctx.closePath();
-        ctx.fill();
-        // Right wing
-        ctx.beginPath();
-        ctx.moveTo(hx,        bty);
-        ctx.lineTo(hx + 16*sc, bty - 7*sc);
-        ctx.lineTo(hx + 15*sc, bty + 7*sc);
-        ctx.closePath();
-        ctx.fill();
-        // Centre knot
+        // ── bow tie ────────────────────────────────────────────────────────
+        var bty = BY - BH * 0.52;
         ctx.fillStyle = '#e0185c';
-        ctx.beginPath(); ctx.ellipse(hx, bty, 5*sc, 4.5*sc, 0, 0, Math.PI * 2); ctx.fill();
-        // Tiny heart on knot
-        ctx.fillStyle = '#ff6090';
-        ctx.font = (8*sc) + 'px serif';
-        ctx.textAlign    = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('♥', hx, bty);
+        ctx.beginPath(); ctx.moveTo(hx, bty); ctx.lineTo(hx - 20*sc, bty - 9*sc); ctx.lineTo(hx - 19*sc, bty + 9*sc); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(hx, bty); ctx.lineTo(hx + 20*sc, bty - 9*sc); ctx.lineTo(hx + 19*sc, bty + 9*sc); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#ff3070';
+        ctx.beginPath(); ctx.ellipse(hx, bty, 6*sc, 5.5*sc, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ff80a8';
+        ctx.beginPath(); ctx.ellipse(hx - 2*sc, bty - 1.5*sc, 2.5*sc, 2*sc, 0, 0, Math.PI * 2); ctx.fill();
 
         // ── magical aura ──────────────────────────────────────────────────
         if (emerge > 0.35) {
             var ao = Math.min(1, (emerge - 0.35) / 0.65);
-            var ag = ctx.createRadialGradient(hx, HY, 10*sc, hx, HY, 78*sc);
+            var ag = ctx.createRadialGradient(hx, HY, 10*sc, hx, HY, 90*sc);
             ag.addColorStop(0, 'rgba(200,130,255,' + (ao * 0.20).toFixed(2) + ')');
             ag.addColorStop(1, 'transparent');
             ctx.fillStyle   = ag;
             ctx.globalAlpha = 1;
-            ctx.beginPath(); ctx.arc(hx, HY, 78*sc, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(hx, HY, 90*sc, 0, Math.PI * 2); ctx.fill();
         }
 
         ctx.globalAlpha = 1;
