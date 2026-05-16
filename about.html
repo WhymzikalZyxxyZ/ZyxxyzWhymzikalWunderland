@@ -13,11 +13,10 @@
         }
         #aboutCanvas {
             width: 100%;
-            height: 420px;
+            height: 460px;
             display: block;
-            border: 1px solid rgba(180,100,255,0.35);
-            border-radius: 12px;
-            background: #0d001a;
+            border-radius: 14px;
+            border: 1px solid rgba(200,120,60,0.40);
         }
         .about-card {
             max-width: 620px;
@@ -35,9 +34,7 @@
             color: #ddd;
             margin: 0 0 20px;
         }
-        .about-card p:last-child {
-            margin-bottom: 0;
-        }
+        .about-card p:last-child { margin-bottom: 0; }
         .about-card .signature {
             font-family: 'Comic Sans MS', monospace;
             font-size: 0.95em;
@@ -74,29 +71,25 @@
     </div>
 
     <div class="about-card">
+        <p>Well, hello there. You’ve wandered into the right place.</p>
         <p>
-            Well, hello there. You've wandered into the right place.
-        </p>
-        <p>
-            I'm Zyxxyz &mdash; creator, tinkerer, and the architect of this little wunderland you've found yourself in.
-            Consider this my personal corner of the internet: part gallery, part playground, part something you didn't
+            I’m Zyxxyz &mdash; creator, tinkerer, and the architect of this little wunderland you’ve found yourself in.
+            Consider this my personal corner of the internet: part gallery, part playground, part something you didn’t
             know you were looking for.
         </p>
         <hr class="about-divider">
         <p>
-            Games that'll have you coming back for one more round. Art that might linger in the back of your mind.
-            Tech projects born purely out of curiosity and a little too much free time. It's all here &mdash;
-            and it's all made with intention.
+            Games that’ll have you coming back for one more round. Art that might linger in the back of your mind.
+            Tech projects born purely out of curiosity and a little too much free time. It’s all here &mdash;
+            and it’s all made with intention.
         </p>
         <p>
-            This is a living, breathing space. New things find their way in as they're ready, so there's always
-            a reason to return. I'd love to know what catches your eye &mdash; the community's open, and bold opinions
+            This is a living, breathing space. New things find their way in as they’re ready, so there’s always
+            a reason to return. I’d love to know what catches your eye &mdash; the community’s open, and bold opinions
             are more than welcome.
         </p>
         <hr class="about-divider">
-        <p>
-            Thanks for visiting. Genuinely. Now go explore &mdash; something in here was made for you.
-        </p>
+        <p>Thanks for visiting. Genuinely. Now go explore &mdash; something in here was made for you.</p>
         <p class="signature">&mdash; ZYXXYZ</p>
     </div>
 
@@ -116,71 +109,60 @@
     window.addEventListener('resize', resize);
 
     // ── palette ───────────────────────────────────────────────────────────────
-    var GOLD     = '#ffd700';
-    var MAGENTA  = '#ff69b4';
-    var LAVENDER = '#c084fc';
-    var TEAL     = '#5eead4';
-    var ROSE     = '#ffb3c6';
-    var FCOLS    = [GOLD, MAGENTA, LAVENDER, TEAL, ROSE, '#ffffff'];
+    var GOLD    = '#ffd700';
+    var MAGENTA = '#ff69b4';
+    var LAVENDER= '#c084fc';
+    var TEAL    = '#5eead4';
+    var CREAM   = '#f5f0e8';
+    var ROSE    = '#ff8fa3';
 
-    // ── rabbit sprite (actual character image) ────────────────────────────────
-    // Fractions that crop just the rabbit+hat area from the bottom of comebacklater.jpg
-    // (the top ~52% is the sign; we want the bottom ~48%)
-    var CROP_SY = 0.52, CROP_SH = 0.48;
-    var CROP_SX = 0.05, CROP_SW = 0.90;
-    // Within that crop: where the hat brim sits (rel) and hat bottom (rel)
-    var HAT_BRIM_REL   = 0.52;
-    var HAT_BOTTOM_REL = 0.93;
+    var LIGHT_COLS = [GOLD, MAGENTA, LAVENDER, TEAL, '#ff6b6b', '#74b9ff', '#a8ff78'];
+    var SUIT_HEART = '#ff4d6d';
+    var SUIT_DIAM  = '#ff9f43';
+    var SUIT_SPADE = '#c8d6ff';
+    var SUIT_CLUB  = '#5eead4';
+    var SUIT_COLS  = { '♠': SUIT_SPADE, '♥': SUIT_HEART, '♦': SUIT_DIAM, '♣': SUIT_CLUB };
 
-    var rabbitImg      = new Image();
-    var rabbitImgReady = false;
-    rabbitImg.onload   = function () { rabbitImgReady = true; };
-    rabbitImg.src      = '/images/comebacklater.jpg';
+    // ── twinkling stars (upper sky only) ─────────────────────────────────────
+    var stars = [];
+    for (var i = 0; i < 75; i++) {
+        stars.push({
+            x:     Math.random(),
+            y:     Math.random() * 0.52,
+            r:     Math.random() * 1.6 + 0.3,
+            phase: Math.random() * Math.PI * 2,
+            spd:   Math.random() * 0.9 + 0.3
+        });
+    }
 
-    // ── twinkling stars ───────────────────────────────────────────────────────
-    var stars = (function () {
-        var out = [];
-        for (var i = 0; i < 90; i++) {
-            out.push({
-                x: Math.random(), y: Math.random(),
-                r: Math.random() * 1.6 + 0.2,
-                phase: Math.random() * Math.PI * 2,
-                speed: Math.random() * 0.8 + 0.3
-            });
-        }
-        return out;
-    }());
+    // ── fairy lights on string ────────────────────────────────────────────────
+    var N_LIGHTS = 24;
 
-    // ── floating magical symbols ──────────────────────────────────────────────
-    var SYMS = ['♠','♥','♦','♣','★','♪','♫',
-                '✦','✿','❋','✨','🎩'];
-    var floaters = (function () {
-        var out = [];
-        for (var i = 0; i < 20; i++) {
-            out.push({
-                sym:   SYMS[i % SYMS.length],
-                x:     Math.random(),
-                y:     Math.random(),
-                vx:    (Math.random() - 0.5) * 0.0018,
-                vy:    -(Math.random() * 0.006 + 0.0015),
-                rot:   Math.random() * Math.PI * 2,
-                rotV:  (Math.random() - 0.5) * 0.018,
-                size:  Math.random() * 13 + 9,
-                alpha: Math.random() * 0.35 + 0.15,
-                phase: Math.random() * Math.PI * 2,
-                col:   FCOLS[Math.floor(Math.random() * FCOLS.length)]
-            });
-        }
-        return out;
-    }());
+    // ── suit symbol floaters ─────────────────────────────────────────────────
+    var SUIT_SYMS = ['♠', '♥', '♦', '♣'];
+    var floaters = [];
+    for (var i = 0; i < 28; i++) {
+        var sym = SUIT_SYMS[i % 4];
+        floaters.push({
+            sym:   sym,
+            x:     Math.random(),
+            y:     0.08 + Math.random() * 0.85,
+            vx:    (Math.random() - 0.5) * 0.0014,
+            vy:    -(Math.random() * 0.0045 + 0.001),
+            rot:   Math.random() * Math.PI * 2,
+            rotV:  (Math.random() - 0.5) * 0.011,
+            size:  Math.random() * 14 + 7,
+            alpha: Math.random() * 0.28 + 0.08,
+            phase: Math.random() * Math.PI * 2,
+            col:   SUIT_COLS[sym]
+        });
+    }
 
     // ── fireflies ─────────────────────────────────────────────────────────────
-    var flies    = [];
-    var flyClock = 0;
+    var flies = [], flyClock = 0;
 
-    // ── burst on rabbit pop ───────────────────────────────────────────────────
-    var burst      = [];
-    var burstFired = false;
+    // ── burst particles ───────────────────────────────────────────────────────
+    var burst = [], burstFired = false;
 
     // ── main loop ─────────────────────────────────────────────────────────────
     var t0 = null, prevT = 0;
@@ -189,133 +171,219 @@
         if (t0 === null) { t0 = ts; }
         var t  = (ts - t0) / 1000;
         var dt = Math.min(t - prevT, 0.05);
-        prevT = t;
+        prevT  = t;
 
         var W = cvs.width, H = cvs.height;
-        var sc    = Math.min(W / 640, H / 420, 1.4);
-        var cx0   = W / 2;
-        var baseY = H * 0.82;
+        var sc    = Math.min(W / 640, H / 460, 1.5);
+        var cx    = W / 2;
+        var baseY = H * 0.86;   // hat brim rests here
 
         // drift floaters
         floaters.forEach(function (f) {
-            f.x  += f.vx; f.y  += f.vy; f.rot += f.rotV;
-            if (f.y < -0.08) { f.y = 1.08; f.x = Math.random(); }
-            if (f.x < -0.08) { f.x = 1.08; }
-            if (f.x >  1.08) { f.x = -0.08; }
+            f.x += f.vx; f.y += f.vy; f.rot += f.rotV;
+            if (f.y < -0.06) { f.y = 1.06; f.x = Math.random(); }
+            if (f.x < -0.06) { f.x = 1.06; }
+            if (f.x >  1.06) { f.x = -0.06; }
         });
 
-        // spawn fireflies
+        // spawn fireflies in lower half
         flyClock += dt;
-        if (flyClock > 0.09) {
+        if (flyClock > 0.10) {
             flyClock = 0;
             flies.push({
-                x:    Math.random() * W,
-                y:    H + 8,
-                vx:   (Math.random() - 0.5) * 0.7,
-                vy:   -(Math.random() * 1.1 + 0.35),
-                r:    Math.random() * 2.2 + 0.6,
+                x:   Math.random() * W,
+                y:   H * 0.55 + Math.random() * H * 0.35,
+                vx:  (Math.random() - 0.5) * 0.55,
+                vy:  -(Math.random() * 0.9 + 0.25),
+                r:   Math.random() * 2.0 + 0.7,
                 life: 1,
-                col:  FCOLS[Math.floor(Math.random() * FCOLS.length)]
+                col: LIGHT_COLS[Math.floor(Math.random() * LIGHT_COLS.length)]
             });
         }
         for (var fi = flies.length - 1; fi >= 0; fi--) {
-            var f = flies[fi];
-            f.x += f.vx + Math.sin(t * 1.8 + fi) * 0.3;
-            f.y += f.vy;
-            f.life -= dt * 0.16;
-            if (f.life <= 0 || f.y < -12) { flies.splice(fi, 1); }
+            var ff = flies[fi];
+            ff.x  += ff.vx + Math.sin(t * 2.2 + fi * 0.9) * 0.45;
+            ff.y  += ff.vy;
+            ff.life -= dt * 0.13;
+            if (ff.life <= 0 || ff.y < H * 0.12) { flies.splice(fi, 1); }
         }
 
-        // rabbit spring emerge
-        var EMERGE_T = 1.5;
+        // rabbit spring emerge (hat rattles at t=1.0, bursts at t=2.0)
+        var EMERGE_T = 2.0;
         var emerge   = 0;
         if (t >= EMERGE_T) {
             var d2 = t - EMERGE_T;
-            emerge = Math.max(0, Math.min(1, 1 - Math.exp(-4.5 * d2) * Math.cos(6.5 * d2)));
+            emerge = Math.max(0, Math.min(1, 1 - Math.exp(-4.2 * d2) * Math.cos(6.0 * d2)));
         }
 
-        // pop burst
-        if (!burstFired && emerge > 0.05) {
+        // hat rattle before burst
+        var shakeX = 0;
+        if (t > 1.0 && t < EMERGE_T) {
+            var ramp = (t - 1.0) / (EMERGE_T - 1.0);
+            shakeX = Math.sin(t * 55) * ramp * 7 * sc;
+        }
+        var hx      = cx + shakeX;
+        var idleBob = emerge > 0.98 ? Math.sin(t * 1.55) * 2.8 * sc : 0;
+
+        // burst particles fire from hat brim
+        var hatBrimY = baseY;
+        if (!burstFired && emerge > 0.04) {
             burstFired = true;
-            for (var bi = 0; bi < 48; bi++) {
-                var a  = (bi / 48) * Math.PI * 2;
-                var sp = Math.random() * 4.5 + 1;
+            for (var bi = 0; bi < 72; bi++) {
+                var ang = (bi / 72) * Math.PI * 2;
+                var sp  = Math.random() * 6 + 1.5;
                 burst.push({
-                    x: cx0, y: baseY - HAT_BOTTOM_REL * 220 * sc + HAT_BRIM_REL * 220 * sc,
-                    vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 2.5,
-                    life: 1, r: Math.random() * 3 + 1,
-                    col: FCOLS[Math.floor(Math.random() * FCOLS.length)]
+                    x:    hx, y: hatBrimY,
+                    vx:   Math.cos(ang) * sp,
+                    vy:   Math.sin(ang) * sp - 4.0,
+                    life: 1,
+                    r:    Math.random() * 3.5 + 1.0,
+                    col:  LIGHT_COLS[Math.floor(Math.random() * LIGHT_COLS.length)]
                 });
             }
         }
         for (var bri = burst.length - 1; bri >= 0; bri--) {
-            var br = burst[bri];
-            br.x += br.vx; br.y += br.vy; br.vy += 0.11;
-            br.life -= dt * 0.85;
+            var br  = burst[bri];
+            br.x   += br.vx; br.y += br.vy; br.vy += 0.14;
+            br.life -= dt * 0.65;
             if (br.life <= 0) { burst.splice(bri, 1); }
         }
 
-        // hat shake before pop
-        var shakeX = 0;
-        if (t > 0.9 && t < EMERGE_T) {
-            shakeX = Math.sin(t * 48) * (EMERGE_T - t) * 5 * sc;
-        }
-        var hx      = cx0 + shakeX;
-        var idleBob = emerge > 0.99 ? Math.sin(t * 1.6) * 2.5 * sc : 0;
-
-        // draw
-        drawSky(W, H);
-        drawNebulas(W, H);
+        // ── draw scene ────────────────────────────────────────────────────────
+        drawBackground(W, H, t);
+        drawFairyLights(W, H, t);
         drawStars(W, H, t);
         drawFloaters(W, H, t);
-        drawFlies();
+        drawFireflies();
         drawBurst();
-        drawRabbitSprite(hx, baseY, sc, t, emerge);
+        drawShowman(hx, baseY, sc, t, emerge, idleBob);
         drawWelcome(W, H, t);
 
         requestAnimationFrame(frame);
     }
 
-    // ── sky ───────────────────────────────────────────────────────────────────
-    function drawSky(W, H) {
-        var g = ctx.createRadialGradient(W / 2, H * 0.35, 0, W / 2, H * 0.35, Math.max(W, H) * 0.9);
-        g.addColorStop(0,    '#2e0a50');
-        g.addColorStop(0.45, '#1a0535');
-        g.addColorStop(1,    '#080015');
-        ctx.fillStyle = g;
-        ctx.fillRect(0, 0, W, H);
+    // ── sunset sky + rolling hills ────────────────────────────────────────────
+    function drawBackground(W, H, t) {
+        // Sky gradient: deep purple at top → warm orange at horizon
+        var sky = ctx.createLinearGradient(0, 0, 0, H * 0.68);
+        sky.addColorStop(0,    '#180530');
+        sky.addColorStop(0.28, '#2e0a55');
+        sky.addColorStop(0.55, '#6b1848');
+        sky.addColorStop(0.78, '#b84020');
+        sky.addColorStop(1,    '#e8710a');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, W, H * 0.68);
 
-        var mist = ctx.createLinearGradient(0, H * 0.72, 0, H);
-        mist.addColorStop(0, 'transparent');
-        mist.addColorStop(1, 'rgba(140,80,220,0.10)');
+        // Ground base
+        ctx.fillStyle = '#0c1e0a';
+        ctx.fillRect(0, H * 0.63, W, H * 0.37);
+
+        // Horizon warm glow
+        var hg = ctx.createRadialGradient(W * 0.5, H * 0.65, 0, W * 0.5, H * 0.65, W * 0.65);
+        hg.addColorStop(0,   'rgba(255,160,40,0.22)');
+        hg.addColorStop(0.5, 'rgba(200,70,20,0.09)');
+        hg.addColorStop(1,   'transparent');
+        ctx.fillStyle = hg;
+        ctx.fillRect(0, H * 0.40, W, H * 0.38);
+
+        // Far hills (soft, blueish-green silhouette)
+        ctx.fillStyle = '#1a3d1a';
+        ctx.beginPath();
+        ctx.moveTo(0, H * 0.72);
+        ctx.bezierCurveTo(W * 0.12, H * 0.52, W * 0.28, H * 0.48, W * 0.38, H * 0.56);
+        ctx.bezierCurveTo(W * 0.50, H * 0.64, W * 0.60, H * 0.47, W * 0.74, H * 0.52);
+        ctx.bezierCurveTo(W * 0.86, H * 0.57, W * 0.94, H * 0.62, W,        H * 0.70);
+        ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+        ctx.fill();
+
+        // Mid hills (richer green)
+        ctx.fillStyle = '#235220';
+        ctx.beginPath();
+        ctx.moveTo(0, H * 0.80);
+        ctx.bezierCurveTo(W * 0.09, H * 0.63, W * 0.20, H * 0.59, W * 0.33, H * 0.65);
+        ctx.bezierCurveTo(W * 0.45, H * 0.71, W * 0.54, H * 0.62, W * 0.64, H * 0.65);
+        ctx.bezierCurveTo(W * 0.77, H * 0.68, W * 0.88, H * 0.65, W,        H * 0.74);
+        ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+        ctx.fill();
+
+        // Front hill (darkest, with central stage dip for rabbit)
+        ctx.fillStyle = '#164514';
+        ctx.beginPath();
+        ctx.moveTo(0, H);
+        ctx.lineTo(0, H * 0.87);
+        ctx.bezierCurveTo(W * 0.07, H * 0.76, W * 0.17, H * 0.74, W * 0.28, H * 0.79);
+        ctx.bezierCurveTo(W * 0.38, H * 0.84, W * 0.43, H * 0.88, W * 0.50, H * 0.90);
+        ctx.bezierCurveTo(W * 0.57, H * 0.88, W * 0.62, H * 0.84, W * 0.72, H * 0.80);
+        ctx.bezierCurveTo(W * 0.82, H * 0.76, W * 0.92, H * 0.80, W,        H * 0.86);
+        ctx.lineTo(W, H); ctx.closePath();
+        ctx.fill();
+
+        // Sunset rim-light on hill tops
+        var hl = ctx.createLinearGradient(0, H * 0.58, 0, H * 0.82);
+        hl.addColorStop(0, 'rgba(255,130,40,0.14)');
+        hl.addColorStop(1, 'transparent');
+        ctx.fillStyle = hl;
+        ctx.fillRect(0, H * 0.55, W, H * 0.30);
+
+        // Ground mist (subtle green shimmer)
+        var mist = ctx.createLinearGradient(0, H * 0.80, 0, H);
+        mist.addColorStop(0,   'rgba(80,200,100,0.06)');
+        mist.addColorStop(0.6, 'rgba(60,160,80,0.04)');
+        mist.addColorStop(1,   'transparent');
         ctx.fillStyle = mist;
-        ctx.fillRect(0, H * 0.72, W, H * 0.28);
+        ctx.fillRect(0, H * 0.80, W, H * 0.20);
     }
 
-    // ── nebulas ───────────────────────────────────────────────────────────────
-    function drawNebulas(W, H) {
-        var ns = [
-            { cx: 0.18, cy: 0.28, r: W * 0.26, col: 'rgba(160,60,255,0.045)' },
-            { cx: 0.82, cy: 0.22, r: W * 0.22, col: 'rgba(255,90,170,0.038)' },
-            { cx: 0.50, cy: 0.55, r: W * 0.32, col: 'rgba(70,190,255,0.028)' }
-        ];
-        ns.forEach(function (n) {
-            var g = ctx.createRadialGradient(n.cx * W, n.cy * H, 0, n.cx * W, n.cy * H, n.r);
-            g.addColorStop(0, n.col);
+    // ── fairy lights strung across the scene ─────────────────────────────────
+    function drawFairyLights(W, H, t) {
+        var wireY = H * 0.07;
+        var droop = H * 0.04;
+
+        // Wire
+        ctx.strokeStyle = 'rgba(60,40,20,0.55)';
+        ctx.lineWidth   = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(0, wireY);
+        for (var x = 0; x <= W; x += 4) {
+            var frac = x / W;
+            ctx.lineTo(x, wireY + Math.sin(frac * Math.PI) * droop);
+        }
+        ctx.stroke();
+
+        for (var li = 0; li < N_LIGHTS; li++) {
+            var frac  = (li + 0.5) / N_LIGHTS;
+            var wx    = frac * W;
+            var wy    = wireY + Math.sin(frac * Math.PI) * droop + 7;
+            var col   = LIGHT_COLS[li % LIGHT_COLS.length];
+            var pulse = 0.55 + Math.sin(t * 2.4 + li * 0.95) * 0.42;
+
+            // Soft glow halo
+            var g = ctx.createRadialGradient(wx, wy, 0, wx, wy, 16);
+            g.addColorStop(0, col);
             g.addColorStop(1, 'transparent');
-            ctx.fillStyle = g;
-            ctx.beginPath();
-            ctx.arc(n.cx * W, n.cy * H, n.r, 0, Math.PI * 2);
-            ctx.fill();
-        });
+            ctx.globalAlpha = pulse * 0.40;
+            ctx.fillStyle   = g;
+            ctx.beginPath(); ctx.arc(wx, wy, 16, 0, Math.PI * 2); ctx.fill();
+
+            // Bulb body
+            ctx.globalAlpha = pulse * 0.92;
+            ctx.fillStyle   = col;
+            ctx.beginPath(); ctx.arc(wx, wy, 4.5, 0, Math.PI * 2); ctx.fill();
+
+            // White hot centre
+            ctx.globalAlpha = pulse;
+            ctx.fillStyle   = '#ffffff';
+            ctx.beginPath(); ctx.arc(wx, wy, 1.6, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
     }
 
-    // ── stars ─────────────────────────────────────────────────────────────────
+    // ── twinkling stars ───────────────────────────────────────────────────────
     function drawStars(W, H, t) {
         stars.forEach(function (s) {
-            var alpha = Math.max(0, 0.25 + Math.sin(t * s.speed + s.phase) * 0.55 + 0.2);
-            ctx.globalAlpha = alpha;
-            ctx.fillStyle   = '#ffffff';
+            var a = Math.max(0.04, Math.min(0.95, 0.28 + Math.sin(t * s.spd + s.phase) * 0.55));
+            ctx.globalAlpha = a;
+            ctx.fillStyle   = '#fff6e8';
             ctx.beginPath();
             ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
             ctx.fill();
@@ -323,43 +391,36 @@
         ctx.globalAlpha = 1;
     }
 
-    // ── floating symbols ──────────────────────────────────────────────────────
+    // ── floating card suits ───────────────────────────────────────────────────
     function drawFloaters(W, H, t) {
         floaters.forEach(function (f) {
-            var pulse = f.alpha * (0.65 + Math.sin(t * 1.1 + f.phase) * 0.35);
-            ctx.globalAlpha = pulse;
+            var a = f.alpha * (0.6 + Math.sin(t * 1.1 + f.phase) * 0.4);
+            ctx.globalAlpha = a;
             ctx.save();
             ctx.translate(f.x * W, f.y * H);
             ctx.rotate(f.rot);
-            ctx.fillStyle        = f.col;
-            ctx.font             = f.size + 'px serif';
-            ctx.textAlign        = 'center';
-            ctx.textBaseline     = 'middle';
-            ctx.shadowColor      = f.col;
-            ctx.shadowBlur       = 8;
+            ctx.fillStyle    = f.col;
+            ctx.font         = f.size + 'px serif';
+            ctx.textAlign    = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor  = f.col;
+            ctx.shadowBlur   = 9;
             ctx.fillText(f.sym, 0, 0);
-            ctx.shadowBlur = 0;
+            ctx.shadowBlur   = 0;
             ctx.restore();
         });
         ctx.globalAlpha = 1;
     }
 
     // ── fireflies ─────────────────────────────────────────────────────────────
-    function drawFlies() {
+    function drawFireflies() {
         flies.forEach(function (f) {
-            var g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r * 5);
-            g.addColorStop(0, f.col);
-            g.addColorStop(1, 'transparent');
-            ctx.globalAlpha = f.life * 0.65;
-            ctx.fillStyle   = g;
-            ctx.beginPath();
-            ctx.arc(f.x, f.y, f.r * 5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.globalAlpha = f.life * 0.9;
-            ctx.fillStyle   = '#fffde0';
-            ctx.beginPath();
-            ctx.arc(f.x, f.y, f.r * 0.5, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.globalAlpha = f.life * 0.55;
+            ctx.fillStyle   = f.col;
+            ctx.beginPath(); ctx.arc(f.x, f.y, f.r * 5, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = f.life * 0.88;
+            ctx.fillStyle   = '#fffde8';
+            ctx.beginPath(); ctx.arc(f.x, f.y, f.r * 0.65, 0, Math.PI * 2); ctx.fill();
         });
         ctx.globalAlpha = 1;
     }
@@ -367,73 +428,389 @@
     // ── burst ─────────────────────────────────────────────────────────────────
     function drawBurst() {
         burst.forEach(function (b) {
-            ctx.globalAlpha = Math.max(0, b.life) * 0.88;
+            ctx.globalAlpha = Math.max(0, b.life) * 0.82;
             ctx.fillStyle   = b.col;
-            ctx.beginPath();
-            ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
         });
         ctx.globalAlpha = 1;
     }
 
-    // ── rabbit sprite (image-based) ───────────────────────────────────────────
-    function drawRabbitSprite(hx, baseY, sc, t, emerge) {
-        // Display height for the cropped rabbit+hat area
-        var dispH = 220 * sc;
-        var hatRimY    = baseY - HAT_BOTTOM_REL * dispH + HAT_BRIM_REL * dispH;
-        var idleBob    = emerge > 0.99 ? Math.sin(t * 1.6) * 2.5 * sc : 0;
+    // ── full showman: hat + rabbit ────────────────────────────────────────────
+    function drawShowman(hx, baseY, sc, t, emerge, idleBob) {
+        // Hat geometry
+        var HAT_H    = 120 * sc;   // hat body height
+        var HAT_W    = 86  * sc;   // half-width at top
+        var HAT_WB   = 94  * sc;   // half-width at bottom (slight taper)
+        var BRIM_RX  = 118 * sc;
+        var BRIM_RY  = 11  * sc;
+        var BAND_H   = 14  * sc;
 
-        // Magical aura around the rabbit once it's emerging
-        if (emerge > 0.3) {
-            var ao  = Math.min(1, (emerge - 0.3) / 0.7);
-            var auraY = hatRimY - (hatRimY - (baseY - HAT_BOTTOM_REL * dispH)) * 0.5;
-            var ag  = ctx.createRadialGradient(hx, auraY, 6*sc, hx, auraY, 62*sc);
-            ag.addColorStop(0, 'rgba(192,130,255,' + (ao * 0.22).toFixed(2) + ')');
-            ag.addColorStop(1, 'transparent');
-            ctx.fillStyle = ag;
-            ctx.beginPath(); ctx.arc(hx, auraY, 62*sc, 0, Math.PI * 2); ctx.fill();
-        }
+        var brimY    = baseY;
+        var bodyBot  = brimY  - 14 * sc;   // hat body starts above brim
+        var bodyTop  = bodyBot - HAT_H;
+        var bandY    = bodyBot - BAND_H - 20 * sc;
 
-        // Orbiting sparkles on hat band once visible
-        if (t > 1.0) {
-            for (var i = 0; i < 4; i++) {
-                var ang = t * 1.4 + i * Math.PI / 2;
-                var sx  = hx + Math.cos(ang) * 48 * sc;
-                var sy  = hatRimY - 14 * sc + Math.sin(ang) * 4 * sc;
-                ctx.globalAlpha = Math.max(0, Math.min(1, 0.5 + Math.sin(t * 3 + i) * 0.45));
-                ctx.fillStyle   = GOLD;
-                ctx.beginPath(); ctx.arc(sx, sy, 2*sc, 0, Math.PI * 2); ctx.fill();
+        // Rabbit slides: at emerge=0 rabbit is fully inside hat; at emerge=1 fully above
+        var rabbitSlide = (1 - emerge) * (HAT_H * 1.25) - idleBob;
+
+        // ── glow pool beneath hat ──────────────────────────────────────────
+        var gp = ctx.createRadialGradient(hx, brimY + 6*sc, 0, hx, brimY + 6*sc, BRIM_RX * 1.3);
+        gp.addColorStop(0,   'rgba(180,90,255,0.32)');
+        gp.addColorStop(0.45,'rgba(120,50,200,0.12)');
+        gp.addColorStop(1,   'transparent');
+        ctx.fillStyle = gp;
+        ctx.beginPath();
+        ctx.ellipse(hx, brimY + 6*sc, BRIM_RX * 1.3, BRIM_RY * 2.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // ── rabbit clipped to hat opening (above bodyTop) ─────────────────
+        ctx.save();
+        ctx.beginPath();
+        // Reveal: clip top boundary descends as emerge grows
+        // At emerge=0: clipTopY = bodyTop  (nothing above hat visible)
+        // At emerge=1: clipTopY = bodyTop - 300*sc (everything visible)
+        var clipTopY = bodyTop - emerge * 320 * sc;
+        ctx.rect(0, clipTopY, cvs.width, bodyTop - clipTopY + 5 * sc);
+        ctx.clip();
+        drawRabbit(hx, bodyTop, sc, t, emerge, rabbitSlide);
+        ctx.restore();
+
+        // ── hat brim (drawn over rabbit base, hides entry point) ──────────
+        // Brim shadow
+        ctx.fillStyle   = 'rgba(0,0,0,0.38)';
+        ctx.globalAlpha = 0.5;
+        ctx.beginPath();
+        ctx.ellipse(hx + 5*sc, brimY + 9*sc, BRIM_RX, BRIM_RY * 0.75, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Brim top face
+        ctx.fillStyle = '#0a0a0a';
+        ctx.beginPath();
+        ctx.ellipse(hx, brimY, BRIM_RX, BRIM_RY, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pink satin inner rim
+        ctx.fillStyle   = '#c04078';
+        ctx.globalAlpha = 0.88;
+        ctx.beginPath();
+        ctx.ellipse(hx, brimY - 2*sc, BRIM_RX * 0.80, BRIM_RY * 0.60, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // ── hat body ──────────────────────────────────────────────────────
+        ctx.fillStyle = '#090909';
+        ctx.beginPath();
+        ctx.moveTo(hx - HAT_WB, bodyBot);
+        ctx.lineTo(hx - HAT_W,  bodyTop);
+        ctx.lineTo(hx + HAT_W,  bodyTop);
+        ctx.lineTo(hx + HAT_WB, bodyBot);
+        ctx.closePath();
+        ctx.fill();
+
+        // Hat body edge sheen
+        ctx.strokeStyle = '#1c1c1c';
+        ctx.lineWidth   = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(hx - HAT_WB, bodyBot); ctx.lineTo(hx - HAT_W, bodyTop); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(hx + HAT_WB, bodyBot); ctx.lineTo(hx + HAT_W, bodyTop); ctx.stroke();
+
+        // Gold band
+        ctx.fillStyle = '#c49a14';
+        ctx.beginPath();
+        ctx.moveTo(hx - HAT_WB + (HAT_WB - HAT_W) * (bandY - bodyTop) / HAT_H, bandY + BAND_H);
+        ctx.lineTo(hx - HAT_WB + (HAT_WB - HAT_W) * (bandY - bodyTop) / HAT_H, bandY);
+        ctx.lineTo(hx + HAT_WB - (HAT_WB - HAT_W) * (bandY - bodyTop) / HAT_H, bandY);
+        ctx.lineTo(hx + HAT_WB - (HAT_WB - HAT_W) * (bandY - bodyTop) / HAT_H, bandY + BAND_H);
+        ctx.closePath();
+        ctx.fill();
+
+        // Band highlight
+        ctx.fillStyle   = '#ffd700';
+        ctx.globalAlpha = 0.50;
+        ctx.beginPath();
+        var lx = hx - HAT_WB + (HAT_WB - HAT_W) * (bandY - bodyTop) / HAT_H;
+        ctx.moveTo(lx, bandY + BAND_H);
+        ctx.lineTo(lx, bandY);
+        ctx.lineTo(hx, bandY);
+        ctx.lineTo(hx, bandY + BAND_H);
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Hat top ellipse
+        ctx.fillStyle = '#090909';
+        ctx.beginPath();
+        ctx.ellipse(hx, bodyTop, HAT_W, 7*sc, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth   = 1;
+        ctx.beginPath();
+        ctx.ellipse(hx, bodyTop, HAT_W, 7*sc, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Orbiting sparkles around band
+        if (t > 1.2) {
+            for (var i = 0; i < 5; i++) {
+                var sang = t * 1.7 + i * Math.PI * 0.4;
+                var sx   = hx + Math.cos(sang) * (HAT_W * 1.05);
+                var sy   = bandY + BAND_H * 0.5 + Math.sin(sang) * 4 * sc;
+                var sa   = Math.max(0, 0.45 + Math.sin(t * 3.8 + i) * 0.50);
+                ctx.globalAlpha = sa;
+                ctx.fillStyle   = i % 2 === 0 ? GOLD : MAGENTA;
+                ctx.beginPath(); ctx.arc(sx, sy, 2.2*sc, 0, Math.PI * 2); ctx.fill();
             }
             ctx.globalAlpha = 1;
         }
 
-        if (!rabbitImgReady) { return; }
+        // Suit orbit around rabbit when fully emerged
+        if (emerge > 0.92) {
+            var orbitAlpha = Math.min(1, (emerge - 0.92) / 0.08);
+            var orbitR = 110 * sc;
+            var headRefY = bodyTop - 62 * sc;   // approx head centre when emerged
+            for (var oi = 0; oi < 4; oi++) {
+                var oang = t * 0.85 + oi * Math.PI * 0.5;
+                var ox   = hx       + Math.cos(oang) * orbitR;
+                var oy   = headRefY + Math.sin(oang) * orbitR * 0.45;
+                var osym = SUIT_SYMS[oi];
+                var ocol = SUIT_COLS[osym];
+                ctx.globalAlpha = orbitAlpha * (0.55 + Math.sin(t * 2.5 + oi) * 0.35);
+                ctx.save();
+                ctx.translate(ox, oy);
+                ctx.rotate(oang * 0.4);
+                ctx.fillStyle    = ocol;
+                ctx.font         = (16 * sc) + 'px serif';
+                ctx.textAlign    = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor  = ocol;
+                ctx.shadowBlur   = 10;
+                ctx.fillText(osym, 0, 0);
+                ctx.shadowBlur   = 0;
+                ctx.restore();
+            }
+            ctx.globalAlpha = 1;
+        }
+    }
 
-        var IW   = rabbitImg.naturalWidth;
-        var IH   = rabbitImg.naturalHeight;
-        var srcX = IW * CROP_SX,  srcY = IH * CROP_SY;
-        var srcW = IW * CROP_SW,  srcH = IH * CROP_SH;
+    // ── rabbit showman (procedural) ───────────────────────────────────────────
+    // hatTop = Y of the hat opening (where rabbit emerges from)
+    // rabbitSlide = extra downward offset that decreases to 0 as rabbit emerges
+    function drawRabbit(hx, hatTop, sc, t, emerge, rabbitSlide) {
+        // All rabbit coordinates when fully emerged; rabbitSlide shifts them down
+        var HY   = hatTop - 62 * sc + rabbitSlide;   // head centre
+        var BY   = HY + 48 * sc;                      // torso centre
+        var BW   = 52 * sc;                            // torso half-width
+        var BH   = 60 * sc;                            // torso half-height
 
-        var dispW  = dispH * (srcW / srcH);
-        var drawX  = hx - dispW / 2;
-        // Align hat bottom (HAT_BOTTOM_REL of dispH) with baseY
-        var drawY0 = baseY - HAT_BOTTOM_REL * dispH;
-        // Pop offset: image rises slightly as rabbit emerges; also idle bob
-        var drawY  = drawY0 - emerge * 10 * sc + idleBob;
+        var baseA = Math.min(1, emerge * 1.8 + 0.05);
+        ctx.globalAlpha = baseA;
 
-        // Clip: at emerge=0 show only hat (from hatRim down);
-        //       at emerge=1 show full crop from top
-        var clipTop = hatRimY - emerge * (hatRimY - drawY);
-        // Always show the hat brim (few px above rim)
-        clipTop = Math.min(clipTop, hatRimY - 6 * sc);
+        // Arm wave (only when idle)
+        var wL = emerge > 0.98 ? Math.sin(t * 2.8)       * 0.18 : 0;
+        var wR = emerge > 0.98 ? Math.sin(t * 2.8 + 1.2) * 0.18 : 0;
+
+        // ── ears (behind head) ────────────────────────────────────────────
+        var earH = 46 * sc;
+        var earW = 13 * sc;
 
         ctx.save();
-        ctx.globalAlpha = Math.min(1, emerge * 1.8 + 0.10);
-        ctx.beginPath();
-        ctx.rect(drawX - 4, clipTop, dispW + 8, cvs.height);
-        ctx.clip();
-        ctx.drawImage(rabbitImg, srcX, srcY, srcW, srcH, drawX, drawY, dispW, dispH);
+        ctx.translate(hx - 17*sc, HY - 8*sc);
+        ctx.rotate(-0.13);
+        ctx.fillStyle = CREAM;
+        ctx.beginPath(); ctx.ellipse(0, -earH * 0.5, earW, earH, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffaabf';
+        ctx.beginPath(); ctx.ellipse(0, -earH * 0.5, earW * 0.52, earH * 0.68, 0, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
+
+        ctx.save();
+        ctx.translate(hx + 17*sc, HY - 8*sc);
+        ctx.rotate(0.13);
+        ctx.fillStyle = CREAM;
+        ctx.beginPath(); ctx.ellipse(0, -earH * 0.5, earW, earH, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffaabf';
+        ctx.beginPath(); ctx.ellipse(0, -earH * 0.5, earW * 0.52, earH * 0.68, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+
+        // ── tuxedo body ───────────────────────────────────────────────────
+        // Jacket
+        ctx.fillStyle = '#0e0e0e';
+        ctx.beginPath(); ctx.ellipse(hx, BY, BW, BH * 0.56, 0, 0, Math.PI * 2); ctx.fill();
+
+        // Shirt front (white)
+        ctx.fillStyle = '#eeeeee';
+        ctx.beginPath(); ctx.ellipse(hx, BY - BH * 0.06, BW * 0.37, BH * 0.42, 0, 0, Math.PI * 2); ctx.fill();
+
+        // Shirt buttons
+        for (var bi = 0; bi < 3; bi++) {
+            ctx.fillStyle = '#aaaaaa';
+            ctx.beginPath();
+            ctx.arc(hx, BY - BH * 0.28 + bi * BH * 0.18, 1.8*sc, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Lapels
+        ctx.fillStyle = '#0e0e0e';
+        ctx.beginPath();
+        ctx.moveTo(hx - 3*sc, BY - BH * 0.46);
+        ctx.lineTo(hx - BW * 0.46, BY - BH * 0.22);
+        ctx.lineTo(hx - BW * 0.26, BY - BH * 0.40);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(hx + 3*sc, BY - BH * 0.46);
+        ctx.lineTo(hx + BW * 0.46, BY - BH * 0.22);
+        ctx.lineTo(hx + BW * 0.26, BY - BH * 0.40);
+        ctx.closePath();
+        ctx.fill();
+
+        // ── arms spread wide in greeting ──────────────────────────────────
+        var armStartL = { x: hx - BW * 0.88, y: BY - BH * 0.15 };
+        var armStartR = { x: hx + BW * 0.88, y: BY - BH * 0.15 };
+        var armEndL   = { x: hx - 148*sc,    y: BY - BH * 0.20 + wL * 22*sc };
+        var armEndR   = { x: hx + 148*sc,    y: BY - BH * 0.20 + wR * 22*sc };
+        var armCtrlL  = { x: armStartL.x - 50*sc, y: armStartL.y - 18*sc + wL * 10*sc };
+        var armCtrlR  = { x: armStartR.x + 50*sc, y: armStartR.y - 18*sc + wR * 10*sc };
+
+        // Sleeve shadow
+        ctx.strokeStyle = '#060606';
+        ctx.lineWidth   = 15 * sc;
+        ctx.lineCap     = 'round';
+        ctx.beginPath();
+        ctx.moveTo(armStartL.x + 2, armStartL.y + 2);
+        ctx.quadraticCurveTo(armCtrlL.x + 2, armCtrlL.y + 2, armEndL.x + 2, armEndL.y + 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(armStartR.x + 2, armStartR.y + 2);
+        ctx.quadraticCurveTo(armCtrlR.x + 2, armCtrlR.y + 2, armEndR.x + 2, armEndR.y + 2);
+        ctx.stroke();
+
+        // Sleeves
+        ctx.strokeStyle = '#111111';
+        ctx.lineWidth   = 13 * sc;
+        ctx.beginPath();
+        ctx.moveTo(armStartL.x, armStartL.y);
+        ctx.quadraticCurveTo(armCtrlL.x, armCtrlL.y, armEndL.x, armEndL.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(armStartR.x, armStartR.y);
+        ctx.quadraticCurveTo(armCtrlR.x, armCtrlR.y, armEndR.x, armEndR.y);
+        ctx.stroke();
+
+        ctx.lineCap = 'butt';
+
+        // White gloves
+        ctx.fillStyle = '#f2f2f2';
+        ctx.beginPath(); ctx.ellipse(armEndL.x, armEndL.y, 12*sc, 10*sc, -0.28 + wL * 0.25, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(armEndR.x, armEndR.y, 12*sc, 10*sc,  0.28 + wR * 0.25, 0, Math.PI * 2); ctx.fill();
+
+        // Glove finger lines
+        ctx.strokeStyle = '#cccccc';
+        ctx.lineWidth   = 1;
+        for (var gi = -1; gi <= 1; gi++) {
+            ctx.beginPath();
+            ctx.moveTo(armEndL.x + gi * 4*sc, armEndL.y - 10*sc);
+            ctx.lineTo(armEndL.x + gi * 4*sc, armEndL.y + 2*sc);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(armEndR.x + gi * 4*sc, armEndR.y - 10*sc);
+            ctx.lineTo(armEndR.x + gi * 4*sc, armEndR.y + 2*sc);
+            ctx.stroke();
+        }
+
+        // ── head ─────────────────────────────────────────────────────────
+        // Shadow
+        ctx.fillStyle = '#ccc7be';
+        ctx.beginPath(); ctx.arc(hx + 3*sc, HY + 3*sc, 41*sc, 0, Math.PI * 2); ctx.fill();
+
+        // Head
+        ctx.fillStyle = CREAM;
+        ctx.beginPath(); ctx.arc(hx, HY, 41*sc, 0, Math.PI * 2); ctx.fill();
+
+        // Rosy cheeks
+        ctx.globalAlpha = baseA * 0.26;
+        ctx.fillStyle   = '#ff69b4';
+        ctx.beginPath(); ctx.arc(hx - 25*sc, HY + 10*sc, 13*sc, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(hx + 25*sc, HY + 10*sc, 13*sc, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = baseA;
+
+        // Eyes: outer dark, lavender iris, pupil, shine
+        var eyeY = HY - 7 * sc;
+        [hx - 15*sc, hx + 15*sc].forEach(function (ex) {
+            ctx.fillStyle = '#1a1a1a';
+            ctx.beginPath(); ctx.arc(ex, eyeY, 9.5*sc, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = LAVENDER;
+            ctx.beginPath(); ctx.arc(ex, eyeY, 5.8*sc, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#0a0a0a';
+            ctx.beginPath(); ctx.arc(ex, eyeY, 2.8*sc, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(ex - 2.2*sc, eyeY - 2.8*sc, 2.2*sc, 0, Math.PI * 2); ctx.fill();
+        });
+
+        // Nose (soft pink)
+        ctx.fillStyle = ROSE;
+        ctx.beginPath(); ctx.ellipse(hx, HY + 8*sc, 4.8*sc, 3.6*sc, 0, 0, Math.PI * 2); ctx.fill();
+
+        // Whiskers
+        ctx.strokeStyle = 'rgba(140,130,120,0.65)';
+        ctx.lineWidth   = 1.2;
+        ctx.lineCap     = 'round';
+        var whiskers = [[-1, 0.35], [-1, -0.15], [-1, 0.80], [1, -0.35], [1, 0.15], [1, -0.80]];
+        whiskers.forEach(function (w) {
+            ctx.beginPath();
+            ctx.moveTo(hx + w[0] * 6*sc, HY + 8*sc);
+            ctx.lineTo(hx + w[0] * 33*sc, HY + 8*sc + w[1] * 9*sc);
+            ctx.stroke();
+        });
+
+        // Smile
+        ctx.strokeStyle = '#9a8880';
+        ctx.lineWidth   = 2.4;
+        ctx.beginPath();
+        ctx.moveTo(hx - 14*sc, HY + 16*sc);
+        ctx.quadraticCurveTo(hx, HY + 26*sc, hx + 14*sc, HY + 16*sc);
+        ctx.stroke();
+        ctx.lineCap = 'butt';
+
+        // ── bow tie (magenta with heart centre) ───────────────────────────
+        var bty = BY - BH * 0.46;
+        ctx.fillStyle = '#b83068';
+        // Left wing
+        ctx.beginPath();
+        ctx.moveTo(hx,        bty);
+        ctx.lineTo(hx - 16*sc, bty - 7*sc);
+        ctx.lineTo(hx - 15*sc, bty + 7*sc);
+        ctx.closePath();
+        ctx.fill();
+        // Right wing
+        ctx.beginPath();
+        ctx.moveTo(hx,        bty);
+        ctx.lineTo(hx + 16*sc, bty - 7*sc);
+        ctx.lineTo(hx + 15*sc, bty + 7*sc);
+        ctx.closePath();
+        ctx.fill();
+        // Centre knot
+        ctx.fillStyle = '#e0185c';
+        ctx.beginPath(); ctx.ellipse(hx, bty, 5*sc, 4.5*sc, 0, 0, Math.PI * 2); ctx.fill();
+        // Tiny heart on knot
+        ctx.fillStyle = '#ff6090';
+        ctx.font = (8*sc) + 'px serif';
+        ctx.textAlign    = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('♥', hx, bty);
+
+        // ── magical aura ──────────────────────────────────────────────────
+        if (emerge > 0.35) {
+            var ao = Math.min(1, (emerge - 0.35) / 0.65);
+            var ag = ctx.createRadialGradient(hx, HY, 10*sc, hx, HY, 78*sc);
+            ag.addColorStop(0, 'rgba(200,130,255,' + (ao * 0.20).toFixed(2) + ')');
+            ag.addColorStop(1, 'transparent');
+            ctx.fillStyle   = ag;
+            ctx.globalAlpha = 1;
+            ctx.beginPath(); ctx.arc(hx, HY, 78*sc, 0, Math.PI * 2); ctx.fill();
+        }
+
         ctx.globalAlpha = 1;
     }
 
@@ -441,25 +818,26 @@
     function drawWelcome(W, H, t) {
         var msgs = [
             '✨ Welcome to ZYXXYZ’s Whymzykal Wunderland ✨',
-            '♥ Games, Art & Magic await within ♥',
-            '♠ Explore at your own wonderful pace ♠',
-            '★ Something was made here just for you ★'
+            '♥  Games, Art & Magic await within  ♥',
+            '♠  Explore at your own wonderful pace  ♠',
+            '♦  Something was made here just for you  ♦'
         ];
-        var CYCLE = 4.5;
+        var CYCLE = 4.8;
         var idx   = Math.floor(t / CYCLE) % msgs.length;
         var msg   = msgs[idx];
-        var show  = Math.min(msg.length, Math.ceil(msg.length * ((t % CYCLE) / CYCLE) * 2.4));
+        var prog  = Math.min(1, ((t % CYCLE) / CYCLE) * 2.5);
+        var show  = Math.min(msg.length, Math.ceil(msg.length * prog));
         var caret = (show < msg.length && Math.floor(t * 2) % 2) ? '|' : '';
 
         var fs = Math.max(11, Math.min(15, W / 46));
-        var y  = H - 18;
+        var y  = H - 16;
 
-        ctx.fillStyle    = 'rgba(10,0,20,0.55)';
-        ctx.fillRect(0, y - fs - 4, W, fs + 20);
+        ctx.fillStyle = 'rgba(5,0,14,0.64)';
+        ctx.fillRect(0, y - fs - 6, W, fs + 22);
 
         ctx.textAlign    = 'center';
         ctx.textBaseline = 'alphabetic';
-        ctx.font         = 'italic ' + fs + 'px \'Comic Sans MS\', cursive, serif';
+        ctx.font         = 'italic ' + fs + 'px \'Comic Sans MS\', cursive';
         ctx.shadowColor  = GOLD;
         ctx.shadowBlur   = 14;
         ctx.fillStyle    = GOLD;
