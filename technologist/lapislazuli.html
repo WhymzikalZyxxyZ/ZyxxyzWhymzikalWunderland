@@ -1,479 +1,871 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lapis Lazuli - Trading Monitor</title>
+    <title>Lapis Lazuli — Market Intelligence</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
     <style>
-        /* ── Reset global site styles inside the app ── */
-        #lapis-app * {
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-        #lapis-app h1, #lapis-app h2, #lapis-app h3 {
-            font-size: unset;
-            font-style: normal;
-            font-weight: 600;
-            text-decoration: none;
-            text-align: left;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            color: unset;
-        }
-        #lapis-app p { color: unset; }
-        #lapis-app button {
-            display: inline-block;
-            margin: 0;
-            font-size: 14px;
-        }
-        #lapis-app table { width: 100%; border-collapse: collapse; }
+    /* ─── Reset site globals ─────────────────────────────────────────────── */
+    #lp * { box-sizing:border-box; margin:0; padding:0;
+            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
+    #lp h1,#lp h2,#lp h3 { font-size:unset; font-style:normal; font-weight:600;
+            text-decoration:none; text-align:left; color:unset;
+            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
+    #lp p  { color:unset; }
+    #lp button { display:inline-block; margin:0; font-size:14px; }
+    #lp table  { width:100%; border-collapse:collapse; }
 
-        /* ── Design tokens ── */
-        #lapis-app {
-            --lapis:   #1E3A8A;
-            --night:   #0F172A;
-            --gold:    #D4AF37;
-            --emerald: #10B981;
-            --ruby:    #EF4444;
-            --cyan:    #06B6D4;
-            --text:    #E2E8F0;
-            --muted:   #94A3B8;
-            --border:  rgba(30,58,138,0.4);
-            --surface: rgba(15,23,42,0.85);
-            background: var(--night);
-            color: var(--text);
-            min-height: 100vh;
-        }
+    /* ─── Design tokens ──────────────────────────────────────────────────── */
+    #lp {
+        --bg:       #04080f;
+        --bg1:      #070d1c;
+        --bg2:      #0b1428;
+        --surf:     #0d1830;
+        --surf2:    #111e3a;
+        --lap1:     #1a3777;
+        --lap2:     #2550a8;
+        --lap3:     #3a6cd4;
+        --lap-glow: rgba(58,108,212,0.22);
+        --gold:     #c9a227;
+        --gold2:    #e8bf4a;
+        --gold-glow:rgba(201,162,39,0.18);
+        --text:     #d8e4f8;
+        --text2:    #8fa8d0;
+        --text3:    #3d5580;
+        --border:   rgba(42,82,168,0.28);
+        --border2:  rgba(42,82,168,0.5);
+        --up:       #1ebd68;
+        --up-bg:    rgba(30,189,104,0.12);
+        --dn:       #e84040;
+        --dn-bg:    rgba(232,64,64,0.12);
+        --hold:     #e8a020;
+        --hold-bg:  rgba(232,160,32,0.12);
 
-        /* ── Back link ── */
-        #lapis-app .back {
-            display: inline-block;
-            padding: 10px 20px;
-            font-size: 13px;
-            color: var(--muted);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        #lapis-app .back:hover { color: var(--gold); }
+        background:
+            radial-gradient(ellipse 100% 55% at 50% -5%, rgba(42,80,168,0.12) 0%, transparent 65%),
+            radial-gradient(ellipse 50% 35% at 92% 95%, rgba(201,162,39,0.05) 0%, transparent 55%),
+            var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        font-variant-numeric: tabular-nums;
+    }
 
-        /* ── Demo banner ── */
-        #lapis-app .demo-banner {
-            margin: 0 20px 4px;
-            padding: 8px 16px;
-            background: rgba(212,175,55,0.1);
-            border: 1px solid rgba(212,175,55,0.35);
-            border-radius: 6px;
-            font-size: 12px;
-            color: var(--gold);
-            text-align: center;
-        }
+    /* ─── Back link ──────────────────────────────────────────────────────── */
+    #lp .back { display:inline-flex; align-items:center; gap:6px;
+        padding:10px 20px; font-size:12px; color:var(--text3);
+        text-decoration:none; letter-spacing:0.5px;
+        transition:color 0.2s; }
+    #lp .back:hover { color:var(--gold); }
 
-        /* ── Header ── */
-        #lapis-app header {
-            padding: 32px 20px 24px;
-            text-align: center;
-            border-bottom: 1px solid var(--gold);
-        }
-        #lapis-app header h1 {
-            font-size: 42px;
-            font-weight: 700;
-            color: var(--gold);
-            text-shadow: 0 0 24px rgba(212,175,55,0.35);
-            letter-spacing: 2px;
-        }
-        #lapis-app header p {
-            margin-top: 6px;
-            font-size: 14px;
-            color: var(--muted);
-            letter-spacing: 1px;
-        }
+    /* ─── Header ─────────────────────────────────────────────────────────── */
+    #lp .lp-header {
+        position: relative;
+        padding: 28px 28px 22px;
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(26,55,119,0.18) 0%, transparent 100%);
+        display: flex; align-items: center; justify-content: space-between;
+        flex-wrap: wrap; gap: 12px;
+    }
+    #lp .lp-header::before {
+        content:''; position:absolute; top:0; left:0; right:0; height:2px;
+        background: linear-gradient(90deg, transparent, var(--lap2), var(--gold), var(--lap2), transparent);
+    }
+    #lp .header-left h1 {
+        font-size: 32px; font-weight: 800; letter-spacing: 4px;
+        color: var(--gold);
+        text-shadow: 0 0 32px rgba(201,162,39,0.45), 0 0 8px rgba(201,162,39,0.2);
+    }
+    #lp .header-left p {
+        margin-top: 4px; font-size: 11px; letter-spacing: 2px;
+        text-transform: uppercase; color: var(--text2);
+    }
+    #lp .header-right { display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+    #lp .live-clock { font-family:'Courier New',monospace; font-size:18px;
+        font-weight:700; color:var(--lap3);
+        text-shadow: 0 0 12px var(--lap-glow); letter-spacing:2px; }
+    #lp .market-status { font-size:11px; color:var(--text3); letter-spacing:1px;
+        text-transform:uppercase; }
+    #lp .mst-dot { display:inline-block; width:7px; height:7px; border-radius:50%;
+        background:var(--up); margin-right:5px; animation:glow-pulse 2s infinite; }
+    @keyframes glow-pulse {
+        0%,100% { box-shadow:0 0 0 0 rgba(30,189,104,0.6); }
+        50%      { box-shadow:0 0 0 4px rgba(30,189,104,0); }
+    }
 
-        /* ── Controls bar ── */
-        #lapis-app .controls {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 10px;
-            padding: 14px 20px;
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-        }
-        #lapis-app .btn {
-            padding: 8px 18px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.18s;
-            color: white;
-        }
-        #lapis-app .btn-primary { background: var(--lapis); }
-        #lapis-app .btn-primary:hover { background: #2D4FB8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(30,58,138,0.45); }
-        #lapis-app .btn-success { background: var(--emerald); }
-        #lapis-app .btn-success:hover { background: #0EA571; transform: translateY(-1px); }
-        #lapis-app .btn-danger  { background: var(--ruby); }
-        #lapis-app .btn-danger:hover  { background: #DC2626; transform: translateY(-1px); }
+    /* ─── Demo banner ────────────────────────────────────────────────────── */
+    #lp .demo-banner {
+        margin:0; padding:7px 24px;
+        background:rgba(201,162,39,0.07); border-bottom:1px solid rgba(201,162,39,0.2);
+        font-size:11px; color:rgba(201,162,39,0.75); text-align:center; letter-spacing:0.5px;
+    }
+    #lp .demo-banner a { color:inherit; opacity:0.75; text-decoration:underline; margin-left:8px; }
 
-        #lapis-app .status-box {
-            margin-left: auto;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 16px;
-            background: rgba(30,58,138,0.2);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-        }
-        #lapis-app .dot {
-            width: 9px; height: 9px;
-            border-radius: 50%;
-            background: var(--muted);
-            animation: pulse 2s infinite;
-        }
-        #lapis-app .dot.active  { background: var(--emerald); }
-        #lapis-app .dot.stopped { background: var(--ruby); }
-        @keyframes pulse {
-            0%,100% { transform: scale(1); }
-            50%      { transform: scale(1.15); }
-        }
-        #lapis-app #status-text  { font-size: 12px; color: var(--muted); }
-        #lapis-app #last-update  { font-size: 11px; color: var(--muted); padding-left: 10px; border-left: 1px solid var(--border); }
+    /* ─── Controls bar ───────────────────────────────────────────────────── */
+    #lp .lp-controls {
+        display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+        padding:10px 24px;
+        background:var(--bg1);
+        border-bottom:1px solid var(--border);
+    }
+    #lp .btn {
+        padding:6px 16px; border:1px solid transparent; border-radius:6px;
+        cursor:pointer; font-size:12px; font-weight:600; letter-spacing:0.5px;
+        transition:all 0.18s; color:white; background:transparent;
+    }
+    #lp .btn-go   { border-color:var(--lap2); color:var(--text2); background:rgba(42,80,168,0.2); }
+    #lp .btn-go:hover   { background:var(--lap2); color:#fff; box-shadow:0 0 14px var(--lap-glow); }
+    #lp .btn-live { border-color:var(--up); color:var(--up); background:var(--up-bg); }
+    #lp .btn-live:hover { background:var(--up); color:#fff; box-shadow:0 0 14px rgba(30,189,104,0.3); }
+    #lp .btn-stop { border-color:var(--dn); color:var(--dn); background:var(--dn-bg); }
+    #lp .btn-stop:hover { background:var(--dn); color:#fff; box-shadow:0 0 14px rgba(232,64,64,0.3); }
 
-        /* ── Main grid ── */
-        #lapis-app main {
-            padding: 20px;
-            display: grid;
-            gap: 20px;
-        }
+    #lp .status-pill {
+        margin-left:auto; display:flex; align-items:center; gap:8px;
+        padding:5px 14px; border-radius:20px;
+        border:1px solid var(--border); background:rgba(11,20,40,0.8);
+    }
+    #lp .s-dot { width:8px; height:8px; border-radius:50%; background:var(--text3);
+        flex-shrink:0; transition:background 0.3s; }
+    #lp .s-dot.live    { background:var(--up); animation:glow-pulse 1.5s infinite; }
+    #lp .s-dot.stopped { background:var(--dn); }
+    #lp #s-text  { font-size:12px; color:var(--text2); }
+    #lp #s-stamp { font-size:10px; color:var(--text3); padding-left:10px;
+        border-left:1px solid var(--border); font-family:'Courier New',monospace; }
 
-        /* ── Section cards ── */
-        #lapis-app .panel {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            overflow: hidden;
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        #lapis-app .panel-header {
-            padding: 12px 20px;
-            background: linear-gradient(90deg, rgba(30,58,138,0.4), transparent);
-            border-bottom: 1px solid var(--border);
-        }
-        #lapis-app .panel-header h2 {
-            font-size: 13px;
-            font-weight: 600;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: var(--gold);
-        }
+    /* ─── Tab bar ────────────────────────────────────────────────────────── */
+    #lp .lp-tabs {
+        display:flex; gap:0; padding:0 24px;
+        background:var(--bg1); border-bottom:1px solid var(--border);
+    }
+    #lp .tab-btn {
+        padding:11px 22px; background:transparent;
+        border:none; border-bottom:2px solid transparent;
+        color:var(--text3); font-size:13px; font-weight:600;
+        cursor:pointer; letter-spacing:0.3px;
+        transition:color 0.18s, border-color 0.18s, background 0.18s;
+    }
+    #lp .tab-btn:hover { color:var(--text2); background:rgba(42,80,168,0.06); }
+    #lp .tab-btn.active {
+        color:var(--gold); border-bottom-color:var(--gold);
+        background:rgba(201,162,39,0.05);
+    }
 
-        /* ── Tables ── */
-        #lapis-app thead th {
-            padding: 10px 16px;
-            text-align: left;
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            color: var(--muted);
-            background: linear-gradient(90deg, rgba(30,58,138,0.2), transparent);
-            border-bottom: 1px solid var(--border);
-        }
-        #lapis-app tbody td {
-            padding: 11px 16px;
-            font-size: 13px;
-            border-bottom: 1px solid rgba(30,58,138,0.15);
-        }
-        #lapis-app tbody tr:last-child td { border-bottom: none; }
-        #lapis-app tbody tr:hover { background: rgba(30,58,138,0.12); }
+    /* ─── Main ───────────────────────────────────────────────────────────── */
+    #lp .lp-main { padding:20px 24px; }
+    #lp .tab-pane { display:none; }
+    #lp .tab-pane.active { display:block; }
 
-        #lapis-app .sym  { font-weight: 700; color: var(--cyan); font-size: 14px; }
-        #lapis-app .mono { font-family: 'Courier New', monospace; }
-        #lapis-app .up   { color: var(--emerald); }
-        #lapis-app .dn   { color: var(--ruby); }
-        #lapis-app .gold { color: var(--gold); }
+    /* ─── Panel ──────────────────────────────────────────────────────────── */
+    #lp .panel {
+        background:var(--surf);
+        border:1px solid var(--border);
+        border-top:1px solid rgba(42,80,168,0.45);
+        border-radius:8px; overflow:hidden;
+        margin-bottom:20px;
+        animation:fadeUp 0.25s ease;
+    }
+    @keyframes fadeUp {
+        from { opacity:0; transform:translateY(8px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+    #lp .panel-head {
+        padding:10px 18px;
+        display:flex; align-items:center; justify-content:space-between;
+        background:linear-gradient(90deg, rgba(26,55,119,0.5) 0%, rgba(26,55,119,0.1) 60%, transparent 100%);
+        border-bottom:1px solid var(--border);
+    }
+    #lp .panel-head h2 { font-size:11px; font-weight:700;
+        letter-spacing:2px; text-transform:uppercase; color:var(--gold2); }
+    #lp .panel-head .ph-right { font-size:11px; color:var(--text3);
+        font-family:'Courier New',monospace; }
 
-        /* ── Signal badges ── */
-        #lapis-app .badge {
-            display: inline-block;
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-        #lapis-app tr.sig-buy  .badge { background: rgba(16,185,129,0.18); color: var(--emerald); border: 1px solid var(--emerald); }
-        #lapis-app tr.sig-sell .badge { background: rgba(239,68,68,0.18);  color: var(--ruby);    border: 1px solid var(--ruby); }
-        #lapis-app tr.sig-hold .badge { background: rgba(212,175,55,0.18); color: var(--gold);    border: 1px solid var(--gold); }
+    /* ─── Stat cards ─────────────────────────────────────────────────────── */
+    #lp .stat-row { display:flex; flex-wrap:wrap; gap:10px; padding:14px 18px;
+        border-bottom:1px solid var(--border); }
+    #lp .stat-card { flex:1; min-width:110px;
+        background:rgba(11,20,40,0.7); border:1px solid var(--border);
+        border-radius:8px; padding:12px 14px; }
+    #lp .sc-label { font-size:10px; text-transform:uppercase; letter-spacing:1px;
+        color:var(--text3); margin-bottom:5px; }
+    #lp .sc-value { font-size:22px; font-weight:700;
+        font-family:'Courier New',monospace; line-height:1; }
+    #lp .sc-sub   { font-size:10px; color:var(--text3); margin-top:3px; }
 
-        /* ── Confidence bars ── */
-        #lapis-app .conf {
-            display: flex; align-items: center; gap: 8px;
-        }
-        #lapis-app .track {
-            flex: 1; height: 6px;
-            background: rgba(255,255,255,0.08);
-            border-radius: 3px; overflow: hidden;
-        }
-        #lapis-app .fill { height: 100%; border-radius: 3px; }
-        #lapis-app tr.sig-buy  .fill { background: linear-gradient(90deg, #10B981, #34D399); }
-        #lapis-app tr.sig-sell .fill { background: linear-gradient(90deg, #EF4444, #F87171); }
-        #lapis-app tr.sig-hold .fill { background: linear-gradient(90deg, var(--gold), #F0CC5A); }
-        #lapis-app .pct { font-size: 11px; color: var(--muted); min-width: 30px; }
+    /* ─── Scrollable table wrapper ───────────────────────────────────────── */
+    #lp .tbl-wrap { overflow-x:auto; }
 
-        /* ── RSI / trend colours ── */
-        #lapis-app .rsi-hot  { color: var(--ruby); }
-        #lapis-app .rsi-cold { color: var(--emerald); }
+    /* ─── Tables ─────────────────────────────────────────────────────────── */
+    #lp thead { position:sticky; top:0; z-index:2; }
+    #lp thead th {
+        padding:9px 14px; text-align:left;
+        font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+        color:var(--text3); background:var(--bg2);
+        border-bottom:1px solid var(--border);
+        white-space:nowrap;
+    }
+    #lp tbody td { padding:9px 14px; font-size:13px;
+        border-bottom:1px solid rgba(42,82,168,0.1); white-space:nowrap; }
+    #lp tbody tr:last-child td { border-bottom:none; }
+    #lp tbody tr { transition:background 0.12s; }
+    #lp tbody tr:hover { background:rgba(42,82,168,0.08); }
+    #lp tbody tr:hover td:first-child { border-left:2px solid var(--lap3); padding-left:12px; }
 
-        /* ── Footer ── */
-        #lapis-app footer {
-            text-align: center;
-            padding: 20px;
-            font-size: 11px;
-            color: var(--muted);
-            border-top: 1px solid var(--border);
-        }
+    /* ─── Common cell classes ────────────────────────────────────────────── */
+    #lp .sym   { font-size:14px; font-weight:800; color:var(--lap3); letter-spacing:0.5px; }
+    #lp .nm    { font-size:10px; color:var(--text3); margin-top:1px; }
+    #lp .mono  { font-family:'Courier New',monospace; }
+    #lp .up    { color:var(--up); }
+    #lp .dn    { color:var(--dn); }
+    #lp .gold  { color:var(--gold); }
+    #lp .muted { color:var(--text2); }
+    #lp .dim   { color:var(--text3); }
 
-        /* ── Responsive ── */
-        @media (max-width: 768px) {
-            #lapis-app header h1 { font-size: 26px; }
-            #lapis-app main { padding: 12px; gap: 12px; }
-            #lapis-app thead th, #lapis-app tbody td { padding: 8px 10px; font-size: 12px; }
-            #lapis-app .status-box { margin-left: 0; width: 100%; justify-content: center; }
-        }
-        @media (max-width: 480px) {
-            #lapis-app .controls { gap: 6px; }
-        }
+    /* ─── Price flash animation ──────────────────────────────────────────── */
+    #lp .flash-up { animation:flashUp 0.5s ease; }
+    #lp .flash-dn { animation:flashDn 0.5s ease; }
+    @keyframes flashUp {
+        0%   { background:rgba(30,189,104,0.28); }
+        100% { background:transparent; }
+    }
+    @keyframes flashDn {
+        0%   { background:rgba(232,64,64,0.22); }
+        100% { background:transparent; }
+    }
+
+    /* ─── Badges ─────────────────────────────────────────────────────────── */
+    #lp .badge {
+        display:inline-block; padding:3px 10px; border-radius:4px;
+        font-size:10px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
+    }
+    #lp .b-buy  { background:var(--up-bg);   color:var(--up);   border:1px solid rgba(30,189,104,0.4); }
+    #lp .b-sell { background:var(--dn-bg);   color:var(--dn);   border:1px solid rgba(232,64,64,0.4); }
+    #lp .b-hold { background:var(--hold-bg); color:var(--hold); border:1px solid rgba(232,160,32,0.4); }
+    #lp .b-bull { background:rgba(30,189,104,0.08);  color:var(--up);   border:1px solid rgba(30,189,104,0.3); }
+    #lp .b-bear { background:rgba(232,64,64,0.08);   color:var(--dn);   border:1px solid rgba(232,64,64,0.3); }
+    #lp .b-neut { background:rgba(232,160,32,0.08);  color:var(--hold); border:1px solid rgba(232,160,32,0.3); }
+    #lp .sector-tag {
+        display:inline-block; padding:2px 8px; border-radius:3px; font-size:10px;
+        font-weight:600; letter-spacing:0.5px;
+        background:rgba(42,80,168,0.2); color:var(--text2);
+        border:1px solid rgba(42,80,168,0.35);
+    }
+
+    /* ─── Sparkline ──────────────────────────────────────────────────────── */
+    #lp .spark  { display:inline-block; vertical-align:middle; }
+
+    /* ─── Day range bar ──────────────────────────────────────────────────── */
+    #lp .rng { display:flex; align-items:center; gap:6px; min-width:160px; }
+    #lp .rng-lo, #lp .rng-hi { font-size:10px; color:var(--text3);
+        font-family:'Courier New',monospace; min-width:48px; }
+    #lp .rng-hi { text-align:right; }
+    #lp .rng-track { flex:1; height:5px; background:rgba(255,255,255,0.07);
+        border-radius:3px; overflow:visible; position:relative; }
+    #lp .rng-fill { height:100%; border-radius:3px;
+        background:linear-gradient(90deg,var(--lap2),var(--lap3)); }
+    #lp .rng-pip { position:absolute; top:50%; width:8px; height:8px;
+        border-radius:50%; background:var(--gold); border:1.5px solid var(--bg);
+        transform:translate(-50%,-50%); }
+
+    /* ─── Volume bar ─────────────────────────────────────────────────────── */
+    #lp .vol-cell { display:flex; align-items:center; gap:7px; }
+    #lp .vol-bar-wrap { width:50px; height:5px; background:rgba(255,255,255,0.07);
+        border-radius:3px; overflow:hidden; flex-shrink:0; }
+    #lp .vol-bar-fill { height:100%; border-radius:3px;
+        background:linear-gradient(90deg,var(--lap1),var(--lap3)); }
+
+    /* ─── Confidence bars ────────────────────────────────────────────────── */
+    #lp .conf { display:flex; align-items:center; gap:8px; }
+    #lp .conf-track { flex:1; height:6px; background:rgba(255,255,255,0.07);
+        border-radius:3px; overflow:hidden; min-width:80px; }
+    #lp .conf-fill { height:100%; border-radius:3px; transition:width 0.4s ease; }
+    #lp .cf-buy  { background:linear-gradient(90deg,#12a055,#1ebd68); }
+    #lp .cf-sell { background:linear-gradient(90deg,#c43030,#e84040); }
+    #lp .cf-hold { background:linear-gradient(90deg,#b87818,#e8a020); }
+    #lp .conf-pct { font-size:11px; color:var(--text3); min-width:30px;
+        font-family:'Courier New',monospace; }
+
+    /* ─── Target progress bar ────────────────────────────────────────────── */
+    #lp .tgt { min-width:180px; }
+    #lp .tgt-range { font-size:11px; font-family:'Courier New',monospace; color:var(--text2); margin-bottom:4px; }
+    #lp .tgt-track { height:5px; background:rgba(255,255,255,0.07); border-radius:3px; overflow:visible; position:relative; }
+    #lp .tgt-fill  { height:100%; border-radius:3px; }
+    #lp .tgt-fill.pos { background:linear-gradient(90deg,var(--lap2),var(--up)); }
+    #lp .tgt-fill.neg { background:linear-gradient(90deg,var(--dn),var(--hold)); }
+    #lp .tgt-cur  { position:absolute; top:50%; width:8px; height:8px;
+        border-radius:50%; background:var(--gold); border:1.5px solid var(--bg);
+        transform:translate(-50%,-50%); }
+
+    /* ─── RSI zone bar ───────────────────────────────────────────────────── */
+    #lp .rsi-bar { display:flex; align-items:center; gap:7px; min-width:130px; }
+    #lp .rsi-track { flex:1; height:5px; background:rgba(255,255,255,0.06);
+        border-radius:3px; overflow:visible; position:relative; }
+    #lp .rsi-pip { position:absolute; top:50%; width:8px; height:8px;
+        border-radius:50%; border:1.5px solid var(--bg);
+        transform:translate(-50%,-50%); }
+    #lp .rsi-val { font-family:'Courier New',monospace; font-size:13px; min-width:36px; }
+
+    /* ─── 52-week range bar ──────────────────────────────────────────────── */
+    #lp .w52-bar { display:flex; align-items:center; gap:6px; min-width:180px; }
+    #lp .w52-track { flex:1; height:5px; background:rgba(255,255,255,0.07);
+        border-radius:3px; overflow:visible; position:relative; }
+    #lp .w52-fill { height:100%; border-radius:3px;
+        background:linear-gradient(90deg,var(--dn),var(--up)); }
+    #lp .w52-pip { position:absolute; top:50%; width:9px; height:9px;
+        border-radius:50%; background:var(--gold2); border:1.5px solid var(--bg);
+        transform:translate(-50%,-50%); }
+
+    /* ─── Sell window badge ──────────────────────────────────────────────── */
+    #lp .sell-win { display:inline-block; padding:3px 10px; border-radius:4px;
+        font-size:11px; font-weight:700; letter-spacing:0.5px;
+        background:rgba(232,160,32,0.12); color:var(--hold);
+        border:1px solid rgba(232,160,32,0.35); }
+
+    /* ─── Ticker tape ────────────────────────────────────────────────────── */
+    #lp .ticker-tape {
+        overflow:hidden; padding:6px 0;
+        background:var(--bg2); border-bottom:1px solid var(--border);
+        font-family:'Courier New',monospace;
+    }
+    #lp .ticker-inner { display:flex; gap:32px; animation:tickerScroll 30s linear infinite;
+        width:max-content; }
+    #lp .ticker-item { font-size:12px; white-space:nowrap; flex-shrink:0; }
+    @keyframes tickerScroll {
+        0%   { transform:translateX(0); }
+        100% { transform:translateX(-50%); }
+    }
+
+    /* ─── Footer ─────────────────────────────────────────────────────────── */
+    #lp footer { text-align:center; padding:16px 20px;
+        font-size:10px; color:var(--text3); letter-spacing:0.5px;
+        border-top:1px solid var(--border); }
+
+    /* ─── Responsive ─────────────────────────────────────────────────────── */
+    @media (max-width:900px) {
+        #lp .lp-header { padding:18px 16px 14px; }
+        #lp .header-left h1 { font-size:22px; }
+        #lp .lp-main { padding:12px 12px; }
+        #lp .lp-tabs { padding:0 12px; }
+        #lp .lp-controls { padding:8px 12px; }
+        #lp .tab-btn { padding:9px 14px; font-size:12px; }
+        #lp thead th, #lp tbody td { padding:7px 10px; }
+        #lp .rng, #lp .w52-bar { min-width:130px; }
+    }
+    @media (max-width:560px) {
+        #lp .status-pill { margin-left:0; width:100%; justify-content:center; }
+        #lp .stat-card { min-width:calc(50% - 5px); }
+        #lp .live-clock { font-size:15px; }
+    }
     </style>
 </head>
 <body class="wunderBody">
 <div class="navbar"></div>
-<div id="lapis-app">
-
-    <a class="back" href="/technologist/apps.html">← Back to Apps</a>
+<div id="lp">
 
     <div class="demo-banner">
-        ⚠ Demo mode — displaying simulated market data. The full application runs locally with live data feeds.
-        <a href="https://github.com/WhymzikalZyxxyZ/lapis-lazuli" style="color:inherit;margin-left:8px;" target="_blank" rel="noopener noreferrer">View on GitHub ↗</a>
+        ⚠ Demo mode — simulated data based on 2025 actuals + 2026 model projections · Not financial advice
+        <a href="https://github.com/WhymzikalZyxxyZ/lapis-lazuli" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
     </div>
 
-    <header>
-        <h1>💎 Lapis Lazuli</h1>
-        <p>Sophisticated Trading Monitor</p>
-    </header>
+    <a class="back" href="/technologist/apps.html">← Apps</a>
 
-    <div class="controls">
-        <button class="btn btn-primary" onclick="refresh()">⟳ Refresh</button>
-        <button class="btn btn-success" onclick="start()">▶ Start Monitoring</button>
-        <button class="btn btn-danger"  onclick="stop()">■ Stop</button>
-        <div class="status-box">
-            <div class="dot" id="dot"></div>
-            <span id="status-text">Ready</span>
-            <span id="last-update"></span>
+    <!-- Header -->
+    <div class="lp-header">
+        <div class="header-left">
+            <h1>💎 LAPIS LAZULI</h1>
+            <p>Market Intelligence · Top 10 · Forecast &amp; Signals</p>
+        </div>
+        <div class="header-right">
+            <div class="live-clock" id="live-clock">--:--:--</div>
+            <div class="market-status"><span class="mst-dot"></span>LIVE DEMO</div>
         </div>
     </div>
 
-    <main>
-        <!-- Price Data -->
-        <div class="panel">
-            <div class="panel-header"><h2>Price Data</h2></div>
-            <table>
-                <thead>
-                    <tr>
+    <!-- Ticker tape -->
+    <div class="ticker-tape"><div class="ticker-inner" id="ticker-inner"></div></div>
+
+    <!-- Controls -->
+    <div class="lp-controls">
+        <button class="btn btn-go"   onclick="doRefresh()">⟳ Refresh</button>
+        <button class="btn btn-live" onclick="startLive()">▶ Start Live</button>
+        <button class="btn btn-stop" onclick="stopLive()">■ Stop</button>
+        <div class="status-pill">
+            <div class="s-dot" id="s-dot"></div>
+            <span id="s-text">Ready</span>
+            <span id="s-stamp"></span>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="lp-tabs">
+        <button class="tab-btn active" onclick="showTab('watchlist')">📊 Watchlist</button>
+        <button class="tab-btn"        onclick="showTab('forecast')">🔮 Forecast</button>
+        <button class="tab-btn"        onclick="showTab('signals')">📡 Signals</button>
+        <button class="tab-btn"        onclick="showTab('indicators')">📈 Indicators</button>
+    </div>
+
+    <div class="lp-main">
+
+        <!-- ── WATCHLIST ───────────────────────────────────────────────── -->
+        <div id="tab-watchlist" class="tab-pane active">
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>Live Watchlist — Top 10</h2>
+                    <span class="ph-right" id="wl-ts"></span>
+                </div>
+                <div class="tbl-wrap">
+                <table>
+                    <thead><tr>
                         <th>Symbol</th>
-                        <th>Current Price</th>
-                        <th>Open</th>
-                        <th>High</th>
-                        <th>Low</th>
+                        <th>Trend</th>
+                        <th>Price</th>
+                        <th>Change</th>
+                        <th>Day Range</th>
                         <th>Volume</th>
-                    </tr>
-                </thead>
-                <tbody id="price-tbody"></tbody>
-            </table>
+                        <th>Mkt Cap</th>
+                        <th>Signal</th>
+                    </tr></thead>
+                    <tbody id="wl-tbody"></tbody>
+                </table>
+                </div>
+            </div>
         </div>
 
-        <!-- Trading Signals -->
-        <div class="panel">
-            <div class="panel-header"><h2>Trading Signals</h2></div>
-            <table>
-                <thead>
-                    <tr>
+        <!-- ── FORECAST ────────────────────────────────────────────────── -->
+        <div id="tab-forecast" class="tab-pane">
+            <div class="panel">
+                <div class="panel-head"><h2>Portfolio Overview</h2><span class="ph-right">2025 actuals · 2026 model</span></div>
+                <div class="stat-row" id="fcast-stats"></div>
+            </div>
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>Year-over-Year Forecast &amp; Sell Timing</h2>
+                    <span class="ph-right">Prior year → projected</span>
+                </div>
+                <div class="tbl-wrap">
+                <table>
+                    <thead><tr>
+                        <th>Symbol</th>
+                        <th>2025 Actual</th>
+                        <th>2026 Projected</th>
+                        <th>Price Target</th>
+                        <th>Trend</th>
+                        <th>Sell Window</th>
+                        <th>Rationale</th>
+                    </tr></thead>
+                    <tbody id="fcast-tbody"></tbody>
+                </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── SIGNALS ─────────────────────────────────────────────────── -->
+        <div id="tab-signals" class="tab-pane">
+            <div class="panel">
+                <div class="panel-head"><h2>Trading Signals</h2><span class="ph-right" id="sig-ts"></span></div>
+                <div class="tbl-wrap">
+                <table>
+                    <thead><tr>
                         <th>Symbol</th>
                         <th>Signal</th>
                         <th>Confidence</th>
                         <th>Strength</th>
-                        <th>Time</th>
-                    </tr>
-                </thead>
-                <tbody id="signal-tbody"></tbody>
-            </table>
+                        <th>Catalyst</th>
+                        <th>Updated</th>
+                    </tr></thead>
+                    <tbody id="sig-tbody"></tbody>
+                </table>
+                </div>
+            </div>
         </div>
 
-        <!-- Technical Indicators -->
-        <div class="panel">
-            <div class="panel-header"><h2>Technical Indicators</h2></div>
-            <table>
-                <thead>
-                    <tr>
+        <!-- ── INDICATORS ──────────────────────────────────────────────── -->
+        <div id="tab-indicators" class="tab-pane">
+            <div class="panel">
+                <div class="panel-head"><h2>Technical Indicators</h2><span class="ph-right" id="ind-ts"></span></div>
+                <div class="tbl-wrap">
+                <table>
+                    <thead><tr>
                         <th>Symbol</th>
-                        <th>RSI</th>
+                        <th>RSI (14)</th>
                         <th>MACD</th>
-                        <th>Price</th>
                         <th>EMA Trend</th>
-                        <th>Volume Trend</th>
-                    </tr>
-                </thead>
-                <tbody id="indicator-tbody"></tbody>
-            </table>
+                        <th>Vol Trend</th>
+                        <th>52-Week Range</th>
+                        <th>Price</th>
+                    </tr></thead>
+                    <tbody id="ind-tbody"></tbody>
+                </table>
+                </div>
+            </div>
         </div>
-    </main>
+    </div><!-- /main -->
 
-    <footer>Lapis Lazuli v0.1.0 &nbsp;·&nbsp; For educational purposes only &nbsp;·&nbsp; Not financial advice</footer>
-</div>
+    <footer>Lapis Lazuli v1.5.0 &nbsp;·&nbsp; Educational purposes only &nbsp;·&nbsp; Not financial advice</footer>
+</div><!-- /#lp -->
 
 <script>
-    const BASE = {
-        prices: [
-            { symbol:'AAPL',  current:189.43, open:187.10, high:190.21, low:186.55, volume:52341200 },
-            { symbol:'GOOGL', current:175.28, open:173.90, high:176.44, low:172.85, volume:18203400 },
-            { symbol:'MSFT',  current:420.55, open:418.22, high:422.10, low:417.80, volume:21450800 },
-            { symbol:'TSLA',  current:248.12, open:251.40, high:253.75, low:245.30, volume:89341100 },
-        ],
-        signals: [
-            { symbol:'AAPL',  signal:'buy',  confidence:78, strength:'Strong',   time:'14:32:01' },
-            { symbol:'GOOGL', signal:'hold', confidence:54, strength:'Moderate', time:'14:31:47' },
-            { symbol:'MSFT',  signal:'buy',  confidence:85, strength:'Strong',   time:'14:32:10' },
-            { symbol:'TSLA',  signal:'sell', confidence:67, strength:'Moderate', time:'14:31:55' },
-        ],
-        indicators: [
-            { symbol:'AAPL',  rsi:58.3, macd: 1.24, price:189.43, ema:'Up',      vol:'Rising'  },
-            { symbol:'GOOGL', rsi:44.1, macd:-0.87, price:175.28, ema:'Neutral', vol:'Falling' },
-            { symbol:'MSFT',  rsi:62.7, macd: 2.15, price:420.55, ema:'Up',      vol:'Rising'  },
-            { symbol:'TSLA',  rsi:71.4, macd:-1.63, price:248.12, ema:'Down',    vol:'Rising'  },
-        ]
-    };
+'use strict';
 
-    let live = JSON.parse(JSON.stringify(BASE));
-    let prevPrices = {};
-    let monitoring = false;
-    let monitorInterval = null;
+/* ── Dataset ─────────────────────────────────────────────────────────────── */
+const STOCKS = [
+    { symbol:'NVDA',  name:'NVIDIA Corp',         sector:'Technology',   current:143.80,open:141.20,high:145.50,low:140.10,volume:412800000,mcap:'3.52T',
+      y2025ret:171.2,y2026proj:28.4,targetLo:150,targetHi:195,sellWindow:'Q2–Q3 2026',trend:'bull',
+      rationale:'AI infrastructure cycle; watch margin compression in H2',
+      signal:'buy',confidence:82,strength:'Strong',catalyst:'AI Capex Cycle'},
+    { symbol:'AAPL',  name:'Apple Inc',            sector:'Technology',   current:194.50,open:192.80,high:196.20,low:192.10,volume:58300000, mcap:'2.96T',
+      y2025ret:18.4, y2026proj:12.8,targetLo:200,targetHi:230,sellWindow:'Q4 2026',   trend:'bull',
+      rationale:'Services revenue expanding; iPhone refresh cycle Q3',
+      signal:'buy',confidence:74,strength:'Moderate',catalyst:'Services Growth'},
+    { symbol:'MSFT',  name:'Microsoft Corp',       sector:'Technology',   current:422.30,open:419.40,high:425.80,low:418.60,volume:22100000, mcap:'3.14T',
+      y2025ret:14.2, y2026proj:15.5,targetLo:440,targetHi:510,sellWindow:'Q3–Q4 2026',trend:'bull',
+      rationale:'Azure + Copilot enterprise expansion; durable revenue',
+      signal:'buy',confidence:80,strength:'Strong',catalyst:'Azure + Copilot'},
+    { symbol:'AMZN',  name:'Amazon.com Inc',       sector:'Cons. Disc.',  current:224.10,open:221.50,high:226.30,low:220.80,volume:35700000, mcap:'2.37T',
+      y2025ret:44.8, y2026proj:22.1,targetLo:245,targetHi:290,sellWindow:'Q3 2026',   trend:'bull',
+      rationale:'AWS re-acceleration; advertising segment outperforming',
+      signal:'buy',confidence:77,strength:'Strong',catalyst:'AWS + Advertising'},
+    { symbol:'GOOGL', name:'Alphabet Inc',         sector:'Technology',   current:178.60,open:176.30,high:180.10,low:175.90,volume:19400000, mcap:'2.21T',
+      y2025ret:26.5, y2026proj:18.3,targetLo:195,targetHi:230,sellWindow:'Q2 2026',   trend:'bull',
+      rationale:'Gemini enterprise rollout; YouTube recovery; Search AI',
+      signal:'buy',confidence:71,strength:'Moderate',catalyst:'Gemini + Search'},
+    { symbol:'META',  name:'Meta Platforms',       sector:'Technology',   current:588.40,open:582.70,high:594.20,low:580.30,volume:14200000, mcap:'1.49T',
+      y2025ret:65.3, y2026proj:9.4, targetLo:600,targetHi:660,sellWindow:'Q1–Q2 2026',trend:'neut',
+      rationale:'Strong 2025 run limits 2026 upside; ad saturation risk H2',
+      signal:'hold',confidence:58,strength:'Moderate',catalyst:'Ad Monetization'},
+    { symbol:'TSLA',  name:'Tesla Inc',            sector:'Cons. Disc.',  current:276.80,open:280.30,high:283.10,low:272.40,volume:98600000, mcap:'0.89T',
+      y2025ret:-24.8,y2026proj:14.2,targetLo:290,targetHi:340,sellWindow:'Q4 2026',   trend:'neut',
+      rationale:'Recovery from 2025 losses; FSD/Robotaxi pivotal; margin risk mid-year',
+      signal:'hold',confidence:52,strength:'Weak',   catalyst:'FSD / Robotaxi'},
+    { symbol:'AVGO',  name:'Broadcom Inc',         sector:'Technology',   current:193.20,open:191.40,high:195.60,low:190.80,volume:18900000, mcap:'0.91T',
+      y2025ret:108.4,y2026proj:20.8,targetLo:210,targetHi:250,sellWindow:'Q3 2026',   trend:'bull',
+      rationale:'Hyperscaler custom AI silicon demand surging; VMware synergies',
+      signal:'buy',confidence:79,strength:'Strong',catalyst:'Custom AI Silicon'},
+    { symbol:'BRK.B', name:'Berkshire Hathaway B', sector:'Financials',   current:458.90,open:456.30,high:462.10,low:455.70,volume:4200000,  mcap:'1.06T',
+      y2025ret:25.2, y2026proj:8.6, targetLo:470,targetHi:510,sellWindow:'Q2 2026',   trend:'neut',
+      rationale:'Large cash reserve signals caution; stable defensive returns',
+      signal:'hold',confidence:62,strength:'Moderate',catalyst:'Value Stability'},
+    { symbol:'JPM',   name:'JPMorgan Chase',       sector:'Financials',   current:244.70,open:242.10,high:247.30,low:241.80,volume:9800000,  mcap:'0.70T',
+      y2025ret:43.7, y2026proj:6.2, targetLo:250,targetHi:275,sellWindow:'Q1 2026',   trend:'bear',
+      rationale:'Rate plateau squeezes NIM; 2025 run limits upside; trim position',
+      signal:'sell',confidence:63,strength:'Moderate',catalyst:'Rate Plateau'},
+];
 
-    function fmt(n)    { return n.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 }); }
-    function fmtVol(n) { return n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n.toLocaleString(); }
-    function jitter(v, pct=0.002) { return v * (1 + (Math.random()-0.5)*2*pct); }
-    function now()     { return new Date().toLocaleTimeString(); }
+const IND = [
+    {symbol:'NVDA', rsi:64.2,macd: 3.84,ema:'Up',     vol:'Rising', w52h:153.20,w52l: 47.32},
+    {symbol:'AAPL', rsi:56.8,macd: 1.12,ema:'Up',     vol:'Steady', w52h:199.62,w52l:164.08},
+    {symbol:'MSFT', rsi:60.4,macd: 2.21,ema:'Up',     vol:'Rising', w52h:430.80,w52l:366.80},
+    {symbol:'AMZN', rsi:62.1,macd: 2.76,ema:'Up',     vol:'Rising', w52h:230.40,w52l:153.70},
+    {symbol:'GOOGL',rsi:58.3,macd: 1.58,ema:'Up',     vol:'Steady', w52h:184.20,w52l:135.60},
+    {symbol:'META', rsi:67.9,macd: 1.04,ema:'Neutral',vol:'Falling',w52h:611.00,w52l:380.50},
+    {symbol:'TSLA', rsi:48.5,macd:-1.44,ema:'Down',   vol:'Rising', w52h:358.60,w52l:138.80},
+    {symbol:'AVGO', rsi:63.7,macd: 2.40,ema:'Up',     vol:'Rising', w52h:201.80,w52l: 84.70},
+    {symbol:'BRK.B',rsi:54.2,macd: 0.88,ema:'Neutral',vol:'Steady', w52h:465.00,w52l:353.00},
+    {symbol:'JPM',  rsi:44.6,macd:-0.72,ema:'Down',   vol:'Falling',w52h:261.40,w52l:167.90},
+];
 
-    function tick() {
-        live.prices.forEach(r => { r.current = jitter(r.current, 0.003); });
-        live.indicators.forEach(r => {
-            r.rsi  = Math.max(10, Math.min(90, r.rsi  + (Math.random()-0.5)*1.2));
-            r.macd = r.macd + (Math.random()-0.5)*0.08;
-            const p = live.prices.find(p => p.symbol === r.symbol);
-            if (p) r.price = p.current;
-        });
-        live.signals.forEach(r => {
-            r.time = now();
-            r.confidence = Math.max(30, Math.min(99, r.confidence + Math.round((Math.random()-0.5)*4)));
-        });
-    }
-
-    function updatePrices() {
-        document.getElementById('price-tbody').innerHTML = live.prices.map(r => {
-            const prev = prevPrices[r.symbol] ?? r.open;
-            const up   = r.current >= prev;
-            prevPrices[r.symbol] = r.current;
-            return `<tr>
-                <td class="sym">${r.symbol}</td>
-                <td class="mono ${up?'up':'dn'}">${up?'▲':'▼'} $${fmt(r.current)}</td>
-                <td class="mono">$${fmt(r.open)}</td>
-                <td class="mono up">$${fmt(r.high)}</td>
-                <td class="mono dn">$${fmt(r.low)}</td>
-                <td>${fmtVol(r.volume)}</td>
-            </tr>`;
-        }).join('');
-    }
-
-    function updateSignals() {
-        document.getElementById('signal-tbody').innerHTML = live.signals.map(r => {
-            return `<tr class="sig-${r.signal}">
-                <td class="sym">${r.symbol}</td>
-                <td><span class="badge">${r.signal.toUpperCase()}</span></td>
-                <td>
-                    <div class="conf">
-                        <div class="track"><div class="fill" style="width:${r.confidence}%"></div></div>
-                        <span class="pct">${r.confidence}%</span>
-                    </div>
-                </td>
-                <td>${r.strength}</td>
-                <td>${r.time}</td>
-            </tr>`;
-        }).join('');
-    }
-
-    function updateIndicators() {
-        document.getElementById('indicator-tbody').innerHTML = live.indicators.map(r => {
-            const rsiCls  = r.rsi > 70 ? 'rsi-hot' : r.rsi < 30 ? 'rsi-cold' : '';
-            const emaCls  = r.ema === 'Up' ? 'up' : r.ema === 'Down' ? 'dn' : 'gold';
-            const volCls  = r.vol === 'Rising' ? 'up' : 'dn';
-            const macdCls = r.macd >= 0 ? 'up' : 'dn';
-            return `<tr>
-                <td class="sym">${r.symbol}</td>
-                <td class="${rsiCls}">${r.rsi.toFixed(1)}</td>
-                <td class="mono ${macdCls}">${r.macd>=0?'+':''}${r.macd.toFixed(2)}</td>
-                <td class="mono">$${fmt(r.price)}</td>
-                <td class="${emaCls}">${r.ema}</td>
-                <td class="${volCls}">${r.vol}</td>
-            </tr>`;
-        }).join('');
-    }
-
-    function setStatus(text, state) {
-        document.getElementById('status-text').textContent = text;
-        const dot = document.getElementById('dot');
-        dot.className = 'dot' + (state === 'active' ? ' active' : state === 'stopped' ? ' stopped' : '');
-        document.getElementById('last-update').textContent = 'Updated: ' + now();
-    }
-
-    function refresh() {
-        updatePrices();
-        updateSignals();
-        updateIndicators();
-        setStatus(monitoring ? 'Monitoring' : 'Idle', monitoring ? 'active' : '');
-    }
-
-    function start() {
-        if (monitoring) return;
-        monitoring = true;
-        setStatus('Monitoring', 'active');
-        monitorInterval = setInterval(() => { tick(); refresh(); }, 2500);
-    }
-
-    function stop() {
-        if (!monitoring) return;
-        monitoring = false;
-        clearInterval(monitorInterval);
-        setStatus('Stopped', 'stopped');
-    }
-
-    document.addEventListener('keydown', e => {
-        if ((e.ctrlKey||e.metaKey) && e.key==='r') { e.preventDefault(); refresh(); }
-        if ((e.ctrlKey||e.metaKey) && e.key==='s') { e.preventDefault(); start(); }
-        if ((e.ctrlKey||e.metaKey) && e.key==='e') { e.preventDefault(); stop(); }
+/* ── Sparkline history (12 deterministic points → updated live) ─────────── */
+const HISTORY = {};
+(function seedHistory() {
+    STOCKS.forEach(s => {
+        const n = 16;
+        const yr = Math.max(-0.5, Math.min(2, s.y2025ret / 100));
+        const start = s.current / (1 + yr);
+        const pts = [];
+        const seed = Math.round(s.current * 137.3);
+        function pr(i) { return ((seed * (i+3) * 9301 + 49297) % 233280) / 233280; }
+        for (let i = 0; i < n; i++) {
+            const t = i / (n - 1);
+            const trend = start + (s.current - start) * t;
+            pts.push(Math.max(0.01, trend * (1 + (pr(i) - 0.5) * 0.10)));
+        }
+        pts[n - 1] = s.current;
+        HISTORY[s.symbol] = pts;
     });
+}());
 
-    window.addEventListener('beforeunload', stop);
-    window.addEventListener('load', () => {
-        refresh();
-        setStatus('Ready — click Start Monitoring to begin', '');
+/* ── Mutable live state ──────────────────────────────────────────────────── */
+let live    = STOCKS.map(s => ({ ...s }));
+let liveInd = IND.map(i => ({ ...i }));
+let prevPrices = {};
+let monitoring = false;
+let monitorInterval = null;
+const MAX_VOL = Math.max(...STOCKS.map(s => s.volume));
+
+/* ── Helpers ─────────────────────────────────────────────────────────────── */
+function fmt(n)  { return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtV(n) { return n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n.toLocaleString(); }
+function ts()    { return new Date().toLocaleTimeString('en-US',{hour12:false}); }
+function jitter(v,p=0.003){ return v*(1+(Math.random()-0.5)*2*p); }
+function clamp(v,lo,hi)   { return Math.max(lo,Math.min(hi,v)); }
+
+/* ── Clock ───────────────────────────────────────────────────────────────── */
+function updateClock() {
+    document.getElementById('live-clock').textContent =
+        new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* ── Sparkline SVG ───────────────────────────────────────────────────────── */
+function sparkSVG(pts, isUp) {
+    const W=72, H=24;
+    const min=Math.min(...pts), max=Math.max(...pts), range=max-min||1;
+    const coords=pts.map((v,i)=>{
+        const x=(i/(pts.length-1))*W;
+        const y=H-((v-min)/range)*(H-4)-2;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+    // fill polygon
+    const first=pts.map((_,i)=>i===0?`0,${H}`:null).filter(Boolean)[0];
+    const last=`${W},${H}`;
+    const fillPts=`0,${H} ${coords} ${last}`;
+    const col=isUp?'#1ebd68':'#e84040';
+    const fillCol=isUp?'rgba(30,189,104,0.08)':'rgba(232,64,64,0.08)';
+    return `<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+        <polygon points="${fillPts}" fill="${fillCol}"/>
+        <polyline points="${coords}" fill="none" stroke="${col}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="${W}" cy="${(H-((pts[pts.length-1]-min)/range)*(H-4)-2).toFixed(1)}" r="2.5" fill="${col}"/>
+    </svg>`;
+}
+
+/* ── Day range bar ───────────────────────────────────────────────────────── */
+function dayRangBar(current, low, high) {
+    const pct = clamp(((current-low)/(high-low||1))*100,0,100).toFixed(1);
+    return `<div class="rng">
+        <span class="rng-lo dim">$${fmt(low)}</span>
+        <div class="rng-track"><div class="rng-fill" style="width:${pct}%"></div>
+            <div class="rng-pip" style="left:${pct}%"></div></div>
+        <span class="rng-hi dim">$${fmt(high)}</span>
+    </div>`;
+}
+
+/* ── Volume bar ──────────────────────────────────────────────────────────── */
+function volBar(vol) {
+    const pct=clamp(vol/MAX_VOL*100,2,100).toFixed(1);
+    return `<div class="vol-cell">
+        <span>${fmtV(vol)}</span>
+        <div class="vol-bar-wrap"><div class="vol-bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+}
+
+/* ── Target progress bar ─────────────────────────────────────────────────── */
+function targetBar(current, lo, hi, isPos) {
+    const range=hi-lo||1;
+    const pct=clamp(((current-lo)/range)*100,0,100).toFixed(1);
+    const cls=isPos?'pos':'neg';
+    return `<div class="tgt">
+        <div class="tgt-range">$${lo} – $${hi}</div>
+        <div class="tgt-track"><div class="tgt-fill ${cls}" style="width:${pct}%"></div>
+            <div class="tgt-cur" style="left:${pct}%"></div></div>
+    </div>`;
+}
+
+/* ── RSI bar ─────────────────────────────────────────────────────────────── */
+function rsiBar(rsi) {
+    const pct=clamp(rsi,0,100).toFixed(1);
+    const pip_col=rsi>70?'#e84040':rsi<30?'#1ebd68':'#c9a227';
+    const cls=rsi>70?'dn':rsi<30?'up':'gold';
+    return `<div class="rsi-bar">
+        <span class="rsi-val ${cls}">${rsi.toFixed(1)}</span>
+        <div class="rsi-track">
+            <div class="rsi-pip" style="left:${pct}%;background:${pip_col}"></div>
+        </div>
+    </div>`;
+}
+
+/* ── 52-week range bar ───────────────────────────────────────────────────── */
+function w52Bar(current, lo, hi) {
+    const pct=clamp(((current-lo)/(hi-lo||1))*100,0,100).toFixed(1);
+    return `<div class="w52-bar">
+        <span class="dim" style="font-size:10px;font-family:'Courier New',monospace">$${fmt(lo)}</span>
+        <div class="w52-track"><div class="w52-fill" style="width:100%"></div>
+            <div class="w52-pip" style="left:${pct}%"></div></div>
+        <span class="dim" style="font-size:10px;font-family:'Courier New',monospace">$${fmt(hi)}</span>
+    </div>`;
+}
+
+/* ── Ticker tape ─────────────────────────────────────────────────────────── */
+function renderTicker() {
+    const items = [...live, ...live].map(r => {
+        const chg=(r.current-r.open)/r.open*100;
+        const col=chg>=0?'#1ebd68':'#e84040';
+        const arr=chg>=0?'▲':'▼';
+        return `<span class="ticker-item">
+            <span style="color:#3a6cd4;font-weight:700">${r.symbol}</span>&nbsp;
+            <span style="color:${col}">${arr} $${fmt(r.current)} (${chg>=0?'+':''}${chg.toFixed(2)}%)</span>
+        </span>`;
+    }).join('');
+    document.getElementById('ticker-inner').innerHTML = items;
+}
+
+/* ── Render: Watchlist ───────────────────────────────────────────────────── */
+function renderWatchlist() {
+    document.getElementById('wl-ts').textContent = ts();
+    const rows = live.map(r => {
+        const prev=prevPrices[r.symbol]??r.open;
+        const up=r.current>=prev;
+        const chg=r.current-r.open, chgPct=(chg/r.open*100);
+        prevPrices[r.symbol]=r.current;
+        const h=HISTORY[r.symbol];
+        const sparkUp=(h[h.length-1]||r.current)>=(h[0]||r.current);
+        const flashCls=up?'flash-up':'flash-dn';
+        const sig=r.signal;
+        return `<tr>
+            <td><div class="sym">${r.symbol}</div><div class="nm">${r.name}</div>
+                <span class="sector-tag">${r.sector}</span></td>
+            <td>${sparkSVG(h,sparkUp)}</td>
+            <td class="mono ${up?'up':'dn'} ${flashCls}" style="font-size:15px;font-weight:700">
+                ${up?'▲':'▼'} $${fmt(r.current)}</td>
+            <td class="mono ${chg>=0?'up':'dn'}">
+                ${chg>=0?'+':''}${fmt(chg)}<br>
+                <span style="font-size:11px">${chgPct>=0?'+':''}${chgPct.toFixed(2)}%</span></td>
+            <td>${dayRangBar(r.current,r.low,r.high)}</td>
+            <td>${volBar(r.volume)}</td>
+            <td class="mono gold" style="font-weight:700">$${r.mcap}</td>
+            <td><span class="badge b-${sig}">${sig.toUpperCase()}</span></td>
+        </tr>`;
+    }).join('');
+    document.getElementById('wl-tbody').innerHTML = rows;
+}
+
+/* ── Render: Forecast ────────────────────────────────────────────────────── */
+function renderForecast() {
+    const avg25=live.reduce((a,r)=>a+r.y2025ret,0)/live.length;
+    const avg26=live.reduce((a,r)=>a+r.y2026proj,0)/live.length;
+    const bull=live.filter(r=>r.trend==='bull').length;
+    const sellN=live.filter(r=>r.signal==='sell').length;
+    document.getElementById('fcast-stats').innerHTML=`
+        <div class="stat-card"><div class="sc-label">Avg 2025 Return</div>
+            <div class="sc-value up">+${avg25.toFixed(1)}%</div>
+            <div class="sc-sub">10-stock avg actual</div></div>
+        <div class="stat-card"><div class="sc-label">2026 Projected</div>
+            <div class="sc-value gold">+${avg26.toFixed(1)}%</div>
+            <div class="sc-sub">Model estimate</div></div>
+        <div class="stat-card"><div class="sc-label">Bullish Outlook</div>
+            <div class="sc-value up">${bull} <span style="font-size:14px">/ 10</span></div>
+            <div class="sc-sub">Upward trending</div></div>
+        <div class="stat-card"><div class="sc-label">Active Sell Signals</div>
+            <div class="sc-value dn">${sellN}</div>
+            <div class="sc-sub">Reduce or exit</div></div>`;
+    document.getElementById('fcast-tbody').innerHTML=live.map(r=>{
+        const tB=r.trend==='bull'?'<span class="badge b-bull">BULLISH</span>':
+                 r.trend==='bear'?'<span class="badge b-bear">BEARISH</span>':
+                                  '<span class="badge b-neut">NEUTRAL</span>';
+        const isPos=r.y2026proj>=0;
+        return `<tr>
+            <td><div class="sym">${r.symbol}</div><div class="nm">${r.name}</div></td>
+            <td class="mono ${r.y2025ret>=0?'up':'dn'}" style="font-weight:700">
+                ${r.y2025ret>=0?'+':''}${r.y2025ret.toFixed(1)}%</td>
+            <td class="mono ${r.y2026proj>=0?'up':'dn'}" style="font-weight:700">
+                +${r.y2026proj.toFixed(1)}%</td>
+            <td>${targetBar(r.current,r.targetLo,r.targetHi,isPos)}</td>
+            <td>${tB}</td>
+            <td><span class="sell-win">${r.sellWindow}</span></td>
+            <td style="font-size:11px;color:#6b84b2;max-width:200px;white-space:normal">${r.rationale}</td>
+        </tr>`;
+    }).join('');
+}
+
+/* ── Render: Signals ─────────────────────────────────────────────────────── */
+function renderSignals() {
+    document.getElementById('sig-ts').textContent = ts();
+    document.getElementById('sig-tbody').innerHTML=live.map(r=>{
+        const sc=r.signal;
+        return `<tr>
+            <td><div class="sym">${r.symbol}</div><div class="nm">${r.name}</div></td>
+            <td><span class="badge b-${sc}">${sc.toUpperCase()}</span></td>
+            <td><div class="conf">
+                <div class="conf-track"><div class="conf-fill cf-${sc}" style="width:${r.confidence}%"></div></div>
+                <span class="conf-pct">${r.confidence}%</span>
+            </div></td>
+            <td class="muted">${r.strength}</td>
+            <td><span class="sector-tag">${r.catalyst}</span></td>
+            <td class="dim mono" style="font-size:11px">${ts()}</td>
+        </tr>`;
+    }).join('');
+}
+
+/* ── Render: Indicators ──────────────────────────────────────────────────── */
+function renderIndicators() {
+    document.getElementById('ind-ts').textContent = ts();
+    document.getElementById('ind-tbody').innerHTML=liveInd.map(r=>{
+        const st=live.find(s=>s.symbol===r.symbol);
+        const price=st?st.current:0;
+        const emaCls=r.ema==='Up'?'up':r.ema==='Down'?'dn':'gold';
+        const volCls=r.vol==='Rising'?'up':r.vol==='Falling'?'dn':'muted';
+        const macdCls=r.macd>=0?'up':'dn';
+        return `<tr>
+            <td><div class="sym">${r.symbol}</div></td>
+            <td>${rsiBar(r.rsi)}</td>
+            <td class="mono ${macdCls}">${r.macd>=0?'+':''}${r.macd.toFixed(2)}</td>
+            <td class="${emaCls}">${r.ema}</td>
+            <td class="${volCls}">${r.vol}</td>
+            <td>${w52Bar(price,r.w52l,r.w52h)}</td>
+            <td class="mono muted">$${fmt(price)}</td>
+        </tr>`;
+    }).join('');
+}
+
+/* ── Tick simulation ─────────────────────────────────────────────────────── */
+function tick() {
+    live.forEach(r => {
+        r.current = jitter(r.current, 0.004);
+        r.confidence = clamp(r.confidence+Math.round((Math.random()-0.5)*4), 28, 98);
+        const h = HISTORY[r.symbol];
+        h.push(r.current);
+        if (h.length > 24) h.shift();
     });
+    liveInd.forEach(r => {
+        r.rsi  = clamp(r.rsi  + (Math.random()-0.5)*1.6, 12, 88);
+        r.macd = r.macd + (Math.random()-0.5)*0.12;
+    });
+}
+
+/* ── Tab switching ───────────────────────────────────────────────────────── */
+function showTab(tab) {
+    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('tab-'+tab).classList.add('active');
+    document.querySelector(`.tab-btn[onclick="showTab('${tab}')"]`).classList.add('active');
+}
+
+/* ── Status ──────────────────────────────────────────────────────────────── */
+function setStatus(text, state) {
+    document.getElementById('s-text').textContent = text;
+    const dot=document.getElementById('s-dot');
+    dot.className='s-dot'+(state==='live'?' live':state==='stopped'?' stopped':'');
+    document.getElementById('s-stamp').textContent = 'Updated '+ts();
+}
+
+/* ── Public ──────────────────────────────────────────────────────────────── */
+function doRefresh() {
+    renderWatchlist(); renderForecast(); renderSignals(); renderIndicators(); renderTicker();
+    setStatus(monitoring?'Live Monitoring':'Idle', monitoring?'live':'');
+}
+function startLive() {
+    if (monitoring) return;
+    monitoring=true; setStatus('Live Monitoring','live');
+    monitorInterval=setInterval(()=>{ tick(); doRefresh(); }, 1500);
+}
+function stopLive() {
+    if (!monitoring) return;
+    monitoring=false; clearInterval(monitorInterval);
+    setStatus('Stopped','stopped');
+}
+
+/* ── Keyboard shortcuts ──────────────────────────────────────────────────── */
+document.addEventListener('keydown',e=>{
+    if ((e.ctrlKey||e.metaKey)&&e.key==='r'){ e.preventDefault(); doRefresh(); }
+    if ((e.ctrlKey||e.metaKey)&&e.key==='s'){ e.preventDefault(); startLive(); }
+    if ((e.ctrlKey||e.metaKey)&&e.key==='e'){ e.preventDefault(); stopLive(); }
+});
+window.addEventListener('beforeunload',stopLive);
+window.addEventListener('load',()=>{
+    doRefresh();
+    setStatus('Ready — click Start Live to begin','');
+});
 </script>
 </body>
 </html>
