@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gamer — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
-    <script src="/js/script.js"></script>
+    <script src="/js/script.js" defer></script>
+    <link rel="preconnect" href="https://www.gstatic.com">
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="/js/firebase-config.js"></script>
@@ -58,18 +59,18 @@
 </head>
 <body class="wunderBody">
     <div class="navbar">
-        <a href="../index.html">Home</a>
-        <a href="../about.html">About</a>
-        <a href="../virtuoso/virtuoso.html">Virtuoso</a>
-        <a href="../gamer/games.html">Gamer</a>
-        <a href="../technologist/apps.html">Technologist</a>
-        <a href="../community/forum.html">Community</a>
+        <a href="../">Home</a>
+        <a href="../about">About</a>
+        <a href="../virtuoso/virtuoso">Virtuoso</a>
+        <a href="../gamer/games">Gamer</a>
+        <a href="../technologist/apps">Technologist</a>
+        <a href="../community/forum">Community</a>
     </div>
 
     <div id="identity-bar">Playing as <span id="username-display">—</span></div>
 
     <div class="game-cards">
-        <a href="tetris.html" class="game-card">
+        <a href="tetris" class="game-card">
             <span class="game-card-icon">🧱</span>
             <h3>Tetris</h3>
             <p>Stack the blocks, clear the lines.</p>
@@ -79,7 +80,7 @@
                 <span class="score-user" id="user-tetris">—</span>
             </div>
         </a>
-        <a href="snake.html" class="game-card">
+        <a href="snake" class="game-card">
             <span class="game-card-icon">🐍</span>
             <h3>Snake</h3>
             <p>Eat, grow, don't bite yourself.</p>
@@ -89,7 +90,7 @@
                 <span class="score-user" id="user-snake">—</span>
             </div>
         </a>
-        <a href="chess.html" class="game-card">
+        <a href="chess" class="game-card">
             <span class="game-card-icon">♟️</span>
             <h3>Chess</h3>
             <p>Classic strategy. Play vs AI or a friend online.</p>
@@ -99,7 +100,7 @@
                 <span class="score-user" id="user-chess">—</span>
             </div>
         </a>
-        <a href="checkers.html" class="game-card">
+        <a href="checkers" class="game-card">
             <span class="game-card-icon">🔴</span>
             <h3>Checkers</h3>
             <p>Jump your way to victory. SP or online MP.</p>
@@ -109,7 +110,7 @@
                 <span class="score-user" id="user-checkers">—</span>
             </div>
         </a>
-        <a href="pong.html" class="game-card">
+        <a href="pong" class="game-card">
             <span class="game-card-icon">🏓</span>
             <h3>Pong</h3>
             <p>The original arcade classic. VS AI or a friend.</p>
@@ -119,7 +120,7 @@
                 <span class="score-user" id="user-pong">—</span>
             </div>
         </a>
-        <a href="rps.html" class="game-card">
+        <a href="rps" class="game-card">
             <span class="game-card-icon">✂️</span>
             <h3>Rock Paper Scissors</h3>
             <p>Beat the AI's pattern. Best win streak wins.</p>
@@ -129,7 +130,7 @@
                 <span class="score-user" id="user-rps">—</span>
             </div>
         </a>
-        <a href="puzzle.html" class="game-card">
+        <a href="puzzle" class="game-card">
             <span class="game-card-icon">🧩</span>
             <h3>Puzzle</h3>
             <p>9–420 pieces. Fastest completion per piece wins.</p>
@@ -139,7 +140,7 @@
                 <span class="score-user" id="user-puzzle">—</span>
             </div>
         </a>
-        <a href="blackjack.html" class="game-card">
+        <a href="blackjack" class="game-card">
             <span class="game-card-icon">🃏</span>
             <h3>Blackjack</h3>
             <p>Beat the dealer to 21. SP or online MP with friends.</p>
@@ -149,7 +150,7 @@
                 <span class="score-user" id="user-blackjack">—</span>
             </div>
         </a>
-        <a href="solitaire.html" class="game-card">
+        <a href="solitaire" class="game-card">
             <span class="game-card-icon">♠</span>
             <h3>Solitaire</h3>
             <p>Klondike SP or race mode — same deck, first to solve wins.</p>
@@ -159,7 +160,7 @@
                 <span class="score-user" id="user-solitaire">—</span>
             </div>
         </a>
-        <a href="poker.html" class="game-card">
+        <a href="poker" class="game-card">
             <span class="game-card-icon">♥</span>
             <h3>Texas Hold'em</h3>
             <p>No-limit Hold'em vs AI opponents or friends online.</p>
@@ -169,7 +170,7 @@
                 <span class="score-user" id="user-poker">—</span>
             </div>
         </a>
-        <a href="daedalus.html" class="game-card">
+        <a href="daedalus" class="game-card">
             <span class="game-card-icon">🌀</span>
             <h3>Daedalus</h3>
             <p>Ten mazes of growing difficulty. Escape them all — your total time is your score.</p>
@@ -179,7 +180,7 @@
                 <span class="score-user" id="user-daedalus"></span>
             </div>
         </a>
-        <a href="five-card-draw.html" class="game-card">
+        <a href="five-card-draw" class="game-card">
             <span class="game-card-icon">♦</span>
             <h3>Five Card Draw</h3>
             <p>Classic draw poker SP or multiplayer. Click cards to discard.</p>
@@ -191,7 +192,7 @@
         </a>
     </div>
 
-    <button type="button" onclick="navigateToPage('/index.html')">E.T. Phone Home!</button>
+    <button type="button" onclick="navigateToPage('/')">E.T. Phone Home!</button>
 
     <script src="/js/gamer-chat.js"></script>
     <script>

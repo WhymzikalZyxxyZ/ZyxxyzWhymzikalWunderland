@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
-    <script src="/js/script.js"></script>
+    <script src="/js/script.js" defer></script>
+    <link rel="preconnect" href="https://www.gstatic.com">
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="/js/firebase-config.js"></script>
@@ -69,8 +70,8 @@
 </head>
 <body class="wunderBody">
     <div class="navbar">
-        <a href="../index.html">Home</a>
-        <a href="../gamer/games.html">Games</a>
+        <a href="../">Home</a>
+        <a href="../gamer/games">Games</a>
     </div>
 
     <div id="chess-page">
@@ -133,7 +134,7 @@
         </div>
     </div>
 
-    <button type="button" onclick="navigateToPage('/gamer/games.html')">&#8592; Back to Games</button>
+    <button type="button" onclick="navigateToPage('/gamer/games')">&#8592; Back to Games</button>
     <script src="/js/gamer-chat.js"></script>
     <script>
         const myName   = (typeof getOrCreateUsername === 'function') ? getOrCreateUsername() : 'Guest';
