@@ -1,68 +1,68 @@
 'use strict';
 
 const NAV_STRUCTURE = [
-    { label: 'Home',  href: '/index.html' },
-    { label: 'About', href: '/about.html' },
+    { label: 'Home',  href: '/' },
+    { label: 'About', href: '/about' },
     {
-        label: 'Virtuoso', href: '/virtuoso/virtuoso.html',
+        label: 'Virtuoso', href: '/virtuoso/virtuoso',
         children: [
-            { label: 'Motion Pictures', href: '/virtuoso/animations/motionpictures.html' },
-            { label: 'Webcomic',        href: '/virtuoso/comics/webcomic.html' },
-            { label: 'Handmade',        href: '/virtuoso/crafts/handmade.html' },
-            { label: 'Doodles',         href: '/virtuoso/drawings/doodles.html' },
-            { label: 'Stories',         href: '/virtuoso/writings/stories.html' },
-            { label: 'Adagio',          href: '/virtuoso/audio/adagio.html' },
-            { label: 'Melody',          href: '/virtuoso/audio/melody.html' },
+            { label: 'Motion Pictures', href: '/virtuoso/animations/motionpictures' },
+            { label: 'Webcomic',        href: '/virtuoso/comics/webcomic' },
+            { label: 'Handmade',        href: '/virtuoso/crafts/handmade' },
+            { label: 'Doodles',         href: '/virtuoso/drawings/doodles' },
+            { label: 'Stories',         href: '/virtuoso/writings/stories' },
+            { label: 'Adagio',          href: '/virtuoso/audio/adagio' },
+            { label: 'Melody',          href: '/virtuoso/audio/melody' },
         ],
     },
     {
-        label: 'Gamer', href: '/gamer/games.html',
+        label: 'Gamer', href: '/gamer/games',
         children: [
-            { label: 'All Games',           href: '/gamer/games.html' },
-            { label: 'Blackjack',           href: '/gamer/blackjack.html' },
-            { label: 'Chess',               href: '/gamer/chess.html' },
-            { label: 'Checkers',            href: '/gamer/checkers.html' },
-            { label: 'Poker',               href: '/gamer/poker.html' },
-            { label: 'Five Card Draw',      href: '/gamer/five-card-draw.html' },
-            { label: 'Solitaire',           href: '/gamer/solitaire.html' },
-            { label: 'Snake',               href: '/gamer/snake.html' },
-            { label: 'Tetris',              href: '/gamer/tetris.html' },
-            { label: 'Pong',                href: '/gamer/pong.html' },
-            { label: 'Puzzle',              href: '/gamer/puzzle.html' },
-            { label: 'Rock Paper Scissors', href: '/gamer/rps.html' },
-            { label: 'Daedalus',           href: '/gamer/daedalus.html' },
+            { label: 'All Games',           href: '/gamer/games' },
+            { label: 'Blackjack',           href: '/gamer/blackjack' },
+            { label: 'Chess',               href: '/gamer/chess' },
+            { label: 'Checkers',            href: '/gamer/checkers' },
+            { label: 'Poker',               href: '/gamer/poker' },
+            { label: 'Five Card Draw',      href: '/gamer/five-card-draw' },
+            { label: 'Solitaire',           href: '/gamer/solitaire' },
+            { label: 'Snake',               href: '/gamer/snake' },
+            { label: 'Tetris',              href: '/gamer/tetris' },
+            { label: 'Pong',                href: '/gamer/pong' },
+            { label: 'Puzzle',              href: '/gamer/puzzle' },
+            { label: 'Rock Paper Scissors', href: '/gamer/rps' },
+            { label: 'Daedalus',            href: '/gamer/daedalus' },
         ],
     },
     {
-        label: 'Technologist', href: '/technologist/apps.html',
+        label: 'Technologist', href: '/technologist/apps',
         children: [
-            { label: 'Apps',                 href: '/technologist/apps.html' },
-            { label: 'BIOS / UEFI',          href: '/technologist/biosuefi.html' },
-            { label: 'Computer Engineering', href: '/technologist/computerengineering.html' },
-            { label: 'Computer Vision',      href: '/technologist/computervision.html' },
-            { label: 'Software',             href: '/technologist/software.html' },
-            { label: 'System Operator',      href: '/technologist/systemoperator.html' },
-            { label: 'Sorting Hat',          href: '/technologist/sortinghat.html' },
-            { label: 'Architect',            href: '/technologist/architect.html' },
-            { label: 'Prism',                href: '/technologist/prism.html' },
-            { label: 'The Investor',         href: '/technologist/investor.html' },
-            { label: 'The Hacker',           href: '/technologist/hacker.html' },
-            { label: 'The Medic',            href: '/technologist/medic.html' },
-            { label: 'Rate Limiter',         href: '/technologist/rate-limiter.html' },
-            { label: 'Query Plan',           href: '/technologist/query-plan.html' },
-            { label: 'State Machine',        href: '/technologist/state-machine.html' },
-            { label: 'Pipeline',             href: '/technologist/pipeline.html' },
-            { label: 'CodeCollab',           href: '/technologist/code-collab.html' },
-            { label: 'Schema Diff',          href: '/technologist/schema-diff.html' },
-            { label: 'The Calculator',       href: '/technologist/calculator.html' },
+            { label: 'Apps',                 href: '/technologist/apps' },
+            { label: 'BIOS / UEFI',          href: '/technologist/biosuefi' },
+            { label: 'Computer Engineering', href: '/technologist/computerengineering' },
+            { label: 'Computer Vision',      href: '/technologist/computervision' },
+            { label: 'Software',             href: '/technologist/software' },
+            { label: 'System Operator',      href: '/technologist/systemoperator' },
+            { label: 'Sorting Hat',          href: '/technologist/sortinghat' },
+            { label: 'Architect',            href: '/technologist/architect' },
+            { label: 'Prism',                href: '/technologist/prism' },
+            { label: 'The Investor',         href: '/technologist/investor' },
+            { label: 'The Hacker',           href: '/technologist/hacker' },
+            { label: 'The Medic',            href: '/technologist/medic' },
+            { label: 'Rate Limiter',         href: '/technologist/rate-limiter' },
+            { label: 'Query Plan',           href: '/technologist/query-plan' },
+            { label: 'State Machine',        href: '/technologist/state-machine' },
+            { label: 'Pipeline',             href: '/technologist/pipeline' },
+            { label: 'CodeCollab',           href: '/technologist/code-collab' },
+            { label: 'Schema Diff',          href: '/technologist/schema-diff' },
+            { label: 'The Calculator',       href: '/technologist/calculator' },
         ],
     },
-    { label: 'The Lawyer', href: '/technologist/lawyer.html' },
+    { label: 'The Lawyer', href: '/technologist/lawyer' },
     {
-        label: 'Community', href: '/community/forum.html',
+        label: 'Community', href: '/community/forum',
         children: [
-            { label: 'Forum',    href: '/community/forum.html' },
-            { label: 'Wellness', href: '/community/wellness.html' },
+            { label: 'Forum',    href: '/community/forum' },
+            { label: 'Wellness', href: '/community/wellness' },
         ],
     },
 ];
@@ -81,7 +81,7 @@ function buildNavbar() {
 
     const brand = document.createElement('a');
     brand.className = 'nav-brand';
-    brand.href = '/index.html';
+    brand.href = '/';
     brand.textContent = 'ZYXXYZ';
     el.appendChild(brand);
 
@@ -140,10 +140,10 @@ function buildNavbar() {
 function buildBackLink() {
     const path = window.location.pathname;
     const map = [
-        { match: p => p.includes('/gamer/')        && !p.endsWith('/games.html'),    href: '/gamer/games.html',         label: '← Games' },
-        { match: p => p.includes('/technologist/') && !p.endsWith('/apps.html'),     href: '/technologist/apps.html',   label: '← Technologist' },
-        { match: p => p.includes('/virtuoso/')     && !p.endsWith('/virtuoso.html'), href: '/virtuoso/virtuoso.html',   label: '← Virtuoso' },
-        { match: p => p.includes('/community/')    && !p.endsWith('/forum.html'),    href: '/community/forum.html',     label: '← Community' },
+        { match: p => p.includes('/gamer/')        && !p.endsWith('/games'),    href: '/gamer/games',         label: '← Games' },
+        { match: p => p.includes('/technologist/') && !p.endsWith('/apps'),     href: '/technologist/apps',   label: '← Technologist' },
+        { match: p => p.includes('/virtuoso/')     && !p.endsWith('/virtuoso'), href: '/virtuoso/virtuoso',   label: '← Virtuoso' },
+        { match: p => p.includes('/community/')    && !p.endsWith('/forum'),    href: '/community/forum',     label: '← Community' },
     ];
     const entry = map.find(m => m.match(path));
     if (!entry) return;
