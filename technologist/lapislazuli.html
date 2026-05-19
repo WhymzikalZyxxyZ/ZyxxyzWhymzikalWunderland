@@ -357,6 +357,16 @@
         font-weight:700; cursor:pointer; transition:all 0.15s; letter-spacing:0.3px; }
     #lp .btn-remove:hover { background:rgba(232,64,64,0.15); border-color:var(--dn); }
 
+    /* ─── Disclaimer bar ────────────────────────────────────────────────── */
+    #lp .disclaimer-bar {
+        display:flex; align-items:center; justify-content:center; gap:8px;
+        padding:8px 24px; margin:0 24px 16px;
+        background:rgba(201,162,39,0.05);
+        border:1px solid rgba(201,162,39,0.18);
+        border-radius:6px; font-size:11px;
+        color:rgba(201,162,39,0.65); letter-spacing:0.3px; }
+    #lp .disclaimer-bar::before { content:'⚠'; font-size:12px; }
+
     /* ─── Footer ─────────────────────────────────────────────────────────── */
     #lp footer { text-align:center; padding:16px 20px; font-size:10px; color:var(--text3);
         letter-spacing:0.5px; border-top:1px solid var(--border); }
@@ -660,7 +670,8 @@
 </div>
 
 </div><!-- /main -->
-<footer>Lapis Lazuli v1.5.1 · 100 Stocks · DCF · Multiples · Risk · Fundamentals · Capital Returns · Monte Carlo · Not financial advice</footer>
+<div class="disclaimer-bar">Simulated data only · All models (DCF, Scenarios, Monte Carlo, Multiples) use estimated inputs · Not financial advice · Do not make investment decisions based on this tool</div>
+<footer>Lapis Lazuli v1.5.2 · 100 Stocks · DCF · Multiples · Risk · Fundamentals · Capital Returns · Monte Carlo · Not financial advice</footer>
 </div><!-- /#lp -->
 
 <script>
@@ -1845,24 +1856,8 @@ function renderForecast() {
     const scores = live.map(r => compositeScore(r.factors));
     const avgScore = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
     const avgDCF  = live.reduce((a,r)=>a+calcDCF(r),0)/live.length;
-    const avgEarn = live.reduce((a,r)=>a+calcEarnings(r),0)/live.length;
     const bullN   = live.filter(r=>r.trend==='bull').length;
-    document.getElementById('fcast-stats').innerHTML=`
-        <div class="sc"><div class="sc-lbl">Avg Composite Score</div>
-            <div class="sc-val" style="color:${scoreColor(avgScore)}">${avgScore}</div>
-            <div class="sc-sub">Factor-weighted · /100</div></div>
-        <div class="sc"><div class="sc-lbl">Bullish Outlook</div>
-            <div class="sc-val up">${bullN}<span style="font-size:14px">/10</span></div>
-            <div class="sc-sub">Upward trend</div></div>
-        <div class="sc"><div class="sc-lbl">Avg DCF Upside</div>
-            <div class="sc-val gold">${((avgDCF/live.reduce((a,r)=>a+r.current,0)*live.length)-1)*100>=0?'+':''}${(((avgDCF/live.reduce((a,r)=>a+r.current,0)*live.length))-1)*100 .toFixed(1)}%</div>
-            <div class="sc-sub">vs current prices</div></div>
-        <div class="sc"><div class="sc-lbl">Sell Signals</div>
-            <div class="sc-val dn">${live.filter(r=>r.signal==='sell').length}</div>
-            <div class="sc-sub">Active exits</div></div>`;
-
-    // Fix the above broken expression:
-    const avgCur = live.reduce((a,r)=>a+r.current,0)/live.length;
+    const avgCur  = live.reduce((a,r)=>a+r.current,0)/live.length;
     const dcfUps = ((avgDCF/avgCur)-1)*100;
     document.getElementById('fcast-stats').innerHTML=`
         <div class="sc"><div class="sc-lbl">Avg Composite Score</div>
@@ -2034,8 +2029,8 @@ function renderIndicators() {
 ═══════════════════════════════════════════════════════════════════════════ */
 const RF = 5.3; // risk-free rate %
 function m(sym) { return METRICS_DB[sym] || {}; }
-function fmtM(v) { return (v == null || v === 'neg') ? '<span class="na">N/A</span>' : typeof v === 'number' ? v.toFixed(1) : v; }
-function fmtMPct(v) { return (v == null || v === 'neg') ? '<span class="na">N/A</span>' : v.toFixed(1)+'%'; }
+function fmtM(v)    { return v == null ? '<span class="na">N/A</span>' : v.toFixed(1); }
+function fmtMPct(v) { return v == null ? '<span class="na">N/A</span>' : v.toFixed(1)+'%'; }
 function peColor(pe) {
     if (pe == null) return 'na';
     if (pe < 0)  return 'val-xrich';
@@ -2260,9 +2255,11 @@ function setStatus(text,state) {
 }
 function doRefresh() {
     renderWatchlist(); renderForecast(); renderSignals(); renderIndicators(); renderTicker();
-    renderMultiples(); renderRisk(); renderFundamentals(); renderCapitalReturns();
     renderMyWatchlist();
     setStatus(monitoring?'Live Monitoring':'Idle', monitoring?'live':'');
+}
+function renderStatic() {
+    renderMultiples(); renderRisk(); renderFundamentals(); renderCapitalReturns();
 }
 function startLive() {
     if (monitoring) return;
@@ -2289,7 +2286,7 @@ document.addEventListener('keydown',e=>{
     if((e.ctrlKey||e.metaKey)&&e.key==='e'){e.preventDefault();stopLive();}
 });
 window.addEventListener('beforeunload',stopLive);
-window.addEventListener('load',()=>{ loadMyList(); doRefresh(); setStatus('Ready — click Start Live to begin',''); });
+window.addEventListener('load',()=>{ loadMyList(); doRefresh(); renderStatic(); setStatus('Ready — click Start Live to begin',''); });
 </script>
 </body>
 </html>
