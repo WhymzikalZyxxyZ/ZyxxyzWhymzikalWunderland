@@ -1451,6 +1451,8 @@ const IND = [
    Fields: beta, pb, ps, evEbitda, roe, roic, netMargin, revGrowth,
            debtEq, divYield, payoutRatio, buybackYield
 ═══════════════════════════════════════════════════════════════════════════ */
+// Sentinel for negative book value / negative earnings (display as N/A)
+const neg = null;
 const METRICS_DB = {
   //             beta   pb    ps   evEb  roe   roic  netMg  revGr  d/e  divY  pyRt  bbYd
   NVDA:  {beta:1.72,pb:42.0,ps:26.0,evEbitda:48.0,roe:124.0,roic:68.0,netMargin:48.6,revGrowth:122.4,debtEq:0.42,divYield:0.03,payoutRatio:1.2, buybackYield:0.0},
@@ -1554,8 +1556,6 @@ const METRICS_DB = {
   SHW:   {beta:1.12,pb:22.4,ps:3.4, evEbitda:22.4,roe:82.4, roic:24.4,netMargin:13.4,revGrowth:1.8,  debtEq:3.82,divYield:0.94,payoutRatio:28.4,buybackYield:2.4},
   ADBE:  {beta:1.18,pb:14.4,ps:8.4, evEbitda:28.6,roe:36.4, roic:24.6,netMargin:28.4,revGrowth:10.4, debtEq:0.62,divYield:0.0, payoutRatio:0.0, buybackYield:2.4},
 };
-// Sentinel for negative book value / negative earnings (display as N/A)
-const neg = null;
 
 /* ═══════════════════════════════════════════════════════════════════════════
    MODELS
@@ -1855,7 +1855,7 @@ function renderForecast() {
             <div class="sc-val up">${bullN}<span style="font-size:14px">/10</span></div>
             <div class="sc-sub">Upward trend</div></div>
         <div class="sc"><div class="sc-lbl">Avg DCF Upside</div>
-            <div class="sc-val gold">${((avgDCF/live.reduce((a,r)=>a+r.current,0)*live.length)-1)*100>=0?'+':''}${(((avgDCF/live.reduce((a,r)=>a+r.current,0)*live.length))-1)*100..toFixed(1)}%</div>
+            <div class="sc-val gold">${((avgDCF/live.reduce((a,r)=>a+r.current,0)*live.length)-1)*100>=0?'+':''}${(((avgDCF/live.reduce((a,r)=>a+r.current,0)*live.length))-1)*100 .toFixed(1)}%</div>
             <div class="sc-sub">vs current prices</div></div>
         <div class="sc"><div class="sc-lbl">Sell Signals</div>
             <div class="sc-val dn">${live.filter(r=>r.signal==='sell').length}</div>
