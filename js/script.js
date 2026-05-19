@@ -168,7 +168,7 @@ function navigateToPage(url) {
     if (/^\/\//.test(url.trimStart())) return;
     if (typeof document !== 'undefined' && document.body) {
         document.body.classList.add('page-fade-out');
-        setTimeout(() => { window.location.href = url; }, 220);
+        setTimeout(() => { window.location.href = url; }, 160);
     } else {
         window.location.href = url;
     }
