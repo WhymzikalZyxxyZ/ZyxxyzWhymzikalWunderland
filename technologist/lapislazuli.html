@@ -7,13 +7,13 @@
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js"></script>
     <style>
-    /* ─── Reset site globals ─────────────────────────────────────────────── */
+    /* ─── Reset ──────────────────────────────────────────────────────────── */
     #lp * { box-sizing:border-box; margin:0; padding:0;
             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
     #lp h1,#lp h2,#lp h3 { font-size:unset; font-style:normal; font-weight:600;
             text-decoration:none; text-align:left; color:unset;
             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
-    #lp p  { color:unset; }
+    #lp p { color:unset; }
     #lp button { display:inline-block; margin:0; font-size:14px; }
     #lp table  { width:100%; border-collapse:collapse; }
 
@@ -42,7 +42,6 @@
         --dn-bg:    rgba(232,64,64,0.12);
         --hold:     #e8a020;
         --hold-bg:  rgba(232,160,32,0.12);
-
         background:
             radial-gradient(ellipse 100% 55% at 50% -5%, rgba(42,80,168,0.12) 0%, transparent 65%),
             radial-gradient(ellipse 50% 35% at 92% 95%, rgba(201,162,39,0.05) 0%, transparent 55%),
@@ -52,41 +51,26 @@
         font-variant-numeric: tabular-nums;
     }
 
-    /* ─── Back link ──────────────────────────────────────────────────────── */
-    #lp .back { display:inline-flex; align-items:center; gap:6px;
-        padding:10px 20px; font-size:12px; color:var(--text3);
-        text-decoration:none; letter-spacing:0.5px;
-        transition:color 0.2s; }
+    /* ─── Back ───────────────────────────────────────────────────────────── */
+    #lp .back { display:inline-flex; align-items:center; gap:6px; padding:10px 20px;
+        font-size:12px; color:var(--text3); text-decoration:none;
+        letter-spacing:0.5px; transition:color 0.2s; }
     #lp .back:hover { color:var(--gold); }
 
     /* ─── Header ─────────────────────────────────────────────────────────── */
-    #lp .lp-header {
-        position: relative;
-        padding: 28px 28px 22px;
-        border-bottom: 1px solid var(--border);
-        background: linear-gradient(180deg, rgba(26,55,119,0.18) 0%, transparent 100%);
-        display: flex; align-items: center; justify-content: space-between;
-        flex-wrap: wrap; gap: 12px;
-    }
-    #lp .lp-header::before {
-        content:''; position:absolute; top:0; left:0; right:0; height:2px;
-        background: linear-gradient(90deg, transparent, var(--lap2), var(--gold), var(--lap2), transparent);
-    }
-    #lp .header-left h1 {
-        font-size: 32px; font-weight: 800; letter-spacing: 4px;
-        color: var(--gold);
-        text-shadow: 0 0 32px rgba(201,162,39,0.45), 0 0 8px rgba(201,162,39,0.2);
-    }
-    #lp .header-left p {
-        margin-top: 4px; font-size: 11px; letter-spacing: 2px;
-        text-transform: uppercase; color: var(--text2);
-    }
+    #lp .lp-header { position:relative; padding:28px 28px 22px; border-bottom:1px solid var(--border);
+        background:linear-gradient(180deg,rgba(26,55,119,0.18) 0%,transparent 100%);
+        display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+    #lp .lp-header::before { content:''; position:absolute; top:0; left:0; right:0; height:2px;
+        background:linear-gradient(90deg,transparent,var(--lap2),var(--gold),var(--lap2),transparent); }
+    #lp .header-left h1 { font-size:32px; font-weight:800; letter-spacing:4px; color:var(--gold);
+        text-shadow:0 0 32px rgba(201,162,39,0.45),0 0 8px rgba(201,162,39,0.2); }
+    #lp .header-left p { margin-top:4px; font-size:11px; letter-spacing:2px;
+        text-transform:uppercase; color:var(--text2); }
     #lp .header-right { display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
-    #lp .live-clock { font-family:'Courier New',monospace; font-size:18px;
-        font-weight:700; color:var(--lap3);
-        text-shadow: 0 0 12px var(--lap-glow); letter-spacing:2px; }
-    #lp .market-status { font-size:11px; color:var(--text3); letter-spacing:1px;
-        text-transform:uppercase; }
+    #lp .live-clock { font-family:'Courier New',monospace; font-size:18px; font-weight:700;
+        color:var(--lap3); text-shadow:0 0 12px var(--lap-glow); letter-spacing:2px; }
+    #lp .mst { font-size:11px; color:var(--text3); letter-spacing:1px; text-transform:uppercase; }
     #lp .mst-dot { display:inline-block; width:7px; height:7px; border-radius:50%;
         background:var(--up); margin-right:5px; animation:glow-pulse 2s infinite; }
     @keyframes glow-pulse {
@@ -95,116 +79,143 @@
     }
 
     /* ─── Demo banner ────────────────────────────────────────────────────── */
-    #lp .demo-banner {
-        margin:0; padding:7px 24px;
+    #lp .demo-banner { margin:0; padding:7px 24px;
         background:rgba(201,162,39,0.07); border-bottom:1px solid rgba(201,162,39,0.2);
-        font-size:11px; color:rgba(201,162,39,0.75); text-align:center; letter-spacing:0.5px;
-    }
+        font-size:11px; color:rgba(201,162,39,0.75); text-align:center; letter-spacing:0.5px; }
     #lp .demo-banner a { color:inherit; opacity:0.75; text-decoration:underline; margin-left:8px; }
 
-    /* ─── Controls bar ───────────────────────────────────────────────────── */
-    #lp .lp-controls {
-        display:flex; flex-wrap:wrap; align-items:center; gap:8px;
-        padding:10px 24px;
-        background:var(--bg1);
-        border-bottom:1px solid var(--border);
-    }
-    #lp .btn {
-        padding:6px 16px; border:1px solid transparent; border-radius:6px;
+    /* ─── Controls ───────────────────────────────────────────────────────── */
+    #lp .lp-controls { display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+        padding:10px 24px; background:var(--bg1); border-bottom:1px solid var(--border); }
+    #lp .btn { padding:6px 16px; border:1px solid transparent; border-radius:6px;
         cursor:pointer; font-size:12px; font-weight:600; letter-spacing:0.5px;
-        transition:all 0.18s; color:white; background:transparent;
-    }
+        transition:all 0.18s; color:white; background:transparent; }
     #lp .btn-go   { border-color:var(--lap2); color:var(--text2); background:rgba(42,80,168,0.2); }
     #lp .btn-go:hover   { background:var(--lap2); color:#fff; box-shadow:0 0 14px var(--lap-glow); }
     #lp .btn-live { border-color:var(--up); color:var(--up); background:var(--up-bg); }
     #lp .btn-live:hover { background:var(--up); color:#fff; box-shadow:0 0 14px rgba(30,189,104,0.3); }
     #lp .btn-stop { border-color:var(--dn); color:var(--dn); background:var(--dn-bg); }
     #lp .btn-stop:hover { background:var(--dn); color:#fff; box-shadow:0 0 14px rgba(232,64,64,0.3); }
-
-    #lp .status-pill {
-        margin-left:auto; display:flex; align-items:center; gap:8px;
-        padding:5px 14px; border-radius:20px;
-        border:1px solid var(--border); background:rgba(11,20,40,0.8);
-    }
-    #lp .s-dot { width:8px; height:8px; border-radius:50%; background:var(--text3);
-        flex-shrink:0; transition:background 0.3s; }
+    #lp .status-pill { margin-left:auto; display:flex; align-items:center; gap:8px;
+        padding:5px 14px; border-radius:20px; border:1px solid var(--border); background:rgba(11,20,40,0.8); }
+    #lp .s-dot { width:8px; height:8px; border-radius:50%; background:var(--text3); flex-shrink:0; }
     #lp .s-dot.live    { background:var(--up); animation:glow-pulse 1.5s infinite; }
     #lp .s-dot.stopped { background:var(--dn); }
     #lp #s-text  { font-size:12px; color:var(--text2); }
     #lp #s-stamp { font-size:10px; color:var(--text3); padding-left:10px;
         border-left:1px solid var(--border); font-family:'Courier New',monospace; }
 
-    /* ─── Tab bar ────────────────────────────────────────────────────────── */
-    #lp .lp-tabs {
-        display:flex; gap:0; padding:0 24px;
-        background:var(--bg1); border-bottom:1px solid var(--border);
-    }
-    #lp .tab-btn {
-        padding:11px 22px; background:transparent;
-        border:none; border-bottom:2px solid transparent;
-        color:var(--text3); font-size:13px; font-weight:600;
-        cursor:pointer; letter-spacing:0.3px;
-        transition:color 0.18s, border-color 0.18s, background 0.18s;
-    }
+    /* ─── Main tabs ──────────────────────────────────────────────────────── */
+    #lp .lp-tabs { display:flex; padding:0 24px; background:var(--bg1); border-bottom:1px solid var(--border); }
+    #lp .tab-btn { padding:11px 22px; background:transparent; border:none;
+        border-bottom:2px solid transparent; color:var(--text3); font-size:13px;
+        font-weight:600; cursor:pointer; letter-spacing:0.3px;
+        transition:color 0.18s,border-color 0.18s,background 0.18s; }
     #lp .tab-btn:hover { color:var(--text2); background:rgba(42,80,168,0.06); }
-    #lp .tab-btn.active {
-        color:var(--gold); border-bottom-color:var(--gold);
-        background:rgba(201,162,39,0.05);
-    }
+    #lp .tab-btn.active { color:var(--gold); border-bottom-color:var(--gold); background:rgba(201,162,39,0.05); }
 
-    /* ─── Main ───────────────────────────────────────────────────────────── */
+    /* ─── Main area ──────────────────────────────────────────────────────── */
     #lp .lp-main { padding:20px 24px; }
     #lp .tab-pane { display:none; }
     #lp .tab-pane.active { display:block; }
 
     /* ─── Panel ──────────────────────────────────────────────────────────── */
-    #lp .panel {
-        background:var(--surf);
-        border:1px solid var(--border);
-        border-top:1px solid rgba(42,80,168,0.45);
-        border-radius:8px; overflow:hidden;
-        margin-bottom:20px;
-        animation:fadeUp 0.25s ease;
-    }
-    @keyframes fadeUp {
-        from { opacity:0; transform:translateY(8px); }
-        to   { opacity:1; transform:translateY(0); }
-    }
-    #lp .panel-head {
-        padding:10px 18px;
-        display:flex; align-items:center; justify-content:space-between;
-        background:linear-gradient(90deg, rgba(26,55,119,0.5) 0%, rgba(26,55,119,0.1) 60%, transparent 100%);
-        border-bottom:1px solid var(--border);
-    }
-    #lp .panel-head h2 { font-size:11px; font-weight:700;
-        letter-spacing:2px; text-transform:uppercase; color:var(--gold2); }
-    #lp .panel-head .ph-right { font-size:11px; color:var(--text3);
-        font-family:'Courier New',monospace; }
+    #lp .panel { background:var(--surf); border:1px solid var(--border);
+        border-top:1px solid rgba(42,80,168,0.45); border-radius:8px;
+        overflow:hidden; margin-bottom:20px; animation:fadeUp 0.25s ease; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    #lp .panel-head { padding:10px 18px; display:flex; align-items:center; justify-content:space-between;
+        background:linear-gradient(90deg,rgba(26,55,119,0.5) 0%,rgba(26,55,119,0.1) 60%,transparent);
+        border-bottom:1px solid var(--border); }
+    #lp .panel-head h2 { font-size:11px; font-weight:700; letter-spacing:2px;
+        text-transform:uppercase; color:var(--gold2); }
+    #lp .panel-head .ph-r { font-size:11px; color:var(--text3); font-family:'Courier New',monospace; }
 
     /* ─── Stat cards ─────────────────────────────────────────────────────── */
-    #lp .stat-row { display:flex; flex-wrap:wrap; gap:10px; padding:14px 18px;
-        border-bottom:1px solid var(--border); }
-    #lp .stat-card { flex:1; min-width:110px;
-        background:rgba(11,20,40,0.7); border:1px solid var(--border);
-        border-radius:8px; padding:12px 14px; }
-    #lp .sc-label { font-size:10px; text-transform:uppercase; letter-spacing:1px;
-        color:var(--text3); margin-bottom:5px; }
-    #lp .sc-value { font-size:22px; font-weight:700;
-        font-family:'Courier New',monospace; line-height:1; }
-    #lp .sc-sub   { font-size:10px; color:var(--text3); margin-top:3px; }
+    #lp .stat-row { display:flex; flex-wrap:wrap; gap:10px; padding:14px 18px; border-bottom:1px solid var(--border); }
+    #lp .sc { flex:1; min-width:110px; background:rgba(11,20,40,0.7);
+        border:1px solid var(--border); border-radius:8px; padding:12px 14px; }
+    #lp .sc-lbl { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--text3); margin-bottom:5px; }
+    #lp .sc-val { font-size:22px; font-weight:700; font-family:'Courier New',monospace; line-height:1; }
+    #lp .sc-sub { font-size:10px; color:var(--text3); margin-top:3px; }
 
-    /* ─── Scrollable table wrapper ───────────────────────────────────────── */
+    /* ─── Forecast sub-tabs ──────────────────────────────────────────────── */
+    #lp .fc-tabs { display:flex; gap:6px; padding:14px 18px 0; border-bottom:1px solid var(--border); }
+    #lp .fc-tab { padding:7px 16px; border:1px solid var(--border); border-bottom:none;
+        border-radius:6px 6px 0 0; background:transparent; color:var(--text3);
+        font-size:12px; font-weight:600; cursor:pointer; letter-spacing:0.3px;
+        transition:all 0.18s; }
+    #lp .fc-tab:hover { color:var(--text2); background:rgba(42,80,168,0.08); }
+    #lp .fc-tab.active { background:rgba(201,162,39,0.1); color:var(--gold); border-color:rgba(201,162,39,0.3); }
+    #lp .fc-pane { display:none; padding:18px; }
+    #lp .fc-pane.active { display:block; }
+
+    /* ─── Composite score cards ──────────────────────────────────────────── */
+    #lp .score-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(175px,1fr)); gap:12px; }
+    #lp .score-card { background:var(--bg2); border:1px solid var(--border);
+        border-radius:10px; padding:14px 16px; position:relative; overflow:hidden;
+        transition:border-color 0.2s,box-shadow 0.2s; }
+    #lp .score-card:hover { border-color:var(--lap3); box-shadow:0 0 18px var(--lap-glow); }
+    #lp .score-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+    #lp .score-card.sc-bull::before { background:linear-gradient(90deg,transparent,var(--up),transparent); }
+    #lp .score-card.sc-bear::before { background:linear-gradient(90deg,transparent,var(--dn),transparent); }
+    #lp .score-card.sc-neut::before { background:linear-gradient(90deg,transparent,var(--hold),transparent); }
+    #lp .scard-sym  { font-size:15px; font-weight:800; color:var(--lap3); letter-spacing:1px; }
+    #lp .scard-name { font-size:10px; color:var(--text3); margin-bottom:10px; }
+    #lp .scard-score { font-size:36px; font-weight:900; font-family:'Courier New',monospace;
+        line-height:1; margin-bottom:4px; }
+    #lp .scard-lbl  { font-size:9px; text-transform:uppercase; letter-spacing:1px; color:var(--text3); margin-bottom:10px; }
+    #lp .factor-rows { display:flex; flex-direction:column; gap:5px; }
+    #lp .factor-row  { display:flex; align-items:center; gap:6px; }
+    #lp .factor-lbl  { font-size:9px; text-transform:uppercase; letter-spacing:0.5px;
+        color:var(--text3); min-width:52px; }
+    #lp .factor-bar  { flex:1; height:4px; background:rgba(255,255,255,0.07); border-radius:2px; overflow:hidden; }
+    #lp .factor-fill { height:100%; border-radius:2px; }
+    #lp .f-momentum { background:linear-gradient(90deg,#2550a8,#3a6cd4); }
+    #lp .f-value    { background:linear-gradient(90deg,#7a5010,#c9a227); }
+    #lp .f-quality  { background:linear-gradient(90deg,#0e6b40,#1ebd68); }
+    #lp .f-growth   { background:linear-gradient(90deg,#6b1a90,#b84aee); }
+    #lp .f-risk     { background:linear-gradient(90deg,#1a6b6b,#22c5c5); }
+    #lp .factor-num { font-size:9px; color:var(--text3); min-width:22px; text-align:right;
+        font-family:'Courier New',monospace; }
+
+    /* ─── DCF / Valuation table additions ───────────────────────────────── */
+    #lp .moS-pos { color:var(--up); font-weight:700; }
+    #lp .moS-neg { color:var(--dn); font-weight:700; }
+    #lp .intrinsic-val { font-size:14px; font-weight:700; font-family:'Courier New',monospace; }
+    #lp .model-badge { display:inline-block; padding:2px 8px; border-radius:3px; font-size:10px;
+        font-weight:700; letter-spacing:0.5px; }
+    #lp .mb-dcf  { background:rgba(42,80,168,0.2); color:var(--lap3); border:1px solid rgba(42,80,168,0.4); }
+    #lp .mb-earn { background:rgba(201,162,39,0.12); color:var(--gold); border:1px solid rgba(201,162,39,0.3); }
+    #lp .mb-cons { background:rgba(30,189,104,0.1); color:var(--up); border:1px solid rgba(30,189,104,0.3); }
+
+    /* ─── Scenario bars ──────────────────────────────────────────────────── */
+    #lp .scen-bar { display:flex; height:18px; border-radius:4px; overflow:hidden; width:100%; min-width:180px; }
+    #lp .scen-bear { background:rgba(232,64,64,0.45); display:flex; align-items:center;
+        justify-content:center; font-size:10px; font-weight:700; color:rgba(255,255,255,0.85); }
+    #lp .scen-base { background:rgba(42,80,168,0.55); display:flex; align-items:center;
+        justify-content:center; font-size:10px; font-weight:700; color:rgba(255,255,255,0.85); }
+    #lp .scen-bull { background:rgba(30,189,104,0.45); display:flex; align-items:center;
+        justify-content:center; font-size:10px; font-weight:700; color:rgba(255,255,255,0.85); }
+    #lp .ev-val { font-size:13px; font-weight:700; font-family:'Courier New',monospace; color:var(--gold); }
+
+    /* ─── Monte Carlo ────────────────────────────────────────────────────── */
+    #lp .mc-dist { display:flex; height:20px; border-radius:4px; overflow:hidden; width:100%; min-width:200px; gap:1px; }
+    #lp .mc-p10  { background:rgba(232,64,64,0.35); }
+    #lp .mc-p25  { background:rgba(232,140,40,0.35); }
+    #lp .mc-p50  { background:rgba(42,80,168,0.45); }
+    #lp .mc-p75  { background:rgba(20,160,90,0.35); }
+    #lp .mc-p90  { background:rgba(30,189,104,0.45); }
+    #lp .mc-pip  { position:relative; }
+    #lp .mc-label { display:flex; justify-content:space-between; font-size:9px;
+        color:var(--text3); margin-top:2px; font-family:'Courier New',monospace; }
+    #lp .prob-beat { font-size:11px; font-weight:700; font-family:'Courier New',monospace; }
+
+    /* ─── Shared table styles ────────────────────────────────────────────── */
     #lp .tbl-wrap { overflow-x:auto; }
-
-    /* ─── Tables ─────────────────────────────────────────────────────────── */
-    #lp thead { position:sticky; top:0; z-index:2; }
-    #lp thead th {
-        padding:9px 14px; text-align:left;
-        font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
-        color:var(--text3); background:var(--bg2);
-        border-bottom:1px solid var(--border);
-        white-space:nowrap;
-    }
+    #lp thead th { padding:9px 14px; text-align:left; font-size:10px; font-weight:700;
+        letter-spacing:1px; text-transform:uppercase; color:var(--text3); background:var(--bg2);
+        border-bottom:1px solid var(--border); white-space:nowrap; }
     #lp tbody td { padding:9px 14px; font-size:13px;
         border-bottom:1px solid rgba(42,82,168,0.1); white-space:nowrap; }
     #lp tbody tr:last-child td { border-bottom:none; }
@@ -212,7 +223,7 @@
     #lp tbody tr:hover { background:rgba(42,82,168,0.08); }
     #lp tbody tr:hover td:first-child { border-left:2px solid var(--lap3); padding-left:12px; }
 
-    /* ─── Common cell classes ────────────────────────────────────────────── */
+    /* ─── Cell classes ───────────────────────────────────────────────────── */
     #lp .sym   { font-size:14px; font-weight:800; color:var(--lap3); letter-spacing:0.5px; }
     #lp .nm    { font-size:10px; color:var(--text3); margin-top:1px; }
     #lp .mono  { font-family:'Courier New',monospace; }
@@ -221,141 +232,123 @@
     #lp .gold  { color:var(--gold); }
     #lp .muted { color:var(--text2); }
     #lp .dim   { color:var(--text3); }
-
-    /* ─── Price flash animation ──────────────────────────────────────────── */
-    #lp .flash-up { animation:flashUp 0.5s ease; }
-    #lp .flash-dn { animation:flashDn 0.5s ease; }
-    @keyframes flashUp {
-        0%   { background:rgba(30,189,104,0.28); }
-        100% { background:transparent; }
-    }
-    @keyframes flashDn {
-        0%   { background:rgba(232,64,64,0.22); }
-        100% { background:transparent; }
-    }
-
-    /* ─── Badges ─────────────────────────────────────────────────────────── */
-    #lp .badge {
-        display:inline-block; padding:3px 10px; border-radius:4px;
-        font-size:10px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
-    }
+    #lp .badge { display:inline-block; padding:3px 10px; border-radius:4px;
+        font-size:10px; font-weight:800; letter-spacing:1px; text-transform:uppercase; }
     #lp .b-buy  { background:var(--up-bg);   color:var(--up);   border:1px solid rgba(30,189,104,0.4); }
     #lp .b-sell { background:var(--dn-bg);   color:var(--dn);   border:1px solid rgba(232,64,64,0.4); }
     #lp .b-hold { background:var(--hold-bg); color:var(--hold); border:1px solid rgba(232,160,32,0.4); }
     #lp .b-bull { background:rgba(30,189,104,0.08);  color:var(--up);   border:1px solid rgba(30,189,104,0.3); }
     #lp .b-bear { background:rgba(232,64,64,0.08);   color:var(--dn);   border:1px solid rgba(232,64,64,0.3); }
     #lp .b-neut { background:rgba(232,160,32,0.08);  color:var(--hold); border:1px solid rgba(232,160,32,0.3); }
-    #lp .sector-tag {
-        display:inline-block; padding:2px 8px; border-radius:3px; font-size:10px;
-        font-weight:600; letter-spacing:0.5px;
-        background:rgba(42,80,168,0.2); color:var(--text2);
-        border:1px solid rgba(42,80,168,0.35);
-    }
+    #lp .sector-tag { display:inline-block; padding:2px 8px; border-radius:3px; font-size:10px;
+        font-weight:600; background:rgba(42,80,168,0.2); color:var(--text2); border:1px solid rgba(42,80,168,0.35); }
+    #lp .sell-win { display:inline-block; padding:3px 10px; border-radius:4px; font-size:11px;
+        font-weight:700; background:rgba(232,160,32,0.12); color:var(--hold); border:1px solid rgba(232,160,32,0.35); }
 
-    /* ─── Sparkline ──────────────────────────────────────────────────────── */
-    #lp .spark  { display:inline-block; vertical-align:middle; }
-
-    /* ─── Day range bar ──────────────────────────────────────────────────── */
+    /* ─── Watchlist specials ─────────────────────────────────────────────── */
+    #lp .spark { display:inline-block; vertical-align:middle; }
     #lp .rng { display:flex; align-items:center; gap:6px; min-width:160px; }
-    #lp .rng-lo, #lp .rng-hi { font-size:10px; color:var(--text3);
-        font-family:'Courier New',monospace; min-width:48px; }
+    #lp .rng-lo,#lp .rng-hi { font-size:10px; color:var(--text3); font-family:'Courier New',monospace; min-width:48px; }
     #lp .rng-hi { text-align:right; }
-    #lp .rng-track { flex:1; height:5px; background:rgba(255,255,255,0.07);
-        border-radius:3px; overflow:visible; position:relative; }
-    #lp .rng-fill { height:100%; border-radius:3px;
-        background:linear-gradient(90deg,var(--lap2),var(--lap3)); }
-    #lp .rng-pip { position:absolute; top:50%; width:8px; height:8px;
-        border-radius:50%; background:var(--gold); border:1.5px solid var(--bg);
-        transform:translate(-50%,-50%); }
-
-    /* ─── Volume bar ─────────────────────────────────────────────────────── */
+    #lp .rng-track { flex:1; height:5px; background:rgba(255,255,255,0.07); border-radius:3px; overflow:visible; position:relative; }
+    #lp .rng-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--lap2),var(--lap3)); }
+    #lp .rng-pip { position:absolute; top:50%; width:8px; height:8px; border-radius:50%;
+        background:var(--gold); border:1.5px solid var(--bg); transform:translate(-50%,-50%); }
     #lp .vol-cell { display:flex; align-items:center; gap:7px; }
-    #lp .vol-bar-wrap { width:50px; height:5px; background:rgba(255,255,255,0.07);
-        border-radius:3px; overflow:hidden; flex-shrink:0; }
-    #lp .vol-bar-fill { height:100%; border-radius:3px;
-        background:linear-gradient(90deg,var(--lap1),var(--lap3)); }
-
-    /* ─── Confidence bars ────────────────────────────────────────────────── */
+    #lp .vol-bw { width:50px; height:5px; background:rgba(255,255,255,0.07); border-radius:3px; overflow:hidden; flex-shrink:0; }
+    #lp .vol-bf { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--lap1),var(--lap3)); }
     #lp .conf { display:flex; align-items:center; gap:8px; }
-    #lp .conf-track { flex:1; height:6px; background:rgba(255,255,255,0.07);
-        border-radius:3px; overflow:hidden; min-width:80px; }
+    #lp .conf-track { flex:1; height:6px; background:rgba(255,255,255,0.07); border-radius:3px; overflow:hidden; min-width:80px; }
     #lp .conf-fill { height:100%; border-radius:3px; transition:width 0.4s ease; }
     #lp .cf-buy  { background:linear-gradient(90deg,#12a055,#1ebd68); }
     #lp .cf-sell { background:linear-gradient(90deg,#c43030,#e84040); }
     #lp .cf-hold { background:linear-gradient(90deg,#b87818,#e8a020); }
-    #lp .conf-pct { font-size:11px; color:var(--text3); min-width:30px;
-        font-family:'Courier New',monospace; }
-
-    /* ─── Target progress bar ────────────────────────────────────────────── */
-    #lp .tgt { min-width:180px; }
-    #lp .tgt-range { font-size:11px; font-family:'Courier New',monospace; color:var(--text2); margin-bottom:4px; }
-    #lp .tgt-track { height:5px; background:rgba(255,255,255,0.07); border-radius:3px; overflow:visible; position:relative; }
-    #lp .tgt-fill  { height:100%; border-radius:3px; }
-    #lp .tgt-fill.pos { background:linear-gradient(90deg,var(--lap2),var(--up)); }
-    #lp .tgt-fill.neg { background:linear-gradient(90deg,var(--dn),var(--hold)); }
-    #lp .tgt-cur  { position:absolute; top:50%; width:8px; height:8px;
-        border-radius:50%; background:var(--gold); border:1.5px solid var(--bg);
-        transform:translate(-50%,-50%); }
-
-    /* ─── RSI zone bar ───────────────────────────────────────────────────── */
+    #lp .conf-pct { font-size:11px; color:var(--text3); min-width:30px; font-family:'Courier New',monospace; }
     #lp .rsi-bar { display:flex; align-items:center; gap:7px; min-width:130px; }
-    #lp .rsi-track { flex:1; height:5px; background:rgba(255,255,255,0.06);
-        border-radius:3px; overflow:visible; position:relative; }
-    #lp .rsi-pip { position:absolute; top:50%; width:8px; height:8px;
-        border-radius:50%; border:1.5px solid var(--bg);
-        transform:translate(-50%,-50%); }
+    #lp .rsi-track { flex:1; height:5px; background:rgba(255,255,255,0.06); border-radius:3px; overflow:visible; position:relative; }
+    #lp .rsi-pip { position:absolute; top:50%; width:8px; height:8px; border-radius:50%;
+        border:1.5px solid var(--bg); transform:translate(-50%,-50%); }
     #lp .rsi-val { font-family:'Courier New',monospace; font-size:13px; min-width:36px; }
-
-    /* ─── 52-week range bar ──────────────────────────────────────────────── */
     #lp .w52-bar { display:flex; align-items:center; gap:6px; min-width:180px; }
-    #lp .w52-track { flex:1; height:5px; background:rgba(255,255,255,0.07);
-        border-radius:3px; overflow:visible; position:relative; }
-    #lp .w52-fill { height:100%; border-radius:3px;
-        background:linear-gradient(90deg,var(--dn),var(--up)); }
-    #lp .w52-pip { position:absolute; top:50%; width:9px; height:9px;
-        border-radius:50%; background:var(--gold2); border:1.5px solid var(--bg);
-        transform:translate(-50%,-50%); }
-
-    /* ─── Sell window badge ──────────────────────────────────────────────── */
-    #lp .sell-win { display:inline-block; padding:3px 10px; border-radius:4px;
-        font-size:11px; font-weight:700; letter-spacing:0.5px;
-        background:rgba(232,160,32,0.12); color:var(--hold);
-        border:1px solid rgba(232,160,32,0.35); }
+    #lp .w52-track { flex:1; height:5px; background:rgba(255,255,255,0.07); border-radius:3px; overflow:visible; position:relative; }
+    #lp .w52-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--dn),var(--up)); }
+    #lp .w52-pip { position:absolute; top:50%; width:9px; height:9px; border-radius:50%;
+        background:var(--gold2); border:1.5px solid var(--bg); transform:translate(-50%,-50%); }
+    @keyframes flashUp { 0%{background:rgba(30,189,104,0.28)} 100%{background:transparent} }
+    @keyframes flashDn { 0%{background:rgba(232,64,64,0.22)}  100%{background:transparent} }
+    #lp .flash-up { animation:flashUp 0.5s ease; }
+    #lp .flash-dn { animation:flashDn 0.5s ease; }
 
     /* ─── Ticker tape ────────────────────────────────────────────────────── */
-    #lp .ticker-tape {
-        overflow:hidden; padding:6px 0;
-        background:var(--bg2); border-bottom:1px solid var(--border);
-        font-family:'Courier New',monospace;
-    }
-    #lp .ticker-inner { display:flex; gap:32px; animation:tickerScroll 30s linear infinite;
-        width:max-content; }
+    #lp .ticker-tape { overflow:hidden; padding:6px 0; background:var(--bg2); border-bottom:1px solid var(--border); font-family:'Courier New',monospace; }
+    #lp .ticker-inner { display:flex; gap:32px; animation:tickerScroll 30s linear infinite; width:max-content; }
     #lp .ticker-item { font-size:12px; white-space:nowrap; flex-shrink:0; }
-    @keyframes tickerScroll {
-        0%   { transform:translateX(0); }
-        100% { transform:translateX(-50%); }
-    }
+    @keyframes tickerScroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+    /* ─── Stock search ───────────────────────────────────────────────────── */
+    #lp .search-section { margin-top:20px; }
+    #lp .search-bar { display:flex; gap:10px; padding:14px 20px; align-items:center;
+        flex-wrap:wrap; background:var(--bg1);
+        border:1px solid var(--border); border-bottom:none;
+        border-radius:8px 8px 0 0; }
+    #lp .search-input-wrap { position:relative; flex:1; min-width:220px; }
+    #lp .search-input { width:100%; padding:9px 36px 9px 36px;
+        background:var(--bg2); border:1px solid var(--border2); border-radius:8px;
+        color:var(--text); font-size:14px; outline:none; box-sizing:border-box;
+        transition:border-color 0.2s, box-shadow 0.2s; }
+    #lp .search-input::placeholder { color:var(--text3); }
+    #lp .search-input:focus { border-color:var(--lap3); box-shadow:0 0 0 2px rgba(58,108,212,0.18); }
+    #lp .search-icon { position:absolute; left:11px; top:50%; transform:translateY(-50%);
+        color:var(--text3); font-size:14px; pointer-events:none; }
+    #lp .search-dropdown { position:absolute; top:calc(100% + 4px); left:0; right:0;
+        background:rgba(9,14,30,0.98); border:1px solid var(--border2); border-radius:8px;
+        box-shadow:0 8px 32px rgba(0,0,0,0.6); z-index:500;
+        max-height:280px; overflow-y:auto; display:none; }
+    #lp .search-dropdown.open { display:block; }
+    #lp .sr-item { padding:9px 14px; cursor:pointer; display:flex; align-items:center;
+        gap:10px; transition:background 0.12s;
+        border-bottom:1px solid rgba(42,82,168,0.08); }
+    #lp .sr-item:last-child { border-bottom:none; }
+    #lp .sr-item:hover, #lp .sr-item.sr-active { background:rgba(42,80,168,0.18); }
+    #lp .sr-sym { font-size:13px; font-weight:800; color:var(--lap3); min-width:58px;
+        font-family:'Courier New',monospace; letter-spacing:0.5px; }
+    #lp .sr-name { font-size:12px; color:var(--text2); flex:1; }
+    #lp .sr-sector { font-size:10px; color:var(--text3); white-space:nowrap; }
+    #lp .sr-added-tag { font-size:10px; color:var(--up); font-weight:700; letter-spacing:0.5px; white-space:nowrap; }
+    #lp .sr-empty { padding:14px; font-size:12px; color:var(--text3); text-align:center; }
+    #lp .btn-add { border-color:var(--lap3); color:var(--lap3);
+        background:rgba(58,108,212,0.1); padding:8px 20px;
+        font-size:13px; white-space:nowrap; }
+    #lp .btn-add:hover { background:var(--lap3); color:#fff; box-shadow:0 0 14px var(--lap-glow); }
+    #lp .search-cap { font-size:11px; color:var(--text3); white-space:nowrap; letter-spacing:0.3px; }
+    /* ─── My Watchlist panel ─────────────────────────────────────────────── */
+    #lp .panel-my { border-radius:0 0 8px 8px; border-top-color:rgba(58,108,212,0.55); animation:none; }
+    #lp .my-empty-state { padding:36px 24px; text-align:center; }
+    #lp .my-empty-icon { font-size:36px; display:block; margin-bottom:10px; opacity:0.4; }
+    #lp .my-empty-state p { color:var(--text3); font-size:13px; line-height:1.7; }
+    #lp .btn-remove { background:transparent; border:1px solid rgba(232,64,64,0.35);
+        color:var(--dn); border-radius:4px; padding:3px 9px; font-size:10px;
+        font-weight:700; cursor:pointer; transition:all 0.15s; letter-spacing:0.3px; }
+    #lp .btn-remove:hover { background:rgba(232,64,64,0.15); border-color:var(--dn); }
 
     /* ─── Footer ─────────────────────────────────────────────────────────── */
-    #lp footer { text-align:center; padding:16px 20px;
-        font-size:10px; color:var(--text3); letter-spacing:0.5px;
-        border-top:1px solid var(--border); }
+    #lp footer { text-align:center; padding:16px 20px; font-size:10px; color:var(--text3);
+        letter-spacing:0.5px; border-top:1px solid var(--border); }
 
     /* ─── Responsive ─────────────────────────────────────────────────────── */
     @media (max-width:900px) {
         #lp .lp-header { padding:18px 16px 14px; }
         #lp .header-left h1 { font-size:22px; }
-        #lp .lp-main { padding:12px 12px; }
-        #lp .lp-tabs { padding:0 12px; }
-        #lp .lp-controls { padding:8px 12px; }
+        #lp .lp-main { padding:12px; }
+        #lp .lp-tabs,.lp-controls { padding-left:12px; padding-right:12px; }
         #lp .tab-btn { padding:9px 14px; font-size:12px; }
-        #lp thead th, #lp tbody td { padding:7px 10px; }
-        #lp .rng, #lp .w52-bar { min-width:130px; }
+        #lp thead th,#lp tbody td { padding:7px 10px; }
+        #lp .score-grid { grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); }
     }
     @media (max-width:560px) {
         #lp .status-pill { margin-left:0; width:100%; justify-content:center; }
-        #lp .stat-card { min-width:calc(50% - 5px); }
-        #lp .live-clock { font-size:15px; }
+        #lp .sc { min-width:calc(50% - 5px); }
+        #lp .score-grid { grid-template-columns:1fr 1fr; }
     }
     </style>
 </head>
@@ -363,193 +356,507 @@
 <div class="navbar"></div>
 <div id="lp">
 
-    <div class="demo-banner">
-        ⚠ Demo mode — simulated data based on 2025 actuals + 2026 model projections · Not financial advice
-        <a href="https://github.com/WhymzikalZyxxyZ/lapis-lazuli" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+<div class="demo-banner">
+    ⚠ Demo · Simulated data using DCF, Earnings, Scenario &amp; Monte Carlo models · Not financial advice
+    <a href="https://github.com/WhymzikalZyxxyZ/lapis-lazuli" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+</div>
+<a class="back" href="/technologist/apps.html">← Apps</a>
+
+<div class="lp-header">
+    <div class="header-left">
+        <h1>💎 LAPIS LAZULI</h1>
+        <p>Market Intelligence · DCF · Scenarios · Monte Carlo · Factor Models</p>
+    </div>
+    <div class="header-right">
+        <div class="live-clock" id="live-clock">--:--:--</div>
+        <div class="mst"><span class="mst-dot"></span>LIVE DEMO</div>
+    </div>
+</div>
+
+<div class="ticker-tape"><div class="ticker-inner" id="ticker-inner"></div></div>
+
+<div class="lp-controls">
+    <button class="btn btn-go"   onclick="doRefresh()">⟳ Refresh</button>
+    <button class="btn btn-live" onclick="startLive()">▶ Start Live</button>
+    <button class="btn btn-stop" onclick="stopLive()">■ Stop</button>
+    <div class="status-pill">
+        <div class="s-dot" id="s-dot"></div>
+        <span id="s-text">Ready</span>
+        <span id="s-stamp"></span>
+    </div>
+</div>
+
+<div class="lp-tabs">
+    <button class="tab-btn active" onclick="showTab('watchlist')">📊 Watchlist</button>
+    <button class="tab-btn"        onclick="showTab('forecast')">🔮 Forecast</button>
+    <button class="tab-btn"        onclick="showTab('signals')">📡 Signals</button>
+    <button class="tab-btn"        onclick="showTab('indicators')">📈 Indicators</button>
+</div>
+
+<div class="lp-main">
+
+<!-- ── WATCHLIST ────────────────────────────────────────────────────────── -->
+<div id="tab-watchlist" class="tab-pane active">
+    <div class="panel">
+        <div class="panel-head"><h2>Live Watchlist — Top 10</h2><span class="ph-r" id="wl-ts"></span></div>
+        <div class="tbl-wrap"><table>
+            <thead><tr>
+                <th>Symbol</th><th>Trend</th><th>Price</th><th>Change</th>
+                <th>Day Range</th><th>Volume</th><th>Mkt Cap</th><th>Signal</th>
+            </tr></thead>
+            <tbody id="wl-tbody"></tbody>
+        </table></div>
     </div>
 
-    <a class="back" href="/technologist/apps.html">← Apps</a>
-
-    <!-- Header -->
-    <div class="lp-header">
-        <div class="header-left">
-            <h1>💎 LAPIS LAZULI</h1>
-            <p>Market Intelligence · Top 10 · Forecast &amp; Signals</p>
+    <!-- ── MY WATCHLIST ──────────────────────────────────────────────── -->
+    <div class="search-section">
+        <div class="search-bar">
+            <div class="search-input-wrap">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="stock-search"
+                    placeholder="Search ticker (AMD) or company name…"
+                    autocomplete="off"
+                    oninput="onSearchInput(this.value)"
+                    onkeydown="onSearchKey(event)"
+                    onfocus="if(this.value.trim())onSearchInput(this.value)"
+                    onblur="setTimeout(closeDropdown,200)">
+                <div class="search-dropdown" id="search-dropdown"></div>
+            </div>
+            <button class="btn btn-add" onclick="addSelected()">＋ Add to My List</button>
+            <span class="search-cap" id="search-cap">My list: 0 / 10</span>
         </div>
-        <div class="header-right">
-            <div class="live-clock" id="live-clock">--:--:--</div>
-            <div class="market-status"><span class="mst-dot"></span>LIVE DEMO</div>
+        <div class="panel panel-my" id="panel-my">
+            <div class="panel-head">
+                <h2>⭐ My Watchlist</h2>
+                <span class="ph-r" id="my-ts"></span>
+            </div>
+            <div id="my-content">
+                <div class="my-empty-state">
+                    <span class="my-empty-icon">📋</span>
+                    <p>Search for any stock above and click <strong style="color:var(--lap3)">Add to My List</strong> to build your custom watchlist.<br>Supports full projections: DCF · Scenarios · Monte Carlo. Up to 10 stocks.</p>
+                </div>
+            </div>
         </div>
     </div>
+</div>
 
-    <!-- Ticker tape -->
-    <div class="ticker-tape"><div class="ticker-inner" id="ticker-inner"></div></div>
+<!-- ── FORECAST ─────────────────────────────────────────────────────────── -->
+<div id="tab-forecast" class="tab-pane">
+    <div class="panel">
+        <div class="panel-head"><h2>Portfolio Overview</h2><span class="ph-r">Multi-model consensus</span></div>
+        <div class="stat-row" id="fcast-stats"></div>
 
-    <!-- Controls -->
-    <div class="lp-controls">
-        <button class="btn btn-go"   onclick="doRefresh()">⟳ Refresh</button>
-        <button class="btn btn-live" onclick="startLive()">▶ Start Live</button>
-        <button class="btn btn-stop" onclick="stopLive()">■ Stop</button>
-        <div class="status-pill">
-            <div class="s-dot" id="s-dot"></div>
-            <span id="s-text">Ready</span>
-            <span id="s-stamp"></span>
+        <!-- Forecast sub-tabs -->
+        <div class="fc-tabs">
+            <button class="fc-tab active" onclick="showFcTab('overview')">🎯 Model Scores</button>
+            <button class="fc-tab"        onclick="showFcTab('valuation')">📐 Valuation</button>
+            <button class="fc-tab"        onclick="showFcTab('scenarios')">📊 Scenarios</button>
+            <button class="fc-tab"        onclick="showFcTab('monte')">🎲 Monte Carlo</button>
+        </div>
+
+        <!-- Overview: composite score cards -->
+        <div id="fc-overview" class="fc-pane active">
+            <div class="score-grid" id="score-grid"></div>
+        </div>
+
+        <!-- Valuation: DCF + Earnings model -->
+        <div id="fc-valuation" class="fc-pane">
+            <div class="tbl-wrap"><table>
+                <thead><tr>
+                    <th>Symbol</th>
+                    <th>Model</th>
+                    <th>FCF/sh</th>
+                    <th>FCF Growth</th>
+                    <th>WACC</th>
+                    <th>DCF Intrinsic</th>
+                    <th>Earnings Target</th>
+                    <th>Margin of Safety</th>
+                    <th>Sell Window</th>
+                </tr></thead>
+                <tbody id="val-tbody"></tbody>
+            </table></div>
+        </div>
+
+        <!-- Scenarios: Bear / Base / Bull -->
+        <div id="fc-scenarios" class="fc-pane">
+            <div class="tbl-wrap"><table>
+                <thead><tr>
+                    <th>Symbol</th>
+                    <th>Bear Case</th>
+                    <th>Base Case</th>
+                    <th>Bull Case</th>
+                    <th>Probability Weights</th>
+                    <th>Expected Value</th>
+                    <th>EV vs Current</th>
+                    <th>Trend</th>
+                </tr></thead>
+                <tbody id="scen-tbody"></tbody>
+            </table></div>
+        </div>
+
+        <!-- Monte Carlo -->
+        <div id="fc-monte" class="fc-pane">
+            <p style="font-size:11px;color:var(--text3);margin-bottom:14px;letter-spacing:0.3px">
+                500-path geometric Brownian motion simulation over 12 months using stock-specific drift (μ) and volatility (σ).
+                Distribution bands show P10 / P25 / P50 / P75 / P90 outcome prices.
+            </p>
+            <div class="tbl-wrap"><table>
+                <thead><tr>
+                    <th>Symbol</th>
+                    <th>Current</th>
+                    <th>μ (drift)</th>
+                    <th>σ (vol)</th>
+                    <th>12-Month Distribution</th>
+                    <th>P10</th>
+                    <th>P50</th>
+                    <th>P90</th>
+                    <th>P(Beat Current)</th>
+                </tr></thead>
+                <tbody id="monte-tbody"></tbody>
+            </table></div>
         </div>
     </div>
+</div>
 
-    <!-- Tabs -->
-    <div class="lp-tabs">
-        <button class="tab-btn active" onclick="showTab('watchlist')">📊 Watchlist</button>
-        <button class="tab-btn"        onclick="showTab('forecast')">🔮 Forecast</button>
-        <button class="tab-btn"        onclick="showTab('signals')">📡 Signals</button>
-        <button class="tab-btn"        onclick="showTab('indicators')">📈 Indicators</button>
+<!-- ── SIGNALS ──────────────────────────────────────────────────────────── -->
+<div id="tab-signals" class="tab-pane">
+    <div class="panel">
+        <div class="panel-head"><h2>Trading Signals</h2><span class="ph-r" id="sig-ts"></span></div>
+        <div class="tbl-wrap"><table>
+            <thead><tr>
+                <th>Symbol</th><th>Signal</th><th>Confidence</th>
+                <th>Strength</th><th>Catalyst</th><th>Updated</th>
+            </tr></thead>
+            <tbody id="sig-tbody"></tbody>
+        </table></div>
     </div>
+</div>
 
-    <div class="lp-main">
+<!-- ── INDICATORS ───────────────────────────────────────────────────────── -->
+<div id="tab-indicators" class="tab-pane">
+    <div class="panel">
+        <div class="panel-head"><h2>Technical Indicators</h2><span class="ph-r" id="ind-ts"></span></div>
+        <div class="tbl-wrap"><table>
+            <thead><tr>
+                <th>Symbol</th><th>RSI (14)</th><th>MACD</th>
+                <th>EMA Trend</th><th>Vol Trend</th><th>52-Week Range</th><th>Price</th>
+            </tr></thead>
+            <tbody id="ind-tbody"></tbody>
+        </table></div>
+    </div>
+</div>
 
-        <!-- ── WATCHLIST ───────────────────────────────────────────────── -->
-        <div id="tab-watchlist" class="tab-pane active">
-            <div class="panel">
-                <div class="panel-head">
-                    <h2>Live Watchlist — Top 10</h2>
-                    <span class="ph-right" id="wl-ts"></span>
-                </div>
-                <div class="tbl-wrap">
-                <table>
-                    <thead><tr>
-                        <th>Symbol</th>
-                        <th>Trend</th>
-                        <th>Price</th>
-                        <th>Change</th>
-                        <th>Day Range</th>
-                        <th>Volume</th>
-                        <th>Mkt Cap</th>
-                        <th>Signal</th>
-                    </tr></thead>
-                    <tbody id="wl-tbody"></tbody>
-                </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- ── FORECAST ────────────────────────────────────────────────── -->
-        <div id="tab-forecast" class="tab-pane">
-            <div class="panel">
-                <div class="panel-head"><h2>Portfolio Overview</h2><span class="ph-right">2025 actuals · 2026 model</span></div>
-                <div class="stat-row" id="fcast-stats"></div>
-            </div>
-            <div class="panel">
-                <div class="panel-head">
-                    <h2>Year-over-Year Forecast &amp; Sell Timing</h2>
-                    <span class="ph-right">Prior year → projected</span>
-                </div>
-                <div class="tbl-wrap">
-                <table>
-                    <thead><tr>
-                        <th>Symbol</th>
-                        <th>2025 Actual</th>
-                        <th>2026 Projected</th>
-                        <th>Price Target</th>
-                        <th>Trend</th>
-                        <th>Sell Window</th>
-                        <th>Rationale</th>
-                    </tr></thead>
-                    <tbody id="fcast-tbody"></tbody>
-                </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- ── SIGNALS ─────────────────────────────────────────────────── -->
-        <div id="tab-signals" class="tab-pane">
-            <div class="panel">
-                <div class="panel-head"><h2>Trading Signals</h2><span class="ph-right" id="sig-ts"></span></div>
-                <div class="tbl-wrap">
-                <table>
-                    <thead><tr>
-                        <th>Symbol</th>
-                        <th>Signal</th>
-                        <th>Confidence</th>
-                        <th>Strength</th>
-                        <th>Catalyst</th>
-                        <th>Updated</th>
-                    </tr></thead>
-                    <tbody id="sig-tbody"></tbody>
-                </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- ── INDICATORS ──────────────────────────────────────────────── -->
-        <div id="tab-indicators" class="tab-pane">
-            <div class="panel">
-                <div class="panel-head"><h2>Technical Indicators</h2><span class="ph-right" id="ind-ts"></span></div>
-                <div class="tbl-wrap">
-                <table>
-                    <thead><tr>
-                        <th>Symbol</th>
-                        <th>RSI (14)</th>
-                        <th>MACD</th>
-                        <th>EMA Trend</th>
-                        <th>Vol Trend</th>
-                        <th>52-Week Range</th>
-                        <th>Price</th>
-                    </tr></thead>
-                    <tbody id="ind-tbody"></tbody>
-                </table>
-                </div>
-            </div>
-        </div>
-    </div><!-- /main -->
-
-    <footer>Lapis Lazuli v1.5.0 &nbsp;·&nbsp; Educational purposes only &nbsp;·&nbsp; Not financial advice</footer>
+</div><!-- /main -->
+<footer>Lapis Lazuli v1.5.0 · DCF · Earnings Model · Scenario Analysis · Monte Carlo · Factor Scoring · Educational purposes only · Not financial advice</footer>
 </div><!-- /#lp -->
 
 <script>
 'use strict';
 
-/* ── Dataset ─────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   DATASET
+═══════════════════════════════════════════════════════════════════════════ */
 const STOCKS = [
-    { symbol:'NVDA',  name:'NVIDIA Corp',         sector:'Technology',   current:143.80,open:141.20,high:145.50,low:140.10,volume:412800000,mcap:'3.52T',
-      y2025ret:171.2,y2026proj:28.4,targetLo:150,targetHi:195,sellWindow:'Q2–Q3 2026',trend:'bull',
-      rationale:'AI infrastructure cycle; watch margin compression in H2',
-      signal:'buy',confidence:82,strength:'Strong',catalyst:'AI Capex Cycle'},
-    { symbol:'AAPL',  name:'Apple Inc',            sector:'Technology',   current:194.50,open:192.80,high:196.20,low:192.10,volume:58300000, mcap:'2.96T',
-      y2025ret:18.4, y2026proj:12.8,targetLo:200,targetHi:230,sellWindow:'Q4 2026',   trend:'bull',
-      rationale:'Services revenue expanding; iPhone refresh cycle Q3',
-      signal:'buy',confidence:74,strength:'Moderate',catalyst:'Services Growth'},
-    { symbol:'MSFT',  name:'Microsoft Corp',       sector:'Technology',   current:422.30,open:419.40,high:425.80,low:418.60,volume:22100000, mcap:'3.14T',
-      y2025ret:14.2, y2026proj:15.5,targetLo:440,targetHi:510,sellWindow:'Q3–Q4 2026',trend:'bull',
-      rationale:'Azure + Copilot enterprise expansion; durable revenue',
-      signal:'buy',confidence:80,strength:'Strong',catalyst:'Azure + Copilot'},
-    { symbol:'AMZN',  name:'Amazon.com Inc',       sector:'Cons. Disc.',  current:224.10,open:221.50,high:226.30,low:220.80,volume:35700000, mcap:'2.37T',
-      y2025ret:44.8, y2026proj:22.1,targetLo:245,targetHi:290,sellWindow:'Q3 2026',   trend:'bull',
-      rationale:'AWS re-acceleration; advertising segment outperforming',
-      signal:'buy',confidence:77,strength:'Strong',catalyst:'AWS + Advertising'},
-    { symbol:'GOOGL', name:'Alphabet Inc',         sector:'Technology',   current:178.60,open:176.30,high:180.10,low:175.90,volume:19400000, mcap:'2.21T',
-      y2025ret:26.5, y2026proj:18.3,targetLo:195,targetHi:230,sellWindow:'Q2 2026',   trend:'bull',
-      rationale:'Gemini enterprise rollout; YouTube recovery; Search AI',
-      signal:'buy',confidence:71,strength:'Moderate',catalyst:'Gemini + Search'},
-    { symbol:'META',  name:'Meta Platforms',       sector:'Technology',   current:588.40,open:582.70,high:594.20,low:580.30,volume:14200000, mcap:'1.49T',
-      y2025ret:65.3, y2026proj:9.4, targetLo:600,targetHi:660,sellWindow:'Q1–Q2 2026',trend:'neut',
-      rationale:'Strong 2025 run limits 2026 upside; ad saturation risk H2',
-      signal:'hold',confidence:58,strength:'Moderate',catalyst:'Ad Monetization'},
-    { symbol:'TSLA',  name:'Tesla Inc',            sector:'Cons. Disc.',  current:276.80,open:280.30,high:283.10,low:272.40,volume:98600000, mcap:'0.89T',
-      y2025ret:-24.8,y2026proj:14.2,targetLo:290,targetHi:340,sellWindow:'Q4 2026',   trend:'neut',
-      rationale:'Recovery from 2025 losses; FSD/Robotaxi pivotal; margin risk mid-year',
-      signal:'hold',confidence:52,strength:'Weak',   catalyst:'FSD / Robotaxi'},
-    { symbol:'AVGO',  name:'Broadcom Inc',         sector:'Technology',   current:193.20,open:191.40,high:195.60,low:190.80,volume:18900000, mcap:'0.91T',
-      y2025ret:108.4,y2026proj:20.8,targetLo:210,targetHi:250,sellWindow:'Q3 2026',   trend:'bull',
-      rationale:'Hyperscaler custom AI silicon demand surging; VMware synergies',
-      signal:'buy',confidence:79,strength:'Strong',catalyst:'Custom AI Silicon'},
-    { symbol:'BRK.B', name:'Berkshire Hathaway B', sector:'Financials',   current:458.90,open:456.30,high:462.10,low:455.70,volume:4200000,  mcap:'1.06T',
-      y2025ret:25.2, y2026proj:8.6, targetLo:470,targetHi:510,sellWindow:'Q2 2026',   trend:'neut',
-      rationale:'Large cash reserve signals caution; stable defensive returns',
-      signal:'hold',confidence:62,strength:'Moderate',catalyst:'Value Stability'},
-    { symbol:'JPM',   name:'JPMorgan Chase',       sector:'Financials',   current:244.70,open:242.10,high:247.30,low:241.80,volume:9800000,  mcap:'0.70T',
-      y2025ret:43.7, y2026proj:6.2, targetLo:250,targetHi:275,sellWindow:'Q1 2026',   trend:'bear',
-      rationale:'Rate plateau squeezes NIM; 2025 run limits upside; trim position',
-      signal:'sell',confidence:63,strength:'Moderate',catalyst:'Rate Plateau'},
+  { symbol:'NVDA', name:'NVIDIA Corp',         sector:'Technology',   mcap:'3.52T',
+    current:143.80,open:141.20,high:145.50,low:140.10,volume:412800000,
+    signal:'buy',confidence:82,strength:'Strong',catalyst:'AI Capex Cycle',
+    sellWindow:'Q2–Q3 2026', trend:'bull', y2025ret:171.2,
+    // Valuation inputs
+    fcfPerShare:2.20, fcfGrowth:42, wacc:9.5, termGrowth:3.0,
+    fwdEPS:4.20, targetPE:36,
+    // Scenarios (% from current)
+    bearDn:28, bearProb:0.20, basePct:12, baseProb:0.50, bullUps:38, bullProb:0.30,
+    // Monte Carlo
+    sigma:52,
+    // Factor scores (0-100)
+    factors:{ momentum:88, value:32, quality:80, growth:95, risk:45 }
+  },
+  { symbol:'AAPL', name:'Apple Inc',            sector:'Technology',   mcap:'2.96T',
+    current:194.50,open:192.80,high:196.20,low:192.10,volume:58300000,
+    signal:'buy',confidence:74,strength:'Moderate',catalyst:'Services Growth',
+    sellWindow:'Q4 2026', trend:'bull', y2025ret:18.4,
+    fcfPerShare:9.80, fcfGrowth:9, wacc:8.5, termGrowth:2.5,
+    fwdEPS:7.45, targetPE:27,
+    bearDn:15, bearProb:0.18, basePct:10, baseProb:0.54, bullUps:22, bullProb:0.28,
+    sigma:24,
+    factors:{ momentum:70, value:54, quality:92, growth:58, risk:76 }
+  },
+  { symbol:'MSFT', name:'Microsoft Corp',       sector:'Technology',   mcap:'3.14T',
+    current:422.30,open:419.40,high:425.80,low:418.60,volume:22100000,
+    signal:'buy',confidence:80,strength:'Strong',catalyst:'Azure + Copilot',
+    sellWindow:'Q3–Q4 2026', trend:'bull', y2025ret:14.2,
+    fcfPerShare:15.80, fcfGrowth:14, wacc:8.5, termGrowth:2.5,
+    fwdEPS:15.20, targetPE:30,
+    bearDn:14, bearProb:0.16, basePct:13, baseProb:0.52, bullUps:24, bullProb:0.32,
+    sigma:22,
+    factors:{ momentum:74, value:50, quality:92, growth:72, risk:78 }
+  },
+  { symbol:'AMZN', name:'Amazon.com Inc',       sector:'Cons. Disc.',  mcap:'2.37T',
+    current:224.10,open:221.50,high:226.30,low:220.80,volume:35700000,
+    signal:'buy',confidence:77,strength:'Strong',catalyst:'AWS + Advertising',
+    sellWindow:'Q3 2026', trend:'bull', y2025ret:44.8,
+    fcfPerShare:6.40, fcfGrowth:28, wacc:9.5, termGrowth:3.0,
+    fwdEPS:5.80, targetPE:38,
+    bearDn:20, bearProb:0.18, basePct:18, baseProb:0.52, bullUps:32, bullProb:0.30,
+    sigma:28,
+    factors:{ momentum:80, value:46, quality:82, growth:88, risk:68 }
+  },
+  { symbol:'GOOGL',name:'Alphabet Inc',         sector:'Technology',   mcap:'2.21T',
+    current:178.60,open:176.30,high:180.10,low:175.90,volume:19400000,
+    signal:'buy',confidence:71,strength:'Moderate',catalyst:'Gemini + Search',
+    sellWindow:'Q2 2026', trend:'bull', y2025ret:26.5,
+    fcfPerShare:7.50, fcfGrowth:16, wacc:9.0, termGrowth:2.5,
+    fwdEPS:8.20, targetPE:23,
+    bearDn:16, bearProb:0.18, basePct:14, baseProb:0.52, bullUps:26, bullProb:0.30,
+    sigma:24,
+    factors:{ momentum:76, value:60, quality:85, growth:74, risk:72 }
+  },
+  { symbol:'META', name:'Meta Platforms',       sector:'Technology',   mcap:'1.49T',
+    current:588.40,open:582.70,high:594.20,low:580.30,volume:14200000,
+    signal:'hold',confidence:58,strength:'Moderate',catalyst:'Ad Monetization',
+    sellWindow:'Q1–Q2 2026', trend:'neut', y2025ret:65.3,
+    fcfPerShare:22.00, fcfGrowth:18, wacc:9.5, termGrowth:2.5,
+    fwdEPS:26.50, targetPE:23,
+    bearDn:22, bearProb:0.22, basePct:8, baseProb:0.50, bullUps:20, bullProb:0.28,
+    sigma:30,
+    factors:{ momentum:62, value:56, quality:78, growth:60, risk:62 }
+  },
+  { symbol:'TSLA', name:'Tesla Inc',            sector:'Cons. Disc.',  mcap:'0.89T',
+    current:276.80,open:280.30,high:283.10,low:272.40,volume:98600000,
+    signal:'hold',confidence:52,strength:'Weak',catalyst:'FSD / Robotaxi',
+    sellWindow:'Q4 2026', trend:'neut', y2025ret:-24.8,
+    fcfPerShare:3.80, fcfGrowth:32, wacc:11.0, termGrowth:3.0,
+    fwdEPS:4.20, targetPE:65,
+    bearDn:40, bearProb:0.30, basePct:12, baseProb:0.45, bullUps:48, bullProb:0.25,
+    sigma:65,
+    factors:{ momentum:50, value:26, quality:55, growth:70, risk:30 }
+  },
+  { symbol:'AVGO', name:'Broadcom Inc',         sector:'Technology',   mcap:'0.91T',
+    current:193.20,open:191.40,high:195.60,low:190.80,volume:18900000,
+    signal:'buy',confidence:79,strength:'Strong',catalyst:'Custom AI Silicon',
+    sellWindow:'Q3 2026', trend:'bull', y2025ret:108.4,
+    fcfPerShare:14.20, fcfGrowth:22, wacc:9.5, termGrowth:2.5,
+    fwdEPS:16.40, targetPE:14,
+    bearDn:20, bearProb:0.20, basePct:18, baseProb:0.50, bullUps:32, bullProb:0.30,
+    sigma:34,
+    factors:{ momentum:82, value:44, quality:84, growth:88, risk:64 }
+  },
+  { symbol:'BRK.B',name:'Berkshire Hathaway B', sector:'Financials',   mcap:'1.06T',
+    current:458.90,open:456.30,high:462.10,low:455.70,volume:4200000,
+    signal:'hold',confidence:62,strength:'Moderate',catalyst:'Value Stability',
+    sellWindow:'Q2 2026', trend:'neut', y2025ret:25.2,
+    fcfPerShare:21.50, fcfGrowth:10, wacc:8.5, termGrowth:2.0,
+    fwdEPS:18.20, targetPE:25,
+    bearDn:10, bearProb:0.15, basePct:7, baseProb:0.57, bullUps:16, bullProb:0.28,
+    sigma:16,
+    factors:{ momentum:66, value:72, quality:88, growth:40, risk:83 }
+  },
+  { symbol:'JPM',  name:'JPMorgan Chase',       sector:'Financials',   mcap:'0.70T',
+    current:244.70,open:242.10,high:247.30,low:241.80,volume:9800000,
+    signal:'sell',confidence:63,strength:'Moderate',catalyst:'Rate Plateau',
+    sellWindow:'Q1 2026', trend:'bear', y2025ret:43.7,
+    fcfPerShare:19.80, fcfGrowth:8, wacc:10.0, termGrowth:2.0,
+    fwdEPS:19.40, targetPE:13,
+    bearDn:18, bearProb:0.28, basePct:5, baseProb:0.47, bullUps:15, bullProb:0.25,
+    sigma:22,
+    factors:{ momentum:46, value:70, quality:80, growth:36, risk:62 }
+  },
+];
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EXTENDED STOCK DATABASE  (STOCKS above + additional searchable stocks)
+═══════════════════════════════════════════════════════════════════════════ */
+const STOCK_DB = [
+  ...STOCKS,
+  { symbol:'AMD',  name:'Advanced Micro Devices', sector:'Technology',   mcap:'0.27T',
+    current:163.40,open:160.80,high:165.90,low:159.20,volume:44200000,
+    signal:'buy', confidence:72,strength:'Moderate',catalyst:'MI300 AI GPU',
+    sellWindow:'Q4 2026', trend:'bull', y2025ret:9.0,
+    fcfPerShare:3.80,fcfGrowth:34,wacc:10.0,termGrowth:2.5,fwdEPS:5.20,targetPE:32,
+    bearDn:32,bearProb:0.22,basePct:18,baseProb:0.50,bullUps:42,bullProb:0.28,sigma:48,
+    factors:{momentum:72,value:40,quality:70,growth:88,risk:46}},
+  { symbol:'INTC', name:'Intel Corporation',       sector:'Technology',   mcap:'0.09T',
+    current:20.40, open:20.10, high:20.90, low:19.80, volume:62000000,
+    signal:'hold',confidence:44,strength:'Weak',    catalyst:'Foundry Turnaround',
+    sellWindow:'Q2 2026', trend:'bear', y2025ret:-52.0,
+    fcfPerShare:0.80,fcfGrowth:5,wacc:10.5,termGrowth:2.0,fwdEPS:0.80,targetPE:18,
+    bearDn:25,bearProb:0.35,basePct:5,baseProb:0.45,bullUps:28,bullProb:0.20,sigma:38,
+    factors:{momentum:28,value:52,quality:40,growth:22,risk:35}},
+  { symbol:'QCOM', name:'Qualcomm Inc',             sector:'Technology',   mcap:'0.16T',
+    current:140.20,open:138.40,high:142.60,low:137.90,volume:8800000,
+    signal:'hold',confidence:55,strength:'Moderate',catalyst:'Snapdragon AI',
+    sellWindow:'Q3 2026', trend:'neut', y2025ret:-18.0,
+    fcfPerShare:10.40,fcfGrowth:8,wacc:9.5,termGrowth:2.0,fwdEPS:11.20,targetPE:13,
+    bearDn:15,bearProb:0.25,basePct:10,baseProb:0.50,bullUps:22,bullProb:0.25,sigma:26,
+    factors:{momentum:50,value:68,quality:75,growth:45,risk:65}},
+  { symbol:'ORCL', name:'Oracle Corporation',       sector:'Technology',   mcap:'0.54T',
+    current:192.60,open:190.30,high:195.20,low:189.80,volume:7600000,
+    signal:'buy', confidence:68,strength:'Moderate',catalyst:'Cloud DB Growth',
+    sellWindow:'Q3 2026', trend:'bull', y2025ret:68.0,
+    fcfPerShare:7.20,fcfGrowth:14,wacc:9.0,termGrowth:2.0,fwdEPS:7.80,targetPE:26,
+    bearDn:18,bearProb:0.20,basePct:12,baseProb:0.52,bullUps:28,bullProb:0.28,sigma:26,
+    factors:{momentum:76,value:50,quality:78,growth:68,risk:62}},
+  { symbol:'CRM',  name:'Salesforce Inc',           sector:'Technology',   mcap:'0.31T',
+    current:320.80,open:317.50,high:324.20,low:315.90,volume:4200000,
+    signal:'hold',confidence:60,strength:'Moderate',catalyst:'Agentforce AI',
+    sellWindow:'Q2–Q3 2026', trend:'neut', y2025ret:4.0,
+    fcfPerShare:12.40,fcfGrowth:16,wacc:9.5,termGrowth:2.5,fwdEPS:11.20,targetPE:30,
+    bearDn:20,bearProb:0.22,basePct:10,baseProb:0.52,bullUps:25,bullProb:0.26,sigma:28,
+    factors:{momentum:58,value:46,quality:80,growth:65,risk:64}},
+  { symbol:'NFLX', name:'Netflix Inc',              sector:'Comm. Svcs.', mcap:'0.43T',
+    current:1018.30,open:1010.40,high:1026.80,low:1006.20,volume:2800000,
+    signal:'buy', confidence:71,strength:'Moderate',catalyst:'Ad-Tier Scale',
+    sellWindow:'Q4 2026', trend:'bull', y2025ret:89.0,
+    fcfPerShare:22.60,fcfGrowth:22,wacc:9.0,termGrowth:2.5,fwdEPS:24.80,targetPE:42,
+    bearDn:20,bearProb:0.20,basePct:16,baseProb:0.52,bullUps:30,bullProb:0.28,sigma:32,
+    factors:{momentum:78,value:36,quality:82,growth:78,risk:60}},
+  { symbol:'V',    name:'Visa Inc',                 sector:'Financials',  mcap:'0.65T',
+    current:340.20,open:338.10,high:343.60,low:336.80,volume:4100000,
+    signal:'buy', confidence:75,strength:'Moderate',catalyst:'Payment Volume',
+    sellWindow:'Q3 2026', trend:'bull', y2025ret:24.0,
+    fcfPerShare:16.80,fcfGrowth:12,wacc:8.5,termGrowth:2.5,fwdEPS:14.20,targetPE:25,
+    bearDn:12,bearProb:0.16,basePct:12,baseProb:0.54,bullUps:22,bullProb:0.30,sigma:18,
+    factors:{momentum:72,value:56,quality:92,growth:62,risk:80}},
+  { symbol:'MA',   name:'Mastercard Inc',           sector:'Financials',  mcap:'0.54T',
+    current:560.40,open:555.80,high:565.20,low:553.60,volume:2600000,
+    signal:'buy', confidence:74,strength:'Moderate',catalyst:'Cross-border Spend',
+    sellWindow:'Q3 2026', trend:'bull', y2025ret:22.0,
+    fcfPerShare:18.60,fcfGrowth:13,wacc:8.5,termGrowth:2.5,fwdEPS:16.40,targetPE:35,
+    bearDn:12,bearProb:0.16,basePct:13,baseProb:0.54,bullUps:24,bullProb:0.30,sigma:18,
+    factors:{momentum:74,value:52,quality:92,growth:64,risk:80}},
+  { symbol:'BAC',  name:'Bank of America',          sector:'Financials',  mcap:'0.34T',
+    current:44.20, open:43.60, high:44.80, low:43.30, volume:32000000,
+    signal:'hold',confidence:55,strength:'Weak',    catalyst:'Rate Environment',
+    sellWindow:'Q2 2026', trend:'neut', y2025ret:38.0,
+    fcfPerShare:3.40,fcfGrowth:6,wacc:10.5,termGrowth:2.0,fwdEPS:3.60,targetPE:12,
+    bearDn:16,bearProb:0.25,basePct:6,baseProb:0.50,bullUps:14,bullProb:0.25,sigma:22,
+    factors:{momentum:54,value:68,quality:70,growth:34,risk:58}},
+  { symbol:'GS',   name:'Goldman Sachs',            sector:'Financials',  mcap:'0.22T',
+    current:618.40,open:613.80,high:624.60,low:610.20,volume:2400000,
+    signal:'hold',confidence:60,strength:'Moderate',catalyst:'Investment Banking',
+    sellWindow:'Q3 2026', trend:'neut', y2025ret:48.0,
+    fcfPerShare:28.40,fcfGrowth:8,wacc:10.5,termGrowth:2.0,fwdEPS:40.20,targetPE:15,
+    bearDn:18,bearProb:0.24,basePct:7,baseProb:0.50,bullUps:16,bullProb:0.26,sigma:26,
+    factors:{momentum:62,value:66,quality:76,growth:38,risk:60}},
+  { symbol:'XOM',  name:'ExxonMobil Corp',          sector:'Energy',      mcap:'0.49T',
+    current:114.60,open:113.20,high:116.20,low:112.80,volume:12200000,
+    signal:'hold',confidence:58,strength:'Moderate',catalyst:'Permian Basin',
+    sellWindow:'Q1–Q2 2026', trend:'neut', y2025ret:12.0,
+    fcfPerShare:9.80,fcfGrowth:5,wacc:9.0,termGrowth:1.5,fwdEPS:9.20,targetPE:13,
+    bearDn:14,bearProb:0.28,basePct:7,baseProb:0.48,bullUps:18,bullProb:0.24,sigma:22,
+    factors:{momentum:54,value:72,quality:74,growth:30,risk:62}},
+  { symbol:'CVX',  name:'Chevron Corporation',      sector:'Energy',      mcap:'0.27T',
+    current:146.80,open:145.20,high:148.60,low:144.40,volume:9400000,
+    signal:'hold',confidence:56,strength:'Moderate',catalyst:'Tengiz + Buybacks',
+    sellWindow:'Q2 2026', trend:'neut', y2025ret:-6.0,
+    fcfPerShare:11.20,fcfGrowth:4,wacc:9.0,termGrowth:1.5,fwdEPS:11.80,targetPE:13,
+    bearDn:14,bearProb:0.28,basePct:6,baseProb:0.48,bullUps:16,bullProb:0.24,sigma:22,
+    factors:{momentum:50,value:72,quality:72,growth:28,risk:62}},
+  { symbol:'JNJ',  name:'Johnson & Johnson',        sector:'Healthcare',  mcap:'0.38T',
+    current:162.40,open:161.20,high:163.90,low:160.60,volume:6400000,
+    signal:'hold',confidence:60,strength:'Moderate',catalyst:'MedTech + Pharma',
+    sellWindow:'Q3 2026', trend:'neut', y2025ret:-8.0,
+    fcfPerShare:11.40,fcfGrowth:7,wacc:8.5,termGrowth:2.0,fwdEPS:10.20,targetPE:16,
+    bearDn:10,bearProb:0.18,basePct:8,baseProb:0.55,bullUps:16,bullProb:0.27,sigma:14,
+    factors:{momentum:46,value:70,quality:88,growth:38,risk:82}},
+  { symbol:'PFE',  name:'Pfizer Inc',               sector:'Healthcare',  mcap:'0.13T',
+    current:22.60, open:22.20, high:23.10, low:22.00, volume:28000000,
+    signal:'sell',confidence:66,strength:'Moderate',catalyst:'Pipeline Reset',
+    sellWindow:'Q1 2026', trend:'bear', y2025ret:-44.0,
+    fcfPerShare:2.20,fcfGrowth:3,wacc:9.5,termGrowth:1.5,fwdEPS:2.40,targetPE:10,
+    bearDn:16,bearProb:0.32,basePct:4,baseProb:0.45,bullUps:18,bullProb:0.23,sigma:22,
+    factors:{momentum:32,value:70,quality:65,growth:28,risk:55}},
+  { symbol:'UNH',  name:'UnitedHealth Group',       sector:'Healthcare',  mcap:'0.44T',
+    current:484.20,open:480.60,high:488.80,low:479.40,volume:3200000,
+    signal:'hold',confidence:56,strength:'Moderate',catalyst:'Medicare Advantage',
+    sellWindow:'Q4 2026', trend:'neut', y2025ret:-18.0,
+    fcfPerShare:24.80,fcfGrowth:10,wacc:9.0,termGrowth:2.0,fwdEPS:26.40,targetPE:20,
+    bearDn:12,bearProb:0.22,basePct:8,baseProb:0.52,bullUps:18,bullProb:0.26,sigma:20,
+    factors:{momentum:44,value:62,quality:86,growth:46,risk:72}},
+  { symbol:'WMT',  name:'Walmart Inc',              sector:'Cons. Staples',mcap:'0.76T',
+    current:94.60, open:93.80, high:95.40, low:93.20, volume:9200000,
+    signal:'buy', confidence:67,strength:'Moderate',catalyst:'eCommerce + Ads',
+    sellWindow:'Q3 2026', trend:'bull', y2025ret:72.0,
+    fcfPerShare:4.20,fcfGrowth:10,wacc:8.0,termGrowth:2.0,fwdEPS:3.10,targetPE:30,
+    bearDn:8, bearProb:0.15,basePct:8,baseProb:0.57,bullUps:15,bullProb:0.28,sigma:14,
+    factors:{momentum:72,value:50,quality:86,growth:52,risk:82}},
+  { symbol:'COST', name:'Costco Wholesale',         sector:'Cons. Staples',mcap:'0.43T',
+    current:970.20,open:964.60,high:978.40,low:961.80,volume:2200000,
+    signal:'hold',confidence:65,strength:'Moderate',catalyst:'Membership Growth',
+    sellWindow:'Q4 2026', trend:'bull', y2025ret:42.0,
+    fcfPerShare:22.40,fcfGrowth:10,wacc:8.5,termGrowth:2.0,fwdEPS:20.80,targetPE:46,
+    bearDn:12,bearProb:0.18,basePct:10,baseProb:0.54,bullUps:18,bullProb:0.28,sigma:16,
+    factors:{momentum:68,value:36,quality:90,growth:54,risk:80}},
+  { symbol:'HD',   name:'Home Depot Inc',           sector:'Cons. Disc.', mcap:'0.39T',
+    current:364.20,open:361.40,high:367.60,low:359.80,volume:2800000,
+    signal:'hold',confidence:61,strength:'Moderate',catalyst:'Housing Recovery',
+    sellWindow:'Q4 2026', trend:'neut', y2025ret:10.0,
+    fcfPerShare:18.60,fcfGrowth:8,wacc:8.5,termGrowth:2.0,fwdEPS:16.40,targetPE:23,
+    bearDn:14,bearProb:0.20,basePct:9,baseProb:0.52,bullUps:20,bullProb:0.28,sigma:18,
+    factors:{momentum:58,value:56,quality:84,growth:44,risk:72}},
+  { symbol:'PLTR', name:'Palantir Technologies',   sector:'Technology',   mcap:'0.27T',
+    current:118.60,open:115.80,high:121.40,low:114.20,volume:62000000,
+    signal:'buy', confidence:68,strength:'Moderate',catalyst:'AIP Gov Deals',
+    sellWindow:'Q3–Q4 2026', trend:'bull', y2025ret:340.0,
+    fcfPerShare:0.80,fcfGrowth:38,wacc:12.0,termGrowth:3.0,fwdEPS:0.48,targetPE:240,
+    bearDn:40,bearProb:0.28,basePct:22,baseProb:0.45,bullUps:55,bullProb:0.27,sigma:72,
+    factors:{momentum:85,value:18,quality:65,growth:92,risk:32}},
+  { symbol:'SNOW', name:'Snowflake Inc',            sector:'Technology',   mcap:'0.055T',
+    current:160.40,open:157.80,high:163.20,low:156.40,volume:6200000,
+    signal:'hold',confidence:55,strength:'Weak',    catalyst:'AI Data Cloud',
+    sellWindow:'Q2 2026', trend:'neut', y2025ret:-24.0,
+    fcfPerShare:0.60,fcfGrowth:28,wacc:12.0,termGrowth:2.5,fwdEPS:1.20,targetPE:130,
+    bearDn:35,bearProb:0.28,basePct:12,baseProb:0.45,bullUps:42,bullProb:0.27,sigma:55,
+    factors:{momentum:48,value:22,quality:55,growth:82,risk:38}},
+  { symbol:'SPOT', name:'Spotify Technology',      sector:'Comm. Svcs.', mcap:'0.10T',
+    current:494.80,open:490.20,high:500.40,low:488.60,volume:1600000,
+    signal:'buy', confidence:66,strength:'Moderate',catalyst:'Podcast + Audiobook',
+    sellWindow:'Q3 2026', trend:'bull', y2025ret:142.0,
+    fcfPerShare:4.80,fcfGrowth:32,wacc:10.5,termGrowth:2.5,fwdEPS:8.20,targetPE:62,
+    bearDn:28,bearProb:0.22,basePct:18,baseProb:0.50,bullUps:38,bullProb:0.28,sigma:42,
+    factors:{momentum:78,value:30,quality:62,growth:88,risk:50}},
+  { symbol:'DIS',  name:'Walt Disney Co',          sector:'Comm. Svcs.', mcap:'0.20T',
+    current:112.40,open:111.20,high:114.20,low:110.40,volume:9800000,
+    signal:'hold',confidence:52,strength:'Weak',    catalyst:'Streaming Profit',
+    sellWindow:'Q2 2026', trend:'neut', y2025ret:14.0,
+    fcfPerShare:4.40,fcfGrowth:12,wacc:9.5,termGrowth:2.0,fwdEPS:5.60,targetPE:22,
+    bearDn:18,bearProb:0.26,basePct:8,baseProb:0.48,bullUps:22,bullProb:0.26,sigma:26,
+    factors:{momentum:50,value:54,quality:62,growth:50,risk:58}},
+  { symbol:'TSMC', name:'Taiwan Semiconductor',    sector:'Technology',   mcap:'0.94T',
+    current:178.40,open:176.20,high:180.60,low:175.40,volume:8400000,
+    signal:'buy', confidence:76,strength:'Strong',  catalyst:'3nm / AI Chip Demand',
+    sellWindow:'Q3 2026', trend:'bull', y2025ret:98.0,
+    fcfPerShare:9.60,fcfGrowth:20,wacc:9.5,termGrowth:2.5,fwdEPS:10.40,targetPE:18,
+    bearDn:22,bearProb:0.20,basePct:15,baseProb:0.52,bullUps:32,bullProb:0.28,sigma:30,
+    factors:{momentum:80,value:56,quality:82,growth:84,risk:54}},
+  { symbol:'ARM',  name:'Arm Holdings',            sector:'Technology',   mcap:'0.19T',
+    current:120.60,open:118.20,high:123.40,low:117.40,volume:7800000,
+    signal:'buy', confidence:70,strength:'Moderate',catalyst:'AI Chip Architecture',
+    sellWindow:'Q4 2026', trend:'bull', y2025ret:88.0,
+    fcfPerShare:1.80,fcfGrowth:30,wacc:11.0,termGrowth:3.0,fwdEPS:1.60,targetPE:80,
+    bearDn:36,bearProb:0.24,basePct:20,baseProb:0.48,bullUps:48,bullProb:0.28,sigma:58,
+    factors:{momentum:78,value:28,quality:72,growth:90,risk:42}},
+  { symbol:'MU',   name:'Micron Technology',       sector:'Technology',   mcap:'0.12T',
+    current:103.40,open:101.20,high:105.80,low:100.40,volume:22000000,
+    signal:'buy', confidence:69,strength:'Moderate',catalyst:'HBM3 AI Memory',
+    sellWindow:'Q2–Q3 2026', trend:'bull', y2025ret:34.0,
+    fcfPerShare:2.40,fcfGrowth:42,wacc:10.5,termGrowth:2.5,fwdEPS:8.40,targetPE:14,
+    bearDn:30,bearProb:0.24,basePct:22,baseProb:0.48,bullUps:42,bullProb:0.28,sigma:42,
+    factors:{momentum:72,value:52,quality:65,growth:88,risk:48}},
+  { symbol:'UBER', name:'Uber Technologies',       sector:'Cons. Disc.', mcap:'0.18T',
+    current:82.40, open:81.20, high:84.20, low:80.60, volume:18000000,
+    signal:'buy', confidence:68,strength:'Moderate',catalyst:'Autonomous Rides',
+    sellWindow:'Q3 2026', trend:'bull', y2025ret:22.0,
+    fcfPerShare:2.40,fcfGrowth:28,wacc:11.0,termGrowth:3.0,fwdEPS:2.80,targetPE:32,
+    bearDn:24,bearProb:0.22,basePct:18,baseProb:0.50,bullUps:36,bullProb:0.28,sigma:38,
+    factors:{momentum:70,value:42,quality:62,growth:80,risk:52}},
+  { symbol:'COIN', name:'Coinbase Global',         sector:'Financials',  mcap:'0.065T',
+    current:252.40,open:248.60,high:258.20,low:246.80,volume:7600000,
+    signal:'hold',confidence:52,strength:'Weak',    catalyst:'Crypto Regulation',
+    sellWindow:'Q2 2026', trend:'neut', y2025ret:38.0,
+    fcfPerShare:3.80,fcfGrowth:20,wacc:14.0,termGrowth:3.0,fwdEPS:6.20,targetPE:42,
+    bearDn:45,bearProb:0.30,basePct:15,baseProb:0.42,bullUps:60,bullProb:0.28,sigma:85,
+    factors:{momentum:56,value:30,quality:48,growth:70,risk:26}},
 ];
 
 const IND = [
@@ -565,254 +872,538 @@ const IND = [
     {symbol:'JPM',  rsi:44.6,macd:-0.72,ema:'Down',   vol:'Falling',w52h:261.40,w52l:167.90},
 ];
 
-/* ── Sparkline history (12 deterministic points → updated live) ─────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   MODELS
+═══════════════════════════════════════════════════════════════════════════ */
+
+// ── DCF: 5-year discounted cash flow ─────────────────────────────────────
+function calcDCF(s) {
+    let pv = 0;
+    for (let yr = 1; yr <= 5; yr++) {
+        const fcf = s.fcfPerShare * Math.pow(1 + s.fcfGrowth / 100, yr);
+        pv += fcf / Math.pow(1 + s.wacc / 100, yr);
+    }
+    const fcf5 = s.fcfPerShare * Math.pow(1 + s.fcfGrowth / 100, 5);
+    const tv   = fcf5 * (1 + s.termGrowth / 100) / ((s.wacc - s.termGrowth) / 100);
+    pv += tv / Math.pow(1 + s.wacc / 100, 5);
+    return pv;
+}
+
+// ── Earnings model: Forward EPS × Target P/E ─────────────────────────────
+function calcEarnings(s) {
+    return s.fwdEPS * s.targetPE;
+}
+
+// ── Composite score (factor-weighted) ─────────────────────────────────────
+// Weights: Momentum 20 · Value 20 · Quality 25 · Growth 25 · Risk 10
+function compositeScore(f) {
+    return Math.round(f.momentum*0.20 + f.value*0.20 + f.quality*0.25 + f.growth*0.25 + f.risk*0.10);
+}
+
+// ── Scenario analysis: probability-weighted expected value ────────────────
+function calcScenarios(s) {
+    const bear = s.current * (1 - s.bearDn / 100);
+    const base = s.current * (1 + s.basePct / 100);
+    const bull = s.current * (1 + s.bullUps / 100);
+    const ev   = bear * s.bearProb + base * s.baseProb + bull * s.bullProb;
+    return { bear, base, bull, ev };
+}
+
+// ── Monte Carlo: 500-path GBM, T=1yr ─────────────────────────────────────
+// Box-Muller transform for Gaussian random variates
+function monteCarlo(price, mu, sigma, n) {
+    n = n || 500;
+    const T = 1;
+    const results = [];
+    for (let i = 0; i < n; i++) {
+        const u1 = Math.random() || 1e-10;
+        const u2 = Math.random();
+        const z  = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+        const logRet = (mu / 100 - 0.5 * Math.pow(sigma / 100, 2)) * T
+                     + (sigma / 100) * Math.sqrt(T) * z;
+        results.push(price * Math.exp(logRet));
+    }
+    results.sort((a, b) => a - b);
+    const pct = (p) => results[Math.min(n-1, Math.floor(n * p))];
+    return {
+        p10:   pct(0.10),
+        p25:   pct(0.25),
+        p50:   pct(0.50),
+        p75:   pct(0.75),
+        p90:   pct(0.90),
+        pBeat: results.filter(r => r > price).length / n * 100,
+    };
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LIVE STATE & HISTORY
+═══════════════════════════════════════════════════════════════════════════ */
 const HISTORY = {};
-(function seedHistory() {
+(function() {
     STOCKS.forEach(s => {
-        const n = 16;
-        const yr = Math.max(-0.5, Math.min(2, s.y2025ret / 100));
+        const n = 16, yr = Math.max(-0.5, Math.min(2, s.y2025ret / 100));
         const start = s.current / (1 + yr);
-        const pts = [];
         const seed = Math.round(s.current * 137.3);
-        function pr(i) { return ((seed * (i+3) * 9301 + 49297) % 233280) / 233280; }
+        const pr = (i) => ((seed * (i+3) * 9301 + 49297) % 233280) / 233280;
+        const pts = [];
         for (let i = 0; i < n; i++) {
-            const t = i / (n - 1);
-            const trend = start + (s.current - start) * t;
-            pts.push(Math.max(0.01, trend * (1 + (pr(i) - 0.5) * 0.10)));
+            const t = i / (n-1);
+            pts.push(Math.max(0.01, (start + (s.current-start)*t) * (1 + (pr(i)-0.5)*0.10)));
         }
-        pts[n - 1] = s.current;
+        pts[n-1] = s.current;
         HISTORY[s.symbol] = pts;
     });
 }());
 
-/* ── Mutable live state ──────────────────────────────────────────────────── */
 let live    = STOCKS.map(s => ({ ...s }));
 let liveInd = IND.map(i => ({ ...i }));
 let prevPrices = {};
-let monitoring = false;
-let monitorInterval = null;
+let monitoring = false, monitorInterval = null;
 const MAX_VOL = Math.max(...STOCKS.map(s => s.volume));
 
-/* ── Helpers ─────────────────────────────────────────────────────────────── */
+/* ── My Watchlist state ── */
+let myList    = [];
+let myLiveMap = {};
+const HISTORY_MY = {};
+const MY_MAX = 10;
+
+function loadMyList() {
+    try {
+        const saved = JSON.parse(localStorage.getItem('lp_mylist') || '[]');
+        saved.forEach(sym => {
+            const s = STOCK_DB.find(d => d.symbol === sym);
+            if (s) _myListAdd(s, false);
+        });
+    } catch(e) {}
+}
+function saveMyList() {
+    localStorage.setItem('lp_mylist', JSON.stringify(myList));
+}
+function _myListAdd(s, doSave) {
+    if (myList.includes(s.symbol) || myList.length >= MY_MAX) return false;
+    myList.push(s.symbol);
+    myLiveMap[s.symbol] = { ...s };
+    const n=16, yr=Math.max(-0.5,Math.min(2,s.y2025ret/100));
+    const start=s.current/(1+yr), seed=Math.round(s.current*137.3);
+    const pr=(i)=>((seed*(i+3)*9301+49297)%233280)/233280;
+    const pts=[];
+    for(let i=0;i<n;i++){
+        const t=i/(n-1);
+        pts.push(Math.max(0.01,(start+(s.current-start)*t)*(1+(pr(i)-0.5)*0.10)));
+    }
+    pts[n-1]=s.current;
+    HISTORY_MY[s.symbol]=pts;
+    if (doSave!==false) saveMyList();
+    return true;
+}
+function myListRemove(sym) {
+    myList=myList.filter(s=>s!==sym);
+    delete myLiveMap[sym];
+    delete HISTORY_MY[sym];
+    saveMyList();
+    renderMyWatchlist();
+    updateSearchCap();
+}
+function updateSearchCap() {
+    const el=document.getElementById('search-cap');
+    if(el) el.textContent=`My list: ${myList.length} / ${MY_MAX}`;
+}
+
+/* ── Search ── */
+let srHiIdx=-1, srMatches=[];
+function onSearchInput(q) {
+    q=q.trim();
+    const dd=document.getElementById('search-dropdown');
+    if(!q){ dd.classList.remove('open'); srMatches=[]; return; }
+    const ql=q.toLowerCase();
+    srMatches=STOCK_DB.filter(s=>
+        s.symbol.toLowerCase().startsWith(ql)||s.name.toLowerCase().includes(ql)
+    ).slice(0,9);
+    srHiIdx=-1;
+    _renderDropdown();
+    dd.classList.add('open');
+}
+function _renderDropdown() {
+    const dd=document.getElementById('search-dropdown');
+    if(!srMatches.length){ dd.innerHTML='<div class="sr-empty">No results</div>'; return; }
+    dd.innerHTML=srMatches.map((s,i)=>{
+        const added=myList.includes(s.symbol);
+        return `<div class="sr-item${i===srHiIdx?' sr-active':''}" onmousedown="pickSearch(${i})">
+            <span class="sr-sym">${s.symbol}</span>
+            <span class="sr-name">${s.name}</span>
+            <span class="sr-sector">${s.sector}</span>
+            ${added?'<span class="sr-added-tag">✓ In list</span>':''}
+        </div>`;
+    }).join('');
+}
+function onSearchKey(e) {
+    if(!srMatches.length) return;
+    if(e.key==='ArrowDown'){e.preventDefault();srHiIdx=Math.min(srHiIdx+1,srMatches.length-1);_renderDropdown();}
+    else if(e.key==='ArrowUp'){e.preventDefault();srHiIdx=Math.max(srHiIdx-1,0);_renderDropdown();}
+    else if(e.key==='Enter'){e.preventDefault();if(srHiIdx>=0)pickSearch(srHiIdx);else if(srMatches.length===1)pickSearch(0);else addSelected();}
+    else if(e.key==='Escape') closeDropdown();
+}
+function pickSearch(idx) {
+    const s=srMatches[idx]; if(!s) return;
+    document.getElementById('stock-search').value=s.symbol;
+    closeDropdown();
+    addFromDB(s.symbol);
+}
+function closeDropdown() {
+    const dd=document.getElementById('search-dropdown');
+    if(dd) dd.classList.remove('open');
+}
+function addSelected() {
+    const q=document.getElementById('stock-search').value.trim().toUpperCase();
+    if(!q) return;
+    if(srMatches.length===1){ addFromDB(srMatches[0].symbol); return; }
+    addFromDB(q);
+}
+function addFromDB(sym) {
+    sym=sym.toUpperCase();
+    const s=STOCK_DB.find(d=>d.symbol===sym);
+    if(!s){ _flashInput('Not found in database'); return; }
+    if(myList.includes(sym)){ _flashInput('Already in your list'); return; }
+    if(myList.length>=MY_MAX){ _flashInput('List full — max 10 stocks'); return; }
+    _myListAdd(s);
+    document.getElementById('stock-search').value='';
+    srMatches=[]; closeDropdown();
+    renderMyWatchlist();
+    updateSearchCap();
+}
+function _flashInput(msg) {
+    const inp=document.getElementById('stock-search');
+    const orig=inp.placeholder;
+    inp.placeholder=msg;
+    inp.style.borderColor='var(--dn)';
+    setTimeout(()=>{ inp.placeholder=orig; inp.style.borderColor=''; },2000);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════════════════════════ */
 function fmt(n)  { return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtV(n) { return n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n.toLocaleString(); }
 function ts()    { return new Date().toLocaleTimeString('en-US',{hour12:false}); }
-function jitter(v,p=0.003){ return v*(1+(Math.random()-0.5)*2*p); }
-function clamp(v,lo,hi)   { return Math.max(lo,Math.min(hi,v)); }
+function jitter(v,p){ p=p||0.003; return v*(1+(Math.random()-0.5)*2*p); }
+function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
 
-/* ── Clock ───────────────────────────────────────────────────────────────── */
-function updateClock() {
-    document.getElementById('live-clock').textContent =
-        new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-/* ── Sparkline SVG ───────────────────────────────────────────────────────── */
 function sparkSVG(pts, isUp) {
-    const W=72, H=24;
-    const min=Math.min(...pts), max=Math.max(...pts), range=max-min||1;
-    const coords=pts.map((v,i)=>{
-        const x=(i/(pts.length-1))*W;
-        const y=H-((v-min)/range)*(H-4)-2;
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-    }).join(' ');
-    // fill polygon
-    const first=pts.map((_,i)=>i===0?`0,${H}`:null).filter(Boolean)[0];
-    const last=`${W},${H}`;
-    const fillPts=`0,${H} ${coords} ${last}`;
-    const col=isUp?'#1ebd68':'#e84040';
-    const fillCol=isUp?'rgba(30,189,104,0.08)':'rgba(232,64,64,0.08)';
-    return `<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-        <polygon points="${fillPts}" fill="${fillCol}"/>
-        <polyline points="${coords}" fill="none" stroke="${col}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="${W}" cy="${(H-((pts[pts.length-1]-min)/range)*(H-4)-2).toFixed(1)}" r="2.5" fill="${col}"/>
-    </svg>`;
+    const W=72,H=24,min=Math.min(...pts),max=Math.max(...pts),range=max-min||1;
+    const xy=pts.map((v,i)=>`${((i/(pts.length-1))*W).toFixed(1)},${(H-((v-min)/range)*(H-4)-2).toFixed(1)}`).join(' ');
+    const fp=`0,${H} ${xy} ${W},${H}`;
+    const c=isUp?'#1ebd68':'#e84040', fc=isUp?'rgba(30,189,104,0.08)':'rgba(232,64,64,0.08)';
+    const lastY=(H-((pts[pts.length-1]-min)/range)*(H-4)-2).toFixed(1);
+    return `<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><polygon points="${fp}" fill="${fc}"/><polyline points="${xy}" fill="none" stroke="${c}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${W}" cy="${lastY}" r="2.5" fill="${c}"/></svg>`;
 }
-
-/* ── Day range bar ───────────────────────────────────────────────────────── */
-function dayRangBar(current, low, high) {
-    const pct = clamp(((current-low)/(high-low||1))*100,0,100).toFixed(1);
-    return `<div class="rng">
-        <span class="rng-lo dim">$${fmt(low)}</span>
-        <div class="rng-track"><div class="rng-fill" style="width:${pct}%"></div>
-            <div class="rng-pip" style="left:${pct}%"></div></div>
-        <span class="rng-hi dim">$${fmt(high)}</span>
-    </div>`;
+function dayRangeBar(cur,lo,hi) {
+    const p=clamp(((cur-lo)/(hi-lo||1))*100,0,100).toFixed(1);
+    return `<div class="rng"><span class="rng-lo dim">$${fmt(lo)}</span><div class="rng-track"><div class="rng-fill" style="width:${p}%"></div><div class="rng-pip" style="left:${p}%"></div></div><span class="rng-hi dim">$${fmt(hi)}</span></div>`;
 }
-
-/* ── Volume bar ──────────────────────────────────────────────────────────── */
-function volBar(vol) {
-    const pct=clamp(vol/MAX_VOL*100,2,100).toFixed(1);
-    return `<div class="vol-cell">
-        <span>${fmtV(vol)}</span>
-        <div class="vol-bar-wrap"><div class="vol-bar-fill" style="width:${pct}%"></div></div>
-    </div>`;
+function volBar(v) {
+    const p=clamp(v/MAX_VOL*100,2,100).toFixed(1);
+    return `<div class="vol-cell"><span>${fmtV(v)}</span><div class="vol-bw"><div class="vol-bf" style="width:${p}%"></div></div></div>`;
 }
-
-/* ── Target progress bar ─────────────────────────────────────────────────── */
-function targetBar(current, lo, hi, isPos) {
-    const range=hi-lo||1;
-    const pct=clamp(((current-lo)/range)*100,0,100).toFixed(1);
-    const cls=isPos?'pos':'neg';
-    return `<div class="tgt">
-        <div class="tgt-range">$${lo} – $${hi}</div>
-        <div class="tgt-track"><div class="tgt-fill ${cls}" style="width:${pct}%"></div>
-            <div class="tgt-cur" style="left:${pct}%"></div></div>
-    </div>`;
-}
-
-/* ── RSI bar ─────────────────────────────────────────────────────────────── */
 function rsiBar(rsi) {
-    const pct=clamp(rsi,0,100).toFixed(1);
-    const pip_col=rsi>70?'#e84040':rsi<30?'#1ebd68':'#c9a227';
+    const p=clamp(rsi,0,100).toFixed(1);
+    const c=rsi>70?'#e84040':rsi<30?'#1ebd68':'#c9a227';
     const cls=rsi>70?'dn':rsi<30?'up':'gold';
-    return `<div class="rsi-bar">
-        <span class="rsi-val ${cls}">${rsi.toFixed(1)}</span>
-        <div class="rsi-track">
-            <div class="rsi-pip" style="left:${pct}%;background:${pip_col}"></div>
-        </div>
-    </div>`;
+    return `<div class="rsi-bar"><span class="rsi-val ${cls}">${rsi.toFixed(1)}</span><div class="rsi-track"><div class="rsi-pip" style="left:${p}%;background:${c}"></div></div></div>`;
 }
-
-/* ── 52-week range bar ───────────────────────────────────────────────────── */
-function w52Bar(current, lo, hi) {
-    const pct=clamp(((current-lo)/(hi-lo||1))*100,0,100).toFixed(1);
-    return `<div class="w52-bar">
-        <span class="dim" style="font-size:10px;font-family:'Courier New',monospace">$${fmt(lo)}</span>
-        <div class="w52-track"><div class="w52-fill" style="width:100%"></div>
-            <div class="w52-pip" style="left:${pct}%"></div></div>
-        <span class="dim" style="font-size:10px;font-family:'Courier New',monospace">$${fmt(hi)}</span>
-    </div>`;
+function w52Bar(cur,lo,hi) {
+    const p=clamp(((cur-lo)/(hi-lo||1))*100,0,100).toFixed(1);
+    return `<div class="w52-bar"><span class="dim" style="font-size:10px;font-family:'Courier New',monospace">$${fmt(lo)}</span><div class="w52-track"><div class="w52-fill" style="width:100%"></div><div class="w52-pip" style="left:${p}%"></div></div><span class="dim" style="font-size:10px;font-family:'Courier New',monospace">$${fmt(hi)}</span></div>`;
 }
+function scoreColor(n) { return n>=72?'var(--up)':n>=55?'var(--gold)':'var(--dn)'; }
+function mosClass(pct)  { return pct>=0?'moS-pos':'moS-neg'; }
 
-/* ── Ticker tape ─────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   TICKER
+═══════════════════════════════════════════════════════════════════════════ */
 function renderTicker() {
-    const items = [...live, ...live].map(r => {
+    const items=[...live,...live].map(r=>{
         const chg=(r.current-r.open)/r.open*100;
         const col=chg>=0?'#1ebd68':'#e84040';
-        const arr=chg>=0?'▲':'▼';
-        return `<span class="ticker-item">
-            <span style="color:#3a6cd4;font-weight:700">${r.symbol}</span>&nbsp;
-            <span style="color:${col}">${arr} $${fmt(r.current)} (${chg>=0?'+':''}${chg.toFixed(2)}%)</span>
-        </span>`;
+        return `<span class="ticker-item"><span style="color:#3a6cd4;font-weight:700">${r.symbol}</span>&nbsp;<span style="color:${col}">${chg>=0?'▲':'▼'} $${fmt(r.current)} (${chg>=0?'+':''}${chg.toFixed(2)}%)</span></span>`;
     }).join('');
-    document.getElementById('ticker-inner').innerHTML = items;
+    document.getElementById('ticker-inner').innerHTML=items;
 }
 
-/* ── Render: Watchlist ───────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   RENDER: WATCHLIST
+═══════════════════════════════════════════════════════════════════════════ */
 function renderWatchlist() {
-    document.getElementById('wl-ts').textContent = ts();
-    const rows = live.map(r => {
-        const prev=prevPrices[r.symbol]??r.open;
-        const up=r.current>=prev;
-        const chg=r.current-r.open, chgPct=(chg/r.open*100);
+    document.getElementById('wl-ts').textContent=ts();
+    document.getElementById('wl-tbody').innerHTML=live.map(r=>{
+        const prev=prevPrices[r.symbol]??r.open, up=r.current>=prev;
+        const chg=r.current-r.open, chgPct=chg/r.open*100;
         prevPrices[r.symbol]=r.current;
-        const h=HISTORY[r.symbol];
-        const sparkUp=(h[h.length-1]||r.current)>=(h[0]||r.current);
-        const flashCls=up?'flash-up':'flash-dn';
-        const sig=r.signal;
+        const h=HISTORY[r.symbol], sparkUp=(h[h.length-1]||r.current)>=(h[0]||r.current);
         return `<tr>
-            <td><div class="sym">${r.symbol}</div><div class="nm">${r.name}</div>
-                <span class="sector-tag">${r.sector}</span></td>
+            <td><div class="sym">${r.symbol}</div><div class="nm">${r.name}</div><span class="sector-tag">${r.sector}</span></td>
             <td>${sparkSVG(h,sparkUp)}</td>
-            <td class="mono ${up?'up':'dn'} ${flashCls}" style="font-size:15px;font-weight:700">
-                ${up?'▲':'▼'} $${fmt(r.current)}</td>
-            <td class="mono ${chg>=0?'up':'dn'}">
-                ${chg>=0?'+':''}${fmt(chg)}<br>
-                <span style="font-size:11px">${chgPct>=0?'+':''}${chgPct.toFixed(2)}%</span></td>
-            <td>${dayRangBar(r.current,r.low,r.high)}</td>
+            <td class="mono ${up?'up':'dn'} ${up?'flash-up':'flash-dn'}" style="font-size:15px;font-weight:700">${up?'▲':'▼'} $${fmt(r.current)}</td>
+            <td class="mono ${chg>=0?'up':'dn'}">${chg>=0?'+':''}${fmt(chg)}<br><span style="font-size:11px">${chgPct>=0?'+':''}${chgPct.toFixed(2)}%</span></td>
+            <td>${dayRangeBar(r.current,r.low,r.high)}</td>
             <td>${volBar(r.volume)}</td>
             <td class="mono gold" style="font-weight:700">$${r.mcap}</td>
-            <td><span class="badge b-${sig}">${sig.toUpperCase()}</span></td>
+            <td><span class="badge b-${r.signal}">${r.signal.toUpperCase()}</span></td>
         </tr>`;
     }).join('');
-    document.getElementById('wl-tbody').innerHTML = rows;
 }
 
-/* ── Render: Forecast ────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   RENDER: FORECAST
+═══════════════════════════════════════════════════════════════════════════ */
 function renderForecast() {
-    const avg25=live.reduce((a,r)=>a+r.y2025ret,0)/live.length;
-    const avg26=live.reduce((a,r)=>a+r.y2026proj,0)/live.length;
-    const bull=live.filter(r=>r.trend==='bull').length;
-    const sellN=live.filter(r=>r.signal==='sell').length;
+    // ── Summary stats ─────────────────────────────────────────────────────
+    const scores = live.map(r => compositeScore(r.factors));
+    const avgScore = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+    const avgDCF  = live.reduce((a,r)=>a+calcDCF(r),0)/live.length;
+    const avgEarn = live.reduce((a,r)=>a+calcEarnings(r),0)/live.length;
+    const bullN   = live.filter(r=>r.trend==='bull').length;
     document.getElementById('fcast-stats').innerHTML=`
-        <div class="stat-card"><div class="sc-label">Avg 2025 Return</div>
-            <div class="sc-value up">+${avg25.toFixed(1)}%</div>
-            <div class="sc-sub">10-stock avg actual</div></div>
-        <div class="stat-card"><div class="sc-label">2026 Projected</div>
-            <div class="sc-value gold">+${avg26.toFixed(1)}%</div>
-            <div class="sc-sub">Model estimate</div></div>
-        <div class="stat-card"><div class="sc-label">Bullish Outlook</div>
-            <div class="sc-value up">${bull} <span style="font-size:14px">/ 10</span></div>
-            <div class="sc-sub">Upward trending</div></div>
-        <div class="stat-card"><div class="sc-label">Active Sell Signals</div>
-            <div class="sc-value dn">${sellN}</div>
-            <div class="sc-sub">Reduce or exit</div></div>`;
-    document.getElementById('fcast-tbody').innerHTML=live.map(r=>{
-        const tB=r.trend==='bull'?'<span class="badge b-bull">BULLISH</span>':
-                 r.trend==='bear'?'<span class="badge b-bear">BEARISH</span>':
-                                  '<span class="badge b-neut">NEUTRAL</span>';
-        const isPos=r.y2026proj>=0;
+        <div class="sc"><div class="sc-lbl">Avg Composite Score</div>
+            <div class="sc-val" style="color:${scoreColor(avgScore)}">${avgScore}</div>
+            <div class="sc-sub">Factor-weighted · /100</div></div>
+        <div class="sc"><div class="sc-lbl">Bullish Outlook</div>
+            <div class="sc-val up">${bullN}<span style="font-size:14px">/10</span></div>
+            <div class="sc-sub">Upward trend</div></div>
+        <div class="sc"><div class="sc-lbl">Avg DCF Upside</div>
+            <div class="sc-val gold">${((avgDCF/live.reduce((a,r)=>a+r.current,0)*live.length)-1)*100>=0?'+':''}${(((avgDCF/live.reduce((a,r)=>a+r.current,0)*live.length))-1)*100..toFixed(1)}%</div>
+            <div class="sc-sub">vs current prices</div></div>
+        <div class="sc"><div class="sc-lbl">Sell Signals</div>
+            <div class="sc-val dn">${live.filter(r=>r.signal==='sell').length}</div>
+            <div class="sc-sub">Active exits</div></div>`;
+
+    // Fix the above broken expression:
+    const avgCur = live.reduce((a,r)=>a+r.current,0)/live.length;
+    const dcfUps = ((avgDCF/avgCur)-1)*100;
+    document.getElementById('fcast-stats').innerHTML=`
+        <div class="sc"><div class="sc-lbl">Avg Composite Score</div>
+            <div class="sc-val" style="color:${scoreColor(avgScore)}">${avgScore}</div>
+            <div class="sc-sub">Factor-weighted · /100</div></div>
+        <div class="sc"><div class="sc-lbl">Bullish Outlook</div>
+            <div class="sc-val up">${bullN}<span style="font-size:14px"> / 10</span></div>
+            <div class="sc-sub">Upward trend</div></div>
+        <div class="sc"><div class="sc-lbl">Avg DCF Upside</div>
+            <div class="sc-val ${dcfUps>=0?'gold':'dn'}">${dcfUps>=0?'+':''}${dcfUps.toFixed(1)}%</div>
+            <div class="sc-sub">DCF vs market price</div></div>
+        <div class="sc"><div class="sc-lbl">Sell Signals</div>
+            <div class="sc-val dn">${live.filter(r=>r.signal==='sell').length}</div>
+            <div class="sc-sub">Active exits</div></div>`;
+
+    // ── Overview: composite score cards ──────────────────────────────────
+    document.getElementById('score-grid').innerHTML=live.map(r=>{
+        const sc=compositeScore(r.factors), col=scoreColor(sc);
+        const cls=r.trend==='bull'?'sc-bull':r.trend==='bear'?'sc-bear':'sc-neut';
+        const facs=[
+            {k:'Momentum',v:r.factors.momentum,c:'f-momentum'},
+            {k:'Value',   v:r.factors.value,    c:'f-value'},
+            {k:'Quality', v:r.factors.quality,  c:'f-quality'},
+            {k:'Growth',  v:r.factors.growth,   c:'f-growth'},
+            {k:'Risk',    v:r.factors.risk,      c:'f-risk'},
+        ];
+        return `<div class="score-card ${cls}">
+            <div class="scard-sym">${r.symbol}</div>
+            <div class="scard-name">${r.name}</div>
+            <div class="scard-score" style="color:${col}">${sc}</div>
+            <div class="scard-lbl">Composite Score</div>
+            <div class="factor-rows">${facs.map(f=>`
+                <div class="factor-row">
+                    <span class="factor-lbl">${f.k}</span>
+                    <div class="factor-bar"><div class="factor-fill ${f.c}" style="width:${f.v}%"></div></div>
+                    <span class="factor-num">${f.v}</span>
+                </div>`).join('')}
+            </div>
+        </div>`;
+    }).join('');
+
+    // ── Valuation: DCF + Earnings ─────────────────────────────────────────
+    document.getElementById('val-tbody').innerHTML=live.map(r=>{
+        const dcf  = calcDCF(r);
+        const earn = calcEarnings(r);
+        const mosDCF  = ((dcf  - r.current) / r.current * 100);
+        const mosEarn = ((earn - r.current) / r.current * 100);
+        const consensus = (dcf + earn) / 2;
+        const mosC = ((consensus - r.current) / r.current * 100);
         return `<tr>
             <td><div class="sym">${r.symbol}</div><div class="nm">${r.name}</div></td>
-            <td class="mono ${r.y2025ret>=0?'up':'dn'}" style="font-weight:700">
-                ${r.y2025ret>=0?'+':''}${r.y2025ret.toFixed(1)}%</td>
-            <td class="mono ${r.y2026proj>=0?'up':'dn'}" style="font-weight:700">
-                +${r.y2026proj.toFixed(1)}%</td>
-            <td>${targetBar(r.current,r.targetLo,r.targetHi,isPos)}</td>
-            <td>${tB}</td>
+            <td>
+                <span class="model-badge mb-dcf">DCF</span>&nbsp;
+                <span class="model-badge mb-earn">EPS×P/E</span>
+            </td>
+            <td class="mono muted">$${fmt(r.fcfPerShare)}</td>
+            <td class="mono up">${r.fcfGrowth}% <span class="dim" style="font-size:10px">CAGR</span></td>
+            <td class="mono dim">${r.wacc}%</td>
+            <td class="intrinsic-val ${mosClass(mosDCF)}">$${fmt(dcf)}
+                <span style="font-size:10px;display:block;font-weight:400">${mosDCF>=0?'+':''}${mosDCF.toFixed(1)}% MoS</span>
+            </td>
+            <td class="intrinsic-val ${mosClass(mosEarn)}">$${fmt(earn)}
+                <span style="font-size:10px;display:block;font-weight:400">${mosEarn>=0?'+':''}${mosEarn.toFixed(1)}% upside</span>
+            </td>
+            <td><span class="${mosClass(mosC)}" style="font-size:14px;font-weight:700;font-family:'Courier New',monospace">${mosC>=0?'+':''}${mosC.toFixed(1)}%</span>
+                <div class="dim" style="font-size:10px">consensus avg</div></td>
             <td><span class="sell-win">${r.sellWindow}</span></td>
-            <td style="font-size:11px;color:#6b84b2;max-width:200px;white-space:normal">${r.rationale}</td>
         </tr>`;
     }).join('');
-}
 
-/* ── Render: Signals ─────────────────────────────────────────────────────── */
-function renderSignals() {
-    document.getElementById('sig-ts').textContent = ts();
-    document.getElementById('sig-tbody').innerHTML=live.map(r=>{
-        const sc=r.signal;
+    // ── Scenarios ─────────────────────────────────────────────────────────
+    document.getElementById('scen-tbody').innerHTML=live.map(r=>{
+        const s=calcScenarios(r);
+        const evChg=((s.ev-r.current)/r.current*100);
+        const tB=r.trend==='bull'?'<span class="badge b-bull">BULLISH</span>':r.trend==='bear'?'<span class="badge b-bear">BEARISH</span>':'<span class="badge b-neut">NEUTRAL</span>';
+        const bearW=(r.bearProb*100).toFixed(0), baseW=(r.baseProb*100).toFixed(0), bullW=(r.bullProb*100).toFixed(0);
         return `<tr>
-            <td><div class="sym">${r.symbol}</div><div class="nm">${r.name}</div></td>
-            <td><span class="badge b-${sc}">${sc.toUpperCase()}</span></td>
-            <td><div class="conf">
-                <div class="conf-track"><div class="conf-fill cf-${sc}" style="width:${r.confidence}%"></div></div>
-                <span class="conf-pct">${r.confidence}%</span>
-            </div></td>
-            <td class="muted">${r.strength}</td>
-            <td><span class="sector-tag">${r.catalyst}</span></td>
-            <td class="dim mono" style="font-size:11px">${ts()}</td>
+            <td><div class="sym">${r.symbol}</div></td>
+            <td class="mono dn">$${fmt(s.bear)}<div class="dim" style="font-size:10px">-${r.bearDn}%</div></td>
+            <td class="mono gold">$${fmt(s.base)}<div class="dim" style="font-size:10px">+${r.basePct}%</div></td>
+            <td class="mono up">$${fmt(s.bull)}<div class="dim" style="font-size:10px">+${r.bullUps}%</div></td>
+            <td>
+                <div class="scen-bar">
+                    <div class="scen-bear" style="width:${bearW}%">${bearW}%</div>
+                    <div class="scen-base" style="width:${baseW}%">${baseW}%</div>
+                    <div class="scen-bull" style="width:${bullW}%">${bullW}%</div>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-top:2px">
+                    <span>Bear</span><span>Base</span><span>Bull</span>
+                </div>
+            </td>
+            <td class="ev-val">$${fmt(s.ev)}</td>
+            <td class="${evChg>=0?'up':'dn'}" style="font-weight:700;font-family:'Courier New',monospace">${evChg>=0?'+':''}${evChg.toFixed(1)}%</td>
+            <td>${tB}</td>
+        </tr>`;
+    }).join('');
+
+    // ── Monte Carlo ───────────────────────────────────────────────────────
+    document.getElementById('monte-tbody').innerHTML=live.map(r=>{
+        const mu = r.basePct; // use base-case as drift approximation
+        const mc = monteCarlo(r.current, mu, r.sigma, 500);
+        const range = mc.p90 - mc.p10 || 1;
+        const w10=((mc.p25-mc.p10)/range*100).toFixed(1);
+        const w25=((mc.p50-mc.p25)/range*100).toFixed(1);
+        const w50=((mc.p75-mc.p50)/range*100).toFixed(1);
+        const w75=((mc.p90-mc.p75)/range*100).toFixed(1);
+        const beatCls=mc.pBeat>=55?'up':mc.pBeat<=45?'dn':'gold';
+        return `<tr>
+            <td><div class="sym">${r.symbol}</div></td>
+            <td class="mono muted">$${fmt(r.current)}</td>
+            <td class="mono ${mu>=0?'up':'dn'}">${mu>=0?'+':''}${mu.toFixed(1)}%</td>
+            <td class="mono dim">±${r.sigma}%</td>
+            <td>
+                <div class="mc-dist">
+                    <div class="mc-p10" style="flex:${w10}%" title="P10–P25"></div>
+                    <div class="mc-p25" style="flex:${w25}%" title="P25–P50"></div>
+                    <div class="mc-p50" style="flex:${w50}%" title="P50–P75"></div>
+                    <div class="mc-p75" style="flex:${w75}%" title="P75–P90"></div>
+                    <div class="mc-p90" style="flex:2%" title="P90+"></div>
+                </div>
+                <div class="mc-label"><span class="dn">$${fmt(mc.p10)}</span><span class="gold">$${fmt(mc.p50)}</span><span class="up">$${fmt(mc.p90)}</span></div>
+            </td>
+            <td class="mono dn">$${fmt(mc.p10)}</td>
+            <td class="mono gold">$${fmt(mc.p50)}</td>
+            <td class="mono up">$${fmt(mc.p90)}</td>
+            <td class="prob-beat ${beatCls}">${mc.pBeat.toFixed(1)}%</td>
         </tr>`;
     }).join('');
 }
 
-/* ── Render: Indicators ──────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   RENDER: SIGNALS
+═══════════════════════════════════════════════════════════════════════════ */
+function renderSignals() {
+    document.getElementById('sig-ts').textContent=ts();
+    document.getElementById('sig-tbody').innerHTML=live.map(r=>`<tr>
+        <td><div class="sym">${r.symbol}</div><div class="nm">${r.name}</div></td>
+        <td><span class="badge b-${r.signal}">${r.signal.toUpperCase()}</span></td>
+        <td><div class="conf"><div class="conf-track"><div class="conf-fill cf-${r.signal}" style="width:${r.confidence}%"></div></div><span class="conf-pct">${r.confidence}%</span></div></td>
+        <td class="muted">${r.strength}</td>
+        <td><span class="sector-tag">${r.catalyst}</span></td>
+        <td class="dim mono" style="font-size:11px">${ts()}</td>
+    </tr>`).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RENDER: INDICATORS
+═══════════════════════════════════════════════════════════════════════════ */
 function renderIndicators() {
-    document.getElementById('ind-ts').textContent = ts();
+    document.getElementById('ind-ts').textContent=ts();
     document.getElementById('ind-tbody').innerHTML=liveInd.map(r=>{
         const st=live.find(s=>s.symbol===r.symbol);
-        const price=st?st.current:0;
         const emaCls=r.ema==='Up'?'up':r.ema==='Down'?'dn':'gold';
         const volCls=r.vol==='Rising'?'up':r.vol==='Falling'?'dn':'muted';
-        const macdCls=r.macd>=0?'up':'dn';
         return `<tr>
             <td><div class="sym">${r.symbol}</div></td>
             <td>${rsiBar(r.rsi)}</td>
-            <td class="mono ${macdCls}">${r.macd>=0?'+':''}${r.macd.toFixed(2)}</td>
+            <td class="mono ${r.macd>=0?'up':'dn'}">${r.macd>=0?'+':''}${r.macd.toFixed(2)}</td>
             <td class="${emaCls}">${r.ema}</td>
             <td class="${volCls}">${r.vol}</td>
-            <td>${w52Bar(price,r.w52l,r.w52h)}</td>
-            <td class="mono muted">$${fmt(price)}</td>
+            <td>${st?w52Bar(st.current,r.w52l,r.w52h):''}</td>
+            <td class="mono muted">${st?'$'+fmt(st.current):''}</td>
         </tr>`;
     }).join('');
 }
 
-/* ── Tick simulation ─────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   RENDER: MY WATCHLIST
+═══════════════════════════════════════════════════════════════════════════ */
+function renderMyWatchlist() {
+    const content=document.getElementById('my-content');
+    const tsEl=document.getElementById('my-ts');
+    if(!content) return;
+    if(tsEl) tsEl.textContent=ts();
+    updateSearchCap();
+    if(!myList.length) {
+        content.innerHTML=`<div class="my-empty-state">
+            <span class="my-empty-icon">📋</span>
+            <p>Search for any stock above and click <strong style="color:var(--lap3)">Add to My List</strong> to build your custom watchlist.<br>
+            Up to ${MY_MAX} stocks · Full DCF · Scenarios · Monte Carlo projections.</p>
+        </div>`;
+        return;
+    }
+    const rows=myList.map(sym=>{
+        const r=myLiveMap[sym]; if(!r) return '';
+        const prev=prevPrices['my_'+sym]??r.open;
+        const up=r.current>=prev;
+        const chg=r.current-r.open, chgPct=chg/r.open*100;
+        prevPrices['my_'+sym]=r.current;
+        const h=HISTORY_MY[sym]||[r.current];
+        const sparkUp=(h[h.length-1]||r.current)>=(h[0]||r.current);
+        const mc=monteCarlo(r.current,r.basePct,r.sigma,200);
+        const sc=calcScenarios(r);
+        const dcf=calcDCF(r);
+        const mos=((dcf-r.current)/r.current*100);
+        const beatCls=mc.pBeat>=55?'up':mc.pBeat<=45?'dn':'gold';
+        return `<tr>
+            <td><div class="sym">${r.symbol}</div><div class="nm">${r.name}</div><span class="sector-tag">${r.sector}</span></td>
+            <td>${sparkSVG(h,sparkUp)}</td>
+            <td class="mono ${up?'up':'dn'} ${up?'flash-up':'flash-dn'}" style="font-size:15px;font-weight:700">${up?'▲':'▼'} $${fmt(r.current)}</td>
+            <td class="mono ${chg>=0?'up':'dn'}">${chg>=0?'+':''}${fmt(chg)}<br><span style="font-size:11px">${chgPct>=0?'+':''}${chgPct.toFixed(2)}%</span></td>
+            <td><span class="badge b-${r.signal}">${r.signal.toUpperCase()}</span></td>
+            <td class="${mos>=0?'up':'dn'} mono" style="font-weight:700">${mos>=0?'+':''}${mos.toFixed(1)}%<div class="dim" style="font-size:9px">DCF MoS</div></td>
+            <td class="mono" style="font-size:12px"><span class="dn">$${fmt(sc.bear)}</span><span class="dim"> — </span><span class="up">$${fmt(sc.bull)}</span></td>
+            <td class="mono gold" style="font-weight:700">$${fmt(mc.p50)}<div class="${beatCls}" style="font-size:9px">${mc.pBeat.toFixed(0)}% beat</div></td>
+            <td><span class="sell-win" style="font-size:10px">${r.sellWindow}</span></td>
+            <td><button class="btn-remove" onclick="myListRemove('${sym}')">✕ Remove</button></td>
+        </tr>`;
+    }).join('');
+    content.innerHTML=`<div class="tbl-wrap"><table>
+        <thead><tr>
+            <th>Symbol</th><th>Trend</th><th>Price</th><th>Change</th>
+            <th>Signal</th><th>DCF MoS</th><th>Scenarios (Bear–Bull)</th>
+            <th>MC P50</th><th>Sell Window</th><th></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+    </table></div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TICK
+═══════════════════════════════════════════════════════════════════════════ */
 function tick() {
     live.forEach(r => {
         r.current = jitter(r.current, 0.004);
-        r.confidence = clamp(r.confidence+Math.round((Math.random()-0.5)*4), 28, 98);
+        r.confidence = clamp(r.confidence + Math.round((Math.random()-0.5)*4), 28, 98);
         const h = HISTORY[r.symbol];
         h.push(r.current);
         if (h.length > 24) h.shift();
@@ -821,27 +1412,39 @@ function tick() {
         r.rsi  = clamp(r.rsi  + (Math.random()-0.5)*1.6, 12, 88);
         r.macd = r.macd + (Math.random()-0.5)*0.12;
     });
+    myList.forEach(sym => {
+        const r=myLiveMap[sym]; if(!r) return;
+        r.current=jitter(r.current,0.004);
+        r.confidence=clamp(r.confidence+Math.round((Math.random()-0.5)*4),28,98);
+        const h=HISTORY_MY[sym];
+        if(h){ h.push(r.current); if(h.length>24) h.shift(); }
+    });
 }
 
-/* ── Tab switching ───────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   NAV & CONTROLS
+═══════════════════════════════════════════════════════════════════════════ */
 function showTab(tab) {
     document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     document.getElementById('tab-'+tab).classList.add('active');
     document.querySelector(`.tab-btn[onclick="showTab('${tab}')"]`).classList.add('active');
 }
-
-/* ── Status ──────────────────────────────────────────────────────────────── */
-function setStatus(text, state) {
-    document.getElementById('s-text').textContent = text;
-    const dot=document.getElementById('s-dot');
-    dot.className='s-dot'+(state==='live'?' live':state==='stopped'?' stopped':'');
-    document.getElementById('s-stamp').textContent = 'Updated '+ts();
+function showFcTab(tab) {
+    document.querySelectorAll('.fc-pane').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.fc-tab').forEach(b=>b.classList.remove('active'));
+    document.getElementById('fc-'+tab).classList.add('active');
+    document.querySelector(`.fc-tab[onclick="showFcTab('${tab}')"]`).classList.add('active');
 }
-
-/* ── Public ──────────────────────────────────────────────────────────────── */
+function setStatus(text,state) {
+    document.getElementById('s-text').textContent=text;
+    const d=document.getElementById('s-dot');
+    d.className='s-dot'+(state==='live'?' live':state==='stopped'?' stopped':'');
+    document.getElementById('s-stamp').textContent='Updated '+ts();
+}
 function doRefresh() {
     renderWatchlist(); renderForecast(); renderSignals(); renderIndicators(); renderTicker();
+    renderMyWatchlist();
     setStatus(monitoring?'Live Monitoring':'Idle', monitoring?'live':'');
 }
 function startLive() {
@@ -855,17 +1458,21 @@ function stopLive() {
     setStatus('Stopped','stopped');
 }
 
-/* ── Keyboard shortcuts ──────────────────────────────────────────────────── */
+/* ── Clock ── */
+function updateClock() {
+    document.getElementById('live-clock').textContent=
+        new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+}
+setInterval(updateClock,1000); updateClock();
+
+/* ── Keyboard ── */
 document.addEventListener('keydown',e=>{
-    if ((e.ctrlKey||e.metaKey)&&e.key==='r'){ e.preventDefault(); doRefresh(); }
-    if ((e.ctrlKey||e.metaKey)&&e.key==='s'){ e.preventDefault(); startLive(); }
-    if ((e.ctrlKey||e.metaKey)&&e.key==='e'){ e.preventDefault(); stopLive(); }
+    if((e.ctrlKey||e.metaKey)&&e.key==='r'){e.preventDefault();doRefresh();}
+    if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();startLive();}
+    if((e.ctrlKey||e.metaKey)&&e.key==='e'){e.preventDefault();stopLive();}
 });
 window.addEventListener('beforeunload',stopLive);
-window.addEventListener('load',()=>{
-    doRefresh();
-    setStatus('Ready — click Start Live to begin','');
-});
+window.addEventListener('load',()=>{ loadMyList(); doRefresh(); setStatus('Ready — click Start Live to begin',''); });
 </script>
 </body>
 </html>
