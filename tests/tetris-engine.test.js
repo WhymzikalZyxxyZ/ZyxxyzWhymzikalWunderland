@@ -63,7 +63,6 @@ describe('rotateShape', () => {
         expect(s).toEqual(shape);
     });
     test('four rotations returns to original for L-piece', () => {
-        const shape = SHAPES[7].slice(0, 2).map(r => [...r]);
         let s = SHAPES[7].map(r => [...r]);
         for (let i = 0; i < 4; i++) s = rotateShape(s);
         expect(s[0]).toEqual(SHAPES[7][0]);
@@ -160,7 +159,6 @@ describe('clearLines', () => {
         expect(r.level).toBe(2);
     });
     test('does not mutate original board', () => {
-        const original = board[19].slice();
         board[19] = new Array(COLS).fill(1);
         clearLines(board, 0, 0, 1);
         expect(board[19]).toEqual(new Array(COLS).fill(1));

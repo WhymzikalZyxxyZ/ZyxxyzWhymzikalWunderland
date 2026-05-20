@@ -1,6 +1,6 @@
 'use strict';
 const {
-    PONG_W, PONG_H, PADDLE_W, PADDLE_H, BALL_R, PONG_MAX_SCORE,
+    PONG_W, PONG_H, PADDLE_H, BALL_R, PONG_MAX_SCORE,
     newPongState, pongTick, resetBall, getAIPaddleY, clampPaddleY
 } = require('../js/pong-engine');
 

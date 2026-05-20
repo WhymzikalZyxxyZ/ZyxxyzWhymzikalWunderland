@@ -110,7 +110,10 @@ func readMany(r *http.Request, key string) (datas [][]byte, names []string, err 
 		}
 		lr := io.LimitReader(f, maxFileSize+1)
 		buf := &bytes.Buffer{}
-		io.Copy(buf, lr)
+		if _, e := io.Copy(buf, lr); e != nil {
+			f.Close()
+			return nil, nil, e
+		}
 		f.Close()
 		if buf.Len() > maxFileSize {
 			return nil, nil, fmt.Errorf("%q exceeds 50 MB limit", fh.Filename)

@@ -107,7 +107,6 @@ describe('pokerAction fold', () => {
     });
     test('winner gets pot on last-player-standing', () => {
         let s = startPokerHand(newPokerState(['A','B']));
-        const potBefore = s.pot;
         s = pokerAction(s, 'fold');
         const winner = s.players.find(p => p.id === s.winner);
         expect(winner.chips).toBeGreaterThan(0);
