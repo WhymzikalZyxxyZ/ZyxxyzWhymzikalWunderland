@@ -98,27 +98,6 @@
 
         .esc-hint { font-size: 0.7rem; color: #2a2a2a; margin-top: 10px; }
 
-        /* ── Algorithm selector ─────────────────────────────────────────────── */
-        .algo-selector { margin: 20px 0 4px; text-align: center; }
-        .algo-label {
-            font-size: 0.62rem; color: #333; letter-spacing: 0.22em;
-            text-transform: uppercase; margin-bottom: 9px;
-        }
-        .algo-btns { display: flex; gap: 7px; justify-content: center; flex-wrap: wrap; }
-        .algo-btn {
-            padding: 6px 16px; border: 1px solid #232323; border-radius: 6px;
-            background: #0b0b0b; color: #444; font-size: 0.76rem; font-weight: 700;
-            letter-spacing: 0.06em; cursor: pointer; transition: all .18s;
-            font-family: monospace;
-        }
-        .algo-btn:hover { border-color: var(--gold); color: var(--gold); }
-        .algo-btn.active {
-            border-color: var(--gold); color: var(--gold);
-            background: rgba(212,168,83,0.08);
-        }
-        .algo-desc {
-            font-size: 0.69rem; color: #3a3a3a; margin-top: 9px; min-height: 1.3em;
-        }
 
         /* ── Overlays ───────────────────────────────────────────────────── */
         .dae-overlay {
@@ -196,16 +175,6 @@
         </p>
         <div id="bestBox">Best Run: <strong id="bestTitle">—</strong></div>
         <button class="dae-btn" id="startBtn">Enter the Labyrinth</button>
-        <div class="algo-selector">
-            <div class="algo-label">Enemy Pathfinding</div>
-            <div class="algo-btns">
-                <button class="algo-btn active" data-algo="bfs">BFS</button>
-                <button class="algo-btn"        data-algo="astar">A*</button>
-                <button class="algo-btn"        data-algo="dfs">DFS</button>
-                <button class="algo-btn"        data-algo="greedy">Greedy</button>
-            </div>
-            <div class="algo-desc" id="algoDesc">BFS · enemies always take the shortest path to you</div>
-        </div>
         <p class="key-hint">
             Arrow keys or WASD &nbsp;·&nbsp; <strong>hold</strong> to move continuously &nbsp;·&nbsp; <strong>click</strong> maze to pathfind<br>
             Levels 5–10 have enemies &nbsp;·&nbsp; Caught = +10 s penalty &amp; level restart &nbsp;·&nbsp; ESC to quit
@@ -281,12 +250,12 @@ const LEVELS = [
     { rows: 11, cols: 11, fog: 0, nEnemies: 0, speed: 0,   braid: 0.28 },
     { rows: 13, cols: 13, fog: 0, nEnemies: 0, speed: 0,   braid: 0.36 },
     { rows: 15, cols: 15, fog: 0, nEnemies: 0, speed: 0,   braid: 0.44 },
-    { rows: 17, cols: 17, fog: 0, nEnemies: 1, speed: 820, braid: 0.50 },
+    { rows: 17, cols: 17, fog: 0, nEnemies: 1, speed: 820, braid: 0.50, algo: 'bfs'    },
     { rows: 19, cols: 19, fog: 5, nEnemies: 0, speed: 0,   braid: 0.55 },
-    { rows: 21, cols: 21, fog: 5, nEnemies: 1, speed: 650, braid: 0.62 },
-    { rows: 23, cols: 23, fog: 4, nEnemies: 2, speed: 540, braid: 0.70 },
-    { rows: 25, cols: 25, fog: 4, nEnemies: 3, speed: 470, braid: 0.69 },
-    { rows: 29, cols: 29, fog: 3, nEnemies: 4, speed: 410, braid: 0.86, smart: 9 },
+    { rows: 21, cols: 21, fog: 5, nEnemies: 1, speed: 650, braid: 0.62, algo: 'astar'  },
+    { rows: 23, cols: 23, fog: 4, nEnemies: 2, speed: 540, braid: 0.70, algo: 'dfs'    },
+    { rows: 25, cols: 25, fog: 4, nEnemies: 3, speed: 470, braid: 0.69, algo: 'greedy' },
+    { rows: 29, cols: 29, fog: 3, nEnemies: 4, speed: 410, braid: 0.86, algo: 'bfs', smart: 9 },
 ];
 
 const PENALTY_MS  = 10000;
@@ -573,9 +542,8 @@ function greedyStep(grid, rows, cols, sr, sc, tr, tc) {
 }
 
 // ── Dispatcher ────────────────────────────────────────────────────────────────
-let selectedAlgo = 'bfs';
-function pathStep(grid, rows, cols, sr, sc, tr, tc) {
-    switch (selectedAlgo) {
+function pathStep(algo, grid, rows, cols, sr, sc, tr, tc) {
+    switch (algo) {
         case 'astar':  return astarStep(grid, rows, cols, sr, sc, tr, tc);
         case 'dfs':    return dfsStep(grid, rows, cols, sr, sc, tr, tc);
         case 'greedy': return greedyStep(grid, rows, cols, sr, sc, tr, tc);
@@ -803,13 +771,17 @@ function stepEnemies() {
             const mdist = Math.abs(en.r - pR) + Math.abs(en.c - pC);
             en.alerted  = mdist <= detectRange;
             if (en.alerted) {
-                next = pathStep(grid, cfg.rows, cfg.cols, en.r, en.c, pR, pC);
+                // In range: pursue player
+                next = pathStep(cfg.algo, grid, cfg.rows, cfg.cols, en.r, en.c, pR, pC);
+            } else {
+                // Out of range: patrol back toward the start point
+                next = pathStep(cfg.algo, grid, cfg.rows, cfg.cols, en.r, en.c, 0, 0);
             }
         } else {
             // Classic: 65% chance to pathfind, 35% random
             en.alerted = false;
             if (Math.random() < 0.65) {
-                next = pathStep(grid, cfg.rows, cfg.cols, en.r, en.c, pR, pC);
+                next = pathStep(cfg.algo, grid, cfg.rows, cfg.cols, en.r, en.c, pR, pC);
             }
         }
 
@@ -1457,23 +1429,6 @@ document.getElementById('playAgainBtn').addEventListener('click', () => {
 
 document.getElementById('quitBtn').addEventListener('click', () => {
     navigateToPage('/gamer/games');
-});
-
-// ── Algorithm selector ─────────────────────────────────────────────────────────
-const ALGO_DESC = {
-    bfs:    'BFS · enemies always take the shortest path to you',
-    astar:  'A* · heuristic-guided — explores toward you first, same optimal path',
-    dfs:    'DFS · depth-first with shuffled order — winding, unpredictable pursuit',
-    greedy: 'Greedy · rushes toward you by distance alone — bold but maze-blind',
-};
-
-document.querySelectorAll('.algo-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        selectedAlgo = btn.dataset.algo;
-        document.querySelectorAll('.algo-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('algoDesc').textContent = ALGO_DESC[selectedAlgo] || '';
-    });
 });
 
 // ── Init ───────────────────────────────────────────────────────────────────────
