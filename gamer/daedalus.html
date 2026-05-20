@@ -250,11 +250,11 @@ const LEVELS = [
     { rows: 13, cols: 13, fog: 0, nEnemies: 0, speed: 0,   braid: 0.36 },
     { rows: 15, cols: 15, fog: 0, nEnemies: 0, speed: 0,   braid: 0.44 },
     { rows: 17, cols: 17, fog: 0, nEnemies: 1, speed: 820, braid: 0.50 },
-    { rows: 19, cols: 19, fog: 5, nEnemies: 1, speed: 700, braid: 0.55 },
+    { rows: 19, cols: 19, fog: 5, nEnemies: 0, speed: 0,   braid: 0.55 },
     { rows: 21, cols: 21, fog: 5, nEnemies: 1, speed: 650, braid: 0.62 },
     { rows: 23, cols: 23, fog: 4, nEnemies: 2, speed: 540, braid: 0.70 },
-    { rows: 25, cols: 25, fog: 4, nEnemies: 3, speed: 470, braid: 0.78 },
-    { rows: 29, cols: 29, fog: 3, nEnemies: 4, speed: 410, braid: 0.86 },
+    { rows: 25, cols: 25, fog: 4, nEnemies: 3, speed: 470, braid: 0.69 },
+    { rows: 29, cols: 29, fog: 3, nEnemies: 4, speed: 410, braid: 0.86, smart: 9 },
 ];
 
 const PENALTY_MS  = 10000;
@@ -340,12 +340,21 @@ function drawMaze(grid, rows, cols, pR, pC, exitR, exitC, enemies, fogCells) {
 
     // Enemies
     enemies.forEach(en => {
-        const p2 = 0.65 + 0.35 * Math.sin(Date.now() / 280 + en.r + en.c);
-        glowDot(
-            en.c * cellSize + cellSize / 2,
-            en.r * cellSize + cellSize / 2,
-            cellSize * 0.38, `rgba(224,80,80,${p2})`, '#e05050', 0.2
-        );
+        const ex = en.c * cellSize + cellSize / 2;
+        const ey = en.r * cellSize + cellSize / 2;
+        if (en.alerted) {
+            // Locked-on: bright orange-red, fast pulse, outer warning ring
+            const pa = 0.72 + 0.28 * Math.sin(Date.now() / 100 + en.r * 3 + en.c);
+            ctx.strokeStyle = `rgba(255,100,20,${pa * 0.45})`;
+            ctx.lineWidth   = Math.max(1, cellSize / 9);
+            ctx.beginPath();
+            ctx.arc(ex, ey, cellSize * 0.60, 0, Math.PI * 2);
+            ctx.stroke();
+            glowDot(ex, ey, cellSize * 0.46, `rgba(255,90,20,${pa})`, '#ff5514', 0.26);
+        } else {
+            const p2 = 0.65 + 0.35 * Math.sin(Date.now() / 280 + en.r + en.c);
+            glowDot(ex, ey, cellSize * 0.38, `rgba(224,80,80,${p2})`, '#e05050', 0.2);
+        }
     });
 
     // Player
@@ -603,7 +612,7 @@ function resetEnemies(cfg) {
         const ec = Math.min(cfg.cols - 1, Math.round(cf * (cfg.cols - 1)));
         // Don't spawn on player start or exit
         const safe = !(er === 0 && ec === 0) && !(er === exitR && ec === exitC);
-        enemies.push({ r: safe ? er : Math.floor(cfg.rows / 2), c: safe ? ec : Math.floor(cfg.cols / 2) });
+        enemies.push({ r: safe ? er : Math.floor(cfg.rows / 2), c: safe ? ec : Math.floor(cfg.cols / 2), alerted: false });
     }
 }
 
@@ -652,13 +661,30 @@ function updateHudBest() {
 // ── Enemy AI ──────────────────────────────────────────────────────────────────
 function stepEnemies() {
     if (STATE !== 'playing') return;
-    const cfg = LEVELS[levelIdx];
+    const cfg        = LEVELS[levelIdx];
+    const detectRange = cfg.smart || 0;
+
     enemies.forEach(en => {
         let next = null;
-        if (Math.random() < 0.65) {
-            next = bfsStep(grid, cfg.rows, cfg.cols, en.r, en.c, pR, pC);
+
+        if (detectRange > 0) {
+            // Smart enemy: lock on with perfect BFS when player is within range,
+            // otherwise wander randomly.
+            const mdist = Math.abs(en.r - pR) + Math.abs(en.c - pC);
+            en.alerted  = mdist <= detectRange;
+            if (en.alerted) {
+                next = bfsStep(grid, cfg.rows, cfg.cols, en.r, en.c, pR, pC);
+            }
+        } else {
+            // Classic: 65% chance to pathfind, 35% random
+            en.alerted = false;
+            if (Math.random() < 0.65) {
+                next = bfsStep(grid, cfg.rows, cfg.cols, en.r, en.c, pR, pC);
+            }
         }
+
         if (!next) {
+            // Random walk fallback
             const opts = DIRS.filter(d => {
                 if (grid[en.r][en.c] & d) return false;
                 const nr = en.r + DR[d], nc = en.c + DC[d];
@@ -669,6 +695,7 @@ function stepEnemies() {
                 next = [en.r + DR[d], en.c + DC[d]];
             }
         }
+
         if (next) { en.r = next[0]; en.c = next[1]; }
     });
     checkCatch();
