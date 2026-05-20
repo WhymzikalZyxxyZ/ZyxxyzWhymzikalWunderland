@@ -860,14 +860,14 @@ function runCutscene() {
     const T0 = performance.now();
 
     // ── Phase timings (seconds) ───────────────────────────────────────────────
-    const PH_RUN         = 1.8;   // panting sprint toward exit
-    const PH_LOOK_BACK   = 2.6;   // whip-pan: minotaur staring
-    const PH_GLANCE_EXIT = 3.4;   // glance aside: Icarus falls through doorway
-    const PH_CHARGING    = 4.5;   // face minotaur: charging, horns lowered
-    const PH_DESPERATE   = 5.8;   // turn back: jagged exhausted run
-    const PH_TRAMPLE     = 6.5;   // trampled
-    const PH_BLACK       = 7.1;   // black
-    const PH_TEXT        = 7.4;   // text types out
+    const PH_SPRINT      = 2.2;   // exasperated sprint toward exit
+    const PH_LOOKBACK1   = 3.2;   // whip-pan: minotaur far, first glimpse
+    const PH_EXIT_GLANCE = 4.4;   // face exit: Icarus tiny in sky, feathers melting
+    const PH_LOOKBACK2   = 5.5;   // whip-pan: minotaur closer, heavy footfalls
+    const PH_EXIT_GROW   = 6.6;   // sprint: exit aperture surges open
+    const PH_COLLISION   = 7.4;   // final look back: minotaur fills screen, impact
+    const PH_BLACK       = 7.9;   // black
+    const PH_TEXT        = 8.2;   // text types out
 
     // ── First-person stone corridor ───────────────────────────────────────────
     // direction: 'fwd' = exit light ahead; 'back' = darkness ahead (looking behind)
@@ -1056,75 +1056,74 @@ function runCutscene() {
         cx.lineCap = 'butt';
     }
 
-    // ── Look-aside: exit doorway with Icarus ─────────────────────────────────
-    function drawExitGlance(phase, icarusT) {
-        const dLeft = W * 0.30, dTop = H * 0.12, dBot = H * 0.88;
-        const dW = W - dLeft, dH = dBot - dTop;
+    // ── Forward corridor with tiny Icarus visible far in the sky ────────────
+    function drawExitGlance(phase, icarusT, melt) {
+        const depth  = 0.24;
+        const torchT = icarusT;
+        drawCorridor('fwd', depth, torchT);
 
-        const sky = cx.createLinearGradient(dLeft, dTop, dLeft, dBot);
-        sky.addColorStop(0,    '#0a0520'); sky.addColorStop(0.42, '#2a1060');
-        sky.addColorStop(0.72, '#7a1850'); sky.addColorStop(1,    '#c85000');
-        cx.fillStyle = sky; cx.fillRect(dLeft, dTop, dW, dH);
+        // Aperture geometry (must match drawCorridor formulas)
+        const vx   = W / 2, vy = H / 2;
+        const apt  = W * (0.045 + depth * 0.22);
+        const aptH = apt * 0.60;
+        const aL   = vx - apt, aR = vx + apt;
+        const aT   = vy - aptH, aB = vy + aptH;
 
-        const hg = cx.createRadialGradient(W, dBot, 0, W, dBot, dW * 1.2);
-        hg.addColorStop(0,   'rgba(255,160,30,0.85)');
-        hg.addColorStop(0.4, 'rgba(200,60,0,0.38)');
-        hg.addColorStop(1,   'rgba(0,0,0,0)');
-        cx.save(); cx.beginPath(); cx.rect(dLeft, dTop, dW, dH); cx.clip();
-        cx.fillStyle = hg; cx.fillRect(dLeft, dTop, dW, dH); cx.restore();
+        // Icarus — tiny silhouette high in the distant sky
+        const fp   = Math.min(1, icarusT / 1.0);
+        const isz  = apt * 0.44;                          // small — far away
+        const ix   = vx + apt * 0.08;                     // slightly right of centre
+        const iy   = aT + aptH * 0.30 + Math.sin(fp * 9) * isz * 0.06;  // gentle tumble
+        cx.save();
+        cx.beginPath(); cx.rect(aL, aT, aR - aL, aB - aT); cx.clip();
+        drawIcarus(ix, iy, isz, fp, melt);
+        cx.restore();
 
-        if (icarusT >= 0) {
-            const ip  = Math.min(1, icarusT / 1.6);
-            const isz = dH * 0.28;
-            const ix  = dLeft + dW * (0.55 - ip * 0.30);
-            const iy  = dTop  - isz * 0.4 + (dH + isz) * ip;
-            if (iy < dBot + isz) {
-                cx.save(); cx.beginPath(); cx.rect(dLeft, dTop, dW, dH); cx.clip();
-                drawIcarus(ix, iy, isz, ip);
-                cx.restore();
-            }
-        }
-
-        // Stone wall on left
-        const wG = cx.createLinearGradient(0, 0, dLeft, 0);
-        wG.addColorStop(0, '#1c1610'); wG.addColorStop(1, '#0e0b08');
-        cx.fillStyle = wG; cx.fillRect(0, 0, dLeft, H);
-
-        cx.strokeStyle = '#5c4a34'; cx.lineWidth = 2.5;
-        cx.strokeRect(dLeft, dTop, dW, dH);
-        cx.beginPath(); cx.moveTo(dLeft, dTop); cx.lineTo(0, 0); cx.stroke();
-        cx.beginPath(); cx.moveTo(dLeft, dBot); cx.lineTo(0, H); cx.stroke();
-
-        // Fade in then hold
-        const fadeIn = Math.min(1, phase / 0.25);
+        // Fade in/out
+        const fadeIn = Math.min(1, phase / 0.22);
         if (fadeIn < 1) { cx.fillStyle = `rgba(0,0,0,${1 - fadeIn})`; cx.fillRect(0, 0, W, H); }
-        const fadeOut = phase > 0.78 ? (phase - 0.78) / 0.22 : 0;
+        const fadeOut = phase > 0.80 ? (phase - 0.80) / 0.20 : 0;
         if (fadeOut > 0) { cx.fillStyle = `rgba(0,0,0,${fadeOut})`; cx.fillRect(0, 0, W, H); }
     }
 
     // ── Icarus: falling figure silhouette ───────────────────────────────────
-    function drawIcarus(x, y, sz, fp) {
-        cx.save(); cx.translate(x, y);
-        const a = 0.9 - fp * 0.35;
+    // melt 0→1: wings shed feathers, wax drips, silhouette becomes ragged
+    function drawIcarus(x, y, sz, fp, melt = 0) {
+        cx.save();
+        cx.translate(x, y);
+        // Slight tumble rotation increases with fall progress
+        cx.rotate((fp - 0.4) * 0.28 + Math.sin(fp * 7.5) * 0.06);
+
+        const a = 0.88 - fp * 0.30;
         cx.strokeStyle = `rgba(255,200,80,${a})`;
         cx.fillStyle   = `rgba(255,200,80,${a})`;
         cx.lineWidth   = Math.max(1, sz * 0.07); cx.lineCap = 'round';
+
+        // Head
         cx.beginPath(); cx.arc(0, -sz * 0.52, sz * 0.13, 0, Math.PI * 2); cx.fill();
+        // Body, arms, legs
         cx.beginPath();
         cx.moveTo(0, -sz * 0.38); cx.lineTo(0,  sz * 0.22);
         cx.moveTo(-sz * 0.18, -sz * 0.08); cx.lineTo(sz * 0.18, -sz * 0.08);
         cx.moveTo(0,  sz * 0.22);  cx.lineTo(-sz * 0.12, sz * 0.48);
         cx.moveTo(0,  sz * 0.22);  cx.lineTo( sz * 0.12, sz * 0.48);
         cx.stroke();
+
+        // Wings — progressively sparse as melt rises
         cx.lineWidth = Math.max(1, sz * 0.055);
-        const wLen = sz * 0.85;
+        const wLen      = sz * 0.85;
+        const wingAlpha = Math.max(0.08, a * (1 - melt * 0.72));
         [-1, 1].forEach(side => {
+            cx.strokeStyle = `rgba(255,200,80,${wingAlpha})`;
+            // Main wing arc
             cx.beginPath();
             cx.moveTo(side * sz * 0.12, -sz * 0.18);
             cx.quadraticCurveTo(side * wLen * 0.5, -sz * 0.52, side * wLen, -sz * 0.04);
             cx.stroke();
-            for (let i = 1; i <= 4; i++) {
-                const rt  = i / 5;
+            // Barbs — count drops with melt
+            const barbCount = Math.max(1, Math.round(4 * (1 - melt * 0.70)));
+            for (let i = 1; i <= barbCount; i++) {
+                const rt  = i / (barbCount + 1);
                 const rbx = side * (sz * 0.12 + (wLen - sz * 0.12) * rt);
                 const rby = -sz * 0.18 + (-sz * 0.04 + sz * 0.18) * rt - Math.sin(rt * Math.PI) * sz * 0.34;
                 cx.beginPath();
@@ -1132,16 +1131,58 @@ function runCutscene() {
                 cx.lineTo(rbx + side * sz * 0.04, rby + sz * 0.16 * (1 - rt * 0.4));
                 cx.stroke();
             }
+            // Drooping melted barbs (wax-heavy) — only at high melt
+            if (melt > 0.35) {
+                const dropA = (melt - 0.35) / 0.65;
+                cx.strokeStyle = `rgba(255,190,60,${wingAlpha * dropA * 0.7})`;
+                for (let i = 0; i < 3; i++) {
+                    const rt  = (i + 1) / 4;
+                    const rbx = side * (sz * 0.12 + (wLen - sz * 0.12) * rt);
+                    const rby = -sz * 0.18 + (-sz * 0.04 + sz * 0.18) * rt - Math.sin(rt * Math.PI) * sz * 0.34;
+                    cx.beginPath();
+                    cx.moveTo(rbx, rby);
+                    cx.quadraticCurveTo(rbx + side * sz * 0.02, rby + sz * 0.12 * dropA, rbx, rby + sz * 0.22 * dropA);
+                    cx.stroke();
+                }
+            }
         });
         cx.restore();
-        for (let i = 0; i < 4; i++) {
-            const ang = i * 1.57 + fp * 3.5;
-            const d   = sz * (0.55 + (i % 2) * 0.28);
+
+        // Wax drips from hands
+        if (melt > 0.25) {
+            const waxA = (melt - 0.25) / 0.75;
+            for (let i = 0; i < 3; i++) {
+                const handX = x + (i - 1) * sz * 0.18;
+                const handY = y - sz * 0.08 + sz * 0.06 * (i % 2);
+                const dripH = sz * 0.18 * waxA * (0.7 + i * 0.25);
+                const dg = cx.createLinearGradient(handX, handY, handX, handY + dripH);
+                dg.addColorStop(0,   `rgba(255,220,90,${0.55 * waxA})`);
+                dg.addColorStop(1,   `rgba(255,200,70,0)`);
+                cx.fillStyle = dg;
+                cx.beginPath();
+                cx.ellipse(handX, handY + dripH * 0.5, sz * 0.016, dripH * 0.5, 0, 0, Math.PI * 2);
+                cx.fill();
+            }
+        }
+
+        // Feather particles — density grows with melt
+        const nFeathers = 4 + Math.round(melt * 16);
+        for (let i = 0; i < nFeathers; i++) {
+            const phi  = i * 2.39996;                           // golden-angle spread
+            const dist = sz * (0.38 + (i % 5) * 0.20 + melt * 0.35);
+            const ang  = phi + fp * (2.2 + i * 0.28);
+            const fx   = x + Math.cos(ang) * dist;
+            const fy   = y + Math.sin(ang) * dist * 0.55
+                           + fp * sz * (1.0 + melt * 1.6)
+                           + i * sz * 0.06 * melt;             // fall further with melt
+            const fAlpha = Math.max(0, (0.55 - fp * 0.28) * (i < 5 ? 1 : Math.max(0, 1 - (i - 5) / nFeathers)));
             cx.save();
-            cx.translate(x + Math.cos(ang) * d, y + Math.sin(ang) * d * 0.5 + fp * sz * 1.8);
-            cx.rotate(ang + fp * 2);
-            cx.fillStyle = `rgba(255,190,60,${Math.max(0, 0.5 - fp * 0.35)})`;
-            cx.beginPath(); cx.ellipse(0, 0, sz * 0.035, sz * 0.10, 0, 0, Math.PI * 2); cx.fill();
+            cx.translate(fx, fy);
+            cx.rotate(ang + fp * 3.2 + i * 0.7);
+            cx.fillStyle = `rgba(255,190,60,${fAlpha})`;
+            cx.beginPath();
+            cx.ellipse(0, 0, sz * 0.022, sz * (0.072 + melt * 0.038), 0, 0, Math.PI * 2);
+            cx.fill();
             cx.restore();
         }
     }
@@ -1158,98 +1199,144 @@ function runCutscene() {
     // ── Main tick ─────────────────────────────────────────────────────────────
     function tick(ts) {
         const t = (ts - T0) / 1000;
-
         cx.fillStyle = '#020104'; cx.fillRect(0, 0, W, H);
 
-        // ── Phase 0: Panting sprint toward exit ───────────────────────────
-        if (t < PH_RUN) {
-            const p      = t / PH_RUN;
-            const depth  = 0.08 + p * 0.32;
-            const wobble = 0.7 + p * 0.6;
-            const bobY   = Math.sin(t * 7.8) * 15 * wobble;
-            const bobX   = Math.sin(t * 3.9 + 0.5) * 6 * wobble;
-            cx.save(); cx.translate(bobX, bobY);
+        // ── Phase 0: Exasperated sprint toward exit ───────────────────────
+        if (t < PH_SPRINT) {
+            const p     = t / PH_SPRINT;
+            const depth = 0.08 + p * 0.26;
+            const wobble = 0.65 + p * 0.90;
+            const bobY   = (Math.sin(t * 7.4) * 22 + Math.sin(t * 14.8) * 8) * wobble;
+            const bobX   = (Math.sin(t * 3.7) * 11 + Math.sin(t * 9.3)  * 4) * wobble;
+            const tilt   = Math.sin(t * 3.7) * 0.036 * (0.5 + p);
+            cx.save();
+            cx.translate(W / 2, H / 2); cx.rotate(tilt);
+            cx.translate(-W / 2 + bobX, -H / 2 + bobY);
             drawCorridor('fwd', depth, t);
             cx.restore();
-            const hb = Math.max(0, Math.sin(t * 5.0) * 0.6);
-            drawVignette(0.30 + hb * 0.28, 140, 0, 0);
+            const hb = Math.max(0, Math.sin(t * 5.2) * 0.55);
+            drawVignette(0.28 + p * 0.18 + hb * 0.22, 138, 0, 0);
         }
 
-        // ── Phase 1: Whip-pan back — minotaur revealed, staring ──────────
-        else if (t < PH_LOOK_BACK) {
-            const p = (t - PH_RUN) / (PH_LOOK_BACK - PH_RUN);
-            drawCorridor('back', 0.04, t);
-            drawMinotaur(0.28 + p * 0.14, p * 0.10, 0.35 + p * 0.50);
-            // Whip-pan flash
-            const flashA = t < PH_RUN + 0.16 ? (1 - (t - PH_RUN) / 0.16) * 0.88 : 0;
-            if (flashA > 0) { cx.fillStyle = `rgba(255,255,255,${flashA})`; cx.fillRect(0, 0, W, H); }
-            drawVignette(0.50 + p * 0.22, 120, 0, 0);
-        }
-
-        // ── Phase 2: Look aside — exit doorway, Icarus falls ─────────────
-        else if (t < PH_GLANCE_EXIT) {
-            const phase  = (t - PH_LOOK_BACK) / (PH_GLANCE_EXIT - PH_LOOK_BACK);
-            drawExitGlance(phase, t - PH_LOOK_BACK);
-            drawVignette(0.45, 110, 0, 0);
-        }
-
-        // ── Phase 3: Back to minotaur — charging, horns lowering ─────────
-        else if (t < PH_CHARGING) {
-            const p = (t - PH_GLANCE_EXIT) / (PH_CHARGING - PH_GLANCE_EXIT);
-            // Footfall ground shake
-            const stepShake = Math.abs(Math.sin(t * 3.4 * Math.PI)) * p;
-            const shakeX = Math.sin(t * 31.5) * stepShake * 10;
-            const shakeY = stepShake * 7;
+        // ── Phase 1: Whip-pan back — minotaur, first glimpse (far) ──────
+        else if (t < PH_LOOKBACK1) {
+            const p = (t - PH_SPRINT) / (PH_LOOKBACK1 - PH_SPRINT);
+            const thud   = Math.pow(Math.max(0, Math.sin(t * 3.8 * Math.PI)), 3);
+            const shakeX = Math.sin(t * 39) * thud * 14;
+            const shakeY = thud * 10 * (0.5 + p * 0.7);
             cx.save(); cx.translate(shakeX, shakeY);
-            drawCorridor('back', 0.04 + p * 0.05, t);
-            drawMinotaur(0.42 + p * 0.58, p * 0.95, 0.72 + p * 0.28);
+            drawCorridor('back', 0.04, t);
+            drawMinotaur(0.20 + p * 0.18, p * 0.12, 0.28 + p * 0.52);
             cx.restore();
-            // Red eye-bleed onto walls
-            const bleed = cx.createRadialGradient(W/2, H * 0.45, 0, W/2, H * 0.45, W * 0.5);
-            bleed.addColorStop(0,   `rgba(180,0,0,${p * 0.24})`);
-            bleed.addColorStop(0.5, `rgba(120,0,0,${p * 0.11})`);
+            const flashA = t < PH_SPRINT + 0.14 ? (1 - (t - PH_SPRINT) / 0.14) * 0.92 : 0;
+            if (flashA > 0) { cx.fillStyle = `rgba(255,255,255,${flashA})`; cx.fillRect(0, 0, W, H); }
+            drawVignette(0.46 + p * 0.24, 118, 0, 0);
+        }
+
+        // ── Phase 2: Face exit — Icarus tiny in sky, feathers melting ────
+        else if (t < PH_EXIT_GLANCE) {
+            const phase   = (t - PH_LOOKBACK1) / (PH_EXIT_GLANCE - PH_LOOKBACK1);
+            const icarusT = t - PH_LOOKBACK1;
+            const melt    = Math.min(1, icarusT / 0.9);
+            const thud    = Math.pow(Math.max(0, Math.sin(t * 4.0 * Math.PI)), 3);
+            const shakeX  = Math.sin(t * 33) * thud * 6;
+            const shakeY  = thud * 5;
+            cx.save(); cx.translate(shakeX, shakeY);
+            drawCorridor('fwd', 0.24, t);
+            cx.restore();
+            // Icarus clipped to aperture, drawn without shake offset
+            const vxg = W / 2, vyg = H / 2;
+            const aptg  = W * (0.045 + 0.24 * 0.22);
+            const aptHg = aptg * 0.60;
+            const fp2   = Math.min(1, icarusT / 1.0);
+            const isz2  = aptg * 0.44;
+            const ix2   = vxg + aptg * 0.08;
+            const iy2   = vyg - aptHg + aptHg * 0.30 + Math.sin(fp2 * 9) * isz2 * 0.06;
+            cx.save();
+            cx.beginPath();
+            cx.rect(vxg - aptg, vyg - aptHg, aptg * 2, aptHg * 2); cx.clip();
+            drawIcarus(ix2, iy2, isz2, fp2, melt);
+            cx.restore();
+            const fadeIn = Math.min(1, phase / 0.22);
+            if (fadeIn < 1) { cx.fillStyle = `rgba(0,0,0,${1 - fadeIn})`; cx.fillRect(0, 0, W, H); }
+            const fadeOut = phase > 0.80 ? (phase - 0.80) / 0.20 : 0;
+            if (fadeOut > 0) { cx.fillStyle = `rgba(0,0,0,${fadeOut})`; cx.fillRect(0, 0, W, H); }
+            drawVignette(0.40, 108, 0, 0);
+        }
+
+        // ── Phase 3: Whip-pan back — minotaur closer, heavy thuds ────────
+        else if (t < PH_LOOKBACK2) {
+            const p = (t - PH_EXIT_GLANCE) / (PH_LOOKBACK2 - PH_EXIT_GLANCE);
+            const thud   = Math.pow(Math.max(0, Math.sin(t * 4.2 * Math.PI)), 2);
+            const shakeX = Math.sin(t * 43) * thud * 20;
+            const shakeY = thud * 16 * (0.6 + p * 0.6);
+            const tilt   = Math.sin(t * 4.2 * Math.PI) * 0.030 * (0.5 + p);
+            cx.save();
+            cx.translate(W / 2, H / 2); cx.rotate(tilt);
+            cx.translate(-W / 2 + shakeX, -H / 2 + shakeY);
+            drawCorridor('back', 0.04 + p * 0.04, t);
+            drawMinotaur(0.44 + p * 0.22, 0.18 + p * 0.74, 0.70 + p * 0.30);
+            cx.restore();
+            const flashA = t < PH_EXIT_GLANCE + 0.13 ? (1 - (t - PH_EXIT_GLANCE) / 0.13) * 0.90 : 0;
+            if (flashA > 0) { cx.fillStyle = `rgba(255,255,255,${flashA})`; cx.fillRect(0, 0, W, H); }
+            const bleed = cx.createRadialGradient(W / 2, H * 0.45, 0, W / 2, H * 0.45, W * 0.52);
+            bleed.addColorStop(0,   `rgba(175,0,0,${p * 0.26})`);
+            bleed.addColorStop(0.5, `rgba(100,0,0,${p * 0.12})`);
             bleed.addColorStop(1,   'rgba(0,0,0,0)');
             cx.fillStyle = bleed; cx.fillRect(0, 0, W, H);
-            drawVignette(0.58 + p * 0.32, 160, 0, 0);
+            drawVignette(0.52 + p * 0.32, 152, 0, 0);
         }
 
-        // ── Phase 4: Desperate jagged run — minotaur closing in ──────────
-        else if (t < PH_DESPERATE) {
-            const p     = (t - PH_CHARGING) / (PH_DESPERATE - PH_CHARGING);
-            // Erratic exhausted camera: heavy primary bob + high-freq tremor
-            const bobY  = (Math.sin(t * 6.6) * 20 + Math.sin(t * 13.8) * 7) * (0.9 + p * 0.3);
-            const bobX  = (Math.sin(t * 3.4) * 12 + Math.sin(t * 10.2) * 5) * (0.9 + p * 0.3);
-            const depth = 0.38 + p * 0.08;  // exit barely gets closer — hopeless
-            cx.save(); cx.translate(bobX, bobY);
+        // ── Phase 4: Exit surges open — sprinting, aperture expanding ────
+        else if (t < PH_EXIT_GROW) {
+            const p     = (t - PH_LOOKBACK2) / (PH_EXIT_GROW - PH_LOOKBACK2);
+            const depth = 0.32 + Math.pow(p, 1.7) * 0.62;
+            const wobble = 0.85 + p * 0.60;
+            const bobY  = (Math.sin(t * 8.2) * 26 + Math.sin(t * 16.4) * 10) * wobble;
+            const bobX  = (Math.sin(t * 4.1) * 14 + Math.sin(t * 11.5) *  5) * wobble;
+            const tilt  = Math.sin(t * 4.1) * 0.048 * (0.55 + p * 0.9);
+            cx.save();
+            cx.translate(W / 2, H / 2); cx.rotate(tilt);
+            cx.translate(-W / 2 + bobX, -H / 2 + bobY);
             drawCorridor('fwd', depth, t);
             cx.restore();
-            // Minotaur's silhouette bleeds in from behind as dark overlay
-            if (p > 0.25) {
-                const mp = (p - 0.25) / 0.75;
-                cx.globalAlpha = mp * 0.68;
-                drawMinotaur(0.40 + mp * 0.55, 0.92, 0.80 + mp * 0.20);
+            if (p > 0.28) {
+                const mp = (p - 0.28) / 0.72;
+                cx.globalAlpha = mp * 0.60;
+                drawMinotaur(0.42 + mp * 0.45, 0.94, 0.88 + mp * 0.12);
                 cx.globalAlpha = 1;
             }
-            drawVignette(0.62 + p * 0.36, 160, 0, 0);
-            // Scene darkens at end — dread
-            if (p > 0.82) { cx.fillStyle = `rgba(0,0,0,${(p - 0.82) / 0.18 * 0.45})`; cx.fillRect(0, 0, W, H); }
+            drawVignette(0.58 + p * 0.34, 158, 0, 0);
         }
 
-        // ── Phase 5: Trampled ─────────────────────────────────────────────
+        // ── Phase 5: Final look back — collision ──────────────────────────
         else if (t < PH_BLACK) {
-            const p = (t - PH_DESPERATE) / (PH_BLACK - PH_DESPERATE);
-            if (p < 0.28) {
-                // Minotaur rushes to fill screen
-                const mp = p / 0.28;
-                drawMinotaur(0.88 + mp * 0.65, 0.96 + mp * 0.04, 1.0);
-                cx.fillStyle = `rgba(200,0,0,${mp * 0.55})`; cx.fillRect(0, 0, W, H);
+            const p = (t - PH_EXIT_GROW) / (PH_BLACK - PH_EXIT_GROW);
+            if (p < 0.35) {
+                const mp  = p / 0.35;
+                const jx  = (Math.random() - 0.5) * 32 * mp;
+                const jy  = (Math.random() - 0.5) * 26 * mp;
+                cx.save(); cx.translate(jx, jy);
+                drawCorridor('back', 0.04, t);
+                drawMinotaur(0.72 + mp * 0.95, 0.95 + mp * 0.05, 1.0);
+                cx.restore();
+                const flashA = t < PH_EXIT_GROW + 0.12 ? (1 - (t - PH_EXIT_GROW) / 0.12) * 0.92 : 0;
+                if (flashA > 0) { cx.fillStyle = `rgba(255,255,255,${flashA})`; cx.fillRect(0, 0, W, H); }
+                cx.fillStyle = `rgba(200,0,0,${mp * 0.62})`; cx.fillRect(0, 0, W, H);
+                drawVignette(0.68 + mp * 0.32, 185, 0, 0);
             } else {
-                // Impact blast: red flash → black
-                const ip = (p - 0.28) / 0.72;
-                cx.fillStyle = ip < 0.20
-                    ? `rgb(${Math.round(200 * (1 - ip / 0.20))},0,0)`
-                    : `rgba(0,0,0,${(ip - 0.20) / 0.80})`;
-                cx.fillRect(0, 0, W, H);
+                // Bone-white flash → crimson → black
+                const ip = (p - 0.35) / 0.65;
+                if (ip < 0.12) {
+                    cx.fillStyle = 'rgb(255,255,255)'; cx.fillRect(0, 0, W, H);
+                } else if (ip < 0.34) {
+                    const rp = (ip - 0.12) / 0.22;
+                    cx.fillStyle = `rgb(${Math.round(255 - rp * 55)},${Math.round(255 * (1 - rp))},${Math.round(255 * (1 - rp))})`;
+                    cx.fillRect(0, 0, W, H);
+                } else {
+                    cx.fillStyle = `rgba(0,0,0,${Math.min(1, (ip - 0.34) / 0.66)})`;
+                    cx.fillRect(0, 0, W, H);
+                }
             }
         }
 
