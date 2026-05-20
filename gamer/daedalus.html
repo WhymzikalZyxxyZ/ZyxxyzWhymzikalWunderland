@@ -243,8 +243,11 @@ const DC   = { [N]: 0,  [S]: 0, [E]: 1,  [W]: -1 };
 const DIRS = [N, S, E, W];
 
 // ── Level configs ────────────────────────────────────────────────────────────
-//   fog: vision radius in cells (0 = none)
-//   speed: enemy move interval ms (0 = no enemies)
+//   fog:    vision radius in cells (0 = full visibility)
+//   speed:  enemy move interval ms (0 = no enemies)
+//   algo:   pathfinding algorithm used by enemies ('bfs'|'astar'|'dfs'|'greedy')
+//   smart:  Manhattan detection radius; enemies lock on within range and patrol
+//           back to (0,0) outside it (only set on the final level)
 const LEVELS = [
     { rows:  9, cols:  9, fog: 0, nEnemies: 0, speed: 0,   braid: 0.20 },
     { rows: 11, cols: 11, fog: 0, nEnemies: 0, speed: 0,   braid: 0.28 },
@@ -766,8 +769,7 @@ function stepEnemies() {
         let next = null;
 
         if (detectRange > 0) {
-            // Smart enemy: lock on with perfect BFS when player is within range,
-            // otherwise wander randomly.
+            // Smart enemy: lock on and pursue when player within Manhattan range; patrol to (0,0) when out of range.
             const mdist = Math.abs(en.r - pR) + Math.abs(en.c - pC);
             en.alerted  = mdist <= detectRange;
             if (en.alerted) {
@@ -778,7 +780,7 @@ function stepEnemies() {
                 next = pathStep(cfg.algo, grid, cfg.rows, cfg.cols, en.r, en.c, 0, 0);
             }
         } else {
-            // Classic: 65% chance to pathfind, 35% random
+            // Classic: 69% chance to pathfind toward player, 31% random walk
             en.alerted = false;
             if (Math.random() < 0.69) {
                 next = pathStep(cfg.algo, grid, cfg.rows, cfg.cols, en.r, en.c, pR, pC);
@@ -1100,7 +1102,7 @@ function runCutscene() {
         if (fadeOut > 0) { cx.fillStyle = `rgba(0,0,0,${fadeOut})`; cx.fillRect(0, 0, W, H); }
     }
 
-    // ── Icarus (unchanged from original) ─────────────────────────────────────
+    // ── Icarus: falling figure silhouette ───────────────────────────────────
     function drawIcarus(x, y, sz, fp) {
         cx.save(); cx.translate(x, y);
         const a = 0.9 - fp * 0.35;
