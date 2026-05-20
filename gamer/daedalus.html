@@ -1187,6 +1187,89 @@ function runCutscene() {
         }
     }
 
+    // ── Icarus: sprawled on the ground ───────────────────────────────────────
+    // Drawn lying on his back at (x, y), body horizontal, wings spread upward.
+    function drawIcarusGrounded(x, y, sz, melt = 1) {
+        cx.save(); cx.translate(x, y);
+        const a = 0.78;
+        cx.strokeStyle = `rgba(255,200,80,${a})`;
+        cx.fillStyle   = `rgba(255,200,80,${a})`;
+        cx.lineWidth   = Math.max(1, sz * 0.065); cx.lineCap = 'round';
+
+        // Head (to the left, slightly raised)
+        cx.beginPath(); cx.arc(-sz * 0.50, -sz * 0.18, sz * 0.11, 0, Math.PI * 2); cx.fill();
+
+        // Torso (horizontal)
+        cx.beginPath();
+        cx.moveTo(-sz * 0.36, 0); cx.lineTo(sz * 0.28, 0);
+        cx.stroke();
+
+        // Arms — one reaching upward, one fallen aside
+        cx.beginPath();
+        cx.moveTo(-sz * 0.10, -sz * 0.04);
+        cx.lineTo(-sz * 0.16, -sz * 0.46);
+        cx.moveTo(-sz * 0.10, -sz * 0.04);
+        cx.lineTo(sz * 0.06, sz * 0.40);
+        cx.stroke();
+
+        // Legs (splayed right)
+        cx.beginPath();
+        cx.moveTo(sz * 0.28, 0);
+        cx.lineTo(sz * 0.54, -sz * 0.20);
+        cx.moveTo(sz * 0.28, 0);
+        cx.lineTo(sz * 0.50, sz * 0.16);
+        cx.stroke();
+
+        // Wings — spread flat open (lying on back, wings arc upward on each side)
+        const wAlpha = Math.max(0.12, a * (1 - melt * 0.50));
+        cx.lineWidth = Math.max(1, sz * 0.050);
+        cx.strokeStyle = `rgba(255,200,80,${wAlpha})`;
+        // Upper wing arc
+        cx.beginPath();
+        cx.moveTo(-sz * 0.14, -sz * 0.06);
+        cx.quadraticCurveTo(-sz * 0.58, -sz * 0.62, sz * 0.04, -sz * 0.86);
+        cx.stroke();
+        // Lower wing arc
+        cx.beginPath();
+        cx.moveTo(-sz * 0.14, sz * 0.05);
+        cx.quadraticCurveTo(-sz * 0.54, sz * 0.56, sz * 0.06, sz * 0.80);
+        cx.stroke();
+        // Sparse barbs on each wing
+        const barbCount = Math.max(1, Math.round(3 * (1 - melt * 0.65)));
+        [[sz * 0.04, -sz * 0.86, -1], [sz * 0.06, sz * 0.80, 1]].forEach(([tipX, tipY, side]) => {
+            const bx0 = -sz * 0.14, by0 = side < 0 ? -sz * 0.06 : sz * 0.05;
+            cx.strokeStyle = `rgba(255,200,80,${wAlpha * 0.75})`;
+            for (let i = 1; i <= barbCount; i++) {
+                const rt = i / (barbCount + 1);
+                const bxr = bx0 + (tipX - bx0) * rt;
+                const byr = by0 + (tipY - by0) * rt;
+                cx.beginPath();
+                cx.moveTo(bxr, byr);
+                cx.lineTo(bxr + sz * 0.07, byr + side * sz * 0.10);
+                cx.stroke();
+            }
+        });
+
+        cx.restore();
+
+        // Feathers scattered flat on the ground around the body
+        const nFeathers = 6 + Math.round(melt * 9);
+        for (let i = 0; i < nFeathers; i++) {
+            const phi  = i * 2.399;
+            const dist = sz * (0.28 + (i % 5) * 0.22);
+            const fx   = x + Math.cos(phi) * dist * 1.4;
+            const fy   = y + Math.sin(phi) * dist * 0.30;  // squash onto ground plane
+            cx.save();
+            cx.translate(fx, fy);
+            cx.rotate(phi + 0.8);
+            cx.fillStyle = `rgba(255,190,60,${Math.max(0, 0.40 - i * 0.028)})`;
+            cx.beginPath();
+            cx.ellipse(0, 0, sz * 0.016, sz * 0.062, 0, 0, Math.PI * 2);
+            cx.fill();
+            cx.restore();
+        }
+    }
+
     // ── Radial vignette (r,g,b as ints) ──────────────────────────────────────
     function drawVignette(intensity, r, g, b) {
         const vg = cx.createRadialGradient(W/2, H/2, H * 0.18, W/2, H/2, Math.max(W, H) * 0.78);
@@ -1233,30 +1316,48 @@ function runCutscene() {
             drawVignette(0.46 + p * 0.24, 118, 0, 0);
         }
 
-        // ── Phase 2: Face exit — Icarus tiny in sky, feathers melting ────
+        // ── Phase 2: Face exit — Icarus falls to ground and sprawls ─────
         else if (t < PH_EXIT_GLANCE) {
             const phase   = (t - PH_LOOKBACK1) / (PH_EXIT_GLANCE - PH_LOOKBACK1);
             const icarusT = t - PH_LOOKBACK1;
-            const melt    = Math.min(1, icarusT / 0.9);
+            const melt    = Math.min(1, icarusT / 0.85);
             const thud    = Math.pow(Math.max(0, Math.sin(t * 4.0 * Math.PI)), 3);
             const shakeX  = Math.sin(t * 33) * thud * 6;
             const shakeY  = thud * 5;
             cx.save(); cx.translate(shakeX, shakeY);
             drawCorridor('fwd', 0.24, t);
             cx.restore();
-            // Icarus clipped to aperture, drawn without shake offset
-            const vxg = W / 2, vyg = H / 2;
+
+            // Aperture geometry
+            const vxg  = W / 2, vyg = H / 2;
             const aptg  = W * (0.045 + 0.24 * 0.22);
             const aptHg = aptg * 0.60;
-            const fp2   = Math.min(1, icarusT / 1.0);
+            const aT2   = vyg - aptHg, aB2 = vyg + aptHg;
             const isz2  = aptg * 0.44;
-            const ix2   = vxg + aptg * 0.08;
-            const iy2   = vyg - aptHg + aptHg * 0.30 + Math.sin(fp2 * 9) * isz2 * 0.06;
+            const LAND_T = 0.72;  // seconds until Icarus hits ground
+
             cx.save();
             cx.beginPath();
-            cx.rect(vxg - aptg, vyg - aptHg, aptg * 2, aptHg * 2); cx.clip();
-            drawIcarus(ix2, iy2, isz2, fp2, melt);
+            cx.rect(vxg - aptg, aT2, aptg * 2, aptHg * 2); cx.clip();
+
+            if (icarusT < LAND_T) {
+                // Falling with gravity acceleration (ease-in)
+                const fallT = icarusT / LAND_T;
+                const fallP = Math.pow(fallT, 1.9);
+                const fp2   = fallT;
+                const yStart  = aT2 + isz2 * 0.52;
+                const yGround = aB2 - isz2 * 0.14;
+                const ix2 = vxg + aptg * 0.06 + Math.sin(fallT * 5) * isz2 * 0.07;
+                const iy2 = yStart + (yGround - yStart) * fallP;
+                drawIcarus(ix2, iy2, isz2, fp2, melt);
+            } else {
+                // Landed — sprawled on the ground
+                const gx = vxg + aptg * 0.06;
+                const gy = aB2 - isz2 * 0.14;
+                drawIcarusGrounded(gx, gy, isz2, melt);
+            }
             cx.restore();
+
             const fadeIn = Math.min(1, phase / 0.22);
             if (fadeIn < 1) { cx.fillStyle = `rgba(0,0,0,${1 - fadeIn})`; cx.fillRect(0, 0, W, H); }
             const fadeOut = phase > 0.80 ? (phase - 0.80) / 0.20 : 0;
