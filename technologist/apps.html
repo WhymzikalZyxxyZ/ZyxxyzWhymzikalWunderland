@@ -6,85 +6,164 @@
     <title>Apps — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js" defer></script>
+    <style>
+        .apps-page { max-width: 1100px; margin: 0 auto; padding: 0 24px 72px; }
+
+        .apps-hero { text-align: center; padding: 48px 24px 40px; }
+        .apps-hero h1 {
+            font-family: Jokerman, fantasy;
+            font-size: 2.4em; font-weight: 900;
+            color: #f4a261;
+            text-shadow: 0 0 28px rgba(244,162,97,0.35);
+            margin-bottom: 10px;
+        }
+        .apps-hero p {
+            color: #8fa8d0; font-size: 1em;
+            letter-spacing: 0.4px; margin: 0;
+        }
+
+        .cat-section { margin-bottom: 52px; }
+        .cat-heading {
+            font-family: Papyrus, fantasy;
+            font-size: 1em; font-weight: 700;
+            color: #c8b0d8;
+            letter-spacing: 2.5px; text-transform: uppercase;
+            padding: 0 4px 10px;
+            border-bottom: 1px solid rgba(200,176,216,0.18);
+            margin-bottom: 22px;
+        }
+
+        /* tighter cards on this page — more content fits */
+        .apps-page .card { width: 220px; padding: 28px 22px 22px; gap: 10px; }
+        .apps-page .card h3 { font-size: 1.25em; }
+        .apps-page .card p  { font-size: 0.85em; line-height: 1.5; }
+    </style>
 </head>
 <body class="wunderBody">
+<div class="navbar"></div>
 
-    <h2>Zyxxyz, the App-maker</h2>
+<div class="apps-page">
 
-    <div class="navbar">
-        <a href="/">Home</a>
-        <a href="/technologist/apps">Apps</a>
-        <a href="/technologist/biosuefi">BIOS/UEFI</a>
-        <a href="/technologist/computerengineering">Computer Engineering</a>
-        <a href="/technologist/computervision">Computer Vision</a>
-        <a href="/technologist/software">Software</a>
-        <a href="/technologist/systemoperator">System Operator</a>
+    <div class="apps-hero">
+        <h1>🛠️ Apps</h1>
+        <p>Tools, simulators, and interactive guides — built to learn, explore, and create.</p>
     </div>
 
-    <div class="section-cards" style="margin-top:30px;">
-        <a href="/technologist/lapislazuli" class="card">
-            <h3>Lapis Lazuli</h3>
-            <p>A sophisticated day trading monitor with ML-powered price forecasting and real-time signals.</p>
-        </a>
-        <a href="/technologist/sortinghat" class="card">
-            <h3>Sorting Hat</h3>
-            <p>An interactive algorithm visualizer — watch sorting, pathfinding, and binary search trees execute step by step.</p>
-        </a>
-        <a href="/technologist/architect" class="card">
-            <h3>The Architect</h3>
-            <p>A diagram creator for flowcharts and system architecture — place shapes, draw connections, and export your designs.</p>
-        </a>
-        <a href="/technologist/prism" class="card">
-            <h3>Prism</h3>
-            <p>A colour tools suite — explore palettes, convert between colour spaces, generate gradients, and check contrast accessibility.</p>
-        </a>
-        <a href="/technologist/investor" class="card">
-            <h3>The Investor</h3>
-            <p>A smart investing guide with lessons, a glossary of financial terms, a step-by-step investing journey, and tools including compound interest and DCA calculators.</p>
-        </a>
-        <a href="/technologist/hacker" class="card">
-            <h3>The Hacker</h3>
-            <p>An ethical hacking and cybersecurity guide covering offensive techniques, defensive security, a tools reference, a glossary of 50+ terms, and a full learning roadmap.</p>
-        </a>
-        <a href="/technologist/medic" class="card">
-            <h3>The Medic</h3>
-            <p>A human anatomy and EMT guide covering body systems, trauma, medical emergencies, clinical protocols, a glossary of 60+ terms, vital sign reference tables, and the full EMT career pathway.</p>
-        </a>
-        <a href="/technologist/rate-limiter" class="card">
-            <h3>Rate Limiter</h3>
-            <p>Simulate and compare four rate limiting algorithms — Token Bucket, Sliding Window, Fixed Window, and Leaky Bucket — with a live canvas timeline and per-algorithm stats.</p>
-        </a>
-        <a href="/technologist/query-plan" class="card">
-            <h3>Query Plan</h3>
-            <p>A SQL execution plan visualiser — paste a query, see a cost-annotated tree, get index suggestions, and read diagnostics covering joins, aggregates, and subqueries.</p>
-        </a>
-        <a href="/technologist/state-machine" class="card">
-            <h3>State Machine</h3>
-            <p>An interactive finite state machine builder — drag states onto a canvas, draw transitions with events and guards, then run the machine by firing events step by step.</p>
-        </a>
-        <a href="/technologist/pipeline" class="card">
-            <h3>Pipeline</h3>
-            <p>A CI/CD pipeline dashboard — define stages and jobs, simulate a run with configurable failure rates, watch jobs execute in parallel, and review duration metrics and run history.</p>
-        </a>
-        <a href="/technologist/code-collab" class="card">
-            <h3>CodeCollab</h3>
-            <p>A real-time collaborative editor demo — two editors share one document with live Operational Transformation conflict resolution, and a conflict simulator steps through classic OT scenarios.</p>
-        </a>
-        <a href="/technologist/schema-diff" class="card">
-            <h3>Schema Diff</h3>
-            <p>A schema migration tool — paste two SQL CREATE TABLE statements or JSON schemas, see a visual diff of added, removed, and modified columns, and get a generated migration script.</p>
-        </a>
-        <a href="/technologist/calculator" class="card">
-            <h3>The Calculator</h3>
-            <p>A complete mathematics curriculum from arithmetic to differential equations — with explanations and real-world applications for each topic, interactive calculator tools, a formula reference, and a glossary of 90+ terms.</p>
-        </a>
-        <a href="/technologist/lawyer" class="card">
-            <h3>The Lawyer</h3>
-            <p>A complete LSAT prep curriculum covering Logical Reasoning, Analytical Reasoning, Reading Comprehension, and Test Strategy — with worked examples, real-world legal applications, a practice question bank, and a glossary of 44 terms.</p>
-        </a>
-    </div>
+    <!-- ── Finance & Markets ──────────────────────────────────────── -->
+    <section class="cat-section">
+        <h2 class="cat-heading">📈 Finance &amp; Markets</h2>
+        <div class="section-cards">
+            <a href="/technologist/lapislazuli" class="card">
+                <span class="card-icon">💎</span>
+                <h3>Lapis Lazuli</h3>
+                <p>Real-time market intelligence across 100 stocks — DCF valuation, scenario analysis, Monte Carlo simulation, and a custom watchlist.</p>
+            </a>
+            <a href="/technologist/investor" class="card">
+                <span class="card-icon">📊</span>
+                <h3>The Investor</h3>
+                <p>Investing fundamentals, glossary, and tools including compound interest and DCA calculators — from first dollar to full portfolio.</p>
+            </a>
+        </div>
+    </section>
 
-    <button type="button" onclick="navigateToPage('/')">E.T. Phone Home!</button>
+    <!-- ── Developer Tools ───────────────────────────────────────── -->
+    <section class="cat-section">
+        <h2 class="cat-heading">🖥️ Developer Tools</h2>
+        <div class="section-cards">
+            <a href="/technologist/rate-limiter" class="card">
+                <span class="card-icon">⚙️</span>
+                <h3>Rate Limiter</h3>
+                <p>Compare Token Bucket, Sliding Window, Fixed Window, and Leaky Bucket algorithms with a live canvas timeline and per-algorithm stats.</p>
+            </a>
+            <a href="/technologist/query-plan" class="card">
+                <span class="card-icon">🗄️</span>
+                <h3>Query Plan</h3>
+                <p>Paste a SQL query, get a cost-annotated execution tree, index suggestions, and diagnostics covering joins, aggregates, and subqueries.</p>
+            </a>
+            <a href="/technologist/state-machine" class="card">
+                <span class="card-icon">🔄</span>
+                <h3>State Machine</h3>
+                <p>Build finite state machines on a canvas — define states, draw transitions with events and guards, then step through execution.</p>
+            </a>
+            <a href="/technologist/pipeline" class="card">
+                <span class="card-icon">🚀</span>
+                <h3>Pipeline</h3>
+                <p>Design CI/CD stages, simulate runs with configurable failure rates, watch parallel jobs execute, and review duration metrics.</p>
+            </a>
+            <a href="/technologist/code-collab" class="card">
+                <span class="card-icon">🤝</span>
+                <h3>CodeCollab</h3>
+                <p>Two editors, one document — live Operational Transformation keeps them in sync, with a conflict simulator for classic OT scenarios.</p>
+            </a>
+            <a href="/technologist/schema-diff" class="card">
+                <span class="card-icon">🔀</span>
+                <h3>Schema Diff</h3>
+                <p>Paste two SQL or JSON schemas, see a visual diff of added, removed, and changed columns, and get a ready-to-run migration script.</p>
+            </a>
+        </div>
+    </section>
 
+    <!-- ── Creative & Design ─────────────────────────────────────── -->
+    <section class="cat-section">
+        <h2 class="cat-heading">🎨 Creative &amp; Design</h2>
+        <div class="section-cards">
+            <a href="/technologist/architect" class="card">
+                <span class="card-icon">🏗️</span>
+                <h3>The Architect</h3>
+                <p>Draw flowcharts and system architecture diagrams — place shapes, connect them with labelled arrows, and export your design.</p>
+            </a>
+            <a href="/technologist/prism" class="card">
+                <span class="card-icon">🌈</span>
+                <h3>Prism</h3>
+                <p>Colour tools suite — explore palettes, convert between colour spaces, generate gradients, and check contrast accessibility.</p>
+            </a>
+            <a href="/technologist/sortinghat" class="card">
+                <span class="card-icon">🎩</span>
+                <h3>Sorting Hat</h3>
+                <p>Watch sorting algorithms, pathfinding, and binary search trees execute step by step with animated visuals and complexity notes.</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- ── Files & Documents ─────────────────────────────────────── -->
+    <section class="cat-section">
+        <h2 class="cat-heading">📁 Files &amp; Documents</h2>
+        <div class="section-cards">
+            <a href="/technologist/editor" class="card">
+                <span class="card-icon">✏️</span>
+                <h3>The Editor</h3>
+                <p>Merge, split, rotate, and edit PDFs. Compress or zip any file. All processing is in-memory — nothing stored, everything downloadable.</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- ── Learning & Guides ─────────────────────────────────────── -->
+    <section class="cat-section">
+        <h2 class="cat-heading">📚 Learning &amp; Guides</h2>
+        <div class="section-cards">
+            <a href="/technologist/calculator" class="card">
+                <span class="card-icon">🧮</span>
+                <h3>The Calculator</h3>
+                <p>A full mathematics curriculum from arithmetic to differential equations — interactive calculators, formula reference, and a 90-term glossary.</p>
+            </a>
+            <a href="/technologist/hacker" class="card">
+                <span class="card-icon">🔐</span>
+                <h3>The Hacker</h3>
+                <p>Ethical hacking and cybersecurity — offensive techniques, defensive security, a tools reference, 50+ term glossary, and a full learning roadmap.</p>
+            </a>
+            <a href="/technologist/medic" class="card">
+                <span class="card-icon">🏥</span>
+                <h3>The Medic</h3>
+                <p>Human anatomy and EMT guide — body systems, trauma, clinical protocols, vital sign tables, and the full EMT career pathway.</p>
+            </a>
+            <a href="/technologist/lawyer" class="card">
+                <span class="card-icon">⚖️</span>
+                <h3>The Lawyer</h3>
+                <p>Complete LSAT prep — Logical Reasoning, Analytical Reasoning, Reading Comprehension, test strategy, practice questions, and a 44-term glossary.</p>
+            </a>
+        </div>
+    </section>
+
+</div>
 </body>
 </html>

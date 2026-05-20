@@ -17,7 +17,6 @@ function newCheckersGame() {
 }
 
 function inBounds(r, c) { return r >= 0 && r < 8 && c >= 0 && c < 8; }
-function isKing(p)    { return Math.abs(p) === 2; }
 function colorOf(p)   { return p > 0 ? CK_WHITE : CK_BLACK; }
 function ownsPiece(piece, color) { return piece !== 0 && colorOf(piece) === color; }
 

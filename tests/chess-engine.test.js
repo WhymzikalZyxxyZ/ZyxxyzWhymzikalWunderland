@@ -1,8 +1,8 @@
 'use strict';
 const {
-    CH_WHITE, CH_BLACK, CH_PAWN, CH_KNIGHT, CH_BISHOP, CH_ROOK, CH_QUEEN, CH_KING,
-    newChessGame, getLegalMoves, applyMove, updateStatus,
-    isInCheck, findKing, evaluateBoard, getChessAIMove, rawMoves
+    CH_WHITE, CH_BLACK, CH_PAWN, CH_ROOK, CH_QUEEN, CH_KING,
+    newChessGame, applyMove, updateStatus,
+    isInCheck, findKing, evaluateBoard, getChessAIMove
 } = require('../js/chess-engine');
 
 describe('newChessGame', () => {
@@ -63,7 +63,6 @@ describe('getLegalMoves', () => {
     });
     test('no moves in checkmate position', () => {
         // Fool's mate: e4, f5, Qh5, g5, Qxf7# or Scholar's mate position
-        let g = updateStatus(newChessGame());
         // Manually set a checkmate board
         const mateBoard = Array.from({ length: 8 }, () => new Array(8).fill(0));
         mateBoard[7][4] = CH_KING * CH_WHITE;  // white king e1

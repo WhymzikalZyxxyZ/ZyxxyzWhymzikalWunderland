@@ -55,6 +55,90 @@
             font-size: 11px; color: #666; margin-bottom: 8px;
         }
         #identity-bar span { color: #f4a261; }
+
+        /* ── Suggestions ─────────────────────────────────────────── */
+        #suggestions-fab {
+            position: fixed; bottom: 24px; right: 24px; z-index: 900;
+            background: #f4a261; border: none; border-radius: 28px;
+            padding: 11px 20px; color: #0e0818; font-family: 'Courier New', monospace;
+            font-size: 13px; font-weight: bold; letter-spacing: 1px;
+            cursor: pointer; box-shadow: 0 4px 20px rgba(244,162,97,0.45);
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+        }
+        #suggestions-fab:hover {
+            background: #e8955a; transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(244,162,97,0.55);
+        }
+
+        #suggestions-overlay {
+            display: none; position: fixed; inset: 0; z-index: 950;
+            background: rgba(0,0,0,0.72);
+        }
+        #suggestions-overlay.open { display: flex; align-items: center; justify-content: center; }
+
+        #suggestions-modal {
+            background: rgba(12,7,22,0.98); border: 1px solid rgba(244,162,97,0.28);
+            border-radius: 14px; padding: 28px 28px 24px; width: min(540px, calc(100vw - 40px));
+            max-height: 80vh; display: flex; flex-direction: column;
+            box-shadow: 0 16px 56px rgba(0,0,0,0.7);
+        }
+        #suggestions-modal h2 {
+            font-family: 'Courier New', monospace; color: #f4a261;
+            font-size: 15px; letter-spacing: 2px; text-transform: uppercase;
+            margin: 0 0 18px; text-align: center;
+        }
+        #suggestions-form {
+            display: flex; gap: 8px; margin-bottom: 20px;
+        }
+        #suggestion-input {
+            flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(244,162,97,0.25);
+            border-radius: 8px; padding: 9px 12px; color: #f0f0f0;
+            font-family: 'Courier New', monospace; font-size: 13px; outline: none;
+            transition: border-color 0.2s;
+        }
+        #suggestion-input:focus { border-color: rgba(244,162,97,0.6); }
+        #suggestion-input::placeholder { color: #555; }
+        #suggestions-submit {
+            background: #f4a261; border: none; border-radius: 8px;
+            padding: 9px 16px; color: #0e0818; font-family: 'Courier New', monospace;
+            font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap;
+            transition: background 0.2s;
+        }
+        #suggestions-submit:hover { background: #e8955a; }
+        #suggestions-submit:disabled { background: #5a4a38; color: #888; cursor: default; }
+        #suggestions-offline {
+            display: none; text-align: center; font-family: 'Courier New', monospace;
+            font-size: 12px; color: #888; margin-bottom: 14px;
+        }
+        #suggestions-list {
+            overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 10px;
+        }
+        #suggestions-list::-webkit-scrollbar { width: 4px; }
+        #suggestions-list::-webkit-scrollbar-thumb { background: rgba(244,162,97,0.3); border-radius: 2px; }
+        .sug-item {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 8px; padding: 10px 14px;
+        }
+        .sug-meta {
+            font-family: 'Courier New', monospace; font-size: 10px; color: #666;
+            margin-bottom: 5px; display: flex; justify-content: space-between; gap: 8px;
+        }
+        .sug-meta .sug-user { color: #f4a261; }
+        .sug-text {
+            font-family: 'Courier New', monospace; font-size: 13px; color: #d0d0d0;
+            word-break: break-word; line-height: 1.45;
+        }
+        #suggestions-empty {
+            font-family: 'Courier New', monospace; font-size: 12px;
+            color: #555; text-align: center; padding: 24px 0;
+        }
+        #suggestions-close {
+            align-self: flex-end; background: transparent; border: 1px solid rgba(244,162,97,0.2);
+            border-radius: 6px; padding: 5px 12px; color: #888;
+            font-family: 'Courier New', monospace; font-size: 11px;
+            cursor: pointer; margin-top: 16px; transition: color 0.2s, border-color 0.2s;
+        }
+        #suggestions-close:hover { color: #f4a261; border-color: rgba(244,162,97,0.5); }
     </style>
 </head>
 <body class="wunderBody">
@@ -194,6 +278,26 @@
 
     <button type="button" onclick="navigateToPage('/')">E.T. Phone Home!</button>
 
+    <!-- Suggestions FAB -->
+    <button id="suggestions-fab" type="button" onclick="openSuggestions()">💬 Suggestions</button>
+
+    <!-- Suggestions modal -->
+    <div id="suggestions-overlay" role="dialog" aria-modal="true" aria-label="Suggestions">
+        <div id="suggestions-modal">
+            <h2>💬 Suggestions</h2>
+            <div id="suggestions-offline">Firebase unavailable — suggestions require an internet connection.</div>
+            <div id="suggestions-form">
+                <input id="suggestion-input" type="text" maxlength="280"
+                    placeholder="Got an idea? Suggest a game or feature…" autocomplete="off">
+                <button id="suggestions-submit" type="button" onclick="submitSuggestion()">Send</button>
+            </div>
+            <div id="suggestions-list">
+                <div id="suggestions-empty">No suggestions yet — be the first!</div>
+            </div>
+            <button id="suggestions-close" type="button" onclick="closeSuggestions()">Close</button>
+        </div>
+    </div>
+
     <script src="/js/gamer-chat.js"></script>
     <script>
         (function() {
@@ -241,6 +345,113 @@
         bindScore('scores/solitaire',    'world-solitaire',    'user-solitaire');
         bindScore('scores/poker',        'world-poker',        'user-poker');
         bindScore('scores/fivecarddraw', 'world-fivecarddraw', 'user-fivecarddraw');
+
+        // ── Suggestions ────────────────────────────────────────────
+        let suggestionsLoaded = false;
+
+        function fmtTimestamp(ts) {
+            const d = new Date(ts);
+            const date = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            const time = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+            return date + ' · ' + time;
+        }
+
+        function renderSuggestions(items) {
+            const list = document.getElementById('suggestions-list');
+            const empty = document.getElementById('suggestions-empty');
+            if (!items || items.length === 0) {
+                empty.style.display = '';
+                return;
+            }
+            empty.style.display = 'none';
+            // newest first
+            items.sort((a, b) => b.timestamp - a.timestamp);
+            list.innerHTML = '';
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'sug-item';
+                const meta = document.createElement('div');
+                meta.className = 'sug-meta';
+                meta.innerHTML = '<span class="sug-user">' + escHtml(item.username) + '</span>'
+                    + '<span>' + fmtTimestamp(item.timestamp) + '</span>';
+                const text = document.createElement('div');
+                text.className = 'sug-text';
+                text.textContent = item.text;
+                div.appendChild(meta);
+                div.appendChild(text);
+                list.appendChild(div);
+            });
+        }
+
+        function escHtml(s) {
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        function loadSuggestions() {
+            if (suggestionsLoaded) return;
+            suggestionsLoaded = true;
+            if (!window.FIREBASE_READY) return;
+            firebase.database().ref('suggestions').on('value', snap => {
+                const val = snap.val();
+                const items = val ? Object.values(val) : [];
+                renderSuggestions(items);
+            });
+        }
+
+        function openSuggestions() {
+            const overlay = document.getElementById('suggestions-overlay');
+            const offline = document.getElementById('suggestions-offline');
+            const form = document.getElementById('suggestions-form');
+            const submit = document.getElementById('suggestions-submit');
+            overlay.classList.add('open');
+            if (!window.FIREBASE_READY) {
+                offline.style.display = '';
+                form.style.display = 'none';
+            } else {
+                offline.style.display = 'none';
+                form.style.display = 'flex';
+                submit.disabled = false;
+            }
+            loadSuggestions();
+            document.getElementById('suggestion-input').focus();
+        }
+
+        function closeSuggestions() {
+            document.getElementById('suggestions-overlay').classList.remove('open');
+        }
+
+        function submitSuggestion() {
+            if (!window.FIREBASE_READY) return;
+            const input = document.getElementById('suggestion-input');
+            const text = input.value.trim();
+            if (!text) return;
+            const username = (typeof getOrCreateUsername === 'function')
+                ? getOrCreateUsername() : 'Anonymous';
+            const submit = document.getElementById('suggestions-submit');
+            submit.disabled = true;
+            firebase.database().ref('suggestions').push({
+                text: text,
+                username: username,
+                timestamp: Date.now()
+            }).then(() => {
+                input.value = '';
+                submit.disabled = false;
+            }).catch(() => {
+                submit.disabled = false;
+            });
+        }
+
+        document.getElementById('suggestions-overlay').addEventListener('click', function(e) {
+            if (e.target === this) closeSuggestions();
+        });
+
+        document.getElementById('suggestion-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') submitSuggestion();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeSuggestions();
+        });
     </script>
 </body>
 </html>
