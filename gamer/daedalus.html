@@ -98,6 +98,28 @@
 
         .esc-hint { font-size: 0.7rem; color: #2a2a2a; margin-top: 10px; }
 
+        /* ── Algorithm selector ─────────────────────────────────────────────── */
+        .algo-selector { margin: 20px 0 4px; text-align: center; }
+        .algo-label {
+            font-size: 0.62rem; color: #333; letter-spacing: 0.22em;
+            text-transform: uppercase; margin-bottom: 9px;
+        }
+        .algo-btns { display: flex; gap: 7px; justify-content: center; flex-wrap: wrap; }
+        .algo-btn {
+            padding: 6px 16px; border: 1px solid #232323; border-radius: 6px;
+            background: #0b0b0b; color: #444; font-size: 0.76rem; font-weight: 700;
+            letter-spacing: 0.06em; cursor: pointer; transition: all .18s;
+            font-family: monospace;
+        }
+        .algo-btn:hover { border-color: var(--gold); color: var(--gold); }
+        .algo-btn.active {
+            border-color: var(--gold); color: var(--gold);
+            background: rgba(212,168,83,0.08);
+        }
+        .algo-desc {
+            font-size: 0.69rem; color: #3a3a3a; margin-top: 9px; min-height: 1.3em;
+        }
+
         /* ── Overlays ───────────────────────────────────────────────────── */
         .dae-overlay {
             position: fixed; inset: 0;
@@ -174,6 +196,16 @@
         </p>
         <div id="bestBox">Best Run: <strong id="bestTitle">—</strong></div>
         <button class="dae-btn" id="startBtn">Enter the Labyrinth</button>
+        <div class="algo-selector">
+            <div class="algo-label">Enemy Pathfinding</div>
+            <div class="algo-btns">
+                <button class="algo-btn active" data-algo="bfs">BFS</button>
+                <button class="algo-btn"        data-algo="astar">A*</button>
+                <button class="algo-btn"        data-algo="dfs">DFS</button>
+                <button class="algo-btn"        data-algo="greedy">Greedy</button>
+            </div>
+            <div class="algo-desc" id="algoDesc">BFS · enemies always take the shortest path to you</div>
+        </div>
         <p class="key-hint">
             Arrow keys or WASD &nbsp;·&nbsp; <strong>hold</strong> to move continuously &nbsp;·&nbsp; <strong>click</strong> maze to pathfind<br>
             Levels 5–10 have enemies &nbsp;·&nbsp; Caught = +10 s penalty &amp; level restart &nbsp;·&nbsp; ESC to quit
@@ -453,6 +485,104 @@ function braidMaze(grid, rows, cols, factor) {
     }
 }
 
+// ── A*: heuristic-guided, same optimal path as BFS but explores toward target ─
+function astarStep(grid, rows, cols, sr, sc, tr, tc) {
+    if (sr === tr && sc === tc) return null;
+    const h = (r, c) => Math.abs(r - tr) + Math.abs(c - tc);
+    const g    = Array.from({length: rows}, () => new Array(cols).fill(Infinity));
+    const prev = Array.from({length: rows}, () => new Array(cols).fill(null));
+    g[sr][sc]    = 0;
+    prev[sr][sc] = [-1, -1];
+    // Simple sorted array as priority queue (fine for maze sizes ≤ 841 cells)
+    const open = [[h(sr, sc), sr, sc]];
+    let found  = false;
+    outer: while (open.length) {
+        open.sort((a, b) => a[0] - b[0]);
+        const [, r, c] = open.shift();
+        if (r === tr && c === tc) { found = true; break; }
+        for (const d of DIRS) {
+            if (grid[r][c] & d) continue;
+            const nr = r + DR[d], nc = c + DC[d];
+            if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+            const ng = g[r][c] + 1;
+            if (ng >= g[nr][nc]) continue;
+            g[nr][nc]    = ng;
+            prev[nr][nc] = [r, c];
+            if (nr === tr && nc === tc) { found = true; break outer; }
+            open.push([ng + h(nr, nc), nr, nc]);
+        }
+    }
+    if (!found) return null;
+    let [r, c] = [tr, tc];
+    while (prev[r][c][0] !== sr || prev[r][c][1] !== sc) [r, c] = prev[r][c];
+    return [r, c];
+}
+
+// ── DFS: depth-first with shuffled directions — winding, erratic paths ────────
+function dfsStep(grid, rows, cols, sr, sc, tr, tc) {
+    if (sr === tr && sc === tc) return null;
+    const prev = Array.from({length: rows}, () => new Array(cols).fill(null));
+    prev[sr][sc] = [-1, -1];
+    const stk  = [[sr, sc]];
+    let found  = false;
+    outer: while (stk.length) {
+        const [r, c] = stk.pop();
+        // Shuffle direction order each expansion — produces varied winding paths
+        const dirs = [N, S, E, W].sort(() => Math.random() - 0.5);
+        for (const d of dirs) {
+            if (grid[r][c] & d) continue;
+            const nr = r + DR[d], nc = c + DC[d];
+            if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+            if (prev[nr][nc] !== null) continue;
+            prev[nr][nc] = [r, c];
+            if (nr === tr && nc === tc) { found = true; break outer; }
+            stk.push([nr, nc]);
+        }
+    }
+    if (!found) return null;
+    let [r, c] = [tr, tc];
+    while (prev[r][c][0] !== sr || prev[r][c][1] !== sc) [r, c] = prev[r][c];
+    return [r, c];
+}
+
+// ── Greedy Best-First: pursues by heuristic only — no cost tracking ───────────
+function greedyStep(grid, rows, cols, sr, sc, tr, tc) {
+    if (sr === tr && sc === tc) return null;
+    const h    = (r, c) => Math.abs(r - tr) + Math.abs(c - tc);
+    const prev = Array.from({length: rows}, () => new Array(cols).fill(null));
+    prev[sr][sc] = [-1, -1];
+    const open   = [[h(sr, sc), sr, sc]];
+    let found    = false;
+    outer: while (open.length) {
+        open.sort((a, b) => a[0] - b[0]);
+        const [, r, c] = open.shift();
+        for (const d of DIRS) {
+            if (grid[r][c] & d) continue;
+            const nr = r + DR[d], nc = c + DC[d];
+            if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+            if (prev[nr][nc] !== null) continue;
+            prev[nr][nc] = [r, c];
+            if (nr === tr && nc === tc) { found = true; break outer; }
+            open.push([h(nr, nc), nr, nc]);
+        }
+    }
+    if (!found) return null;
+    let [r, c] = [tr, tc];
+    while (prev[r][c][0] !== sr || prev[r][c][1] !== sc) [r, c] = prev[r][c];
+    return [r, c];
+}
+
+// ── Dispatcher ────────────────────────────────────────────────────────────────
+let selectedAlgo = 'bfs';
+function pathStep(grid, rows, cols, sr, sc, tr, tc) {
+    switch (selectedAlgo) {
+        case 'astar':  return astarStep(grid, rows, cols, sr, sc, tr, tc);
+        case 'dfs':    return dfsStep(grid, rows, cols, sr, sc, tr, tc);
+        case 'greedy': return greedyStep(grid, rows, cols, sr, sc, tr, tc);
+        default:       return bfsStep(grid, rows, cols, sr, sc, tr, tc);
+    }
+}
+
 // ── Random exit: pick a cell in the farthest 40% of BFS distances ────────────
 function randomExit(grid, rows, cols) {
     const dist = Array.from({length: rows}, () => new Array(cols).fill(-1));
@@ -673,13 +803,13 @@ function stepEnemies() {
             const mdist = Math.abs(en.r - pR) + Math.abs(en.c - pC);
             en.alerted  = mdist <= detectRange;
             if (en.alerted) {
-                next = bfsStep(grid, cfg.rows, cfg.cols, en.r, en.c, pR, pC);
+                next = pathStep(grid, cfg.rows, cfg.cols, en.r, en.c, pR, pC);
             }
         } else {
             // Classic: 65% chance to pathfind, 35% random
             en.alerted = false;
             if (Math.random() < 0.65) {
-                next = bfsStep(grid, cfg.rows, cfg.cols, en.r, en.c, pR, pC);
+                next = pathStep(grid, cfg.rows, cfg.cols, en.r, en.c, pR, pC);
             }
         }
 
@@ -1327,6 +1457,23 @@ document.getElementById('playAgainBtn').addEventListener('click', () => {
 
 document.getElementById('quitBtn').addEventListener('click', () => {
     navigateToPage('/gamer/games');
+});
+
+// ── Algorithm selector ─────────────────────────────────────────────────────────
+const ALGO_DESC = {
+    bfs:    'BFS · enemies always take the shortest path to you',
+    astar:  'A* · heuristic-guided — explores toward you first, same optimal path',
+    dfs:    'DFS · depth-first with shuffled order — winding, unpredictable pursuit',
+    greedy: 'Greedy · rushes toward you by distance alone — bold but maze-blind',
+};
+
+document.querySelectorAll('.algo-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        selectedAlgo = btn.dataset.algo;
+        document.querySelectorAll('.algo-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('algoDesc').textContent = ALGO_DESC[selectedAlgo] || '';
+    });
 });
 
 // ── Init ───────────────────────────────────────────────────────────────────────
