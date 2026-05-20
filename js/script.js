@@ -55,6 +55,7 @@ const NAV_STRUCTURE = [
             { label: 'CodeCollab',           href: '/technologist/code-collab' },
             { label: 'Schema Diff',          href: '/technologist/schema-diff' },
             { label: 'The Calculator',       href: '/technologist/calculator' },
+            { label: 'The Editor',           href: '/technologist/editor' },
         ],
     },
     { label: 'The Lawyer', href: '/technologist/lawyer' },
