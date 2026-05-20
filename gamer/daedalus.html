@@ -175,8 +175,8 @@
         <div id="bestBox">Best Run: <strong id="bestTitle">—</strong></div>
         <button class="dae-btn" id="startBtn">Enter the Labyrinth</button>
         <p class="key-hint">
-            Arrow keys or WASD to move &nbsp;·&nbsp; Levels 7–10 have enemies<br>
-            Caught = +10 s penalty &amp; level restart &nbsp;·&nbsp; ESC to quit
+            Arrow keys or WASD &nbsp;·&nbsp; <strong>hold</strong> to move continuously &nbsp;·&nbsp; <strong>click</strong> maze to pathfind<br>
+            Levels 5–10 have enemies &nbsp;·&nbsp; Caught = +10 s penalty &amp; level restart &nbsp;·&nbsp; ESC to quit
         </p>
     </div>
 
@@ -245,16 +245,16 @@ const DIRS = [N, S, E, W];
 //   fog: vision radius in cells (0 = none)
 //   speed: enemy move interval ms (0 = no enemies)
 const LEVELS = [
-    { rows:  9, cols:  9, fog: 0, nEnemies: 0, speed: 0,   braid: 0    },
-    { rows: 11, cols: 11, fog: 0, nEnemies: 0, speed: 0,   braid: 0    },
-    { rows: 13, cols: 13, fog: 0, nEnemies: 0, speed: 0,   braid: 0    },
-    { rows: 15, cols: 15, fog: 0, nEnemies: 0, speed: 0,   braid: 0    },
-    { rows: 17, cols: 17, fog: 0, nEnemies: 0, speed: 0,   braid: 0    },
-    { rows: 19, cols: 19, fog: 5, nEnemies: 0, speed: 0,   braid: 0    },
-    { rows: 21, cols: 21, fog: 5, nEnemies: 1, speed: 650, braid: 0.55 },
-    { rows: 23, cols: 23, fog: 4, nEnemies: 2, speed: 540, braid: 0.65 },
-    { rows: 25, cols: 25, fog: 4, nEnemies: 3, speed: 470, braid: 0.75 },
-    { rows: 29, cols: 29, fog: 3, nEnemies: 4, speed: 410, braid: 0.85 },
+    { rows:  9, cols:  9, fog: 0, nEnemies: 0, speed: 0,   braid: 0.20 },
+    { rows: 11, cols: 11, fog: 0, nEnemies: 0, speed: 0,   braid: 0.28 },
+    { rows: 13, cols: 13, fog: 0, nEnemies: 0, speed: 0,   braid: 0.36 },
+    { rows: 15, cols: 15, fog: 0, nEnemies: 0, speed: 0,   braid: 0.44 },
+    { rows: 17, cols: 17, fog: 0, nEnemies: 1, speed: 820, braid: 0.50 },
+    { rows: 19, cols: 19, fog: 5, nEnemies: 1, speed: 700, braid: 0.55 },
+    { rows: 21, cols: 21, fog: 5, nEnemies: 1, speed: 650, braid: 0.62 },
+    { rows: 23, cols: 23, fog: 4, nEnemies: 2, speed: 540, braid: 0.70 },
+    { rows: 25, cols: 25, fog: 4, nEnemies: 3, speed: 470, braid: 0.78 },
+    { rows: 29, cols: 29, fog: 3, nEnemies: 4, speed: 410, braid: 0.86 },
 ];
 
 const PENALTY_MS  = 10000;
@@ -323,6 +323,20 @@ function drawMaze(grid, rows, cols, pR, pC, exitR, exitC, enemies, fogCells) {
     const ex   = exitC * cellSize + cellSize / 2;
     const ey   = exitR * cellSize + cellSize / 2;
     glowDot(ex, ey, cellSize * 0.42, `rgba(128,203,196,${pulse})`, '#80cbc4', 0.18);
+
+    // Walk target crosshair
+    if (walkTarget) {
+        const tx = walkTarget.c * cellSize + cellSize / 2;
+        const ty = walkTarget.r * cellSize + cellSize / 2;
+        const pa = 0.25 + 0.25 * Math.sin(Date.now() / 280);
+        ctx.strokeStyle = `rgba(212,168,83,${pa})`;
+        ctx.lineWidth   = Math.max(1, cellSize / 16);
+        const hs = cellSize * 0.32;
+        ctx.beginPath();
+        ctx.moveTo(tx - hs, ty); ctx.lineTo(tx + hs, ty);
+        ctx.moveTo(tx, ty - hs); ctx.lineTo(tx, ty + hs);
+        ctx.stroke();
+    }
 
     // Enemies
     enemies.forEach(en => {
@@ -430,6 +444,34 @@ function braidMaze(grid, rows, cols, factor) {
     }
 }
 
+// ── Random exit: pick a cell in the farthest 40% of BFS distances ────────────
+function randomExit(grid, rows, cols) {
+    const dist = Array.from({length: rows}, () => new Array(cols).fill(-1));
+    dist[0][0] = 0;
+    const q = [[0, 0]];
+    let maxDist = 0;
+    while (q.length) {
+        const [r, c] = q.shift();
+        for (const d of DIRS) {
+            if (grid[r][c] & d) continue;
+            const nr = r + DR[d], nc = c + DC[d];
+            if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+            if (dist[nr][nc] !== -1) continue;
+            dist[nr][nc] = dist[r][c] + 1;
+            if (dist[nr][nc] > maxDist) maxDist = dist[nr][nc];
+            q.push([nr, nc]);
+        }
+    }
+    const minDist = Math.max(3, Math.floor(maxDist * 0.60));
+    const candidates = [];
+    for (let r = 0; r < rows; r++)
+        for (let c = 0; c < cols; c++)
+            if (dist[r][c] >= minDist && !(r === 0 && c === 0))
+                candidates.push([r, c]);
+    if (!candidates.length) return [rows - 1, cols - 1];
+    return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
 // ── BFS: first step toward target ────────────────────────────────────────────
 function bfsStep(grid, rows, cols, sr, sc, tr, tc) {
     if (sr === tr && sc === tc) return null;
@@ -514,6 +556,45 @@ let enemyTimer  = null;
 let penaltyCount = 0;
 let rafId       = null;
 
+// Hold-to-move & click-to-walk
+let holdInterval = null;
+let heldDr = 0, heldDc = 0;
+let walkInterval = null;
+let walkTarget   = null;  // { r, c } for click pathfinding
+
+// ── Hold / walk helpers ───────────────────────────────────────────────────────
+function stopHold() {
+    if (holdInterval) { clearInterval(holdInterval); holdInterval = null; }
+}
+
+function stopWalk() {
+    if (walkInterval) { clearInterval(walkInterval); walkInterval = null; }
+    walkTarget = null;
+}
+
+function startHold(dr, dc) {
+    stopHold(); stopWalk();
+    heldDr = dr; heldDc = dc;
+    tryMove(dr, dc);
+    holdInterval = setInterval(() => tryMove(heldDr, heldDc), 130);
+}
+
+function walkStep() {
+    if (!walkTarget || STATE !== 'playing') { stopWalk(); return; }
+    const cfg  = LEVELS[levelIdx];
+    const next = bfsStep(grid, cfg.rows, cfg.cols, pR, pC, walkTarget.r, walkTarget.c);
+    if (!next) { stopWalk(); return; }
+    tryMove(next[0] - pR, next[1] - pC);
+    if (pR === walkTarget?.r && pC === walkTarget?.c) stopWalk();
+}
+
+function startWalkTo(tr, tc) {
+    stopHold(); stopWalk();
+    walkTarget = { r: tr, c: tc };
+    walkStep();
+    if (walkTarget !== null) walkInterval = setInterval(walkStep, 130);
+}
+
 function resetEnemies(cfg) {
     enemies = [];
     for (let i = 0; i < cfg.nEnemies; i++) {
@@ -528,6 +609,7 @@ function resetEnemies(cfg) {
 
 function startLevel(idx) {
     if (csRafId) { cancelAnimationFrame(csRafId); csRafId = null; }
+    stopHold(); stopWalk();
     levelIdx     = idx;
     penaltyCount = 0;
     const cfg    = LEVELS[idx];
@@ -535,7 +617,7 @@ function startLevel(idx) {
     grid  = generateMaze(cfg.rows, cfg.cols);
     if (cfg.braid > 0) braidMaze(grid, cfg.rows, cfg.cols, cfg.braid);
     pR    = 0; pC = 0;
-    exitR = cfg.rows - 1; exitC = cfg.cols - 1;
+    [exitR, exitC] = randomExit(grid, cfg.rows, cfg.cols);
     resetEnemies(cfg);
 
     clearInterval(enemyTimer);
@@ -597,6 +679,7 @@ function checkCatch() {
 }
 
 function onCaught() {
+    stopHold(); stopWalk();
     timerAddPenalty();
     penaltyCount++;
     // Flash
@@ -1111,6 +1194,7 @@ function onGameComplete() {
 // ── Quit ───────────────────────────────────────────────────────────────────────
 function quitToTitle() {
     STATE = 'title';
+    stopHold(); stopWalk();
     clearInterval(enemyTimer);
     if (csRafId) { cancelAnimationFrame(csRafId); csRafId = null; }
     timerPause();
@@ -1140,18 +1224,45 @@ const KEY = {
     W:[-1,0], S:[1,0], A:[0,-1], D:[0,1],
 };
 
+// Keyboard: hold to move continuously
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') { quitToTitle(); return; }
     const mv = KEY[e.key];
-    if (mv) { e.preventDefault(); tryMove(...mv); }
+    if (mv) {
+        e.preventDefault();
+        if (!e.repeat) startHold(mv[0], mv[1]);
+    }
+});
+document.addEventListener('keyup', e => {
+    if (KEY[e.key]) stopHold();
 });
 
-document.getElementById('dUp').addEventListener('click',    () => tryMove(-1,  0));
-document.getElementById('dDown').addEventListener('click',  () => tryMove( 1,  0));
-document.getElementById('dLeft').addEventListener('click',  () => tryMove( 0, -1));
-document.getElementById('dRight').addEventListener('click', () => tryMove( 0,  1));
+// Canvas click: pathfind to clicked cell
+canvas.addEventListener('click', e => {
+    if (STATE !== 'playing') return;
+    const cfg  = LEVELS[levelIdx];
+    const rect = canvas.getBoundingClientRect();
+    const cc   = Math.floor((e.clientX - rect.left) / (rect.width  / cfg.cols));
+    const rr   = Math.floor((e.clientY - rect.top)  / (rect.height / cfg.rows));
+    if (rr < 0 || rr >= cfg.rows || cc < 0 || cc >= cfg.cols) return;
+    if (rr === pR && cc === pC) return;
+    startWalkTo(rr, cc);
+});
 
-// Touch swipe on canvas
+// D-pad: hold while pointer is down
+function wireDpad(id, dr, dc) {
+    const btn = document.getElementById(id);
+    btn.addEventListener('pointerdown', e => { e.preventDefault(); startHold(dr, dc); });
+    btn.addEventListener('pointerup',     () => stopHold());
+    btn.addEventListener('pointerleave',  () => stopHold());
+    btn.addEventListener('pointercancel', () => stopHold());
+}
+wireDpad('dUp',    -1,  0);
+wireDpad('dDown',   1,  0);
+wireDpad('dLeft',   0, -1);
+wireDpad('dRight',  0,  1);
+
+// Touch swipe on canvas (for mobile swipe gesture in addition to d-pad)
 let swipeStart = null;
 canvas.addEventListener('touchstart', e => {
     swipeStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -1163,10 +1274,11 @@ canvas.addEventListener('touchend', e => {
     const dy = e.changedTouches[0].clientY - swipeStart.y;
     swipeStart = null;
     if (Math.max(Math.abs(dx), Math.abs(dy)) < 18) return;
-    if (Math.abs(dx) > Math.abs(dy)) tryMove(0, dx > 0 ? 1 : -1);
-    else                             tryMove(dy > 0 ? 1 : -1, 0);
+    if (Math.abs(dx) > Math.abs(dy)) startHold(0, dx > 0 ? 1 : -1);
+    else                             startHold(dy > 0 ? 1 : -1, 0);
     e.preventDefault();
 }, { passive: false });
+canvas.addEventListener('touchcancel', () => stopHold(), { passive: true });
 
 // ── Button wiring ──────────────────────────────────────────────────────────────
 document.getElementById('startBtn').addEventListener('click', () => {
