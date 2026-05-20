@@ -780,7 +780,7 @@ function stepEnemies() {
         } else {
             // Classic: 65% chance to pathfind, 35% random
             en.alerted = false;
-            if (Math.random() < 0.65) {
+            if (Math.random() < 0.69) {
                 next = pathStep(cfg.algo, grid, cfg.rows, cfg.cols, en.r, en.c, pR, pC);
             }
         }
