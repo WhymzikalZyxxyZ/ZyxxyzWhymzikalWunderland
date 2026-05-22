@@ -734,6 +734,11 @@ function resetEnemies(cfg) {
 let pendingIntro = -1;
 
 function startLevel(idx) {
+    if (idx === 0 && pendingIntro !== 0) {
+        pendingIntro = 0;
+        runLevel1Cutscene(() => startLevel(0));
+        return;
+    }
     if (idx === 4 && pendingIntro !== 4) {
         pendingIntro = 4;
         runLevel5Cutscene(() => startLevel(4));
@@ -1477,6 +1482,105 @@ function runCutscene() {
     }
 
     csRafId = requestAnimationFrame(tick);
+}
+
+// ── Level 1 intro cutscene ─────────────────────────────────────────────────────
+// First-person: slow walk into the dark labyrinth entrance → stop → fade to black
+// → "The labyrinth of Daedalus. Ten levels. No way back."
+function runLevel1Cutscene(cb) {
+    timerPause();
+    const icOvl = document.getElementById('icOverlay');
+    const cvs   = document.getElementById('icCanvas');
+    icOvl.style.display = 'block';
+
+    const cW = window.innerWidth, cH = window.innerHeight;
+    cvs.width = cW; cvs.height = cH;
+    cvs.style.width = cW + 'px'; cvs.style.height = cH + 'px';
+    const cx = cvs.getContext('2d');
+    const T0 = performance.now();
+    let rafId1 = null;
+
+    const PH_WALK  = 3.2;   // slow walk forward into darkness
+    const PH_PAUSE = 4.6;   // stop, stare ahead
+    const PH_FADE  = 5.4;   // fade to black
+    const PH_TEXT  = 5.8;   // text types out
+    const PH_END   = 9.2;   // cutscene ends → gameplay
+
+    const drawCorridor = (d, dp, t) => _drawCorridor(cx, cW, cH, d, dp, t);
+    const drawVignette = (i, r, g, b) => _drawVignette(cx, cW, cH, i, r, g, b);
+
+    function tick1(ts) {
+        const t = (ts - T0) / 1000;
+        cx.fillStyle = '#020104'; cx.fillRect(0, 0, cW, cH);
+
+        if (t < PH_WALK) {
+            // Slow walk forward from the entrance
+            const p     = t / PH_WALK;
+            const depth = 0.01 + p * 0.058;
+            const wobble = 0.45 * Math.min(1, t / 0.9);
+            const bobY  = Math.sin(t * 3.2) * 9 * wobble;
+            const bobX  = Math.sin(t * 1.6) * 4 * wobble;
+            cx.save();
+            cx.translate(cW / 2 + bobX, cH / 2 + bobY);
+            cx.translate(-cW / 2, -cH / 2);
+            drawCorridor('fwd', depth, t);
+            cx.restore();
+            const fadeIn = Math.min(1, t / 0.75);
+            if (fadeIn < 1) { cx.fillStyle = `rgba(0,0,0,${1 - fadeIn})`; cx.fillRect(0, 0, cW, cH); }
+            drawVignette(0.55 - p * 0.08, 0, 0, 0);
+
+        } else if (t < PH_PAUSE) {
+            // Stop — breathing bob, staring down the corridor
+            const breathY = Math.sin(t * 1.4) * 3;
+            cx.save(); cx.translate(0, breathY); drawCorridor('fwd', 0.068, t); cx.restore();
+            drawVignette(0.48, 0, 0, 0);
+
+        } else if (t < PH_FADE) {
+            // Fade to black
+            const fadeA = Math.min(1, (t - PH_PAUSE) / (PH_FADE - PH_PAUSE));
+            drawCorridor('fwd', 0.068, t);
+            cx.fillStyle = `rgba(0,0,0,${fadeA})`; cx.fillRect(0, 0, cW, cH);
+
+        } else if (t < PH_TEXT) {
+            cx.fillStyle = '#000'; cx.fillRect(0, 0, cW, cH);
+
+        } else {
+            // Gold + grey text types out
+            cx.fillStyle = '#000'; cx.fillRect(0, 0, cW, cH);
+            const line1 = 'The labyrinth of Daedalus.';
+            const line2 = 'Ten levels. No way back.';
+            const rate  = 0.065;
+            const shown1 = line1.slice(0, Math.min(Math.floor((t - PH_TEXT) / rate), line1.length));
+            const delay2 = PH_TEXT + line1.length * rate + 0.45;
+            const shown2 = t >= delay2
+                ? line2.slice(0, Math.min(Math.floor((t - delay2) / rate), line2.length))
+                : '';
+            const fs = Math.min(cW / 17, 28);
+            cx.font = `900 ${fs}px monospace`;
+            cx.textAlign = 'center';
+            if (shown1.length) {
+                cx.shadowColor = '#b8a060'; cx.shadowBlur = 22;
+                cx.fillStyle   = '#d4a853';
+                cx.fillText(shown1, cW / 2, cH / 2 - fs * 0.85);
+            }
+            if (shown2.length) {
+                cx.shadowColor = '#555'; cx.shadowBlur = 10;
+                cx.fillStyle   = '#999';
+                cx.fillText(shown2, cW / 2, cH / 2 + fs * 0.85);
+            }
+            cx.shadowBlur = 0;
+        }
+
+        if (t >= PH_END) {
+            cancelAnimationFrame(rafId1); rafId1 = null;
+            icOvl.style.display = 'none';
+            timerResume();
+            cb();
+            return;
+        }
+        rafId1 = requestAnimationFrame(tick1);
+    }
+    rafId1 = requestAnimationFrame(tick1);
 }
 
 // ── Level 5 intro cutscene ─────────────────────────────────────────────────────
