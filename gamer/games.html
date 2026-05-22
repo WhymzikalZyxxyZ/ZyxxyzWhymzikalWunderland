@@ -200,8 +200,8 @@
                 <h3>Daedalus</h3>
                 <p>Ten labyrinthine mazes of escalating difficulty — braided paths, fog of war, and enemies that hunt you. Escape them all. Your total time is your score.</p>
                 <div class="world-score-box">
-                    <label>LOCAL BEST</label>
-                    <span class="score-num" id="local-daedalus" style="font-size:14px;">—</span>
+                    <label>GLOBAL BEST</label>
+                    <span class="score-num" id="world-daedalus" style="font-size:14px;">—</span>
                     <span class="score-user" id="user-daedalus"></span>
                 </div>
             </a>
@@ -370,16 +370,26 @@
 
     <script src="/js/gamer-chat.js"></script>
     <script>
-        (function() {
-            const b = localStorage.getItem('dae_best');
-            if (b) {
-                const ms = +b, s = Math.floor(ms / 100) / 10;
-                const m = Math.floor(s / 60), sec = s % 60;
-                document.getElementById('local-daedalus').textContent =
-                    String(m).padStart(2,'0') + ':' + sec.toFixed(1).padStart(4,'0');
-                document.getElementById('user-daedalus').textContent = 'this device';
-            }
-        })();
+        function fmtDaeMs(ms) {
+            const s = Math.floor(ms / 100) / 10;
+            const m = Math.floor(s / 60), sec = s % 60;
+            return String(m).padStart(2,'0') + ':' + sec.toFixed(1).padStart(4,'0');
+        }
+
+        function bindDaedalusScore(fbPath, numId, userId) {
+            if (!window.FIREBASE_READY) return;
+            firebase.database().ref(fbPath).on('value', snap => {
+                const v = snap.val();
+                if (v === null || v === undefined) return;
+                if (typeof v === 'object' && Number.isFinite(v.score)) {
+                    document.getElementById(numId).textContent = fmtDaeMs(v.score);
+                    document.getElementById(userId).textContent =
+                        typeof v.username === 'string' ? v.username.slice(0, 30) : '—';
+                }
+            });
+        }
+
+        bindDaedalusScore('scores/daedalus', 'world-daedalus', 'user-daedalus');
 
         if (typeof getOrCreateUsername === 'function') {
             document.getElementById('username-display').textContent = getOrCreateUsername();

@@ -6,6 +6,11 @@
     <title>Daedalus — ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js" defer></script>
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/username-gen.js"></script>
     <style>
         :root { --gold: #d4a853; --red: #e05050; --teal: #80cbc4; }
 
@@ -1730,6 +1735,15 @@ function onGameComplete() {
     const prev  = localStorage.getItem('dae_best');
     const isNew = !prev || total < +prev;
     if (isNew) localStorage.setItem('dae_best', total);
+
+    if (window.FIREBASE_READY) {
+        const uname = (typeof getOrCreateUsername === 'function') ? getOrCreateUsername() : 'Anonymous';
+        firebase.database().ref('scores/daedalus').transaction(function(current) {
+            if (current === null || total < current.score) {
+                return { score: total, username: uname };
+            }
+        });
+    }
 
     document.getElementById('gcTime').textContent      = fmtMs(total);
     document.getElementById('gcNewBest').style.display = isNew ? 'block' : 'none';
