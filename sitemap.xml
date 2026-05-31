@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://zyxwonderland.xyz/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://zyxwonderland.xyz/about</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://zyxwonderland.xyz/gamer/games</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://zyxwonderland.xyz/gamer/daedalus</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://zyxwonderland.xyz/gamer/tetris</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://zyxwonderland.xyz/gamer/snake</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://zyxwonderland.xyz/gamer/chess</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://zyxwonderland.xyz/gamer/checkers</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://zyxwonderland.xyz/gamer/blackjack</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://zyxwonderland.xyz/gamer/poker</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://zyxwonderland.xyz/gamer/solitaire</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://zyxwonderland.xyz/gamer/pong</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://zyxwonderland.xyz/gamer/puzzle</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://zyxwonderland.xyz/gamer/rps</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://zyxwonderland.xyz/gamer/five-card-draw</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://zyxwonderland.xyz/virtuoso/virtuoso</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://zyxwonderland.xyz/virtuoso/animations/motionpictures</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://zyxwonderland.xyz/virtuoso/comics/webcomic</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://zyxwonderland.xyz/virtuoso/crafts/handmade</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://zyxwonderland.xyz/virtuoso/drawings/doodles</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://zyxwonderland.xyz/virtuoso/writings/stories</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://zyxwonderland.xyz/virtuoso/audio/adagio</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://zyxwonderland.xyz/virtuoso/audio/melody</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://zyxwonderland.xyz/technologist/apps</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://zyxwonderland.xyz/technologist/calculator</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://zyxwonderland.xyz/technologist/editor</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://zyxwonderland.xyz/technologist/sortinghat</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://zyxwonderland.xyz/community/forum</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://zyxwonderland.xyz/community/guestbook</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://zyxwonderland.xyz/community/wellness</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://zyxwonderland.xyz/blog</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://zyxwonderland.xyz/search</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+</urlset>

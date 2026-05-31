@@ -1,0 +1,591 @@
+// ════════════════════════════════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════════════════════════════════
+const TABS = ['learn','os','terminal'];
+function switchTab(t) {
+    TABS.forEach(id => {
+        document.getElementById('tab-'+id).classList.toggle('active', id===t);
+        document.getElementById('tab-'+id+'-content').style.display = id===t ? '' : 'none';
+    });
+    if (t === 'terminal') focusInput();
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// OS SUB-TABS
+// ════════════════════════════════════════════════════════════════════════
+const OS_LIST = ['mac','win','linux'];
+function switchOS(os) {
+    OS_LIST.forEach(id => {
+        document.getElementById('ostab-'+id).classList.toggle('active', id===os);
+        document.getElementById('os-'+id).classList.toggle('active', id===os);
+    });
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// LEARNING CENTER
+// ════════════════════════════════════════════════════════════════════════
+const TOPICS = [
+  { title:'What Is a System Operator?', body:`
+    <p>A <span class="term" data-def="Also called a sysop or sysadmin. The person responsible for configuring, maintaining, and securing computer systems and the infrastructure that runs them.">system operator</span> (sysop) is the person responsible for the day-to-day operation of computer systems, servers, and networks.</p>
+    <p>The role sits at the intersection of IT administration, security, and DevOps. A sysop keeps systems running, healthy, and secure — often invisible to everyone until something breaks.</p>
+    <ul>
+      <li><strong>Sysadmin</strong> — traditional title focused on servers and infrastructure.</li>
+      <li><strong>DevOps / SRE</strong> — modern evolution merging operations with software development.</li>
+      <li><strong>Cloud Engineer</strong> — focuses on cloud platforms (AWS, Azure, GCP).</li>
+      <li><strong>Security Analyst</strong> — specialises in monitoring and defending systems.</li>
+    </ul>
+  `},
+  { title:'Core Responsibilities', body:`
+    <p>The sysop's job spans the full lifecycle of a system.</p>
+    <ul>
+      <li><strong>Provisioning</strong> — set up new servers, VMs, or cloud instances.</li>
+      <li><strong>Configuration management</strong> — use tools like Ansible, Puppet, or Chef to keep configs consistent and repeatable.</li>
+      <li><strong>Patching &amp; updates</strong> — keep OS and software up-to-date to close security vulnerabilities.</li>
+      <li><strong>Monitoring &amp; alerting</strong> — track CPU, memory, disk, and network; alert on anomalies (Grafana, Prometheus, Nagios).</li>
+      <li><strong>Backup &amp; recovery</strong> — schedule backups, test restores, maintain <span class="term" data-def="Recovery Point Objective (RPO): how much data loss is acceptable. Recovery Time Objective (RTO): how quickly a system must be restored.">RPO/RTO</span> targets.</li>
+      <li><strong>User &amp; access management</strong> — create accounts, manage groups, enforce least-privilege.</li>
+      <li><strong>Capacity planning</strong> — forecast resource needs before they become crises.</li>
+    </ul>
+  `},
+  { title:'File Permissions', body:`
+    <p>Unix-like systems use a three-tier permission model for every file and directory.</p>
+    <p><span class="spec-tag">owner</span><span class="spec-tag">group</span><span class="spec-tag">others</span> — each gets read (r=4), write (w=2), execute (x=1).</p>
+    <ul>
+      <li><code>chmod 755 file</code> — owner can rwx, group and others can r-x.</li>
+      <li><code>chmod 644 file</code> — owner can rw-, others can r--. Standard for web files.</li>
+      <li><code>chown user:group file</code> — change ownership.</li>
+      <li><strong><span class="term" data-def="Set User ID on execution. Lets a program run with the file owner's privileges (e.g. passwd runs as root). A security risk if misused.">SUID / SGID</span></strong> — special bits that elevate permissions at execution time.</li>
+      <li><code>ls -la</code> to see permissions; <code>stat file</code> for numeric mode.</li>
+    </ul>
+    <p>Windows uses <span class="term" data-def="Access Control Lists in Windows. Each file/folder has an ACL containing Access Control Entries (ACEs) specifying which users or groups have which permissions.">ACLs</span> — managed via <code>icacls</code> or the Security tab in Properties.</p>
+  `},
+  { title:'Process Management', body:`
+    <p>Systems run dozens to thousands of processes. A sysop must be able to inspect and control them.</p>
+    <ul>
+      <li><code>ps aux</code> / <code>top</code> / <code>htop</code> — list running processes with CPU/mem usage (Linux/macOS).</li>
+      <li><code>kill PID</code> — send SIGTERM (graceful stop). <code>kill -9 PID</code> — SIGKILL (force stop).</li>
+      <li><code>systemctl</code> — manage <span class="term" data-def="The init system and service manager used by most modern Linux distributions. Replaces init/upstart. Controls services, targets (runlevels), and system state.">systemd</span> services: <code>start</code>, <code>stop</code>, <code>enable</code>, <code>status</code>.</li>
+      <li><code>Get-Process</code> / <code>Stop-Process</code> — PowerShell equivalents on Windows.</li>
+      <li><strong>Cron jobs</strong> — scheduled tasks on Unix. <code>crontab -e</code> to edit. Format: <code>min hr dom mon dow command</code>.</li>
+      <li><strong>Task Scheduler</strong> — GUI and PowerShell-based scheduling on Windows.</li>
+    </ul>
+  `},
+  { title:'Networking Fundamentals', body:`
+    <p>Every sysop needs a solid foundation in networking to diagnose connectivity issues.</p>
+    <ul>
+      <li><strong><span class="term" data-def="TCP/IP stack: Application → Transport (TCP/UDP) → Internet (IP) → Link (Ethernet/Wi-Fi). Each layer adds a header when sending, strips it when receiving.">OSI / TCP/IP layers</span></strong> — understand where a problem lives (DNS? routing? firewall?).</li>
+      <li><code>ping</code> / <code>traceroute</code> (<code>tracert</code> on Windows) — test connectivity and trace hops.</li>
+      <li><code>netstat -tulnp</code> — which processes are listening on which ports.</li>
+      <li><code>ss</code> — faster, richer socket statistics (modern Linux replacement for netstat).</li>
+      <li><code>dig</code> / <code>nslookup</code> — query DNS records.</li>
+      <li><strong>Firewall basics</strong> — <code>iptables</code> / <code>nftables</code> on Linux; Windows Defender Firewall; cloud security groups.</li>
+      <li><strong><span class="term" data-def="Virtual Private Network. Encrypts traffic between a client and a server. Site-to-site VPNs connect office networks; remote-access VPNs let users appear inside the corporate network.">VPN</span></strong> — encrypted tunnel used for remote access and site-to-site connectivity.</li>
+    </ul>
+  `},
+  { title:'Log Management', body:`
+    <p>Logs are the primary diagnostic tool for a system operator. Know where they live.</p>
+    <ul>
+      <li><strong>Linux</strong> — <code>/var/log/syslog</code>, <code>/var/log/auth.log</code>, <code>/var/log/kern.log</code>, journald (<code>journalctl -xe</code>).</li>
+      <li><strong>macOS</strong> — <code>Console.app</code>, <code>log stream</code> / <code>log show</code>, <code>/var/log/</code>.</li>
+      <li><strong>Windows</strong> — Event Viewer (<code>eventvwr.msc</code>), channels: System, Application, Security.</li>
+      <li><code>tail -f /var/log/syslog</code> — stream live log output to the terminal.</li>
+      <li><code>grep "ERROR" /var/log/app.log</code> — search for specific entries.</li>
+      <li><strong>Centralised logging</strong> — ship logs to a SIEM or ELK stack (Elasticsearch, Logstash, Kibana) for aggregation, search, and alerting at scale.</li>
+      <li><strong>Log rotation</strong> — <code>logrotate</code> prevents logs from consuming all disk space.</li>
+    </ul>
+  `},
+  { title:'User & Access Management', body:`
+    <p>Controlling who can do what on a system is one of the most critical sysop responsibilities.</p>
+    <ul>
+      <li><code>useradd</code> / <code>usermod</code> / <code>userdel</code> — manage local Linux users.</li>
+      <li><code>passwd</code> — set or change a user's password.</li>
+      <li><code>sudo</code> — run commands as root. Configure via <code>/etc/sudoers</code> (<code>visudo</code>).</li>
+      <li><strong><span class="term" data-def="Active Directory is Microsoft's directory service for Windows networks. Manages users, computers, policies, and authentication across the domain via Kerberos and LDAP.">Active Directory</span></strong> — centralised identity management for Windows environments.</li>
+      <li><strong><span class="term" data-def="Principle of Least Privilege — every account gets only the minimum permissions necessary to do its job. Limits damage from compromise or error.">PoLP</span></strong> — grant only the minimum access required.</li>
+      <li><strong>SSH keys</strong> — generate with <code>ssh-keygen</code>, authorise via <code>~/.ssh/authorized_keys</code>. Disable password auth in production.</li>
+      <li><strong>MFA</strong> — require a second factor (TOTP app, hardware key) for privileged access.</li>
+    </ul>
+  `},
+  { title:'Virtualisation & Containers', body:`
+    <p>Modern infrastructure runs on layers of abstraction that sysops must understand.</p>
+    <ul>
+      <li><strong><span class="term" data-def="A hypervisor creates and runs virtual machines. Type 1 (bare-metal): VMware ESXi, Hyper-V, KVM — runs directly on hardware. Type 2 (hosted): VirtualBox, VMware Workstation — runs on top of a host OS.">Hypervisors</span></strong> — Type 1 (VMware ESXi, KVM) and Type 2 (VirtualBox, Parallels).</li>
+      <li><strong>Docker</strong> — containers package an app and its dependencies into an isolated, portable unit. Faster and lighter than VMs.</li>
+      <li><code>docker run</code> / <code>docker ps</code> / <code>docker logs</code> — the essential daily commands.</li>
+      <li><strong>Kubernetes (K8s)</strong> — orchestrates containers at scale. Manages scheduling, scaling, rolling deploys, and self-healing.</li>
+      <li><strong>VMs vs containers</strong> — VMs virtualise hardware (full OS); containers share the host kernel (process isolation only). Containers are faster; VMs offer stronger isolation.</li>
+      <li><strong>Cloud VMs</strong> — EC2 (AWS), Compute Engine (GCP), Azure VMs. Provision in seconds via console or IaC.</li>
+    </ul>
+  `},
+  { title:'Security & Hardening', body:`
+    <p>A sysop is the last line of defence. Hardening reduces the attack surface.</p>
+    <ul>
+      <li><strong>Patch promptly</strong> — most breaches exploit known vulnerabilities weeks or months after a patch is available.</li>
+      <li><strong>Disable unused services</strong> — every open port is an opportunity for attackers.</li>
+      <li><strong><span class="term" data-def="Security-Enhanced Linux. A Linux kernel module that enforces mandatory access controls (MAC) — processes are confined to only what policy allows, even if running as root.">SELinux / AppArmor</span></strong> — mandatory access control to confine processes.</li>
+      <li><strong>Fail2ban</strong> — automatically blocks IPs that show signs of brute-force attacks.</li>
+      <li><strong>Audit trails</strong> — enable auditd on Linux; Windows Security event log; track privileged actions.</li>
+      <li><strong>Encryption at rest</strong> — LUKS on Linux, BitLocker on Windows, FileVault on macOS.</li>
+      <li><strong>CIS Benchmarks</strong> — industry-standard hardening guides for every major OS and application.</li>
+    </ul>
+  `},
+  { title:'Scripting & Automation', body:`
+    <p>A sysop who cannot script is limited to repetitive manual work. Automate everything repeatable.</p>
+    <ul>
+      <li><strong>bash / zsh</strong> — shell scripting for Linux/macOS tasks: backups, log rotation, deployment hooks.</li>
+      <li><strong>PowerShell</strong> — first-class scripting on Windows; also cross-platform (PS Core).</li>
+      <li><strong>Python</strong> — when scripts grow complex. Excellent for API calls, data processing, and tooling.</li>
+      <li><strong>Ansible</strong> — agentless configuration management using YAML playbooks. Push config to hundreds of hosts simultaneously.</li>
+      <li><strong>Terraform</strong> — <span class="term" data-def="Infrastructure as Code. Describe your servers, networks, and databases in declarative config files. Version-control them like code. Apply and destroy with one command.">IaC</span> for cloud resources. Declare infrastructure in HCL, apply with <code>terraform apply</code>.</li>
+      <li><strong>CI/CD pipelines</strong> — automate test and deploy with GitHub Actions, GitLab CI, Jenkins, or CircleCI.</li>
+    </ul>
+  `},
+];
+
+function buildLearnGrid() {
+    const grid = document.getElementById('learn-grid');
+    TOPICS.forEach((t, i) => {
+        const bodyId = 'lc-body-' + i;
+        const card   = document.createElement('div');
+        card.className = 'learn-card';
+        card.innerHTML =
+            '<div class="learn-card-title" onclick="toggleCard(\'' + bodyId + '\',this)">' +
+                '<span>' + t.title + '</span><span>&#9658;</span>' +
+            '</div>' +
+            '<div class="learn-card-body" id="' + bodyId + '">' + t.body + '</div>';
+        grid.appendChild(card);
+    });
+}
+
+function toggleCard(id, titleEl) {
+    const open  = document.getElementById(id).classList.toggle('open');
+    const arrow = titleEl.querySelector('span:last-child');
+    if (arrow) arrow.innerHTML = open ? '&#9660;' : '&#9658;';
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// OS COMMAND REFERENCE
+// ════════════════════════════════════════════════════════════════════════
+const CMD_DATA = {
+    mac: [
+        ['ls -la',                 'List directory contents with permissions and hidden files'],
+        ['cd /path/to/dir',        'Change directory'],
+        ['pwd',                    'Print working directory'],
+        ['cp src dest',            'Copy file or directory (-r for recursive)'],
+        ['mv src dest',            'Move or rename a file'],
+        ['rm -rf dir/',            'Delete directory and contents (use with caution)'],
+        ['cat file.txt',           'Print file contents to terminal'],
+        ['grep -r "pattern" .',    'Recursive search for text in files'],
+        ['find . -name "*.log"',   'Find files by name pattern'],
+        ['chmod 755 file',         'Set file permissions (rwxr-xr-x)'],
+        ['chown user:group file',  'Change file owner and group'],
+        ['ps aux',                 'List all running processes'],
+        ['kill -9 PID',            'Force-kill a process by PID'],
+        ['top / htop',             'Interactive process monitor'],
+        ['brew install pkg',       'Install a package via Homebrew'],
+        ['diskutil list',          'List disks and partitions'],
+        ['ifconfig / ipconfig',    'Show network interface configuration'],
+        ['ping -c 4 host',         'Send 4 ICMP ping packets to a host'],
+        ['ssh user@host',          'Connect to a remote host via SSH'],
+        ['scp file user@host:dst', 'Secure copy file to remote host'],
+        ['sudo command',           'Run a command with administrator privileges'],
+        ['man command',            'Show the manual page for a command'],
+    ],
+    win: [
+        ['Get-ChildItem / ls',     'List directory contents'],
+        ['Set-Location / cd',      'Change directory'],
+        ['Get-Location / pwd',     'Print current directory'],
+        ['Copy-Item src dst',      'Copy file or folder'],
+        ['Move-Item src dst',      'Move or rename file'],
+        ['Remove-Item -Recurse',   'Delete folder and contents'],
+        ['Get-Content file.txt',   'Print file contents'],
+        ['Select-String "pat" f',  'Search for text in files (like grep)'],
+        ['Get-ChildItem -Recurse', 'Recursive file search'],
+        ['icacls file',            'View or modify file permissions (ACLs)'],
+        ['Get-Process',            'List running processes'],
+        ['Stop-Process -Id PID',   'Kill a process by ID'],
+        ['taskmgr',                'Open Task Manager GUI'],
+        ['winget install pkg',     'Install a package via Windows Package Manager'],
+        ['diskpart',               'Disk partition management tool'],
+        ['ipconfig /all',          'Show detailed network configuration'],
+        ['Test-Connection host',   'Ping a host (PowerShell version)'],
+        ['netstat -ano',           'Show open ports and listening sockets'],
+        ['ssh user@host',          'SSH is built-in since Windows 10'],
+        ['Invoke-WebRequest url',  'Download a file (like curl/wget)'],
+        ['Start-Process -Verb RunAs', 'Run a command as Administrator'],
+        ['Get-Help command',       'Show help for a PowerShell command'],
+    ],
+    linux: [
+        ['ls -la',                 'List directory contents with permissions and hidden files'],
+        ['cd /path/to/dir',        'Change directory'],
+        ['pwd',                    'Print working directory'],
+        ['cp -r src dest',         'Copy file or directory recursively'],
+        ['mv src dest',            'Move or rename a file'],
+        ['rm -rf dir/',            'Delete directory and contents (irreversible)'],
+        ['cat file.txt',           'Print file contents'],
+        ['grep -rn "pattern" .',   'Recursive search with line numbers'],
+        ['find / -name "file"',    'Find files system-wide by name'],
+        ['chmod 644 file',         'Set file permissions (rw-r--r--)'],
+        ['chown user:group file',  'Change file owner and group'],
+        ['ps aux | grep proc',     'Search running processes'],
+        ['kill -9 PID',            'Force-kill a process'],
+        ['systemctl status svc',   'Check a systemd service status'],
+        ['journalctl -xe',         'View recent systemd/kernel logs'],
+        ['apt install / dnf install', 'Install packages (Debian/Fedora)'],
+        ['df -h',                  'Show disk space usage (human-readable)'],
+        ['free -h',                'Show memory usage'],
+        ['ip addr / ifconfig',     'Show network interface configuration'],
+        ['ss -tulnp',              'Show listening sockets and owning processes'],
+        ['curl -I https://url',    'Fetch HTTP headers from a URL'],
+        ['ssh -i key user@host',   'Connect via SSH with a key file'],
+        ['tar -czf out.tar.gz dir','Create compressed archive'],
+        ['sudo -i / sudo su',      'Switch to root shell'],
+    ],
+};
+
+function buildCmdTable(containerId, rows) {
+    const wrap = document.getElementById(containerId);
+    if (!wrap) return;
+    rows.forEach(([name, desc]) => {
+        const row = document.createElement('div');
+        row.className = 'cmd-row';
+        row.innerHTML = '<span class="cmd-name">' + name + '</span><span class="cmd-desc">' + desc + '</span>';
+        wrap.appendChild(row);
+    });
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// TERMINAL EMULATOR
+// ════════════════════════════════════════════════════════════════════════
+let currentShell = 'bash';
+let cwd          = '/home/zyxxyz';
+let history      = [];
+let histIdx      = -1;
+
+// Virtual filesystem
+const FS = {
+    '/': { type:'dir' },
+    '/home': { type:'dir' },
+    '/home/zyxxyz': { type:'dir' },
+    '/home/zyxxyz/documents': { type:'dir' },
+    '/home/zyxxyz/documents/notes.txt': { type:'file', content:'These are my operator notes.\nAlways check the logs first.\nWhen in doubt, restart nothing yet — read first.\n' },
+    '/home/zyxxyz/documents/todo.txt':  { type:'file', content:'[ ] Patch OpenSSH on prod-01\n[ ] Rotate API keys\n[ ] Review sudo access list\n[x] Set up log rotation\n' },
+    '/home/zyxxyz/scripts': { type:'dir' },
+    '/home/zyxxyz/scripts/backup.sh': { type:'file', content:'#!/bin/bash\n# Daily backup script\nSRC=/home/zyxxyz\nDST=/backups/$(date +%Y-%m-%d)\nmkdir -p "$DST"\nrsync -av "$SRC/" "$DST/"\necho "Backup complete: $DST"\n' },
+    '/home/zyxxyz/scripts/monitor.sh': { type:'file', content:'#!/bin/bash\n# Simple resource monitor\necho "=== CPU ==="\ntop -bn1 | head -5\necho "=== DISK ==="\ndf -h /\necho "=== MEMORY ==="\nfree -h\n' },
+    '/etc': { type:'dir' },
+    '/etc/hosts': { type:'file', content:'127.0.0.1   localhost\n127.0.1.1   zyxxyz-workstation\n::1         localhost ip6-localhost\n' },
+    '/etc/motd': { type:'file', content:'Welcome to Zyxxyz\'s Whymzykal Wunderland system.\nAll activity is logged. Authorised users only.\n' },
+    '/var': { type:'dir' },
+    '/var/log': { type:'dir' },
+    '/var/log/syslog': { type:'file', content:'May  2 08:00:01 zyxxyz systemd[1]: Started Daily Backup.\nMay  2 08:00:03 zyxxyz backup.sh[1234]: Backup complete: /backups/2026-05-02\nMay  2 09:14:22 zyxxyz sshd[5678]: Accepted publickey for zyxxyz\nMay  2 11:30:07 zyxxyz kernel: [UFW BLOCK] IN=eth0 SRC=192.168.1.99\n' },
+    '/var/log/auth.log': { type:'file', content:'May  2 09:14:22 zyxxyz sshd[5678]: Accepted publickey for zyxxyz from 10.0.0.5\nMay  2 09:14:22 zyxxyz systemd-logind[890]: New session 42 of user zyxxyz\nMay  2 11:45:00 zyxxyz sudo[9012]: zyxxyz : TTY=pts/0 ; COMMAND=/usr/bin/apt update\n' },
+};
+
+function fsNode(path) {
+    return FS[normPath(path)] || null;
+}
+
+function normPath(p) {
+    if (!p.startsWith('/')) p = cwd + '/' + p;
+    const parts = p.split('/').filter(Boolean);
+    const out = [];
+    parts.forEach(seg => {
+        if (seg === '..') out.pop();
+        else if (seg !== '.') out.push(seg);
+    });
+    return '/' + out.join('/');
+}
+
+function listDir(path) {
+    const norm = normPath(path);
+    const prefix = norm === '/' ? '/' : norm + '/';
+    return Object.keys(FS)
+        .filter(k => {
+            if (k === norm) return false;
+            if (!k.startsWith(prefix)) return false;
+            const rest = k.slice(prefix.length);
+            return rest && !rest.includes('/');
+        })
+        .map(k => ({ name: k.slice(prefix.length), node: FS[k] }));
+}
+
+function getPrompt() {
+    const user = 'zyxxyz';
+    const host = 'wunderland';
+    const shortCwd = cwd === '/home/zyxxyz' ? '~' : cwd.replace('/home/zyxxyz', '~');
+    if (currentShell === 'ps') return 'PS ' + cwd + '> ';
+    if (currentShell === 'zsh') return user + '@' + host + ' ' + shortCwd + ' % ';
+    return user + '@' + host + ':' + shortCwd + '$ ';
+}
+
+function updatePromptLabel() {
+    document.getElementById('term-prompt-label').textContent = getPrompt();
+}
+
+// Shell-specific command aliases
+function resolveCmd(raw) {
+    const aliases = {
+        ps: { 'ls':'ls', 'dir':'ls', 'cd':'cd', 'pwd':'pwd', 'cat':'cat',
+              'get-content':'cat', 'clear':'clear', 'cls':'clear',
+              'echo':'echo', 'help':'help', 'whoami':'whoami',
+              'hostname':'hostname', 'date':'date', 'mkdir':'mkdir',
+              'get-location':'pwd', 'set-location':'cd', 'get-childitem':'ls' },
+        bash: null,
+        zsh:  null,
+    };
+    const map = aliases[currentShell];
+    if (!map) return raw;
+    return map[raw.toLowerCase()] || raw;
+}
+
+function runCommand(input) {
+    const trimmed = input.trim();
+    if (!trimmed) return;
+    history.unshift(trimmed);
+    histIdx = -1;
+
+    printLine(getPrompt() + trimmed, 'prompt');
+
+    const parts  = trimmed.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || [];
+    const rawCmd = parts[0] || '';
+    const cmd    = resolveCmd(rawCmd.toLowerCase());
+    const args   = parts.slice(1).map(a => a.replace(/^["']|["']$/g, ''));
+
+    switch (cmd) {
+        case 'help':    cmdHelp();                  break;
+        case 'ls':      cmdLs(args);                break;
+        case 'cd':      cmdCd(args);                break;
+        case 'pwd':     printLine(cwd);             break;
+        case 'cat':     cmdCat(args);               break;
+        case 'echo':    printLine(args.join(' '));   break;
+        case 'clear':   clearTerminal();            break;
+        case 'whoami':  printLine('zyxxyz');        break;
+        case 'hostname':printLine('wunderland');    break;
+        case 'date':    printLine(new Date().toString()); break;
+        case 'mkdir':   cmdMkdir(args);             break;
+        case 'uname':   cmdUname(args);             break;
+        case 'ps':      cmdPs();                    break;
+        case 'id':      printLine('uid=1000(zyxxyz) gid=1000(zyxxyz) groups=1000(zyxxyz),4(adm),24(cdrom),27(sudo)'); break;
+        case 'uptime':  printLine(' 11:42:07 up 3 days, 14:21,  1 user,  load average: 0.08, 0.12, 0.10'); break;
+        case 'df':      cmdDf();                    break;
+        case 'free':    cmdFree();                  break;
+        case 'history': history.slice(0,20).forEach((h,i)=>printLine('  '+(i+1).toString().padStart(3)+' '+h)); break;
+        default:
+            printLine(currentShell === 'ps'
+                ? "'" + rawCmd + "' is not recognized as a cmdlet, function, script file, or operable program."
+                : rawCmd + ': command not found', 'err');
+    }
+}
+
+function cmdHelp() {
+    const lines = currentShell === 'ps' ? [
+        'Available commands (PowerShell mode):',
+        '  ls / dir / Get-ChildItem   List directory contents',
+        '  cd / Set-Location          Change directory',
+        '  pwd / Get-Location         Print working directory',
+        '  cat / Get-Content          Read a file',
+        '  echo                       Print text',
+        '  clear / cls                Clear the terminal',
+        '  date                       Show current date/time',
+        '  whoami                     Print current user',
+        '  hostname                   Print machine name',
+        '  history                    Show command history',
+        '  help                       Show this message',
+    ] : [
+        'Available commands (' + (currentShell === 'zsh' ? 'zsh' : 'bash') + ' mode):',
+        '  ls [-la]                   List directory contents',
+        '  cd <dir>                   Change directory',
+        '  pwd                        Print working directory',
+        '  cat <file>                 Read a file',
+        '  echo <text>                Print text',
+        '  mkdir <dir>                Create a directory',
+        '  uname [-a]                 System information',
+        '  ps                         List running processes (simulated)',
+        '  df [-h]                    Disk space usage',
+        '  free [-h]                  Memory usage',
+        '  id                         Show user and group IDs',
+        '  uptime                     System uptime',
+        '  date                       Current date/time',
+        '  whoami                     Current user',
+        '  hostname                   Machine name',
+        '  history                    Command history',
+        '  clear                      Clear the terminal',
+        '  help                       Show this message',
+    ];
+    lines.forEach(l => printLine(l));
+}
+
+function cmdLs(args) {
+    const showAll = args.includes('-la') || args.includes('-a') || args.includes('-al');
+    const pathArg = args.find(a => !a.startsWith('-')) || cwd;
+    const target  = normPath(pathArg);
+    const node    = fsNode(target);
+    if (!node) { printLine('ls: cannot access \'' + pathArg + '\': No such file or directory', 'err'); return; }
+    if (node.type === 'file') { printLine(pathArg); return; }
+    const entries = listDir(target);
+    if (showAll) {
+        printLine('total ' + (entries.length * 4 + 8));
+        printLine('drwxr-xr-x  2 zyxxyz zyxxyz 4096 May  2 11:42 .');
+        printLine('drwxr-xr-x 12 zyxxyz zyxxyz 4096 May  1 09:00 ..');
+    }
+    entries.forEach(({name, node: n}) => {
+        if (!showAll && name.startsWith('.')) return;
+        if (n.type === 'dir') printLine((showAll ? 'drwxr-xr-x  2 zyxxyz zyxxyz 4096 May  1 09:00 ' : '') + name + '/', 'dir');
+        else                  printLine((showAll ? '-rw-r--r--  1 zyxxyz zyxxyz  ' + (n.content||'').length.toString().padStart(4) + ' May  1 09:00 ' : '') + name, 'exec');
+    });
+    if (entries.length === 0 && !showAll) printLine('(empty directory)', 'info');
+}
+
+function cmdCd(args) {
+    if (!args.length || args[0] === '~') { cwd = '/home/zyxxyz'; updatePromptLabel(); return; }
+    const target = normPath(args[0]);
+    const node   = fsNode(target);
+    if (!node)            { printLine('cd: ' + args[0] + ': No such file or directory', 'err'); return; }
+    if (node.type !== 'dir') { printLine('cd: ' + args[0] + ': Not a directory', 'err'); return; }
+    cwd = target;
+    updatePromptLabel();
+}
+
+function cmdCat(args) {
+    if (!args.length) { printLine('cat: missing operand', 'err'); return; }
+    args.forEach(arg => {
+        const target = normPath(arg);
+        const node   = fsNode(target);
+        if (!node)              { printLine('cat: ' + arg + ': No such file or directory', 'err'); return; }
+        if (node.type === 'dir'){ printLine('cat: ' + arg + ': Is a directory', 'err'); return; }
+        printLine(node.content || '(empty file)', 'out');
+    });
+}
+
+function cmdMkdir(args) {
+    if (!args.length) { printLine('mkdir: missing operand', 'err'); return; }
+    args.forEach(arg => {
+        const target = normPath(arg);
+        if (FS[target]) { printLine('mkdir: cannot create directory \'' + arg + '\': File exists', 'err'); return; }
+        FS[target] = { type:'dir' };
+        printLine('Directory created: ' + target, 'info');
+    });
+}
+
+function cmdUname(args) {
+    const all = args.includes('-a');
+    if (all) printLine('Linux wunderland 6.8.0-57-generic #59-Ubuntu SMP x86_64 GNU/Linux');
+    else     printLine('Linux');
+}
+
+function cmdPs() {
+    printLine('  PID TTY          TIME CMD');
+    [
+        ['  1', 'pts/0', '00:00:00', 'bash'],
+        ['123', 'pts/0', '00:00:00', 'sshd: zyxxyz@pts/0'],
+        ['456', '?',     '00:02:14', 'systemd'],
+        ['789', '?',     '00:00:07', 'cron'],
+        ['012', '?',     '00:00:00', 'ps'],
+    ].forEach(r => printLine(r[0].padEnd(5) + ' ' + r[1].padEnd(13) + r[2] + ' ' + r[3]));
+}
+
+function cmdDf(args) {
+    printLine('Filesystem      Size  Used Avail Use% Mounted on');
+    printLine('/dev/sda1        50G   18G   30G  38% /');
+    printLine('tmpfs           3.9G     0  3.9G   0% /dev/shm');
+    printLine('/dev/sdb1       200G   82G  118G  41% /backups');
+}
+
+function cmdFree() {
+    printLine('               total        used        free      shared  buff/cache   available');
+    printLine('Mem:           7.7Gi       2.1Gi       3.9Gi        12Mi       1.7Gi       5.3Gi');
+    printLine('Swap:          2.0Gi          0B       2.0Gi');
+}
+
+// ── Output helpers ────────────────────────────────────────────────────────────
+function printLine(text, type) {
+    const out  = document.getElementById('term-output');
+    const div  = document.createElement('div');
+    const cls  = { prompt:'t-prompt', err:'t-err', out:'t-out', info:'t-info', dir:'t-dir', exec:'t-exec' };
+    div.className  = cls[type] || 't-line';
+    div.textContent = text;
+    out.appendChild(div);
+    const wrap = document.getElementById('terminal-wrap');
+    wrap.scrollTop = wrap.scrollHeight;
+}
+
+function clearTerminal() {
+    document.getElementById('term-output').innerHTML = '';
+}
+
+function focusInput() {
+    document.getElementById('term-input').focus();
+}
+
+function handleTermKey(e) {
+    const input = document.getElementById('term-input');
+    if (e.key === 'Enter') {
+        const val = input.value;
+        input.value = '';
+        runCommand(val);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (histIdx < history.length - 1) { histIdx++; input.value = history[histIdx]; }
+        input.setSelectionRange(input.value.length, input.value.length);
+    } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (histIdx > 0) { histIdx--; input.value = history[histIdx]; }
+        else if (histIdx === 0) { histIdx = -1; input.value = ''; }
+        input.setSelectionRange(input.value.length, input.value.length);
+    } else if (e.key === 'Tab') {
+        e.preventDefault();
+        tabComplete(input);
+    } else if (e.key === 'l' && e.ctrlKey) {
+        e.preventDefault();
+        clearTerminal();
+    }
+}
+
+function tabComplete(input) {
+    const val   = input.value;
+    const parts = val.split(' ');
+    if (parts.length < 2) return;
+    const partial = parts[parts.length - 1];
+    const base    = partial.includes('/') ? partial.slice(0, partial.lastIndexOf('/')+1) : '';
+    const frag    = partial.includes('/') ? partial.slice(partial.lastIndexOf('/')+1) : partial;
+    const dir     = normPath(base || cwd);
+    const matches = listDir(dir)
+        .map(e => e.name + (e.node.type==='dir' ? '/' : ''))
+        .filter(n => n.startsWith(frag));
+    if (matches.length === 1) {
+        parts[parts.length-1] = base + matches[0];
+        input.value = parts.join(' ');
+    } else if (matches.length > 1) {
+        printLine(getPrompt() + val, 'prompt');
+        printLine(matches.join('  '));
+    }
+}
+
+function changeShell() {
+    currentShell = document.getElementById('shell-select').value;
+    resetTerminal();
+}
+
+function resetTerminal() {
+    cwd = currentShell === 'ps' ? 'C:\\Users\\zyxxyz' : '/home/zyxxyz';
+    history = [];
+    histIdx = -1;
+    clearTerminal();
+    updatePromptLabel();
+    const motd = {
+        bash: 'Welcome to Ubuntu 24.04.2 LTS (GNU/Linux 6.8.0-57-generic x86_64)\nType \'help\' for available commands.',
+        zsh:  'Last login: Fri May  2 09:14:22 2026\nzyxxyz@wunderland ~ %\nType \'help\' for available commands.',
+        ps:   'Windows PowerShell\nCopyright (C) Microsoft Corporation. All rights reserved.\nType \'help\' for available commands.',
+    };
+    printLine(motd[currentShell], 'info');
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════════════════
+buildLearnGrid();
+buildCmdTable('cmds-mac',   CMD_DATA.mac);
+buildCmdTable('cmds-win',   CMD_DATA.win);
+buildCmdTable('cmds-linux', CMD_DATA.linux);
+resetTerminal();

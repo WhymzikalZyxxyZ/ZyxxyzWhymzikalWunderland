@@ -72,6 +72,16 @@ jobs:
           require('fs').writeFileSync('js/firebase-config.js', out);
           "
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install and minify assets
+        run: |
+          npm install --no-save terser clean-css-cli
+          node scripts/minify.js
+
       - name: Remove non-web files
         run: rm -rf node_modules tests coverage package.json package-lock.json CODEOWNERS README.md .eslintrc* .stylelintrc* .htmlhintrc .github
 

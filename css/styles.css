@@ -1,46 +1,128 @@
-fsbody {
-    background-color: powderblue;
+/* ── Design tokens ───────────────────────────────────────────────────────── */
+:root {
+    --accent:        #f4a261;
+    --accent-dark:   #e76f51;
+    --accent-dim:    rgba(244, 162, 97, 0.18);
+    --accent-border: rgba(244, 162, 97, 0.2);
+    --text-muted:    #c8b0d8;
+    --bg-base:       rgba(14, 8, 24, 0.95);
 }
 
-h1 {
-    color: blue;
-    text-align: center;
-    font-size: 69px;
-    font-weight: bolder;
-    font-style: oblique;
-    font-palette: dark;
-    font-family: 'Comic Sans MS';
-    text-decoration: underline blink;
-    outline-color: aquamarine;
+/* ── Base reset ─────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+h1, h2, h3, h4 { margin: 0; }
+p { margin: 0; }
+
+/* ── Skip to content ─────────────────────────────────────────────────────── */
+.skip-to-content {
+    position: fixed;
+    top: -100px;
+    left: 16px;
+    background: var(--accent);
+    color: #111;
+    padding: 8px 16px;
+    border-radius: 0 0 6px 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    font-weight: bold;
+    z-index: 9999;
+    transition: top 0.15s;
+    text-decoration: none;
+}
+.skip-to-content:focus { top: 0; }
+
+/* ── Page fade-in ────────────────────────────────────────────────────────── */
+body { animation: pageFadeIn 0.25s ease-out both; }
+@keyframes pageFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+body.page-fade-out { animation: pageFadeOut 0.16s ease-in forwards; }
+@keyframes pageFadeOut { to { opacity: 0; transform: translateY(-4px); } }
+
+/* ── Firebase loading spinner ────────────────────────────────────────────── */
+.firebase-loading {
+    display: inline-block;
+    width: 20px; height: 20px;
+    border: 2px solid rgba(244,162,97,0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Dark / Light theme toggle ───────────────────────────────────────────── */
+.theme-toggle {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #888;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    user-select: none;
+    flex-shrink: 0;
+    margin: 0 12px;
+}
+.theme-toggle:hover { border-color: rgba(244,162,97,0.4); color: var(--accent); }
+
+/* On mobile the theme toggle sits in the top row above the collapsed links */
+@media (width <= 768px) {
+    .theme-toggle {
+        position: absolute;
+        top: 8px;
+        right: 58px;
+        margin: 0;
+        padding: 4px 10px;
+    }
 }
 
-h2 {
-    color: darkslategrey;
-    text-align: center;
-    font-weight: bolder;
-    font-size: 69px;
-    font-family: Jokerman;
-    text-decoration: blink;
-    outline-color: aquamarine;
+/* Light theme — override tokens first, then structural rules */
+[data-theme="light"] {
+    --accent:      #c07030;
+    --accent-dark: #a05828;
+}
+[data-theme="light"] body,
+[data-theme="light"] .wunderBody,
+[data-theme="light"] .indexBody {
+    background: #f5f0e8 !important;
+    color: #1a1a1a;
+}
+[data-theme="light"] .navbar { background: rgba(240,235,225,0.95) !important; border-bottom-color: rgba(0,0,0,0.1) !important; }
+[data-theme="light"] .nav-link { color: #444 !important; }
+[data-theme="light"] .nav-link:hover { color: var(--accent) !important; }
+[data-theme="light"] .nav-brand { color: var(--accent) !important; }
+[data-theme="light"] .section-cards .card { background: rgba(255,255,255,0.85) !important; border-color: rgba(0,0,0,0.1) !important; color: #333; }
+[data-theme="light"] .section-cards .card h3 { color: var(--accent); }
+[data-theme="light"] .section-cards .card p  { color: #666; }
+[data-theme="light"] h1,
+[data-theme="light"] h2 { color: #333; text-shadow: none !important; }
+[data-theme="light"] .hero { background: rgba(255,255,255,0.7) !important; border-color: rgba(0,0,0,0.1) !important; }
+[data-theme="light"] .hero p { color: #555 !important; }
+
+/* ── Keyboard focus ring ─────────────────────────────────────────────────── */
+:focus { outline: none; }
+:focus-visible {
+    outline: 2px solid rgba(244, 162, 97, 0.75);
+    outline-offset: 3px;
+    border-radius: 3px;
 }
 
-p {
-    color: red;
-}
-
-banner {
-    width: 420px;
-    height: 420px;
+/* ── Responsive canvases ─────────────────────────────────────────────────── */
+canvas {
+    max-width: 100%;
+    height: auto;
     display: block;
 }
 
 .indexBody {
-    background-image: url('../images/logo.svg');
-    background-size: cover; /* Makes the image cover the entire body */
-    background-position: center; /* Centers the background image */
-    background-repeat: no-repeat; /* Prevents the background from repeating */
-    background-attachment: fixed; /* Makes the background fixed when scrolling */
-    min-height: 100vh; /* Ensure the body takes full viewport height */
+    background:
+        radial-gradient(ellipse 70% 50% at 15% 20%, rgba(120, 40, 200, 0.30) 0%, transparent 60%),
+        radial-gradient(ellipse 55% 65% at 85% 15%, rgba(220, 80, 140, 0.22) 0%, transparent 55%),
+        radial-gradient(ellipse 80% 45% at 50% 85%, rgba(40, 100, 200, 0.20) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 60% at 75% 60%, rgba(180, 60, 30, 0.14) 0%, transparent 55%),
+        linear-gradient(160deg, #0a0618 0%, #160b2e 25%, #0e1020 55%, #080612 80%, #060410 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
 }
 
 .notYetBody {
@@ -74,20 +156,7 @@ banner {
     color: white;
 }
 
-button {
-    display: block;
-    margin: 20px auto;
-    padding: 10px 20px;
-    background-color: #f4a261; /* Button color */
-    border: none;
-    color: white;
-    font-size: 1.2em;
-    cursor: pointer;
-}
-
-button:hover {
-    background-color: #e76f51; /* Darker shade on hover */
-}
+/* .nav-burger and game buttons define their own styles; no aggressive global override */
 
 /* .indexNavbar replaced by unified .navbar — see below */
 
@@ -116,7 +185,7 @@ button:hover {
     font-size: 17px;
     font-weight: bold;
     letter-spacing: 3px;
-    color: #f4a261;
+    color: var(--accent);
     text-decoration: none;
     padding: 15px 20px 15px 16px;
     white-space: nowrap;
@@ -140,7 +209,7 @@ button:hover {
     display: flex;
     align-items: center;
     padding: 15px 18px;
-    color: #c8b0d8;
+    color: var(--text-muted);
     text-decoration: none;
     font-family: Papyrus, fantasy;
     font-size: 15px;
@@ -151,13 +220,14 @@ button:hover {
 
 .nav-link:hover,
 .nav-dropdown:hover > .nav-link {
-    color: #f4a261;
+    color: var(--accent);
     background-color: rgba(244, 162, 97, 0.08);
 }
 
 .nav-active > .nav-link,
 a.nav-link.nav-active {
-    color: #f4a261;
+    color: var(--accent);
+    box-shadow: inset 0 -2px 0 var(--accent);
 }
 
 .nav-dropdown-toggle::after {
@@ -210,7 +280,7 @@ a.nav-link.nav-active {
 
 .nav-dropdown-menu a:hover,
 .nav-dropdown-menu a.nav-active {
-    color: #f4a261;
+    color: var(--accent);
     background-color: rgba(244, 162, 97, 0.08);
 }
 
@@ -250,7 +320,7 @@ a.nav-link.nav-active {
     display: block;
     width: 22px;
     height: 2px;
-    background: #c8b0d8;
+    background: var(--text-muted);
     border-radius: 2px;
     margin: 0 auto;
     transition: transform 0.22s ease, opacity 0.22s ease;
@@ -296,17 +366,27 @@ a.nav-link.nav-active {
     .nav-dropdown-menu {
         position: static;
         transform: none;
-        visibility: visible;
-        opacity: 1;
-        pointer-events: auto;
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+        height: 0;
+        overflow: hidden;
         transition: none;
         background: rgba(255, 255, 255, 0.03);
         border: none;
         border-left: 2px solid rgba(244, 162, 97, 0.2);
         border-radius: 0;
         box-shadow: none;
-        padding: 0 0 4px;
+        padding: 0;
         min-width: unset;
+    }
+
+    .nav-dropdown.nav-dropdown-open > .nav-dropdown-menu {
+        visibility: visible;
+        opacity: 1;
+        pointer-events: auto;
+        height: auto;
+        padding: 0 0 4px;
     }
 
     .nav-dropdown-menu--wide {
@@ -321,7 +401,13 @@ a.nav-link.nav-active {
     }
 
     .nav-dropdown-toggle::after {
-        content: '';
+        content: ' ▸';
+        font-size: 0.7em;
+        opacity: 0.55;
+    }
+
+    .nav-dropdown.nav-dropdown-open > .nav-link.nav-dropdown-toggle::after {
+        content: ' ▾';
     }
 }
 
@@ -335,7 +421,7 @@ a.nav-link.nav-active {
 }
 
 .back-bar-link {
-    color: #c8b0d8;
+    color: var(--text-muted);
     font-family: Papyrus, fantasy;
     font-size: 13px;
     text-decoration: none;
@@ -343,7 +429,7 @@ a.nav-link.nav-active {
 }
 
 .back-bar-link:hover {
-    color: #f4a261;
+    color: var(--accent);
 }
 
 /* ── Page transitions ───────────────────────────────────────────────────── */
@@ -412,7 +498,7 @@ body.page-fade-out {
 
 .card:hover {
     background: rgba(244, 162, 97, 0.18);
-    border-color: #f4a261;
+    border-color: var(--accent);
     transform: translateY(-8px);
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
 }
@@ -424,7 +510,7 @@ body.page-fade-out {
 }
 
 .card h3 {
-    color: #f4a261;
+    color: var(--accent);
     font-family: Jokerman, fantasy;
     font-size: 1.5em;
     margin: 0;

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guestbook — ZYXXYZ's Whymzykal Wunderland</title>
+    <meta name="description" content="Sign the guestbook — leave your mark on ZYXXYZ's Whymzykal Wunderland.">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <script src="/js/utils.js" defer></script>
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
+    <style>
+        #gb-page { max-width: 680px; margin: 0 auto; padding: 24px 20px 80px; }
+
+        .gb-header { text-align: center; margin-bottom: 36px; }
+        .gb-header h2 { font-family: Jokerman, fantasy; color: #f4a261; font-size: clamp(1.6rem, 5vw, 2.4rem); margin-bottom: 6px; }
+        .gb-header p { font-family: 'Courier New', monospace; font-size: 11px; color: #555; letter-spacing: 2px; text-transform: uppercase; }
+
+        .gb-form { background: rgba(0,0,0,0.5); border: 1px solid #2a2a2a; border-radius: 12px; padding: 22px 24px; margin-bottom: 32px; }
+        .gb-form-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .gb-input { background: #111; border: 1px solid #2a2a2a; color: #ddd; border-radius: 6px; padding: 8px 12px; font-size: 13px; flex: 1; min-width: 0; box-sizing: border-box; transition: border-color 0.15s; }
+        .gb-input:focus { border-color: rgba(244,162,97,0.5); outline: none; }
+        textarea.gb-input { resize: vertical; min-height: 80px; line-height: 1.6; width: 100%; }
+        .gb-submit { background: #f4a261; border: none; color: #111; border-radius: 6px; padding: 9px 22px; font-family: 'Courier New', monospace; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+        .gb-submit:hover { background: #e76f51; }
+        .gb-char-count { font-family: 'Courier New', monospace; font-size: 10px; color: #333; text-align: right; margin-top: -6px; margin-bottom: 8px; }
+
+        /* Entries */
+        .gb-eyebrow { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+        .gb-eyebrow::before, .gb-eyebrow::after { content: ''; flex: 1; height: 1px; background: rgba(244,162,97,0.15); }
+        .gb-eyebrow span { font-family: 'Courier New', monospace; font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: rgba(244,162,97,0.4); white-space: nowrap; }
+
+        .gb-entry { background: rgba(0,0,0,0.35); border: 1px solid #1e1e1e; border-radius: 10px; padding: 16px 20px; margin-bottom: 12px; transition: border-color 0.2s; }
+        .gb-entry:hover { border-color: rgba(244,162,97,0.18); }
+        .gb-entry-meta { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+        .gb-name { font-family: 'Courier New', monospace; font-size: 13px; font-weight: bold; color: #f4a261; }
+        .gb-url  { font-family: 'Courier New', monospace; font-size: 11px; color: #555; text-decoration: none; }
+        .gb-url:hover { color: #aaa; }
+        .gb-date { font-family: 'Courier New', monospace; font-size: 10px; color: #333; margin-left: auto; }
+        .gb-msg  { font-size: 14px; color: #999; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+
+        .gb-count { font-family: 'Courier New', monospace; font-size: 11px; color: #444; text-align: center; margin-top: 20px; }
+        .gb-empty { text-align: center; font-family: 'Courier New', monospace; font-size: 12px; color: #333; padding: 50px 0; }
+        .gb-loading { text-align: center; padding: 40px; }
+    </style>
+</head>
+<body class="wunderBody">
+    <div class="navbar"></div>
+
+    <div id="gb-page">
+        <div class="gb-header">
+            <h2>Guestbook</h2>
+            <p>Leave your mark</p>
+        </div>
+
+        <div class="gb-form">
+            <div class="gb-form-row">
+                <input id="gb-name"    class="gb-input" type="text"  placeholder="Your name (required)" maxlength="40">
+                <input id="gb-url"     class="gb-input" type="url"   placeholder="Your website (optional)" maxlength="100">
+            </div>
+            <textarea id="gb-msg" class="gb-input" placeholder="Say something — anything. Be yourself." maxlength="400"></textarea>
+            <div class="gb-char-count"><span id="gb-chars">0</span> / 400</div>
+            <div style="display:flex;justify-content:flex-end;">
+                <button class="gb-submit" id="gb-submit">Sign the book →</button>
+            </div>
+        </div>
+
+        <div class="gb-eyebrow"><span>entries</span></div>
+        <div id="gb-feed"><div class="gb-loading"><span class="firebase-loading"></span></div></div>
+        <div class="gb-count" id="gb-count"></div>
+    </div>
+
+    <script src="/js/community/guestbook.js" defer></script>
+</body>
+</html>
