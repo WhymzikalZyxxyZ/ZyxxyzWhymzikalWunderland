@@ -1,14 +1,9 @@
 'use strict';
 
-// Simple admin PIN stored in localStorage — ZYXXYZ can set it once
+// esc(), fmtDate(), fmtDateLong(), withFirebase() provided by /js/utils.js
+
 const ADMIN_KEY = 'blog_admin_unlocked';
 const EMOJIS = ['👍','❤️','😂','🤯','✨'];
-
-function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-function fmtDate(ts) {
-    return new Date(ts).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
-}
 
 function isAdmin() { return sessionStorage.getItem(ADMIN_KEY) === '1'; }
 
@@ -42,7 +37,7 @@ function renderPost(key, data) {
     div.className = 'blog-post';
     div.innerHTML = `
         <div class="post-meta">
-            <span class="post-date">${fmtDate(data.ts)}</span>
+            <span class="post-date">${fmtDateLong(data.ts)}</span>
             ${data.tag ? `<span class="post-tag">${esc(data.tag)}</span>` : ''}
         </div>
         <div class="post-title">${esc(data.title)}</div>

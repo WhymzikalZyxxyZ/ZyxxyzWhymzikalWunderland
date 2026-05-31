@@ -1,10 +1,9 @@
 'use strict';
 
+// esc(), fmtDate(), withFirebase() provided by /js/utils.js
+
 const MAX_MSG = 400;
 const MAX_ENTRIES = 200;
-
-function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function fmtDate(ts) { return new Date(ts).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }); }
 
 // ── Char counter ──────────────────────────────────────────────────────────────
 document.getElementById('gb-msg').addEventListener('input', function() {

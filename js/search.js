@@ -60,13 +60,13 @@ const INDEX = [
 ];
 
 // ── Search logic ──────────────────────────────────────────────────────────────
+// esc() provided by /js/utils.js
+
 function highlight(text, query) {
     if (!query) return esc(text);
     const re = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
     return esc(text).replace(re, '<mark>$1</mark>');
 }
-
-function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function search(q) {
     if (!q) return [];

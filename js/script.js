@@ -310,6 +310,13 @@ if (typeof document !== 'undefined') {
         buildNavbar();
         buildBackLink();
 
+        // Ensure skip-to-content target exists on every page
+        if (!document.getElementById('main-content')) {
+            const anchor = document.querySelector('.back-bar') || document.querySelector('.navbar');
+            const first  = anchor && anchor.nextElementSibling;
+            if (first && !first.id) first.id = 'main-content';
+        }
+
         document.addEventListener('click', e => {
             const a = e.target.closest('a[href]');
             if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
