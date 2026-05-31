@@ -7,6 +7,74 @@
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js" defer></script>
     <style>
+        /* ── Page title ── */
+        h1 {
+            font-family: Jokerman, fantasy;
+            color: #f4a261;
+            text-shadow: 0 0 36px rgba(244,162,97,0.45), 0 0 10px rgba(244,162,97,0.20);
+            text-align: center;
+            font-size: clamp(1.9em, 5vw, 3.2em);
+            letter-spacing: 2px;
+            margin: 44px 0 0;
+            padding: 0 24px;
+            line-height: 1.2;
+        }
+
+        /* ── Hero pulse ── */
+        @keyframes heroGlow {
+            0%, 100% { border-color: rgba(244,162,97,0.28); box-shadow: 0 4px 32px rgba(0,0,0,0.4); }
+            50%       { border-color: rgba(244,162,97,0.58); box-shadow: 0 4px 48px rgba(244,162,97,0.12), 0 4px 32px rgba(0,0,0,0.4); }
+        }
+        .hero { animation: heroGlow 5s ease-in-out infinite; }
+
+        /* ── WOTD teaser ── */
+        .wotd-teaser {
+            text-align: center;
+            margin: 6px 0 28px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #484848;
+            letter-spacing: 1px;
+        }
+        .wotd-teaser a {
+            color: #c07840;
+            text-decoration: none;
+            border-bottom: 1px dotted rgba(192,120,64,0.4);
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .wotd-teaser a:hover { color: #f4a261; border-color: rgba(244,162,97,0.6); }
+
+        /* ── Cards eyebrow ── */
+        .cards-eyebrow {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            max-width: 700px;
+            margin: 0 auto 24px;
+            padding: 0 24px;
+        }
+        .cards-eyebrow span {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: rgba(244,162,97,0.38);
+            white-space: nowrap;
+        }
+        .cards-eyebrow::before,
+        .cards-eyebrow::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(244,162,97,0.14);
+        }
+
+        /* ── Responsive cards ── */
+        @media (max-width: 620px) {
+            .section-cards { flex-direction: column; align-items: center; }
+            .card { width: 100%; max-width: 360px; box-sizing: border-box; }
+        }
+
         /* ── WORD OF THE DAY BANNER ── */
         .wotd-banner {
             width: 100%;
@@ -114,34 +182,38 @@
     </div>
 
     <div class="hero">
-        <p>Welcome, wanderer! You've stumbled upon a wunderland of games, art, tech projects, and more. Poke around — it's pretty fun in here.</p>
+        <p>Welcome, wanderer! You've stumbled upon a wunderland of games, art, tech projects, and more. Poke around — there's no map, and that's half the fun.</p>
     </div>
+
+    <div class="wotd-teaser">Today's word: <a id="wotd-teaser-link" href="#wotd-banner">—</a></div>
+
+    <div class="cards-eyebrow"><span>explore</span></div>
 
     <div class="section-cards">
         <a href="/gamer/games" class="card">
             <span class="card-icon">🎮</span>
             <h3>Gamer</h3>
-            <p>Play games right in your browser. Tetris awaits.</p>
+            <p>Twelve games, eleven leaderboards. Tetris, Snake, Daedalus, and more — how do you stack up?</p>
         </a>
         <a href="/virtuoso/virtuoso" class="card">
             <span class="card-icon">🎨</span>
             <h3>Virtuoso</h3>
-            <p>Art, animations, comics, doodles, crafts, and stories.</p>
+            <p>Art, animations, comics, doodles, crafts, and stories — made by hand and pixel.</p>
         </a>
         <a href="/technologist/apps" class="card">
             <span class="card-icon">💻</span>
             <h3>Technologist</h3>
-            <p>Apps, software, computer builds, and tech exploration.</p>
+            <p>Apps, tools, and deep dives into computers, software, and the way things work.</p>
         </a>
         <a href="/community/forum" class="card">
             <span class="card-icon">💬</span>
             <h3>Community</h3>
-            <p>Come hang out and join the conversation.</p>
+            <p>Drop in, say hello, leave a suggestion, or just lurk. All welcome.</p>
         </a>
         <a href="/about" class="card">
             <span class="card-icon">✨</span>
             <h3>About</h3>
-            <p>Who is ZYXXYZ? Find out here.</p>
+            <p>Goggles, a suit, a banana cane. Who is ZYXXYZ? The answer is in here somewhere.</p>
         </a>
     </div>
 
@@ -334,6 +406,15 @@
 
         const today = new Date();
         const dateStr = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+        const teaserLink = document.getElementById('wotd-teaser-link');
+        if (teaserLink) {
+            teaserLink.textContent = entry.word;
+            teaserLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('wotd-banner').scrollIntoView({ behavior: 'smooth' });
+            });
+        }
 
         const banner = document.getElementById('wotd-banner');
 
