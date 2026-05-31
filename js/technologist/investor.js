@@ -1,0 +1,826 @@
+// ════════════════════════════════════════════════════════════════
+    //  TAB SWITCHING
+    // ════════════════════════════════════════════════════════════════
+
+    function showTab(tab) {
+        document.querySelectorAll('.inv-tab-panel').forEach(p => p.style.display = 'none');
+        document.querySelectorAll('.inv-tab').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tab).style.display = '';
+        document.querySelector('.inv-tab[data-tab="' + tab + '"]').classList.add('active');
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  LEARN DATA
+    // ════════════════════════════════════════════════════════════════
+
+    const MODULES = [
+        {
+            title: 'Foundations',
+            lessons: [
+                {
+                    icon: '&#128161;',
+                    title: 'What is Investing?',
+                    body: '<p>Investing is allocating money with the expectation of generating income or profit over time. Unlike saving—which preserves value—investing <strong>puts your money to work</strong>.</p><p><strong>Three ways investments generate returns:</strong></p><ul><li><strong>Price appreciation</strong> — the investment grows in value (e.g. stock rises from $50 to $80)</li><li><strong>Income</strong> — periodic payments such as dividends or bond coupons</li><li><strong>Total return</strong> — appreciation + income combined</li></ul><p><strong>The alternative to not investing:</strong> Inflation averages ~3% per year. Money sitting in a savings account at 0.5% loses purchasing power over time. Investing is how individuals build long-term wealth.</p><div class="lesson-stat">&#9993; Historical U.S. stock market (S&amp;P 500) average annual return: ~10% nominal, ~7% after inflation (1957–2024)</div>'
+                },
+                {
+                    icon: '&#128200;',
+                    title: 'The Power of Compound Interest',
+                    body: '<p><strong>Compound interest</strong> is earning returns on your returns. Albert Einstein allegedly called it "the eighth wonder of the world."</p><p><strong>$10,000 invested at 8% annual return:</strong></p><ul><li>After 10 years: <strong>$21,589</strong> (+116%)</li><li>After 20 years: <strong>$46,610</strong> (+366%)</li><li>After 30 years: <strong>$100,627</strong> (+906%)</li><li>After 40 years: <strong>$217,245</strong> (+2,072%)</li></ul><p><strong>The Rule of 72:</strong> Divide 72 by your annual return to estimate years to double your money. At 8%, your money doubles every 9 years. At 12%, every 6 years.</p><p>Starting at age 25 vs. 35 can mean <strong>hundreds of thousands of dollars</strong> of difference at retirement — even with identical contributions. Time is your most valuable asset.</p><div class="lesson-stat">&#9993; Starting $200/month at age 25 vs 35 at 8% return = ~$300,000 more at age 65</div>'
+                },
+                {
+                    icon: '&#9878;',
+                    title: 'Risk vs. Return',
+                    body: '<p>Every investment involves a tradeoff: <strong>higher potential return means higher risk</strong>. Understanding the types of risk you face is essential to managing them.</p><p><strong>Types of investment risk:</strong></p><ul><li><strong>Market risk</strong> — the entire market declines (unavoidable, but manageable)</li><li><strong>Company risk</strong> — a specific stock collapses (eliminable through diversification)</li><li><strong>Inflation risk</strong> — returns don\'t keep pace with rising prices</li><li><strong>Liquidity risk</strong> — you can\'t sell when needed without a big loss</li><li><strong>Concentration risk</strong> — too much in one asset, sector, or country</li><li><strong>Behavioral risk</strong> — panic selling or chasing returns</li></ul><p>Risk is measured by <strong>volatility</strong> (price fluctuation) and <strong>beta</strong> (movement relative to the overall market). A beta of 1.0 means the investment moves in line with the market; 1.5 means 50% more volatile.</p><p><strong>Key insight:</strong> Diversification reduces risk without necessarily sacrificing expected return — it is the only free lunch in investing.</p>'
+                },
+                {
+                    icon: '&#9200;',
+                    title: 'Time Horizon & Liquidity',
+                    body: '<p>Your <strong>time horizon</strong> is how long until you need the money. It is the most important factor determining how much risk you should take.</p><ul><li><strong>Short-term (&lt;3 years)</strong> — high-yield savings, CDs, short-term bonds. No stocks for money you may need soon.</li><li><strong>Medium-term (3–10 years)</strong> — balanced portfolio, moderate stock allocation (50–70%)</li><li><strong>Long-term (10+ years)</strong> — higher stock allocation appropriate; can ride out downturns</li><li><strong>Retirement (30+ years)</strong> — aggressive growth allocation, shift conservative as you approach retirement</li></ul><p><strong>Liquidity</strong> is how quickly and easily an investment can be converted to cash without a significant price penalty.</p><ul><li><strong>Highly liquid:</strong> Stocks, ETFs, bonds (sell within days)</li><li><strong>Less liquid:</strong> Real estate (weeks to months)</li><li><strong>Illiquid:</strong> Private equity, collectibles (months to years)</li></ul><p>The S&amp;P 500 has <strong>never had a negative 20-year return</strong> in U.S. history. A longer time horizon transforms volatility from a risk into an opportunity.</p>'
+                },
+            ]
+        },
+        {
+            title: 'Asset Classes',
+            lessons: [
+                {
+                    icon: '&#128202;',
+                    title: 'Stocks (Equities)',
+                    body: '<p>A <strong>stock</strong> represents fractional ownership (equity) in a company. As the company grows, your shares appreciate in value. Many stocks also pay <strong>dividends</strong> — regular cash distributions from profits.</p><p><strong>Key stock types:</strong></p><ul><li><strong>Common stock</strong> — standard shares with voting rights; last in liquidation priority</li><li><strong>Preferred stock</strong> — fixed dividends, priority in liquidation, usually no voting rights</li><li><strong>Growth stocks</strong> — high-growth companies reinvesting profits; typically no dividend; higher risk/reward</li><li><strong>Value stocks</strong> — mature companies trading below estimated intrinsic value</li><li><strong>Dividend stocks</strong> — stable companies paying regular income (REITs, utilities, blue chips)</li></ul><p><strong>Market capitalization</strong> = price × shares outstanding:</p><ul><li>Large-cap: $10B+ (Apple, Microsoft, Alphabet)</li><li>Mid-cap: $2B–$10B</li><li>Small-cap: under $2B — higher growth potential, higher risk</li></ul><div class="lesson-stat">&#9993; S&amp;P 500 annualized return 1957–2024: ~10.5%. $1,000 invested in 1980 = ~$75,000 today.</div>'
+                },
+                {
+                    icon: '&#127968;',
+                    title: 'Bonds (Fixed Income)',
+                    body: '<p>A <strong>bond</strong> is a loan you make to a government or corporation. They pay you <strong>coupon interest</strong> at regular intervals and return your <strong>principal</strong> at maturity.</p><p><strong>Key bond terms:</strong></p><ul><li><strong>Par value</strong> — face value ($1,000 typically)</li><li><strong>Coupon rate</strong> — annual interest paid as % of par</li><li><strong>Maturity</strong> — when principal is returned (short: 1–3 years, long: 10–30 years)</li><li><strong>Yield</strong> — actual return considering current market price</li><li><strong>Duration</strong> — sensitivity to interest rate changes (higher = more sensitive)</li></ul><p><strong>Bond types (low to high risk):</strong></p><ul><li>U.S. Treasury bonds — backed by the U.S. government; the "risk-free" benchmark</li><li>Municipal bonds — issued by state/local governments; often tax-exempt</li><li>Investment-grade corporate — BBB- rated or above; low default risk</li><li>High-yield ("junk") bonds — below BBB-; higher yield, higher default risk</li></ul><p><strong>Critical relationship:</strong> Bond prices and interest rates move inversely. When rates rise, existing bond prices fall.</p>'
+                },
+                {
+                    icon: '&#128230;',
+                    title: 'ETFs & Index Funds',
+                    body: '<p>Funds let you own a diversified basket of investments in a single purchase — the most practical solution for most individual investors.</p><p><strong>ETF (Exchange-Traded Fund):</strong></p><ul><li>Trades on an exchange like a stock, throughout the day</li><li>Usually tracks an index passively</li><li>Very low expense ratios (as low as 0.03%)</li><li>Tax-efficient due to in-kind creation/redemption mechanism</li></ul><p><strong>Index Fund:</strong></p><ul><li>Tracks a market index (S&amp;P 500, Total Market, MSCI World, etc.)</li><li>Priced once per day (mutual fund structure)</li><li>No active manager — lower costs, more consistent performance</li></ul><p><strong>Active vs. Passive — the verdict:</strong> According to the S&amp;P SPIVA report, over 15 years, <strong>92% of actively managed U.S. funds underperform their benchmark index</strong> after fees. Most investors are better served by low-cost index funds.</p><div class="lesson-stat">&#9993; Vanguard S&amp;P 500 ETF (VOO) expense ratio: 0.03%. A typical active fund: 0.5–1.5%. On $100,000 over 30 years, that 1% difference = ~$170,000.</div>'
+                },
+                {
+                    icon: '&#127963;',
+                    title: 'REITs & Alternative Assets',
+                    body: '<p>Beyond stocks and bonds, a complete portfolio may include alternative assets for diversification and inflation protection.</p><p><strong>REIT (Real Estate Investment Trust):</strong></p><ul><li>Company owning income-producing real estate; by law must distribute 90%+ of taxable income</li><li>Trades on exchanges like a stock — no need to buy physical property</li><li>Types: residential, commercial, industrial, data centers, healthcare, self-storage</li><li>Typically yields 3–6% in dividends</li></ul><p><strong>Commodities:</strong></p><ul><li><strong>Gold</strong> — traditional store of value; hedge against inflation and currency devaluation</li><li>Oil, natural gas, agricultural products — tied to global supply/demand</li><li>Accessed via commodity ETFs or futures contracts</li></ul><p><strong>Cryptocurrency:</strong> Highly speculative, extremely volatile, no intrinsic cash flows. If included at all, most financial advisors recommend limiting to 1–5% of portfolio.</p><p><strong>Rule of thumb for alternatives:</strong> No more than 10–15% of a diversified portfolio for most investors.</p>'
+                },
+            ]
+        },
+        {
+            title: 'Investment Strategies',
+            lessons: [
+                {
+                    icon: '&#128279;',
+                    title: 'Buy & Hold (Passive Investing)',
+                    body: '<p>The simplest and historically most effective strategy for most investors: buy a diversified portfolio and hold it for decades, ignoring short-term market noise.</p><p><strong>Why it works:</strong></p><ul><li>Captures the long-term upward trend of markets</li><li>Eliminates the near-impossible task of market timing</li><li>Minimizes transaction costs, spreads, and capital gains taxes</li><li>Requires almost zero time or expertise to execute</li><li>Removes emotional decision-making from the equation</li></ul><p><strong>The market timing problem:</strong> DALBAR research shows the average equity fund investor earns about 4% annually versus the S&amp;P 500\'s ~10% — the gap is almost entirely due to buying high and selling low during volatility.</p><p>Missing just the <strong>10 best trading days</strong> in a 20-year period cuts returns nearly in half.</p><div class="lesson-stat">&#9993; "It\'s not about timing the market. It\'s about time in the market." — Warren Buffett\'s advice for most investors: buy a low-cost S&amp;P 500 index fund.</div>'
+                },
+                {
+                    icon: '&#128197;',
+                    title: 'Dollar Cost Averaging (DCA)',
+                    body: '<p><strong>Dollar Cost Averaging</strong> means investing a fixed amount at regular intervals regardless of market conditions — the natural strategy for anyone investing from a paycheck.</p><p><strong>Example:</strong> Invest $500 every month in a Total Market ETF, no matter what the market is doing.</p><p><strong>What this achieves:</strong></p><ul><li>Automatically buys <strong>more shares when prices are low</strong>, fewer when high</li><li>Removes the psychological pressure of "when should I invest?"</li><li>Builds a consistent wealth-building habit</li><li>Smooths out the impact of volatility over time</li></ul><p><strong>DCA vs. Lump Sum:</strong> If you have a large sum to invest, studies show lump-sum investing outperforms DCA about <strong>two-thirds of the time</strong>, because markets trend upward. However, DCA is psychologically easier and protects against investing a lump sum right before a crash.</p><p>For regular paycheck investors, DCA is the natural and ideal strategy — just set up automatic contributions and invest consistently.</p>'
+                },
+                {
+                    icon: '&#128269;',
+                    title: 'Value Investing',
+                    body: '<p>Value investing means buying securities that appear <strong>underpriced relative to their intrinsic value</strong>. Pioneered by Benjamin Graham, refined and popularized by Warren Buffett.</p><p><strong>The core premise:</strong> Markets are not always perfectly efficient. Patient, analytical investors can identify companies trading below their true worth, buy them, and wait for the market to recognize that value.</p><p><strong>Key valuation metrics:</strong></p><ul><li><strong>P/E Ratio</strong> — Price-to-Earnings. Lower may suggest undervaluation vs. peers</li><li><strong>P/B Ratio</strong> — Price-to-Book. Under 1.0 means trading below net asset value</li><li><strong>EV/EBITDA</strong> — Enterprise value relative to operating earnings</li><li><strong>Free Cash Flow Yield</strong> — Cash generated relative to market cap</li><li><strong>Debt/Equity Ratio</strong> — Financial health and leverage</li></ul><p><strong>The "Margin of Safety":</strong> Only buy when the stock is <em>significantly</em> below your intrinsic value estimate — this buffer protects against errors in analysis.</p><p>Value investing requires patience and discipline. Undervalued stocks can remain cheap for years before the market corrects.</p>'
+                },
+                {
+                    icon: '&#127919;',
+                    title: 'The Three-Fund Portfolio',
+                    body: '<p>The Three-Fund Portfolio is a simple, complete, and proven strategy favored by the Bogleheads investment philosophy. With just three index funds you achieve global diversification at minimal cost.</p><p><strong>The three funds:</strong></p><ul><li><strong>U.S. Total Market Index Fund</strong> — entire U.S. stock market (3,500+ companies)</li><li><strong>International Developed Market Index Fund</strong> — stocks from Europe, Japan, Australia, etc.</li><li><strong>U.S. Bond Market Index Fund</strong> — broad U.S. investment-grade bonds</li></ul><p><strong>Sample allocations:</strong></p><ul><li>Age 30, aggressive: 80% U.S. stocks / 10% international / 10% bonds</li><li>Age 45, moderate: 55% U.S. stocks / 15% international / 30% bonds</li><li>Age 60, conservative: 35% U.S. stocks / 10% international / 55% bonds</li></ul><p>This approach beats the vast majority of actively managed funds over 10+ years. It requires minimal time, minimal cost, and minimal expertise to maintain.</p><div class="lesson-stat">&#9993; Combined expense ratio for a three-fund Vanguard/Fidelity portfolio: as low as 0.03–0.04%/year</div>'
+                },
+            ]
+        },
+        {
+            title: 'Portfolio Management',
+            lessons: [
+                {
+                    icon: '&#129689;',
+                    title: 'Diversification',
+                    body: '<p>Diversification means spreading investments so that a loss in one position cannot devastate your entire portfolio. It is called the only "free lunch" in investing because it reduces risk without necessarily reducing expected return.</p><p><strong>Dimensions of diversification:</strong></p><ul><li><strong>Asset class</strong> — stocks, bonds, real estate, commodities behave differently in different conditions</li><li><strong>Geography</strong> — U.S., international developed, emerging markets (50% of world market cap is outside the U.S.)</li><li><strong>Sector</strong> — technology, healthcare, consumer, energy, financials don\'t move in lockstep</li><li><strong>Company size</strong> — large-cap, mid-cap, small-cap respond differently to economic cycles</li><li><strong>Time</strong> — dollar cost averaging diversifies your purchase price across time</li></ul><p><strong>How many stocks do you need?</strong> Academic research shows that 90%+ of company-specific (unsystematic) risk is eliminated with 15–30 stocks across different sectors. An index fund achieves this automatically and more cheaply.</p><p><strong>Correlation is key:</strong> The lower the correlation between assets, the better the diversification benefit. Gold and bonds often move opposite to stocks during crashes.</p>'
+                },
+                {
+                    icon: '&#127828;',
+                    title: 'Asset Allocation',
+                    body: '<p><strong>Asset allocation</strong> — how you divide your portfolio among asset classes — is the single biggest driver of long-term portfolio risk and return. Research by Brinson, Hood, and Beebower found it explains ~90% of portfolio performance variance.</p><p><strong>Common allocation models:</strong></p><ul><li><strong>100% Stocks</strong> — maximum growth, maximum volatility. For investors with 30+ year horizons who won\'t panic sell.</li><li><strong>80/20 (Stocks/Bonds)</strong> — strong growth with some downside buffer. Good for 15–25 year horizon.</li><li><strong>60/40</strong> — the classic balanced portfolio. Less volatility, modest income. 10–20 year horizon.</li><li><strong>40/60</strong> — conservative. Suitable for retirement or low risk tolerance.</li></ul><p><strong>Common rule of thumb:</strong> Hold your age in bonds (or subtract age from 110 for stocks). A 30-year-old: 80% stocks, 20% bonds. A 65-year-old: 45% stocks, 55% bonds.</p><p><strong>Target-date funds</strong> (e.g., "2055 Fund") automatically shift toward bonds as you approach retirement — a low-maintenance option for many investors.</p>'
+                },
+                {
+                    icon: '&#9878;',
+                    title: 'Rebalancing Your Portfolio',
+                    body: '<p><strong>Rebalancing</strong> is periodically adjusting your portfolio back to your target allocation after market movements cause drift. It enforces a disciplined "sell high, buy low" discipline.</p><p><strong>Example:</strong> You target 80% stocks / 20% bonds. After a 2-year bull market, stocks grow to 90% of your portfolio. Rebalancing means selling some stocks and buying bonds to restore 80/20.</p><p><strong>When to rebalance:</strong></p><ul><li><strong>Calendar rebalancing</strong> — annually or semi-annually (simplest approach)</li><li><strong>Threshold rebalancing</strong> — whenever any allocation drifts 5%+ from target</li><li><strong>Hybrid</strong> — check annually; rebalance only if drift exceeds 5% (recommended)</li></ul><p><strong>How to rebalance tax-efficiently:</strong></p><ul><li>First rebalance inside tax-advantaged accounts (401k, IRA) — no tax consequences</li><li>Use new contributions to buy underweighted assets before selling overweighted ones</li><li>In taxable accounts, consider tax-loss harvesting alongside rebalancing</li></ul><p>Studies show consistent rebalancing modestly improves risk-adjusted returns while keeping portfolio risk in line with your goals.</p>'
+                },
+                {
+                    icon: '&#127963;',
+                    title: 'Tax-Advantaged Accounts',
+                    body: '<p>Tax-advantaged accounts are among the most powerful legal wealth-building tools available. They allow your investments to grow without the annual tax drag of a standard brokerage account.</p><p><strong>401(k) / 403(b) — Employer Plans:</strong></p><ul><li>Pre-tax contributions reduce your taxable income today</li><li>2024 limit: $23,000 ($30,500 if age 50+)</li><li><strong>Always contribute enough to capture the full employer match — it\'s an instant 50–100% return</strong></li><li>Traditional: taxed on withdrawal in retirement</li><li>Roth 401k option: after-tax contributions, tax-free growth</li></ul><p><strong>IRA (Individual Retirement Account):</strong></p><ul><li>2024 limit: $7,000/year ($8,000 if 50+)</li><li><strong>Traditional IRA</strong> — may be tax-deductible; taxed on withdrawal</li><li><strong>Roth IRA</strong> — after-tax contributions; <em>grows and withdraws completely tax-free</em>; no RMDs; best for younger, lower-tax-bracket investors</li><li>Roth IRA income limit: $161,000 (single) / $240,000 (married) in 2024</li></ul><p><strong>Optimal contribution priority:</strong></p><ul><li>1. 401k to full employer match (free money)</li><li>2. Max out Roth IRA ($7,000)</li><li>3. Max out 401k ($23,000)</li><li>4. Taxable brokerage account</li></ul>'
+                },
+            ]
+        },
+    ];
+
+    function buildLearnTab() {
+        const container = document.getElementById('tab-learn');
+        MODULES.forEach(mod => {
+            const lbl = document.createElement('div');
+            lbl.className = 'sec-lbl';
+            lbl.textContent = mod.title;
+            container.appendChild(lbl);
+
+            const grid = document.createElement('div');
+            grid.className = 'module-grid';
+
+            mod.lessons.forEach(lesson => {
+                const card = document.createElement('div');
+                card.className = 'lesson-card';
+
+                const hdr = document.createElement('div');
+                hdr.className = 'lesson-hdr';
+                hdr.innerHTML = '<span class="lesson-icon">' + lesson.icon + '</span>' +
+                    '<span class="lesson-title">' + lesson.title + '</span>' +
+                    '<span class="lesson-arrow">&#9658;</span>';
+
+                const body = document.createElement('div');
+                body.className = 'lesson-body';
+                body.innerHTML = lesson.body;
+
+                card.appendChild(hdr);
+                card.appendChild(body);
+                card.addEventListener('click', () => {
+                    const isOpen = card.classList.contains('open');
+                    card.classList.toggle('open', !isOpen);
+                    body.style.display = isOpen ? 'none' : 'block';
+                });
+
+                grid.appendChild(card);
+            });
+
+            container.appendChild(grid);
+        });
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  GLOSSARY
+    // ════════════════════════════════════════════════════════════════
+
+    const TERMS = [
+        { name: 'Alpha', cat: 'Performance', def: 'The excess return of an investment relative to its benchmark index. An alpha of 1.0 means the investment outperformed the market by 1% after adjusting for risk. Positive alpha indicates <strong>outperformance</strong>; negative alpha indicates underperformance.' },
+        { name: 'Asset', cat: 'General', def: 'Anything of economic value owned by an individual or entity. In investing, assets include stocks, bonds, real estate, cash, and commodities — things that can generate income or appreciate in value.' },
+        { name: 'Asset Allocation', cat: 'Portfolio', def: 'How an investor divides a portfolio among different asset classes (stocks, bonds, cash, real estate). Research shows asset allocation is the <strong>primary driver of long-term portfolio performance</strong> and risk.' },
+        { name: 'Asset Class', cat: 'General', def: 'A group of investments that share similar characteristics and behave similarly in the marketplace. The main asset classes are equities (stocks), fixed income (bonds), cash/cash equivalents, real estate, and commodities.' },
+        { name: 'Bear Market', cat: 'Market', def: 'A market decline of <strong>20% or more</strong> from recent highs, sustained over at least two months. Bear markets are associated with pessimism, economic slowdown, and falling corporate earnings. The average bear market lasts about 9–14 months.' },
+        { name: 'Beta', cat: 'Risk', def: 'A measure of a stock\'s volatility relative to the overall market. A beta of 1.0 moves with the market; 1.5 is 50% more volatile; 0.5 is 50% less volatile. High-beta stocks offer higher potential returns with more risk.' },
+        { name: 'Blue Chip Stock', cat: 'Stocks', def: 'Shares in large, nationally recognized, financially sound companies with a long history of reliable performance. Examples: Apple, Johnson & Johnson, Coca-Cola. Blue chips typically pay dividends and weather economic downturns better than smaller companies.' },
+        { name: 'Bond', cat: 'Fixed Income', def: 'A debt security in which the investor loans money to an issuer (government or corporation) for a defined period at a fixed or variable interest rate. Bonds pay periodic <strong>coupon payments</strong> and return <strong>principal at maturity</strong>.' },
+        { name: 'Book Value', cat: 'Valuation', def: 'A company\'s total assets minus its total liabilities — the theoretical value of what shareholders would receive if the company were liquidated. The <strong>Price-to-Book (P/B) ratio</strong> compares market price to book value.' },
+        { name: 'Bull Market', cat: 'Market', def: 'A market characterized by rising prices, typically defined as a <strong>20%+ gain</strong> from recent lows, sustained over time. Bull markets are associated with economic growth, high employment, and investor confidence. The average bull market lasts 2.7 years.' },
+        { name: 'Capital Gain', cat: 'Taxes', def: 'Profit realized from selling an asset for more than its purchase price. <strong>Short-term capital gains</strong> (held under 1 year) are taxed as ordinary income. <strong>Long-term capital gains</strong> (held 1+ years) receive preferential lower tax rates (0%, 15%, or 20%).' },
+        { name: 'Capital Loss', cat: 'Taxes', def: 'A loss incurred when an asset is sold for less than its purchase price. Capital losses can offset capital gains to reduce tax liability — a strategy known as <strong>tax-loss harvesting</strong>. Up to $3,000 in excess losses can offset ordinary income annually.' },
+        { name: 'Compound Interest', cat: 'Concepts', def: 'Earning interest (or returns) on both your original principal and previously earned interest. Over time, compounding creates exponential growth. The formula: <strong>A = P(1 + r/n)^(nt)</strong>. Time is the most powerful variable — starting early dramatically amplifies final wealth.' },
+        { name: 'Correction', cat: 'Market', def: 'A short-term decline of <strong>10–20%</strong> in a market index or individual security from a recent peak. Corrections are healthy and normal — the S&P 500 experiences a 10%+ correction roughly once per year on average. They should not trigger panic selling.' },
+        { name: 'Coupon Rate', cat: 'Fixed Income', def: 'The annual interest rate paid on a bond, expressed as a percentage of the bond\'s face (par) value. A bond with a $1,000 par value and 5% coupon pays $50/year. The coupon rate is fixed at issuance; market yield fluctuates with price changes.' },
+        { name: 'Debt-to-Equity Ratio', cat: 'Fundamentals', def: 'Total liabilities divided by shareholders\' equity. Measures how much a company relies on debt financing vs. equity. A D/E ratio of 2.0 means $2 of debt for every $1 of equity. <strong>High D/E increases financial risk</strong> during economic downturns.' },
+        { name: 'Diversification', cat: 'Portfolio', def: 'Spreading investments across different assets, sectors, and geographies to reduce risk. Because different assets often move independently, losses in one area are offset by gains elsewhere. The only "free lunch" in investing — reduces risk without sacrificing expected return.' },
+        { name: 'Dividend', cat: 'Stocks', def: 'A payment made by a company to its shareholders, typically from profits, on a per-share basis. Dividends are usually paid quarterly. The <strong>dividend yield</strong> = annual dividend ÷ stock price. Dividend reinvestment (DRIP) compounds wealth significantly over time.' },
+        { name: 'Dollar Cost Averaging', cat: 'Strategy', def: 'Investing a fixed dollar amount at regular intervals regardless of market conditions. When prices are low, you buy more shares; when high, fewer. This eliminates market-timing decisions, reduces average purchase cost over time, and builds disciplined investing habits.' },
+        { name: 'Duration', cat: 'Fixed Income', def: 'A measure of a bond\'s sensitivity to interest rate changes, expressed in years. A duration of 7 means the bond\'s price will fall ~7% for every 1% rise in interest rates. <strong>Longer duration = more interest rate risk</strong>. Crucial for bond investors when rates are rising.' },
+        { name: 'EPS (Earnings Per Share)', cat: 'Fundamentals', def: 'Net income divided by the number of outstanding shares. EPS measures profitability on a per-share basis and is used in the P/E ratio calculation. <strong>Growing EPS over time</strong> is one of the strongest indicators of a healthy business.' },
+        { name: 'Equity', cat: 'General', def: 'Ownership interest in an asset after deducting liabilities. In the context of stocks, equity represents a shareholder\'s ownership stake in a company. In personal finance, home equity = market value minus mortgage balance.' },
+        { name: 'ETF', cat: 'Funds', def: 'Exchange-Traded Fund — a basket of securities that trades on an exchange like a stock. Most ETFs track an index passively. Benefits include <strong>low cost</strong> (expense ratios as low as 0.03%), <strong>diversification</strong>, tax efficiency, and intraday trading flexibility.' },
+        { name: 'Expense Ratio', cat: 'Funds', def: 'The annual fee charged by a fund to cover operating costs, expressed as a percentage of assets. A 0.03% expense ratio on $100,000 costs $30/year; a 1% ratio costs $1,000. Over 30 years, the fee difference compounds dramatically — <strong>choose low-cost funds</strong>.' },
+        { name: 'Federal Reserve', cat: 'Market', def: 'The U.S. central bank, responsible for monetary policy. The Fed sets the <strong>federal funds rate</strong> — the interest rate banks charge each other overnight — which influences borrowing costs economy-wide. Fed rate hikes typically pressure bond prices and can slow stock markets.' },
+        { name: 'Free Cash Flow', cat: 'Fundamentals', def: 'Operating cash flow minus capital expenditures. Represents the cash a company generates after maintaining its assets — available for dividends, buybacks, debt repayment, or growth investment. Often considered a more reliable measure of financial health than reported earnings.' },
+        { name: 'Growth Stock', cat: 'Stocks', def: 'Shares in companies expected to grow revenues and earnings faster than the market average. Growth stocks typically reinvest profits rather than paying dividends, trade at high P/E multiples, and can deliver extraordinary returns — but are more volatile and vulnerable during rate hikes.' },
+        { name: 'Hedge', cat: 'Strategy', def: 'An investment designed to offset potential losses in another investment. For example, owning gold while holding stocks (they often move inversely during crises). Options contracts are commonly used as hedges. Hedging typically reduces both risk <em>and</em> potential upside.' },
+        { name: 'Index', cat: 'Market', def: 'A benchmark measuring the performance of a selected group of securities. Major indexes: <strong>S&P 500</strong> (500 largest U.S. companies), <strong>Dow Jones Industrial Average</strong> (30 blue chips), <strong>NASDAQ Composite</strong> (tech-heavy), <strong>Russell 2000</strong> (small-cap U.S. stocks).' },
+        { name: 'Index Fund', cat: 'Funds', def: 'A fund designed to replicate the performance of a market index by holding the same (or similar) securities. Index funds are passively managed, resulting in low costs and broad diversification. Long-term, most index funds outperform actively managed funds after accounting for fees.' },
+        { name: 'Inflation', cat: 'Economics', def: 'The rate at which the general price level of goods and services rises over time, reducing purchasing power. The U.S. Federal Reserve targets ~2% annual inflation. Investing is essential to outpace inflation — cash in a savings account typically loses real value over time.' },
+        { name: 'IPO', cat: 'Market', def: 'Initial Public Offering — the process by which a private company offers shares to the public for the first time. IPOs can be highly profitable but are risky; many IPO companies are unprofitable and experience significant price volatility in their first year of trading.' },
+        { name: 'Liquidity', cat: 'General', def: 'How quickly and easily an asset can be converted to cash without significantly impacting its price. Cash is perfectly liquid; a publicly traded stock is highly liquid (sell within seconds). Real estate and private equity are illiquid — selling can take months and may require price concessions.' },
+        { name: 'Market Capitalization', cat: 'Stocks', def: 'The total market value of a company\'s outstanding shares (price × shares outstanding). Categories: <strong>large-cap</strong> ($10B+), <strong>mid-cap</strong> ($2B–$10B), <strong>small-cap</strong> (under $2B). Large caps are more stable; small caps offer higher growth potential with higher risk.' },
+        { name: 'Mutual Fund', cat: 'Funds', def: 'A pooled investment vehicle managed by professionals, holding a diversified portfolio of stocks, bonds, or other assets. Priced once daily at NAV. Can be actively managed (higher fees) or passively indexed (lower fees). The pioneer is Vanguard\'s first index mutual fund, launched in 1976.' },
+        { name: 'NAV (Net Asset Value)', cat: 'Funds', def: 'Total assets of a fund minus its liabilities, divided by outstanding shares. Mutual funds are bought and sold at NAV, calculated once per day after market close. ETF market prices fluctuate throughout the day but remain close to NAV through arbitrage mechanisms.' },
+        { name: 'P/E Ratio', cat: 'Valuation', def: 'Price-to-Earnings ratio — stock price divided by earnings per share. Indicates how much investors pay per dollar of earnings. A P/E of 20 means investors pay $20 for each $1 of earnings. <strong>High P/E</strong> suggests growth expectations or overvaluation; <strong>low P/E</strong> may indicate value or poor prospects.' },
+        { name: 'Portfolio', cat: 'General', def: 'The complete collection of financial investments held by an individual or institution, including stocks, bonds, ETFs, cash, and other assets. A well-constructed portfolio balances return potential against risk through strategic asset allocation and diversification.' },
+        { name: 'Rebalancing', cat: 'Portfolio', def: 'Realigning portfolio weights back to target allocation by selling outperforming assets and buying underperforming ones. Rebalancing enforces discipline, manages risk drift, and can slightly improve risk-adjusted returns over time. Best done in tax-advantaged accounts to avoid capital gains taxes.' },
+        { name: 'REIT', cat: 'Real Estate', def: 'Real Estate Investment Trust — a company that owns income-producing real estate and is legally required to distribute at least 90% of taxable income as dividends. REITs provide real estate exposure and income without the complexity of owning property directly.' },
+        { name: 'Risk Tolerance', cat: 'General', def: 'An investor\'s ability and willingness to endure investment losses in exchange for potential higher returns. Influenced by time horizon, income stability, financial goals, and psychological comfort with volatility. Knowing your risk tolerance prevents panic selling during market downturns.' },
+        { name: 'ROI (Return on Investment)', cat: 'Performance', def: 'A simple performance metric: (Current Value - Cost) ÷ Cost × 100%. A 50% ROI means you gained 50 cents for every dollar invested. For time-sensitive comparisons, annualized ROI (CAGR — Compound Annual Growth Rate) is more meaningful than simple ROI.' },
+        { name: 'S&P 500', cat: 'Market', def: 'Standard & Poor\'s 500 Index — a market-cap-weighted index of 500 leading U.S. publicly traded companies. Represents ~80% of U.S. market capitalization. Widely regarded as the best single gauge of large-cap U.S. equities and the benchmark most active managers fail to beat.' },
+        { name: 'Short Selling', cat: 'Strategy', def: 'Borrowing shares and selling them, hoping to repurchase at a lower price to profit from the decline. Short selling is highly risky — losses are theoretically unlimited if the stock rises. Suitable only for sophisticated investors. The basis of many hedge fund strategies.' },
+        { name: 'Spread', cat: 'Market', def: 'The difference between an asset\'s bid price (what buyers will pay) and ask price (what sellers want). A wider spread indicates lower liquidity. Bond spreads often refer to the yield premium over Treasury rates — wider spreads signal higher perceived credit risk.' },
+        { name: 'Time Horizon', cat: 'General', def: 'The length of time an investor expects to hold an investment before needing the money. Longer time horizons allow more risk-taking because there is more time to recover from downturns. Time horizon is one of the most important inputs in determining appropriate asset allocation.' },
+        { name: 'Volatility', cat: 'Risk', def: 'The degree of variation in an asset\'s price over time, typically measured by standard deviation of returns. High volatility means large price swings — more risk but also more potential for reward. <strong>The VIX index</strong> measures expected S&P 500 volatility and is known as the "fear gauge."' },
+        { name: 'Yield', cat: 'Fixed Income', def: 'The income generated by an investment as a percentage of its cost or current market value. For bonds: annual coupon ÷ current price. <strong>Yield to maturity (YTM)</strong> accounts for all future cash flows to maturity, providing the most complete return measure for bonds.' },
+        { name: 'Yield Curve', cat: 'Economics', def: 'A graph plotting yields of bonds with equal credit quality but different maturities. A <strong>normal (upward-sloping) curve</strong> means longer bonds have higher yields. An <strong>inverted yield curve</strong> (short-term rates higher than long-term) has historically preceded U.S. recessions.' },
+    ];
+
+    let activeAlpha = 'ALL';
+    let activeSearch = '';
+
+    function buildAlphaBar() {
+        const bar = document.getElementById('alpha-bar');
+        const letters = [...new Set(TERMS.map(t => t.name[0].toUpperCase()))].sort();
+        const allBtn = document.createElement('button');
+        allBtn.className = 'alpha-btn all-btn active';
+        allBtn.textContent = 'All';
+        allBtn.addEventListener('click', () => { activeAlpha = 'ALL'; setAlphaActive(allBtn); filterTerms(activeSearch); });
+        bar.appendChild(allBtn);
+        letters.forEach(l => {
+            const btn = document.createElement('button');
+            btn.className = 'alpha-btn';
+            btn.textContent = l;
+            btn.addEventListener('click', () => { activeAlpha = l; setAlphaActive(btn); filterTerms(activeSearch); });
+            bar.appendChild(btn);
+        });
+    }
+
+    function setAlphaActive(el) {
+        document.querySelectorAll('.alpha-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    function filterTerms(query) {
+        activeSearch = (query || '').toLowerCase();
+        const list = document.getElementById('terms-list');
+        list.innerHTML = '';
+        const filtered = TERMS.filter(t => {
+            const matchAlpha = activeAlpha === 'ALL' || t.name[0].toUpperCase() === activeAlpha;
+            const matchSearch = !activeSearch ||
+                t.name.toLowerCase().includes(activeSearch) ||
+                t.def.toLowerCase().includes(activeSearch);
+            return matchAlpha && matchSearch;
+        });
+        if (!filtered.length) {
+            const empty = document.createElement('div');
+            empty.style.cssText = 'text-align:center;padding:40px;font-family:Courier New,monospace;font-size:12px;color:#333;';
+            empty.textContent = 'No terms found.';
+            list.appendChild(empty);
+            return;
+        }
+        filtered.forEach(term => {
+            const card = document.createElement('div');
+            card.className = 'term-card';
+            const row = document.createElement('div');
+            row.className = 'term-row';
+            const name = document.createElement('span');
+            name.className = 'term-name';
+            name.textContent = term.name;
+            const cat = document.createElement('span');
+            cat.className = 'term-cat';
+            cat.textContent = term.cat;
+            row.appendChild(name); row.appendChild(cat);
+            const def = document.createElement('div');
+            def.className = 'term-def';
+            def.innerHTML = term.def;
+            card.appendChild(row); card.appendChild(def);
+            list.appendChild(card);
+        });
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  GUIDE
+    // ════════════════════════════════════════════════════════════════
+
+    const GUIDE_STEPS = [
+        {
+            title: 'Build Your Financial Foundation',
+            content: '<p>Before investing a single dollar, your finances need a solid base. Investing on an unstable financial foundation amplifies stress and can force you to sell at the worst time.</p><ul><li><strong>Emergency fund first:</strong> Build 3–6 months of living expenses in a high-yield savings account. This prevents you from being forced to liquidate investments during a personal financial crisis.</li><li><strong>Eliminate high-interest debt:</strong> Credit card debt at 20%+ APR is a guaranteed -20% investment. Pay it off before investing in anything except 401k employer-match contributions.</li><li><strong>Understand your cash flow:</strong> Know exactly how much comes in and goes out monthly. You can only invest money you don\'t need for immediate expenses.</li><li><strong>Moderate-interest debt (student loans, auto loans at 5–7%):</strong> This is situational — you may invest and pay these down simultaneously, as market returns historically exceed 5–7%.</li></ul>',
+            tip: '<strong>Benchmark:</strong> Most financial planners suggest having your emergency fund and a plan to eliminate high-interest debt before investing beyond the employer match.'
+        },
+        {
+            title: 'Define Your Investment Goals',
+            content: '<p>Vague goals produce vague results. Effective investing starts with specific, time-bound goals that determine the strategy, account type, and risk level for each pool of money.</p><ul><li><strong>Short-term goals (&lt;3 years):</strong> Down payment, vacation, emergency top-up. These funds should NOT be in stocks. Use: HYSA, CDs, short-term bond funds.</li><li><strong>Medium-term goals (3–10 years):</strong> Starting a business, child\'s education, home upgrade. Balanced approach: 50–70% stocks, 30–50% bonds.</li><li><strong>Retirement (10–40 years away):</strong> The primary goal for most investors. Long time horizon = higher stock allocation appropriate. Tax-advantaged accounts (401k, IRA) are the primary vehicles.</li></ul><p>Write down each goal with a specific dollar amount and target date. This transforms abstract "investing for the future" into actionable plans with clear benchmarks.</p>',
+            tip: '<strong>Exercise:</strong> Write your top 3 financial goals as: "I want $[amount] by [year] for [purpose]." This clarity prevents blending money with different time horizons and risk profiles.'
+        },
+        {
+            title: 'Understand Your Risk Tolerance',
+            content: '<p>Risk tolerance is both <strong>ability</strong> (financial capacity to absorb losses) and <strong>willingness</strong> (psychological comfort with volatility). Both matter equally.</p><ul><li><strong>Financial capacity factors:</strong> Time horizon, job stability, emergency fund size, debt level, other income sources</li><li><strong>Psychological factors:</strong> How you\'ve reacted to past losses, sleep-at-night comfort level, tendency to check portfolio daily vs. quarterly</li></ul><p><strong>The real test:</strong> During the COVID crash of March 2020, the S&P 500 fell 34% in 33 days. Would you have held? Bought more? Sold everything? Your honest answer reveals your true risk tolerance.</p><p><strong>Risk profiles:</strong></p><ul><li><strong>Conservative:</strong> Primarily bonds; preserves capital; 3–5% expected return; minimal volatility</li><li><strong>Moderate:</strong> Balanced stocks/bonds; steady growth; 5–7% expected return; moderate swings</li><li><strong>Aggressive:</strong> Primarily stocks; maximum growth; 8–10%+ expected; significant volatility acceptable</li></ul>',
+            tip: '<strong>Key insight:</strong> Overestimating your risk tolerance is dangerous. It\'s better to take slightly less risk and stay invested than to take too much risk and panic-sell at the bottom.'
+        },
+        {
+            title: 'Choose Your Account Types',
+            content: '<p>Where you invest is nearly as important as what you invest in. Tax-advantaged accounts can add hundreds of thousands of dollars to your wealth over a career.</p><ul><li><strong>401(k)/403(b):</strong> Start here. Contribute at least enough to capture the full employer match. 2024 limit: $23,000. Tax deduction now, taxed at withdrawal.</li><li><strong>Roth IRA:</strong> After capturing the match, max this out ($7,000/year if eligible). Contributions are after-tax, but <strong>all growth is permanently tax-free</strong>. Best for younger investors or anyone expecting higher future tax rates.</li><li><strong>Traditional IRA:</strong> Good if Roth income limits apply or if you expect lower taxes in retirement.</li><li><strong>HSA (Health Savings Account):</strong> If you have a high-deductible health plan, the HSA offers triple tax benefits — the best tax deal available in the U.S. tax code.</li><li><strong>Taxable brokerage:</strong> After maxing tax-advantaged options. More flexible (no contribution limits or withdrawal restrictions), but gains are taxed annually.</li></ul>',
+            tip: '<strong>Priority order:</strong> 401k to match → Roth IRA ($7k) → Max 401k ($23k) → HSA → Taxable brokerage.'
+        },
+        {
+            title: 'Build Your First Portfolio',
+            content: '<p>With goals, risk tolerance, and accounts established, it\'s time to select actual investments. For most investors, simplicity wins.</p><p><strong>The core recommendation for beginners:</strong> The Three-Fund Portfolio</p><ul><li><strong>U.S. Total Market Index ETF</strong> (e.g., VTI, FSKAX) — entire U.S. stock market</li><li><strong>International Index ETF</strong> (e.g., VXUS, FTIHX) — developed and emerging markets worldwide</li><li><strong>U.S. Bond Market ETF</strong> (e.g., BND, FXNAX) — broad investment-grade U.S. bonds</li></ul><p><strong>Sample starting allocation by age:</strong></p><ul><li>20s–30s: 80–90% stocks (split ~65/25 U.S./international), 10–20% bonds</li><li>40s: 70% stocks, 30% bonds</li><li>50s: 55–60% stocks, 40–45% bonds</li><li>Near retirement: 40–50% stocks, 50–60% bonds</li></ul><p>If choosing investments feels overwhelming, a <strong>Target Date Fund</strong> (e.g., "Target 2055 Fund") does everything automatically — it holds a globally diversified portfolio and gradually shifts toward bonds as your retirement date approaches.</p>',
+            tip: '<strong>Perfect is the enemy of good.</strong> A simple three-fund portfolio started today beats a perfect portfolio started next year. Open the account and invest.'
+        },
+        {
+            title: 'Monitor, Rebalance & Stay the Course',
+            content: '<p>Your portfolio requires maintenance, but not obsessive attention. The biggest threats to long-term returns are behavioral — panic selling, performance chasing, and constant tinkering.</p><ul><li><strong>Automate contributions:</strong> Set up automatic monthly investments. Automation removes friction and ensures consistency during both bull and bear markets.</li><li><strong>Review annually:</strong> Once per year, check if your allocation has drifted more than 5% from your target and rebalance if needed.</li><li><strong>Don\'t check daily:</strong> Checking your portfolio daily encourages emotional reactions to normal volatility. Quarterly checks are sufficient for most investors.</li><li><strong>Never panic sell:</strong> The single most destructive investor behavior. Crashes are temporary; selling locks in losses permanently.</li><li><strong>Don\'t chase performance:</strong> Last year\'s top-performing fund is not next year\'s top performer. Stick to your diversified plan.</li><li><strong>Increase contributions over time:</strong> As your income grows, increase the percentage invested. Aim for 15–20% of gross income toward retirement.</li></ul>',
+            tip: '<strong>The Bogleheads\' motto:</strong> "Stay the course." In investing, discipline and patience outperform intelligence and activity. The investor who bought the S&P 500 in 2007 and held through 2009 saw their money triple by 2020.'
+        },
+    ];
+
+    function buildGuideTab() {
+        const container = document.getElementById('guide-steps');
+        GUIDE_STEPS.forEach((step, i) => {
+            const row = document.createElement('div');
+            row.className = 'guide-step';
+
+            const spine = document.createElement('div');
+            spine.className = 'step-spine';
+            const circle = document.createElement('div');
+            circle.className = 'step-circle';
+            circle.textContent = i + 1;
+            const line = document.createElement('div');
+            line.className = 'step-line';
+            spine.appendChild(circle);
+            spine.appendChild(line);
+
+            const body = document.createElement('div');
+            body.className = 'step-body';
+            const title = document.createElement('div');
+            title.className = 'step-title';
+            title.textContent = step.title;
+            const content = document.createElement('div');
+            content.className = 'step-content';
+            content.innerHTML = step.content;
+            const tip = document.createElement('div');
+            tip.className = 'step-tip';
+            tip.innerHTML = step.tip;
+            body.appendChild(title);
+            body.appendChild(content);
+            body.appendChild(tip);
+
+            row.appendChild(spine);
+            row.appendChild(body);
+            container.appendChild(row);
+        });
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  TOOLS — COMPOUND INTEREST
+    // ════════════════════════════════════════════════════════════════
+
+    function fmtDollars(n) {
+        if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+        if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+        if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+        return '$' + n.toFixed(0);
+    }
+
+    function calcCompound() {
+        const P = parseFloat(document.getElementById('ci-principal').value) || 0;
+        const m = parseFloat(document.getElementById('ci-monthly').value) || 0;
+        const r = (parseFloat(document.getElementById('ci-rate').value) || 0) / 100;
+        const y = parseInt(document.getElementById('ci-years').value) || 1;
+
+        const monthly_r = r / 12;
+        const months = y * 12;
+        let value = P;
+        const yearValues = [P];
+        const yearInvested = [P];
+
+        let totalInvested = P;
+        for (let mo = 1; mo <= months; mo++) {
+            value = value * (1 + monthly_r) + m;
+            totalInvested += m;
+            if (mo % 12 === 0) {
+                yearValues.push(value);
+                yearInvested.push(totalInvested);
+            }
+        }
+
+        const gains = value - totalInvested;
+        document.getElementById('ci-final').textContent = fmtDollars(value);
+        document.getElementById('ci-invested').textContent = fmtDollars(totalInvested);
+        document.getElementById('ci-gains').textContent = fmtDollars(gains);
+        document.getElementById('ci-multiple').textContent = (value / Math.max(totalInvested, 1)).toFixed(2) + 'x';
+
+        const result = document.getElementById('ci-result');
+        result.classList.add('show');
+        drawGrowthChart('ci-chart', yearValues, yearInvested, y);
+    }
+
+    function calcDCA() {
+        const m = parseFloat(document.getElementById('dca-monthly').value) || 0;
+        const r = (parseFloat(document.getElementById('dca-rate').value) || 0) / 100;
+        const y = parseInt(document.getElementById('dca-years').value) || 1;
+        const freq = parseInt(document.getElementById('dca-freq').value) || 12;
+
+        const perPeriod = (m * 12) / freq;
+        const rPerPeriod = r / freq;
+        const periods = y * freq;
+
+        let value = 0;
+        const yearValues = [0];
+        const yearInvested = [0];
+        let totalInvested = 0;
+
+        for (let p = 1; p <= periods; p++) {
+            value = value * (1 + rPerPeriod) + perPeriod;
+            totalInvested += perPeriod;
+            if (p % freq === 0) {
+                yearValues.push(value);
+                yearInvested.push(totalInvested);
+            }
+        }
+
+        const growth = value - totalInvested;
+        document.getElementById('dca-final').textContent = fmtDollars(value);
+        document.getElementById('dca-contributed').textContent = fmtDollars(totalInvested);
+        document.getElementById('dca-growth').textContent = fmtDollars(growth);
+
+        const result = document.getElementById('dca-result');
+        result.classList.add('show');
+        drawGrowthChart('dca-chart', yearValues, yearInvested, y);
+    }
+
+    function drawGrowthChart(canvasId, values, invested, years) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = Math.round(rect.width * devicePixelRatio) || 600;
+        canvas.height = Math.round(rect.height * devicePixelRatio) || 130;
+        const c = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        const PAD = { l: 48, r: 12, t: 10, b: 28 };
+        const gW = W - PAD.l - PAD.r;
+        const gH = H - PAD.t - PAD.b;
+
+        c.fillStyle = 'rgba(0,0,0,0.3)';
+        c.fillRect(0, 0, W, H);
+
+        const maxVal = Math.max(...values);
+        const pts = values.length;
+
+        function xOf(i) { return PAD.l + (i / (pts - 1)) * gW; }
+        function yOf(v) { return PAD.t + gH - (v / maxVal) * gH; }
+
+        // Grid lines
+        c.strokeStyle = 'rgba(255,255,255,0.04)';
+        c.lineWidth = 1;
+        for (let g = 0; g <= 4; g++) {
+            const y = PAD.t + (g / 4) * gH;
+            c.beginPath(); c.moveTo(PAD.l, y); c.lineTo(W - PAD.r, y); c.stroke();
+        }
+
+        // Invested area (orange)
+        c.beginPath();
+        c.moveTo(xOf(0), yOf(invested[0]));
+        for (let i = 1; i < pts; i++) c.lineTo(xOf(i), yOf(invested[i]));
+        c.lineTo(xOf(pts - 1), PAD.t + gH);
+        c.lineTo(xOf(0), PAD.t + gH);
+        c.closePath();
+        c.fillStyle = 'rgba(244,162,97,0.28)';
+        c.fill();
+
+        // Total value area (green)
+        c.beginPath();
+        c.moveTo(xOf(0), yOf(values[0]));
+        for (let i = 1; i < pts; i++) c.lineTo(xOf(i), yOf(values[i]));
+        c.lineTo(xOf(pts - 1), yOf(invested[pts - 1]));
+        for (let i = pts - 1; i >= 0; i--) c.lineTo(xOf(i), yOf(invested[i]));
+        c.closePath();
+        c.fillStyle = 'rgba(129,199,132,0.22)';
+        c.fill();
+
+        // Value line
+        c.beginPath();
+        c.moveTo(xOf(0), yOf(values[0]));
+        for (let i = 1; i < pts; i++) c.lineTo(xOf(i), yOf(values[i]));
+        c.strokeStyle = '#81c784';
+        c.lineWidth = 1.5;
+        c.stroke();
+
+        // Invested line
+        c.beginPath();
+        c.moveTo(xOf(0), yOf(invested[0]));
+        for (let i = 1; i < pts; i++) c.lineTo(xOf(i), yOf(invested[i]));
+        c.strokeStyle = '#f4a261';
+        c.lineWidth = 1;
+        c.stroke();
+
+        // Y axis labels
+        c.fillStyle = '#404040';
+        c.font = (10 * devicePixelRatio) + 'px Courier New';
+        c.textAlign = 'right';
+        for (let g = 0; g <= 4; g++) {
+            const v = (maxVal / 4) * (4 - g);
+            const y = PAD.t + (g / 4) * gH;
+            c.fillText(fmtDollars(v), PAD.l - 4, y + 4);
+        }
+
+        // X axis labels
+        c.textAlign = 'center';
+        const step = Math.max(1, Math.floor(years / 5));
+        for (let yr = 0; yr <= years; yr += step) {
+            const x = xOf(yr);
+            c.fillText(yr + 'y', x, H - 6);
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  TOOLS — RISK QUIZ
+    // ════════════════════════════════════════════════════════════════
+
+    const QUIZ_QS = [
+        {
+            q: 'Your portfolio drops 25% in a market crash. You would most likely:',
+            opts: [
+                { text: 'Sell most holdings to stop further losses', pts: 0 },
+                { text: 'Feel anxious but hold steady and wait', pts: 1 },
+                { text: 'Stay calm — I expected this. Maybe buy more.', pts: 2 },
+            ]
+        },
+        {
+            q: 'Your primary investment goal is:',
+            opts: [
+                { text: 'Preserve my capital — I cannot afford significant losses', pts: 0 },
+                { text: 'Steady growth with manageable risk', pts: 1 },
+                { text: 'Maximum long-term growth — I can handle volatility', pts: 2 },
+            ]
+        },
+        {
+            q: 'When do you expect to need this money?',
+            opts: [
+                { text: 'Within 5 years', pts: 0 },
+                { text: 'In 5–15 years', pts: 1 },
+                { text: 'More than 15 years from now', pts: 2 },
+            ]
+        },
+        {
+            q: 'How stable is your income and financial situation?',
+            opts: [
+                { text: 'Variable or uncertain — I may need to access savings', pts: 0 },
+                { text: 'Moderately stable with a solid emergency fund', pts: 1 },
+                { text: 'Very stable, growing income, no near-term cash needs', pts: 2 },
+            ]
+        },
+        {
+            q: 'How would you describe your investing knowledge?',
+            opts: [
+                { text: 'Beginner — still learning the fundamentals', pts: 0 },
+                { text: 'Intermediate — comfortable with stocks, ETFs, and basic concepts', pts: 1 },
+                { text: 'Advanced — familiar with valuation, portfolio theory, and market mechanics', pts: 2 },
+            ]
+        },
+        {
+            q: 'If shown two portfolios — one with 8% average return, 5% max annual loss; another with 12% average return, 35% max annual loss — you would choose:',
+            opts: [
+                { text: 'Portfolio A — I prefer predictability', pts: 0 },
+                { text: 'Somewhere in between depending on my goals', pts: 1 },
+                { text: 'Portfolio B — the higher return is worth the swings', pts: 2 },
+            ]
+        },
+        {
+            q: 'During a prolonged bear market (stocks down 40% over 18 months), you would:',
+            opts: [
+                { text: 'Move to cash or bonds until things stabilize', pts: 0 },
+                { text: 'Hold my current positions and stop checking frequently', pts: 1 },
+                { text: 'Continue regular contributions and look for buying opportunities', pts: 2 },
+            ]
+        },
+    ];
+
+    const PROFILES = [
+        {
+            name: 'Conservative Investor',
+            badge: '&#127964; Preserver',
+            desc: 'You prioritize capital preservation and income over growth. Volatility causes you genuine stress, and that\'s completely valid. Your portfolio should reflect your need for stability.',
+            alloc: [
+                { label: 'Bonds', pct: 55, color: '#4fc3f7' },
+                { label: 'U.S. Stocks', pct: 25, color: '#f4a261' },
+                { label: 'Intl Stocks', pct: 10, color: '#81c784' },
+                { label: 'Cash/REIT', pct: 10, color: '#ce93d8' },
+            ],
+            guidance: 'Focus on high-quality bond funds, dividend stocks, and short-duration fixed income. Consider Treasury I-Bonds for inflation protection. Avoid high-volatility sectors.'
+        },
+        {
+            name: 'Moderate Investor',
+            badge: '&#9878; Balancer',
+            desc: 'You seek a balance between growth and stability. You can handle moderate downturns but don\'t want extreme volatility. A classic balanced portfolio suits you well.',
+            alloc: [
+                { label: 'U.S. Stocks', pct: 45, color: '#f4a261' },
+                { label: 'Bonds', pct: 30, color: '#4fc3f7' },
+                { label: 'Intl Stocks', pct: 20, color: '#81c784' },
+                { label: 'Alternatives', pct: 5, color: '#ce93d8' },
+            ],
+            guidance: 'The classic 60/40 portfolio or a Target Date Fund is ideal. Rebalance annually. Include both U.S. and international exposure. Add bond allocation as you approach goals.'
+        },
+        {
+            name: 'Aggressive Investor',
+            badge: '&#128640; Builder',
+            desc: 'You have a long time horizon, stable income, and psychological comfort with volatility. You understand that short-term pain is the price of long-term gain.',
+            alloc: [
+                { label: 'U.S. Stocks', pct: 60, color: '#f4a261' },
+                { label: 'Intl Stocks', pct: 25, color: '#81c784' },
+                { label: 'Bonds', pct: 10, color: '#4fc3f7' },
+                { label: 'Alternatives', pct: 5, color: '#ce93d8' },
+            ],
+            guidance: 'Hold primarily index funds — U.S. Total Market + International Index. Keep bonds minimal. Automate contributions, ignore short-term noise, and resist the urge to react to headlines.'
+        },
+    ];
+
+    let quizState = { current: 0, answers: new Array(QUIZ_QS.length).fill(null) };
+
+    function renderQuiz() {
+        const body = document.getElementById('quiz-body');
+        if (!body) return;
+        body.innerHTML = '';
+
+        const allAnswered = quizState.answers.every(a => a !== null);
+        const score = quizState.answers.reduce((s, a) => s + (a || 0), 0);
+
+        if (allAnswered && quizState.showResult) {
+            const profileIdx = score <= 4 ? 0 : score <= 9 ? 1 : 2;
+            const p = PROFILES[profileIdx];
+            const res = document.createElement('div');
+            res.className = 'quiz-result';
+            res.innerHTML = '<div class="quiz-badge">' + p.badge + '</div>' +
+                '<div class="quiz-profile-name" style="color:#f4a261;font-family:Courier New,monospace;font-size:13px;letter-spacing:2px;margin-bottom:8px;">' + p.name.toUpperCase() + '</div>' +
+                '<div class="quiz-desc">' + p.desc + '</div>';
+
+            const allocBarEl = document.createElement('div');
+            allocBarEl.className = 'alloc-bar';
+            p.alloc.forEach(seg => {
+                const s = document.createElement('div');
+                s.className = 'alloc-seg';
+                s.style.width = seg.pct + '%';
+                s.style.background = seg.color;
+                allocBarEl.appendChild(s);
+            });
+            res.appendChild(allocBarEl);
+
+            const legend = document.createElement('div');
+            legend.className = 'alloc-legend';
+            p.alloc.forEach(seg => {
+                const item = document.createElement('div');
+                item.className = 'alloc-item';
+                item.innerHTML = '<div class="alloc-dot" style="background:' + seg.color + '"></div>' + seg.label + ' ' + seg.pct + '%';
+                legend.appendChild(item);
+            });
+            res.appendChild(legend);
+
+            const guidance = document.createElement('div');
+            guidance.style.cssText = 'font-size:12px;color:#777;line-height:1.6;margin-top:8px;';
+            guidance.textContent = p.guidance;
+            res.appendChild(guidance);
+
+            const retakeBtn = document.createElement('button');
+            retakeBtn.className = 'tool-btn';
+            retakeBtn.style.marginTop = '12px';
+            retakeBtn.textContent = 'Retake Quiz';
+            retakeBtn.addEventListener('click', () => {
+                quizState = { current: 0, answers: new Array(QUIZ_QS.length).fill(null) };
+                renderQuiz();
+            });
+            res.appendChild(retakeBtn);
+            body.appendChild(res);
+            return;
+        }
+
+        const q = QUIZ_QS[quizState.current];
+        const prog = document.createElement('div');
+        prog.className = 'quiz-prog-bar';
+        const fill = document.createElement('div');
+        fill.className = 'quiz-prog-fill';
+        fill.style.width = ((quizState.current / QUIZ_QS.length) * 100) + '%';
+        prog.appendChild(fill);
+        body.appendChild(prog);
+
+        const counter = document.createElement('div');
+        counter.style.cssText = 'font-family:Courier New,monospace;font-size:9px;color:#444;margin-bottom:10px;';
+        counter.textContent = 'Question ' + (quizState.current + 1) + ' of ' + QUIZ_QS.length;
+        body.appendChild(counter);
+
+        const qEl = document.createElement('div');
+        qEl.className = 'quiz-q';
+        qEl.textContent = q.q;
+        body.appendChild(qEl);
+
+        const opts = document.createElement('div');
+        opts.className = 'quiz-options';
+        q.opts.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'quiz-opt' + (quizState.answers[quizState.current] === opt.pts ? ' sel' : '');
+            btn.textContent = opt.text;
+            btn.addEventListener('click', () => {
+                quizState.answers[quizState.current] = opt.pts;
+                renderQuiz();
+            });
+            opts.appendChild(btn);
+        });
+        body.appendChild(opts);
+
+        const nav = document.createElement('div');
+        nav.className = 'quiz-nav';
+        const back = document.createElement('button');
+        back.className = 'quiz-nav-btn';
+        back.textContent = '← Back';
+        back.disabled = quizState.current === 0;
+        back.addEventListener('click', () => { quizState.current--; renderQuiz(); });
+
+        const next = document.createElement('button');
+        const isLast = quizState.current === QUIZ_QS.length - 1;
+        next.className = 'quiz-nav-btn' + (isLast ? ' primary' : '');
+        next.textContent = isLast ? 'See My Profile →' : 'Next →';
+        next.disabled = quizState.answers[quizState.current] === null;
+        next.addEventListener('click', () => {
+            if (isLast) {
+                quizState.showResult = true;
+            } else {
+                quizState.current++;
+            }
+            renderQuiz();
+        });
+
+        nav.appendChild(back); nav.appendChild(next);
+        body.appendChild(nav);
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  TOOLS — PORTFOLIO ALLOCATOR
+    // ════════════════════════════════════════════════════════════════
+
+    const ALLOC_ASSETS = [
+        { key: 'us',   label: 'U.S. Stocks',   color: '#f4a261', def: 50 },
+        { key: 'int',  label: 'Intl Stocks',   color: '#81c784', def: 20 },
+        { key: 'bond', label: 'Bonds',          color: '#4fc3f7', def: 20 },
+        { key: 'reit', label: 'REITs',          color: '#ce93d8', def: 5  },
+        { key: 'alt',  label: 'Alternatives',   color: '#ffb74d', def: 5  },
+    ];
+
+    let allocValues = {};
+    ALLOC_ASSETS.forEach(a => { allocValues[a.key] = a.def; });
+
+    function renderAllocator() {
+        const body = document.getElementById('alloc-body');
+        if (!body || body.dataset.built) return;
+        body.dataset.built = '1';
+
+        const bar = document.createElement('div');
+        bar.className = 'alloc-bar';
+        bar.id = 'alloc-vis-bar';
+        ALLOC_ASSETS.forEach(a => {
+            const seg = document.createElement('div');
+            seg.className = 'alloc-seg';
+            seg.id = 'alloc-seg-' + a.key;
+            seg.style.width = a.def + '%';
+            seg.style.background = a.color;
+            bar.appendChild(seg);
+        });
+        body.appendChild(bar);
+
+        ALLOC_ASSETS.forEach(a => {
+            const row = document.createElement('div');
+            row.className = 'alloc-slider-row';
+            const dot = document.createElement('div');
+            dot.className = 'alloc-dot';
+            dot.style.cssText = 'width:10px;height:10px;border-radius:2px;background:' + a.color + ';flex-shrink:0;';
+            const lbl = document.createElement('span');
+            lbl.className = 'alloc-slider-lbl';
+            lbl.style.color = '#888';
+            lbl.textContent = a.label;
+            const slider = document.createElement('input');
+            slider.type = 'range';
+            slider.className = 'alloc-slider';
+            slider.min = 0; slider.max = 100; slider.value = a.def;
+            slider.style.accentColor = a.color;
+            const pct = document.createElement('span');
+            pct.className = 'alloc-pct';
+            pct.id = 'alloc-pct-' + a.key;
+            pct.textContent = a.def + '%';
+            slider.addEventListener('input', () => {
+                allocValues[a.key] = parseInt(slider.value);
+                pct.textContent = slider.value + '%';
+                updateAllocBar();
+            });
+            row.appendChild(dot); row.appendChild(lbl); row.appendChild(slider); row.appendChild(pct);
+            body.appendChild(row);
+        });
+
+        const warning = document.createElement('div');
+        warning.className = 'alloc-warning';
+        warning.id = 'alloc-warning';
+        body.appendChild(warning);
+
+        const tip = document.createElement('div');
+        tip.style.cssText = 'font-size:11px;color:#444;margin-top:8px;font-family:Courier New,monospace;line-height:1.6;';
+        tip.textContent = 'Adjust sliders to design your target allocation. Total should equal 100%.';
+        body.appendChild(tip);
+    }
+
+    function updateAllocBar() {
+        const total = Object.values(allocValues).reduce((s, v) => s + v, 0);
+        const warning = document.getElementById('alloc-warning');
+        if (warning) {
+            warning.textContent = total !== 100 ? 'Total: ' + total + '% — allocations should sum to 100%' : '';
+        }
+        ALLOC_ASSETS.forEach(a => {
+            const seg = document.getElementById('alloc-seg-' + a.key);
+            if (seg) seg.style.width = (total > 0 ? (allocValues[a.key] / total * 100) : 0) + '%';
+        });
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    //  INIT
+    // ════════════════════════════════════════════════════════════════
+
+    buildLearnTab();
+    buildGuideTab();
+    buildAlphaBar();
+    filterTerms('');
+    renderQuiz();
+    renderAllocator();
