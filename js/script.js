@@ -91,7 +91,12 @@ function buildNavbar() {
     burger.setAttribute('aria-label', 'Toggle navigation');
     burger.setAttribute('type', 'button');
     burger.innerHTML = '<span></span><span></span><span></span>';
-    burger.addEventListener('click', () => el.classList.toggle('nav-open'));
+    burger.addEventListener('click', () => {
+        el.classList.toggle('nav-open');
+        if (!el.classList.contains('nav-open')) {
+            el.querySelectorAll('.nav-dropdown-open').forEach(d => d.classList.remove('nav-dropdown-open'));
+        }
+    });
     el.appendChild(burger);
 
     const linksWrap = document.createElement('div');
@@ -117,6 +122,19 @@ function buildNavbar() {
         toggle.className = 'nav-link nav-dropdown-toggle';
         toggle.href = item.href;
         toggle.textContent = item.label;
+        toggle.addEventListener('click', e => {
+            const burger = el.querySelector('.nav-burger');
+            if (burger && getComputedStyle(burger).display !== 'none') {
+                e.preventDefault();
+                const isOpen = wrap.classList.toggle('nav-dropdown-open');
+                // Close other open dropdowns
+                if (isOpen) {
+                    linksWrap.querySelectorAll('.nav-dropdown-open').forEach(d => {
+                        if (d !== wrap) d.classList.remove('nav-dropdown-open');
+                    });
+                }
+            }
+        });
         wrap.appendChild(toggle);
 
         const menu = document.createElement('div');
