@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 — Page Not Found · ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <style>
+        .err-wrap {
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px 24px;
+        }
+        .err-code {
+            font-family: 'Courier New', monospace;
+            font-size: clamp(5rem, 20vw, 9rem);
+            font-weight: 900;
+            color: #f4a261;
+            text-shadow: 0 0 60px rgba(244,162,97,0.3);
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+        .err-title {
+            font-family: Jokerman, fantasy;
+            font-size: clamp(1.4rem, 5vw, 2.2rem);
+            color: #bbb;
+            margin-bottom: 16px;
+        }
+        .err-msg {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #555;
+            max-width: 420px;
+            line-height: 1.7;
+            margin-bottom: 36px;
+        }
+        .err-links {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .err-link {
+            padding: 10px 22px;
+            border: 1px solid rgba(244,162,97,0.4);
+            border-radius: 8px;
+            color: #f4a261;
+            text-decoration: none;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .err-link:hover { background: rgba(244,162,97,0.1); border-color: #f4a261; }
+        .err-link.primary { background: #f4a261; color: #111; border-color: #f4a261; font-weight: bold; }
+        .err-link.primary:hover { background: #e76f51; border-color: #e76f51; }
+        .err-img {
+            width: clamp(180px, 45vw, 320px);
+            opacity: 0.82;
+            margin-bottom: 28px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="wunderBody">
+    <div class="navbar"></div>
+    <div class="err-wrap">
+        <div class="err-code">404</div>
+        <img src="/images/comebacklater.png" alt="Come back later" class="err-img">
+        <div class="err-title">You've wandered off the map.</div>
+        <p class="err-msg">
+            This page doesn't exist — or maybe it did once, and it doesn't anymore.
+            Either way, there's plenty worth finding if you head back to the wunderland.
+        </p>
+        <div class="err-links">
+            <a href="/" class="err-link primary">← Home</a>
+            <a href="/gamer/games" class="err-link">Games</a>
+            <a href="/virtuoso/virtuoso" class="err-link">Virtuoso</a>
+            <a href="/community/forum" class="err-link">Community</a>
+        </div>
+    </div>
+</body>
+</html>

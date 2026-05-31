@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <style>
+        #search-page { max-width: 680px; margin: 0 auto; padding: 28px 20px 80px; }
+
+        .search-header { text-align: center; margin-bottom: 32px; }
+        .search-header h2 { font-family: Jokerman, fantasy; color: #f4a261; font-size: clamp(1.6rem, 5vw, 2.4rem); margin-bottom: 16px; }
+
+        .search-bar { display: flex; gap: 8px; margin-bottom: 28px; }
+        #search-input { flex: 1; background: rgba(0,0,0,0.6); border: 1px solid #2a2a2a; color: #ddd; border-radius: 8px; padding: 12px 16px; font-size: 15px; transition: border-color 0.15s; }
+        #search-input:focus { border-color: rgba(244,162,97,0.5); outline: none; }
+        #search-input::placeholder { color: #444; }
+        .search-btn { background: #f4a261; border: none; color: #111; border-radius: 8px; padding: 12px 20px; font-size: 14px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+        .search-btn:hover { background: #e76f51; }
+
+        .search-stats { font-family: 'Courier New', monospace; font-size: 11px; color: #444; margin-bottom: 18px; min-height: 18px; }
+
+        .result-item { background: rgba(0,0,0,0.35); border: 1px solid #1e1e1e; border-radius: 10px; padding: 16px 20px; margin-bottom: 10px; text-decoration: none; display: block; transition: border-color 0.18s; }
+        .result-item:hover { border-color: rgba(244,162,97,0.3); }
+        .result-section { font-family: 'Courier New', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: rgba(244,162,97,0.5); margin-bottom: 4px; }
+        .result-title { font-size: 15px; color: #ddd; margin-bottom: 4px; }
+        .result-title mark { background: rgba(244,162,97,0.2); color: #f4a261; border-radius: 2px; padding: 0 2px; }
+        .result-desc { font-size: 12px; color: #666; line-height: 1.5; }
+        .result-desc mark { background: rgba(244,162,97,0.15); color: #c08050; border-radius: 2px; padding: 0 2px; }
+
+        .search-empty { text-align: center; font-family: 'Courier New', monospace; font-size: 12px; color: #333; padding: 60px 0; }
+        .search-hint { font-family: 'Courier New', monospace; font-size: 11px; color: #333; text-align: center; margin-top: 12px; line-height: 1.7; }
+        .search-hint a { color: #555; text-decoration: none; }
+        .search-hint a:hover { color: #f4a261; }
+    </style>
+</head>
+<body class="wunderBody">
+    <div class="navbar"></div>
+
+    <div id="search-page">
+        <div class="search-header">
+            <h2>Search</h2>
+        </div>
+        <div class="search-bar">
+            <input id="search-input" type="search" placeholder="Search games, tools, art, stories…" autofocus autocomplete="off">
+            <button class="search-btn" id="search-btn">Search</button>
+        </div>
+        <div class="search-stats" id="search-stats"></div>
+        <div id="search-results"></div>
+        <div class="search-hint" id="search-hint">
+            Try: <a href="#" data-q="game">game</a> · <a href="#" data-q="art">art</a> · <a href="#" data-q="daedalus">daedalus</a> · <a href="#" data-q="calculator">calculator</a> · <a href="#" data-q="chess">chess</a>
+        </div>
+    </div>
+
+    <script src="/js/search.js" defer></script>
+</body>
+</html>

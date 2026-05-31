@@ -7,7 +7,10 @@
     "lint:css":  "stylelint \"css/*.css\"",
     "lint:html": "htmlhint \"**/*.html\" --ignore \"node_modules/**,coverage/**\"",
     "lint":      "npm run lint:js && npm run lint:css && npm run lint:html",
-    "test":      "jest --coverage"
+    "test":      "jest --coverage",
+    "minify:js": "find js -name '*.js' ! -name '*.min.js' | xargs -I{} terser {} --compress --mangle -o {}",
+    "minify:css": "find css -name '*.css' | xargs -I{} cleancss {} -o {}",
+    "minify":    "npm run minify:js && npm run minify:css"
   },
   "jest": {
     "testEnvironment": "node",
@@ -40,10 +43,12 @@
     }
   },
   "devDependencies": {
+    "clean-css-cli":             "^5.6.3",
     "eslint":                    "^8.57.0",
     "htmlhint":                  "^1.1.4",
     "jest":                      "^29.7.0",
     "stylelint":                 "^16.3.0",
-    "stylelint-config-standard": "^36.0.0"
+    "stylelint-config-standard": "^36.0.0",
+    "terser":                    "^5.31.0"
   }
 }

@@ -1,8 +1,99 @@
 'use strict';
 
+// ── PWA & SEO head injection ──────────────────────────────────────────────────
+(function injectHead() {
+    const head = document.head;
+
+    // Favicon
+    if (!document.querySelector('link[rel="icon"]')) {
+        const fav = document.createElement('link');
+        fav.rel = 'icon'; fav.href = '/favicon.svg'; fav.type = 'image/svg+xml';
+        head.appendChild(fav);
+    }
+
+    // PWA manifest
+    if (!document.querySelector('link[rel="manifest"]')) {
+        const mf = document.createElement('link');
+        mf.rel = 'manifest'; mf.href = '/manifest.json';
+        head.appendChild(mf);
+    }
+
+    // Theme-color meta
+    if (!document.querySelector('meta[name="theme-color"]')) {
+        const tc = document.createElement('meta');
+        tc.name = 'theme-color'; tc.content = '#f4a261';
+        head.appendChild(tc);
+    }
+
+    // Open Graph tags (per-page descriptions)
+    const PAGE_META = {
+        '/':                                   { desc: 'Games, art, tech projects, and more — ZYXXYZ\'s personal corner of the internet.' },
+        '/about':                              { desc: 'Goggles, a suit, a banana cane. Who is ZYXXYZ? The answer is in here somewhere.' },
+        '/gamer/games':                        { desc: 'Twelve games, eleven leaderboards. Tetris, Snake, Daedalus, chess, poker, and more.' },
+        '/gamer/daedalus':                     { desc: 'Ten mazes. One unbroken run. Escape every level before the Minotaur finds you.' },
+        '/virtuoso/virtuoso':                  { desc: 'Art, animations, comics, doodles, crafts, and stories — made by hand and pixel.' },
+        '/virtuoso/drawings/doodles':          { desc: 'Browser-based drawing app inspired by Paint.NET — layers, tools, and history.' },
+        '/technologist/apps':                  { desc: 'Apps, tools, and deep dives into computers, software, and the way things work.' },
+        '/community/forum':                    { desc: 'Drop in, say hello, leave a suggestion, or just lurk. All welcome.' },
+        '/community/guestbook':                { desc: 'Sign the guestbook and leave your mark on ZYXXYZ\'s Whymzykal Wunderland.' },
+        '/blog':                               { desc: 'Updates and behind-the-scenes from ZYXXYZ\'s Whymzykal Wunderland.' },
+    };
+
+    const path  = window.location.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+    const meta  = PAGE_META[path] || { desc: 'ZYXXYZ\'s Whymzykal Wunderland — games, art, tech, and more.' };
+    const title = document.title;
+
+    const ogTags = [
+        ['og:title',       title],
+        ['og:description', meta.desc],
+        ['og:url',         window.location.href],
+        ['og:type',        'website'],
+        ['og:image',       'https://zyxwonderland.xyz/images/logo.png'],
+        ['og:site_name',   "ZYXXYZ's Whymzykal Wunderland"],
+    ];
+
+    ogTags.forEach(([prop, content]) => {
+        if (document.querySelector(`meta[property="${prop}"]`)) return;
+        const el = document.createElement('meta');
+        el.setAttribute('property', prop); el.setAttribute('content', content);
+        head.appendChild(el);
+    });
+
+    if (!document.querySelector('meta[name="description"]')) {
+        const d = document.createElement('meta');
+        d.name = 'description'; d.content = meta.desc;
+        head.appendChild(d);
+    }
+})();
+
+// ── Service worker registration ───────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+}
+
+// ── Theme (dark / light) ──────────────────────────────────────────────────────
+(function initTheme() {
+    const saved = localStorage.getItem('theme') || 'dark';
+    if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+})();
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    const next    = current === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    document.querySelectorAll('.theme-toggle').forEach(btn => {
+        btn.textContent = next === 'light' ? '🌙' : '☀️';
+        btn.title = next === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
+    });
+}
+
 const NAV_STRUCTURE = [
     { label: 'Home',  href: '/' },
     { label: 'About', href: '/about' },
+    { label: 'Blog',  href: '/blog' },
     {
         label: 'Virtuoso', href: '/virtuoso/virtuoso',
         children: [
@@ -62,10 +153,12 @@ const NAV_STRUCTURE = [
     {
         label: 'Community', href: '/community/forum',
         children: [
-            { label: 'Forum',    href: '/community/forum' },
-            { label: 'Wellness', href: '/community/wellness' },
+            { label: 'Forum',     href: '/community/forum' },
+            { label: 'Guestbook', href: '/community/guestbook' },
+            { label: 'Wellness',  href: '/community/wellness' },
         ],
     },
+    { label: 'Search', href: '/search' },
 ];
 
 function buildNavbar() {
@@ -75,9 +168,20 @@ function buildNavbar() {
     el.className = 'navbar';
     el.innerHTML = '';
 
-    // Always place the navbar as the very first child of body
-    if (el !== document.body.firstElementChild) {
-        document.body.insertBefore(el, document.body.firstChild);
+    // Skip-to-content link — inject once at the very top of body
+    if (!document.querySelector('.skip-to-content')) {
+        const skip = document.createElement('a');
+        skip.className = 'skip-to-content';
+        skip.href = '#main-content';
+        skip.textContent = 'Skip to content';
+        document.body.insertBefore(skip, document.body.firstChild);
+    }
+
+    // Always place the navbar as the very first child of body (after skip link)
+    const skipLink = document.querySelector('.skip-to-content');
+    const afterSkip = skipLink ? skipLink.nextSibling : document.body.firstChild;
+    if (el !== afterSkip) {
+        document.body.insertBefore(el, afterSkip);
     }
 
     const brand = document.createElement('a');
@@ -154,6 +258,14 @@ function buildNavbar() {
     linksWrap.addEventListener('click', e => {
         if (e.target.tagName === 'A') el.classList.remove('nav-open');
     });
+
+    const themeBtn = document.createElement('button');
+    themeBtn.className = 'theme-toggle';
+    const curTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    themeBtn.textContent = curTheme === 'light' ? '🌙' : '☀️';
+    themeBtn.title = curTheme === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
+    themeBtn.addEventListener('click', toggleTheme);
+    el.appendChild(themeBtn);
 }
 
 function buildBackLink() {

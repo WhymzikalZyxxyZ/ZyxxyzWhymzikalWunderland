@@ -215,3 +215,16 @@
 
         banner.appendChild(inner);
     })();
+
+// ── Newsletter signup stub ────────────────────────────────────────────────────
+function handleNewsletterSignup(btn) {
+    const input = btn.previousElementSibling;
+    const email = input ? input.value.trim() : '';
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        input && input.focus();
+        return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Thanks! ✓';
+    input.disabled = true;
+}
