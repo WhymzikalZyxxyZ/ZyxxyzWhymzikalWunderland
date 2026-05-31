@@ -40,11 +40,11 @@
             letter-spacing:2px; color:#555; margin-bottom:6px; }
         #puz-tray { display:flex; flex-wrap:wrap; gap:4px; }
         .puz-piece {
-            cursor:grab; border:2px solid #333; border-radius:3px;
-            transition:border-color 0.1s; flex-shrink:0;
+            cursor:grab; flex-shrink:0; touch-action:none;
+            transition:opacity 0.1s, filter 0.1s;
         }
-        .puz-piece:hover { border-color:#f4a261; }
-        .puz-piece.dragging { opacity:0.5; border-color:#f4a261; cursor:grabbing; }
+        .puz-piece:hover { filter: brightness(1.18); }
+        .puz-piece:active { opacity:0.5; cursor:grabbing; }
         #timer-row { display:flex; gap:20px; align-items:center; margin-top:8px; }
         #puz-timer { font-family:'Courier New',monospace; font-size:18px; color:#f4a261; }
         #puz-progress { font-family:'Courier New',monospace; font-size:11px; color:#888; }
