@@ -33,11 +33,19 @@
             return name;
         }
 
+        // ── Session UID (anonymous authorship for delete) ─────────────────────────
+        let myUid = sessionStorage.getItem('forumUid');
+        if (!myUid) {
+            myUid = (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now());
+            sessionStorage.setItem('forumUid', myUid);
+        }
+
         // ── Helpers ───────────────────────────────────────────────────────────────────
-        const chatMessages = document.getElementById('chat-messages');
-        const statusDot    = document.getElementById('chat-status-dot');
-        const chatInput    = document.getElementById('chat-input');
-        const chatSend     = document.getElementById('chat-send');
+        const chatMessages  = document.getElementById('chat-messages');
+        const statusDot     = document.getElementById('chat-status-dot');
+        const chatInput     = document.getElementById('chat-input');
+        const chatSend      = document.getElementById('chat-send');
+        const loadOlderBtn  = document.getElementById('load-older-btn');
 
         function escHtml(str) {
             return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -55,9 +63,10 @@
             chatMessages.appendChild(el);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
-        function addMessageEl(username, text, ts, isMine) {
+        function addMessageEl(username, text, ts, isMine, msgKey, canDelete, prepend = false) {
             const div = document.createElement('div');
             div.className = 'msg ' + (isMine ? 'mine' : 'theirs');
+            if (msgKey) div.dataset.key = msgKey;
 
             const meta = document.createElement('div');
             meta.className = 'msg-meta';
@@ -73,6 +82,16 @@
             meta.appendChild(sender);
             meta.appendChild(time);
 
+            if (canDelete && msgKey) {
+                const del = document.createElement('button');
+                del.className = 'msg-delete';
+                del.textContent = '✕';
+                del.title = 'Delete this message';
+                del.setAttribute('aria-label', 'Delete message');
+                del.addEventListener('click', () => deleteMessage(msgKey, div));
+                meta.appendChild(del);
+            }
+
             const bubble = document.createElement('div');
             bubble.className = 'msg-bubble';
             bubble.textContent = text;
@@ -80,8 +99,20 @@
             div.appendChild(meta);
             div.appendChild(bubble);
 
-            chatMessages.appendChild(div);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            if (prepend) {
+                const firstMsg = chatMessages.querySelector('.msg, .msg-system');
+                chatMessages.insertBefore(div, firstMsg || null);
+            } else {
+                chatMessages.appendChild(div);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        function deleteMessage(key, el) {
+            if (!confirm('Delete this message?')) return;
+            firebase.database().ref(`forum/messages/${key}`).remove()
+                .then(() => el.remove())
+                .catch(() => alert('Delete failed.'));
         }
 
         // ── Firebase ──────────────────────────────────────────────────────────────────
@@ -91,6 +122,8 @@
             const messagesRef = firebase.database().ref('forum/messages');
             let myUsername    = null;
             let lastSent      = 0;
+            let earliestTs    = Infinity;
+            let loadingOlder  = false;
 
             sendMessage = function () {
                 if (!myUsername) return;
@@ -98,7 +131,7 @@
                 if (!text || text.length > 500) return;
                 if (Date.now() - lastSent < 1500) return;
                 lastSent = Date.now();
-                messagesRef.push({ username: myUsername, text, ts: Date.now() });
+                messagesRef.push({ username: myUsername, text, ts: Date.now(), uid: myUid });
                 chatInput.value = '';
                 document.getElementById('char-count').textContent = '0 / 500';
                 document.getElementById('char-count').classList.remove('warn');
@@ -109,6 +142,33 @@
                 statusDot.classList.toggle('live', !!snap.val());
             });
 
+            function loadOlderMessages() {
+                if (loadingOlder || earliestTs === Infinity) return;
+                loadingOlder = true;
+                if (loadOlderBtn) { loadOlderBtn.disabled = true; loadOlderBtn.textContent = 'Loading…'; }
+                messagesRef.orderByChild('ts').endAt(earliestTs - 1).limitToLast(20)
+                    .once('value', snap => {
+                        const older = [];
+                        snap.forEach(child => older.push({ key: child.key, ...child.val() }));
+                        if (older.length === 0) {
+                            addSystemMsg('— beginning of chat —');
+                            if (loadOlderBtn) loadOlderBtn.remove();
+                        } else {
+                            older.reverse().forEach(msg => {
+                                if (msg.text) {
+                                    const isMine = msg.username === myUsername;
+                                    addMessageEl(msg.username, msg.text, msg.ts, isMine, msg.key, isMine || msg.uid === myUid, true);
+                                    if (msg.ts < earliestTs) earliestTs = msg.ts;
+                                }
+                            });
+                            if (loadOlderBtn) { loadOlderBtn.disabled = false; loadOlderBtn.textContent = 'Load older messages'; }
+                        }
+                        loadingOlder = false;
+                    });
+            }
+
+            if (loadOlderBtn) loadOlderBtn.addEventListener('click', loadOlderMessages);
+
             initUsername().then(username => {
                 myUsername = username;
                 document.getElementById('chat-username').textContent = username;
@@ -118,14 +178,16 @@
                 chatInput.focus();
 
                 let initialLoad = true;
-                messagesRef.orderByChild('ts').limitToLast(100).on('child_added', snapshot => {
+                messagesRef.orderByChild('ts').limitToLast(50).on('child_added', snapshot => {
                     if (initialLoad) {
-                        addSystemMsg('— last 100 messages —');
+                        addSystemMsg('— last 50 messages —');
                         initialLoad = false;
                     }
                     const msg = snapshot.val();
                     if (msg && msg.text) {
-                        addMessageEl(msg.username, msg.text, msg.ts, msg.username === myUsername);
+                        const isMine = msg.username === myUsername;
+                        if (msg.ts < earliestTs) earliestTs = msg.ts;
+                        addMessageEl(msg.username, msg.text, msg.ts, isMine, snapshot.key, isMine || msg.uid === myUid);
                     }
                 });
             });
