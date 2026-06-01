@@ -721,6 +721,13 @@ async function init() {
     document.getElementById('compose-btn').addEventListener('click', () => openCompose());
     document.getElementById('burn-btn').addEventListener('click', burnActive);
     document.getElementById('create-btn').addEventListener('click', handleCreate);
+    document.getElementById('share-btn').addEventListener('click', () => {
+        navigator.clipboard.writeText(location.href).then(() => {
+            const btn = document.getElementById('share-btn');
+            btn.textContent = '✓ Copied!';
+            setTimeout(() => { btn.textContent = '🔗 Copy link'; }, 2000);
+        });
+    });
     document.getElementById('add-address-btn').addEventListener('click', addNewAddress);
     document.getElementById('extend-btn').addEventListener('click', handleExtend);
     document.getElementById('qr-btn').addEventListener('click', showQr);

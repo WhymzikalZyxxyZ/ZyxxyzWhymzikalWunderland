@@ -72,8 +72,13 @@ function renderFiles() {
     });
 }
 
+const MAX_FILE_BYTES  = 25 * 1024 * 1024;
+const MAX_TOTAL_BYTES = 25 * 1024 * 1024;
+
 function addFiles(filesList) {
+    const oversized = [];
     Array.from(filesList).forEach(file => {
+        if (file.size > MAX_FILE_BYTES) { oversized.push(file.name); return; }
         const entry = { file, id: Math.random().toString(36).slice(2), preview: null };
         pendingFiles.push(entry);
         if (isImage(file)) {
@@ -82,6 +87,9 @@ function addFiles(filesList) {
             reader.readAsDataURL(file);
         }
     });
+    if (oversized.length) {
+        errorEl.textContent = `File too large (max 25 MB): ${oversized.join(', ')}`;
+    }
     renderFiles();
 }
 
@@ -154,6 +162,11 @@ export function initCompose() {
         errorEl.textContent = '';
         const to = toInput.value.trim();
         if (!to) { errorEl.textContent = 'Recipient is required.'; toInput.focus(); return; }
+        const totalSize = pendingFiles.reduce((sum, { file }) => sum + file.size, 0);
+        if (totalSize > MAX_TOTAL_BYTES) {
+            errorEl.textContent = `Total attachments exceed 25 MB (${(totalSize / 1048576).toFixed(1)} MB). Remove some files.`;
+            return;
+        }
         sendBtn.disabled = true; sendBtn.textContent = 'Sending…';
         try {
             const token = activeToken || API.getActiveToken();
