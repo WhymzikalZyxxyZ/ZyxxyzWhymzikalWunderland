@@ -248,11 +248,15 @@ export class MailboxDO {
     }
 
     // ── QR code ──────────────────────────────────────────────────────────────────
+    // QR codes are deterministic for a given address, so we cache in the DO's
+    // ephemeral memory — no network round-trip on subsequent requests.
     async _handleQr() {
+        if (this._qrCache) return _json(this._qrCache);
         const QRCode  = (await import('qrcode')).default;
         const svg     = await QRCode.toString(this.address, { type: 'svg', width: 256, margin: 2 });
         const dataUrl = 'data:image/svg+xml;base64,' + btoa(svg);
-        return _json({ dataUrl, address: this.address });
+        this._qrCache = { dataUrl, address: this.address };
+        return _json(this._qrCache);
     }
 
     // ── List box ─────────────────────────────────────────────────────────────────
