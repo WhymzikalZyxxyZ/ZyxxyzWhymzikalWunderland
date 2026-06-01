@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'wunderland-v2';
+const CACHE_NAME = 'wunderland-v3';
 
 // Static assets to pre-cache on install
 const PRECACHE = [
@@ -15,22 +15,22 @@ const PRECACHE = [
     '/404.html',
     '/gamer/games',
     '/js/gamer/tetris.js',
-    '/js/tetris-engine.js',
+    '/js/engines/tetris-engine.js',
     '/js/gamer/snake.js',
-    '/js/snake-engine.js',
+    '/js/engines/snake-engine.js',
     '/js/gamer/daedalus.js',
     '/js/gamer/chess.js',
-    '/js/chess-engine.js',
+    '/js/engines/chess-engine.js',
     '/js/gamer/checkers.js',
-    '/js/checkers-engine.js',
-    '/js/card-engine.js',
+    '/js/engines/checkers-engine.js',
+    '/js/engines/card-engine.js',
     '/js/gamer/blackjack.js',
-    '/js/blackjack-engine.js',
+    '/js/engines/blackjack-engine.js',
     '/js/gamer/pong.js',
-    '/js/pong-engine.js',
+    '/js/engines/pong-engine.js',
     '/js/gamer/rps.js',
-    '/js/rps-engine.js',
-    '/js/puzzle-engine.js',
+    '/js/engines/rps-engine.js',
+    '/js/engines/puzzle-engine.js',
     '/js/gamer/puzzle.js',
 ];
 
