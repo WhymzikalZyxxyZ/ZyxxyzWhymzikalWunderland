@@ -1,11 +1,11 @@
 {
     "name": "anonymail",
-    "main": "src/index.js",
+    "main": "anonymail/worker/src/index.js",
     "compatibility_date": "2024-11-01",
     "compatibility_flags": ["nodejs_compat"],
 
     "assets": {
-        "directory": "./public"
+        "directory": "./anonymail/worker/public"
     },
 
     "durable_objects": {
@@ -23,8 +23,8 @@
     ],
 
     "vars": {
-        "DOMAIN":         "mail.zyxwonderland.xyz",
-        "TTL_MS":         "3600000",
-        "MAX_MAILBOXES":  "500"
+        "DOMAIN":        "mail.zyxwonderland.xyz",
+        "TTL_MS":        "3600000",
+        "MAX_MAILBOXES": "500"
     }
 }
