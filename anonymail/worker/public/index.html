@@ -70,9 +70,11 @@
         </div>
 
         <div class="header-actions">
+            <span id="conn-status" class="conn-status live" title="Live — connected via WebSocket">⚡</span>
             <button id="extend-btn" title="Extend mailbox lifetime by 1 hour" aria-label="Extend lifetime">⏱ Extend</button>
             <button id="qr-btn" title="Show QR code for this address" aria-label="Show QR code">⬜ QR</button>
             <button id="notif-btn" title="Enable desktop notifications" aria-label="Enable notifications">🔔</button>
+            <button id="theme-btn" class="icon-btn" title="Toggle light/dark theme" aria-label="Toggle theme">☀</button>
             <button id="shortcuts-btn" title="Keyboard shortcuts" aria-label="Keyboard shortcuts">⌨ ?</button>
             <button id="burn-btn" title="Destroy this mailbox immediately" aria-label="Burn mailbox">🔥 Burn</button>
         </div>
@@ -108,6 +110,10 @@
             <span class="nav-icon">📤</span>
             <span class="nav-label">Sent</span>
             <span class="nav-badge" id="badge-sent" hidden></span>
+        </div>
+        <div class="nav-item" data-box="starred" role="button" tabindex="0" aria-label="Starred">
+            <span class="nav-icon">⭐</span>
+            <span class="nav-label">Starred</span>
         </div>
 
         <div class="sidebar-spacer"></div>

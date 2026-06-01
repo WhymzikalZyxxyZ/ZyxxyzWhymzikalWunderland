@@ -71,6 +71,9 @@ const state = {
     activeEmailId: null,
     activeEmail:   null,
     ws:            null,
+    wsFailCount:   0,
+    pollInterval:  null,
+    starredIds:    new Set(),
     searchQuery:   '',
 };
 
@@ -114,6 +117,61 @@ function copyToClipboard(text) {
         () => toast('Copied!', 'success'),
         () => toast('Copy failed — select manually.', 'error'),
     );
+}
+
+// ── Theme ─────────────────────────────────────────────────────────────────────
+function initTheme() {
+    const saved = localStorage.getItem('anonymail_theme');
+    if (saved === 'light') document.documentElement.dataset.theme = 'light';
+    const btn = document.getElementById('theme-btn');
+    btn.textContent = saved === 'light' ? '🌙' : '☀';
+    btn.addEventListener('click', () => {
+        const isLight = document.documentElement.dataset.theme === 'light';
+        document.documentElement.dataset.theme = isLight ? '' : 'light';
+        localStorage.setItem('anonymail_theme', isLight ? 'dark' : 'light');
+        btn.textContent = isLight ? '☀' : '🌙';
+    });
+}
+
+// ── Connection status ─────────────────────────────────────────────────────────
+function setConnStatus(mode) {
+    const el = document.getElementById('conn-status');
+    if (!el) return;
+    if (mode === 'polling') {
+        el.textContent = '⟳';
+        el.title       = 'WebSocket unavailable — polling every 15 s';
+        el.className   = 'conn-status polling';
+    } else {
+        el.textContent = '⚡';
+        el.title       = 'Live — connected via WebSocket';
+        el.className   = 'conn-status live';
+    }
+}
+
+// ── Starring ──────────────────────────────────────────────────────────────────
+function loadStarred(token) {
+    try {
+        const raw = sessionStorage.getItem(`anonymail_starred_${token}`);
+        state.starredIds = new Set(JSON.parse(raw || '[]'));
+    } catch { state.starredIds = new Set(); }
+}
+
+function saveStarred(token) {
+    sessionStorage.setItem(`anonymail_starred_${token}`, JSON.stringify([...state.starredIds]));
+}
+
+function toggleStar(id) {
+    const token = API.getActiveToken();
+    if (state.starredIds.has(id)) state.starredIds.delete(id);
+    else state.starredIds.add(id);
+    saveStarred(token);
+    renderList();
+    const starBtn = document.getElementById('star-btn');
+    if (starBtn) {
+        const now = state.starredIds.has(id);
+        starBtn.textContent = now ? '★ Starred' : '☆ Star';
+        starBtn.classList.toggle('starred', now);
+    }
 }
 
 function updatePageTitle() {
@@ -203,8 +261,10 @@ async function addNewAddress() {
 
 function switchAddress(token) {
     if (state.ws) { state.ws.close(); state.ws = null; }
+    if (state.pollInterval) { clearInterval(state.pollInterval); state.pollInterval = null; }
     if (countdownInterval) clearInterval(countdownInterval);
     API.setActiveToken(token);
+    loadStarred(token);
     renderAddressList();
     const sessions = API.getSessions();
     const session  = sessions.find(s => s.token === token);
@@ -394,14 +454,52 @@ function renderSkeleton() {
     `).join('');
 }
 
-// ── WS ────────────────────────────────────────────────────────────────────────
+// ── WS + polling fallback ─────────────────────────────────────────────────────
+const WS_MAX_FAILS  = 4;
+const POLL_INTERVAL = 15_000;
+
 function connectWS(token) {
-    if (state.ws) state.ws.close();
+    if (state.ws) { state.ws.close(); state.ws = null; }
+    if (state.pollInterval) { clearInterval(state.pollInterval); state.pollInterval = null; }
+    state.wsFailCount = 0;
+    _tryConnectWS(token);
+}
+
+function _tryConnectWS(token) {
     const session = API.getSessions().find(s => s.token === token);
-    state.ws = API.openWebSocket(token, session?.address, handleWsEvent);
+    state.ws = API.openWebSocket(token, session?.address, handleWsEvent, (code) => {
+        state.ws = null;
+        if (code === 1000 || API.getActiveToken() !== token) return;
+        state.wsFailCount++;
+        if (state.wsFailCount < WS_MAX_FAILS) {
+            setTimeout(() => { if (API.getActiveToken() === token) _tryConnectWS(token); }, 3000);
+        } else {
+            _startPolling(token);
+        }
+    });
+}
+
+function _startPolling(token) {
+    setConnStatus('polling');
+    state.pollInterval = setInterval(async () => {
+        if (API.getActiveToken() !== token) { clearInterval(state.pollInterval); state.pollInterval = null; return; }
+        try {
+            const fresh    = await API.listBox(token, 'inbox');
+            const knownIds = new Set(state.emails.map(e => e.id));
+            if (state.currentBox === 'inbox') {
+                fresh.filter(e => !knownIds.has(e.id))
+                     .forEach(email => handleWsEvent({ type: 'new_email', email }));
+            }
+        } catch { /* ignore transient errors */ }
+    }, POLL_INTERVAL);
 }
 
 function handleWsEvent(event) {
+    if (event.type === 'ws_open') {
+        state.wsFailCount = 0;
+        setConnStatus('live');
+        return;
+    }
     if (event.type === 'new_email') {
         if (state.currentBox === 'inbox') {
             state.emails.unshift(event.email);
@@ -444,10 +542,35 @@ async function loadBox(box) {
 
     setActiveNav(box);
     renderSkeleton();
-    startPhrases('list-phrase', 1500);
     clearEmailView();
+    document.getElementById('client').classList.remove('mobile-email-view');
 
     const token = API.getActiveToken();
+
+    if (box === 'starred') {
+        document.getElementById('list-header').textContent = 'Starred';
+        try {
+            const [inbox, sent, drafts] = await Promise.all([
+                API.listBox(token, 'inbox').catch(() => []),
+                API.listBox(token, 'sent').catch(() => []),
+                API.listBox(token, 'drafts').catch(() => []),
+            ]);
+            const all = [
+                ...inbox.map(e  => ({ ...e, _sourceBox: 'inbox' })),
+                ...sent.map(e   => ({ ...e, _sourceBox: 'sent' })),
+                ...drafts.map(e => ({ ...e, _sourceBox: 'drafts' })),
+            ];
+            state.emails = all.filter(e => state.starredIds.has(e.id));
+            state.emails.sort((a, b) => b.ts - a.ts);
+            renderList();
+        } catch (err) {
+            document.getElementById('email-list').innerHTML =
+                `<div class="list-empty">Error: ${esc(err.message)}</div>`;
+        }
+        return;
+    }
+
+    startPhrases('list-phrase', 1500);
     try {
         state.emails = await API.listBox(token, box);
         stopPhrases();
@@ -461,9 +584,6 @@ async function loadBox(box) {
         document.getElementById('email-list').innerHTML =
             `<div class="list-empty">Error: ${esc(err.message)}</div>`;
     }
-
-    // Mobile: show list panel
-    document.getElementById('client').classList.remove('mobile-email-view');
 }
 
 function renderList() {
@@ -485,17 +605,24 @@ function renderList() {
             (e.id === state.activeEmailId ? ' selected' : '');
         item.dataset.id = e.id;
 
-        const primary = (state.currentBox === 'sent' || state.currentBox === 'drafts')
+        const primary  = (state.currentBox === 'sent' || state.currentBox === 'drafts' ||
+                          (state.currentBox === 'starred' && (e._sourceBox === 'sent' || e._sourceBox === 'drafts')))
             ? esc(e.to || '(no recipient)')
             : esc(e.from || '(unknown)');
+        const isStarred = state.starredIds.has(e.id);
 
         item.innerHTML = `
             <div class="item-top">
+                <button class="star-btn${isStarred ? ' starred' : ''}" data-id="${e.id}" title="${isStarred ? 'Unstar' : 'Star'}" aria-label="${isStarred ? 'Unstar' : 'Star'}">${isStarred ? '★' : '☆'}</button>
                 <span class="item-from">${primary}</span>
                 <span class="item-time">${timeAgo(e.ts)}</span>
             </div>
             <div class="item-subject">${esc(e.subject || '(no subject)')}${e.hasAttachments ? ' <span class="att-badge" title="Has attachments">📎</span>' : ''}</div>
         `;
+        item.querySelector('.star-btn').addEventListener('click', ev => {
+            ev.stopPropagation();
+            toggleStar(e.id);
+        });
         item.addEventListener('click', () => viewEmail(e.id));
         listEl.appendChild(item);
     });
@@ -520,9 +647,14 @@ async function viewEmail(id) {
     // Mobile: switch to email view
     document.getElementById('client').classList.add('mobile-email-view');
 
-    const token = API.getActiveToken();
+    const token    = API.getActiveToken();
+    const emailMeta = state.emails.find(e => e.id === id);
+    const boxForApi = state.currentBox === 'starred'
+        ? (emailMeta?._sourceBox || 'inbox')
+        : state.currentBox;
     try {
-        const email = await API.getEmail(token, state.currentBox, id);
+        const email = await API.getEmail(token, boxForApi, id);
+        email._sourceBox = emailMeta?._sourceBox;
         stopPhrases();
         state.activeEmail = email;
         renderEmailView(email);
@@ -534,10 +666,12 @@ async function viewEmail(id) {
 }
 
 function renderEmailView(email) {
-    const viewEl = document.getElementById('email-view');
-    const token  = API.getActiveToken();
+    const viewEl    = document.getElementById('email-view');
+    const token     = API.getActiveToken();
+    const effectBox = state.currentBox === 'starred' ? (email._sourceBox || 'inbox') : state.currentBox;
+    const isStarred = state.starredIds.has(email.id);
 
-    const metaRows = state.currentBox === 'inbox'
+    const metaRows = effectBox === 'inbox'
         ? `<div class="meta-row"><span class="meta-label">From</span><span>${esc(email.from)}</span></div>`
         : `<div class="meta-row"><span class="meta-label">To</span><span>${esc(email.to)}</span></div>
            ${email.cc ? `<div class="meta-row"><span class="meta-label">CC</span><span>${esc(email.cc)}</span></div>` : ''}`;
@@ -581,9 +715,10 @@ function renderEmailView(email) {
         ${atts ? `<div class="email-attachments">${atts}</div>` : ''}
         <div class="email-body">${bodyContent}</div>
         <div class="email-actions">
-            ${state.currentBox === 'inbox'
+            <button class="btn btn-ghost${isStarred ? ' starred' : ''}" id="star-btn">${isStarred ? '★ Starred' : '☆ Star'}</button>
+            ${effectBox === 'inbox'
                 ? `<button class="btn btn-primary" id="reply-btn">Reply</button>` : ''}
-            ${state.currentBox === 'drafts'
+            ${effectBox === 'drafts'
                 ? `<button class="btn btn-secondary" id="edit-draft-btn">Edit draft</button>` : ''}
             <button class="btn btn-danger" id="delete-email-btn">Delete</button>
         </div>
@@ -592,8 +727,9 @@ function renderEmailView(email) {
     document.getElementById('back-to-list')?.addEventListener('click', () => {
         document.getElementById('client').classList.remove('mobile-email-view');
     });
+    document.getElementById('star-btn')?.addEventListener('click', () => toggleStar(email.id));
     document.getElementById('delete-email-btn')?.addEventListener('click', () =>
-        confirmDelete(state.currentBox, email.id));
+        confirmDelete(effectBox, email.id));
     document.getElementById('reply-btn')?.addEventListener('click', replyToActive);
     document.getElementById('edit-draft-btn')?.addEventListener('click', () =>
         openCompose({
@@ -617,6 +753,8 @@ async function confirmDelete(box, id) {
     try {
         await API.deleteEmail(token, box, id);
         state.emails = state.emails.filter(e => e.id !== id);
+        state.starredIds.delete(id);
+        saveStarred(token);
         clearEmailView();
         renderList();
         document.getElementById('client').classList.remove('mobile-email-view');
@@ -664,6 +802,7 @@ async function burnActive() {
 
 async function burnAll() {
     if (state.ws) { state.ws.close(); state.ws = null; }
+    if (state.pollInterval) { clearInterval(state.pollInterval); state.pollInterval = null; }
     if (countdownInterval) clearInterval(countdownInterval);
     API.clearAllSessions();
     Object.assign(state, { emails: [], activeEmailId: null, activeEmail: null });
@@ -697,6 +836,7 @@ function showClient() {
     if (!session) return;
 
     document.getElementById('address-display').textContent = session.address;
+    loadStarred(token);
     renderAddressList();
     startCountdown(token);
     connectWS(token);
@@ -712,6 +852,7 @@ async function init() {
     Compose.initCompose();
     initKeyboard();
     initSearch();
+    initTheme();
 
     // Wire nav
     document.querySelectorAll('.nav-item').forEach(el =>

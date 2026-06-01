@@ -26,6 +26,21 @@
     --mono:         'Courier New', monospace;
 }
 
+/* ── Light theme overrides ────────────────────────────────────────────────── */
+html[data-theme="light"] {
+    --bg-base:      #f0f2f8;
+    --bg-sidebar:   #e8ebf4;
+    --bg-panel:     #e0e4ee;
+    --bg-card:      #d5daea;
+    --bg-hover:     #cad0e4;
+    --bg-selected:  #bec7dc;
+    --text-1:       #1a1e2e;
+    --text-2:       #485070;
+    --text-3:       #8890aa;
+    --border:       rgba(0,0,0,.08);
+    --border-hi:    rgba(0,0,0,.14);
+}
+
 html, body { height: 100%; }
 body {
     font-family: var(--sans);
@@ -200,6 +215,14 @@ a      { color: var(--accent); }
 .icon-btn:hover      { border-color: var(--border-hi); color: var(--text-1); background: var(--bg-hover); }
 .icon-btn.notif-on   { color: var(--yellow); border-color: rgba(251,191,36,.4); }
 
+.conn-status {
+    font-size: .8rem; padding: 3px 7px; border-radius: 99px;
+    border: 1px solid var(--border); color: var(--text-3);
+    pointer-events: none; user-select: none; flex-shrink: 0;
+}
+.conn-status.live    { color: var(--green); border-color: rgba(74,222,128,.35); }
+.conn-status.polling { color: var(--yellow); border-color: rgba(251,191,36,.35); }
+
 /* ── Sidebar ──────────────────────────────────────────────────────────────── */
 .sidebar {
     grid-area: sidebar;
@@ -324,6 +347,13 @@ a      { color: var(--accent); }
     display: flex; justify-content: space-between; align-items: baseline;
     gap: 8px; margin-bottom: 4px;
 }
+.star-btn {
+    background: none; border: none; padding: 0 4px 0 0;
+    font-size: .9rem; color: var(--text-3); flex-shrink: 0;
+    transition: color .15s; line-height: 1;
+}
+.star-btn:hover, .star-btn.starred { color: var(--yellow); }
+
 .item-from    { font-weight: 600; font-size: .88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .item-time    { font-size: .75rem; color: var(--text-3); flex-shrink: 0; }
 .item-subject { font-size: .82rem; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -448,6 +478,7 @@ a      { color: var(--accent); }
 .btn-danger:not(:disabled):hover    { background: rgba(248,113,113,.1); }
 .btn-ghost     { background: transparent; color: var(--text-2); border: 1px solid var(--border); }
 .btn-ghost:not(:disabled):hover     { background: var(--bg-hover); color: var(--text-1); }
+.btn-ghost.starred { color: var(--yellow); border-color: rgba(251,191,36,.4); }
 
 /* ── Burn button ──────────────────────────────────────────────────────────── */
 #burn-btn {
