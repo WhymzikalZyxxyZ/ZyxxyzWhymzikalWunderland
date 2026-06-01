@@ -12,13 +12,14 @@ const helmet      = require('helmet');
 const rateLimit   = require('express-rate-limit');
 
 const { buildSmtpServer, setNotifier } = require('./lib/smtp');
-const { byToken }                      = require('./lib/mailstore');
-const sender                           = require('./lib/sender');
-const apiRouter                        = require('./routes/api');
+const { byToken, mailboxCount, setExpiryNotifier } = require('./lib/mailstore');
+const sender  = require('./lib/sender');
+const apiRouter = require('./routes/api');
 
 const PORT      = parseInt(process.env.PORT)      || 3000;
 const SMTP_PORT = parseInt(process.env.SMTP_PORT) || 2525;
 const DOMAIN    = process.env.DOMAIN              || 'anonymail.local';
+const START_TS  = Date.now();
 
 // ── Express ────────────────────────────────────────────────────────────────────
 const app = express();
@@ -28,23 +29,30 @@ app.set('trust proxy', 1);
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc:  ["'self'"],
-            styleSrc:   ["'self'", "'unsafe-inline'"],
-            connectSrc: ["'self'", 'ws:', 'wss:'],
-            imgSrc:     ["'self'", 'data:'],
-            fontSrc:    ["'self'"],
-            objectSrc:  ["'none'"],
+            defaultSrc:     ["'self'"],
+            scriptSrc:      ["'self'"],
+            styleSrc:       ["'self'", "'unsafe-inline'"],
+            connectSrc:     ["'self'", 'ws:', 'wss:'],
+            imgSrc:         ["'self'", 'data:', 'blob:'],
+            fontSrc:        ["'self'"],
+            objectSrc:      ["'none'"],
             frameAncestors: ["'none'"],
+            // Allow sandboxed iframe for HTML email rendering
+            frameSrc:       ["'self'"],
         },
     },
-    hsts: { maxAge: 31536000, includeSubDomains: true },
+    hsts:           { maxAge: 31_536_000, includeSubDomains: true },
     referrerPolicy: { policy: 'no-referrer' },
 }));
 
-// Rate limiters
-const limiter = rateLimit({ windowMs: 60_000, max: 120, standardHeaders: true, legacyHeaders: false });
-const createLimiter = rateLimit({ windowMs: 60_000, max: 10, message: { error: 'Too many mailbox requests' } });
+const limiter = rateLimit({
+    windowMs: 60_000, max: 120,
+    standardHeaders: true, legacyHeaders: false,
+});
+const createLimiter = rateLimit({
+    windowMs: 60_000, max: 10,
+    message: { error: 'Too many mailbox requests — slow down' },
+});
 
 app.use('/api', limiter);
 app.use('/api/mailbox', createLimiter);
@@ -52,6 +60,21 @@ app.use('/api/mailbox', createLimiter);
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public'), { index: 'index.html' }));
 app.use('/api', apiRouter);
+
+// ── Health check ──────────────────────────────────────────────────────────────
+app.get('/healthz', (_req, res) => {
+    const mem = process.memoryUsage();
+    res.json({
+        status:        'ok',
+        uptime:        Math.floor((Date.now() - START_TS) / 1000),
+        activeMailboxes: mailboxCount(),
+        memory: {
+            rss:      (mem.rss        / 1048576).toFixed(1) + ' MB',
+            heapUsed: (mem.heapUsed   / 1048576).toFixed(1) + ' MB',
+            heapTotal:(mem.heapTotal  / 1048576).toFixed(1) + ' MB',
+        },
+    });
+});
 
 // ── HTTP / HTTPS server ────────────────────────────────────────────────────────
 let httpServer;
@@ -64,7 +87,7 @@ if (process.env.TLS_CERT && process.env.TLS_KEY) {
     console.log('[http] HTTPS enabled (TLS 1.2+)');
 } else {
     httpServer = http.createServer(app);
-    console.log('[http] Running plain HTTP — set TLS_CERT + TLS_KEY for production');
+    console.log('[http] Plain HTTP — set TLS_CERT + TLS_KEY for production');
 }
 
 // ── WebSocket ──────────────────────────────────────────────────────────────────
@@ -76,7 +99,6 @@ const addressSockets = new Map();
 wss.on('connection', (ws, req) => {
     const params = new URLSearchParams(req.url.replace(/^[^?]*/, ''));
     const token  = params.get('token');
-
     if (!token) { ws.close(4001, 'Token required'); return; }
 
     const mb = byToken(token);
@@ -88,33 +110,35 @@ wss.on('connection', (ws, req) => {
 
     ws.on('close', () => {
         const set = addressSockets.get(addr);
-        if (set) {
-            set.delete(ws);
-            if (!set.size) addressSockets.delete(addr);
-        }
+        if (set) { set.delete(ws); if (!set.size) addressSockets.delete(addr); }
     });
-
-    // Pong to keep alive
     ws.on('ping', () => ws.pong());
-
     ws.send(JSON.stringify({ type: 'connected', address: addr, expiresAt: mb.expiresAt }));
 });
 
-// Injected into smtp.js so it can push inbox events without a circular dep
+// Notify connected clients of new emails
 setNotifier((address, event) => {
     const set = addressSockets.get(address);
     if (!set) return;
     const msg = JSON.stringify(event);
-    for (const ws of set) {
-        if (ws.readyState === 1 /* OPEN */) ws.send(msg);
-    }
+    for (const ws of set) if (ws.readyState === 1) ws.send(msg);
 });
 
-// ── Keep-alive pings ──────────────────────────────────────────────────────────
-setInterval(() => {
-    for (const ws of wss.clients) {
-        if (ws.readyState === 1) ws.ping();
+// Notify clients when their mailbox expires — then close the sockets cleanly
+setExpiryNotifier((address) => {
+    const set = addressSockets.get(address);
+    if (!set) return;
+    const msg = JSON.stringify({ type: 'expired' });
+    for (const ws of set) {
+        if (ws.readyState === 1) ws.send(msg);
+        ws.close(1000, 'Mailbox expired');
     }
+    addressSockets.delete(address);
+});
+
+// Keep-alive pings every 30 s
+setInterval(() => {
+    for (const ws of wss.clients) if (ws.readyState === 1) ws.ping();
 }, 30_000);
 
 // ── Outbound SMTP ─────────────────────────────────────────────────────────────
@@ -132,14 +156,12 @@ const smtpServer = buildSmtpServer({
     tlsKey:   process.env.TLS_KEY  ? fs.readFileSync(process.env.TLS_KEY)  : null,
     tlsCert:  process.env.TLS_CERT ? fs.readFileSync(process.env.TLS_CERT) : null,
 });
-
 smtpServer.listen(SMTP_PORT, '0.0.0.0', () => {
-    console.log(`[smtp] Inbound SMTP listening on :${SMTP_PORT}`);
+    console.log(`[smtp] Inbound SMTP on :${SMTP_PORT}`);
 });
-
 smtpServer.on('error', err => console.error('[smtp]', err.message));
 
-// ── Start HTTP ────────────────────────────────────────────────────────────────
+// ── Start ─────────────────────────────────────────────────────────────────────
 httpServer.listen(PORT, () => {
     console.log(`[http] Anonymail on :${PORT}  |  domain: ${DOMAIN}`);
 });

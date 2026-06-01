@@ -1,6 +1,49 @@
 'use strict';
 
+const sanitizeHtml = require('sanitize-html');
 const { encrypt, encryptBuf, decrypt, decryptBuf, randomHex } = require('./crypto');
+
+// ── HTML sanitisation config ───────────────────────────────────────────────────
+const SANITIZE_OPTS = {
+    allowedTags: [
+        ...sanitizeHtml.defaults.allowedTags,
+        'img', 'table', 'tbody', 'thead', 'tfoot', 'tr', 'td', 'th', 'caption',
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'font', 'center',
+    ],
+    allowedAttributes: {
+        ...sanitizeHtml.defaults.allowedAttributes,
+        '*':   ['style', 'align', 'valign', 'bgcolor'],
+        a:     ['href', 'name', 'target', 'rel'],
+        img:   ['src', 'alt', 'width', 'height', 'style'],
+        table: ['border', 'cellpadding', 'cellspacing', 'width', 'style'],
+        td:    ['colspan', 'rowspan', 'width', 'style'],
+    },
+    allowedSchemes:        ['http', 'https', 'mailto'],
+    allowedSchemesByTag:   { img: ['http', 'https', 'data', 'cid'] },
+    // Force external links to open safely
+    transformTags: {
+        a: (tagName, attribs) => ({
+            tagName,
+            attribs: { ...attribs, rel: 'noopener noreferrer', target: '_blank' },
+        }),
+    },
+    // Strip style values containing url() or JS expressions
+    allowedStyles: {
+        '*': {
+            color:              [/.*/],
+            'background-color': [/.*/],
+            'font-size':        [/.*/],
+            'font-weight':      [/.*/],
+            'font-style':       [/.*/],
+            'text-align':       [/.*/],
+            'text-decoration':  [/.*/],
+            padding:            [/.*/],
+            margin:             [/.*/],
+            border:             [/.*/],
+            width:              [/.*/],
+        },
+    },
+};
 
 // ── Address corpus ─────────────────────────────────────────────────────────────
 const ADJS  = ['swift','quiet','bold','bright','calm','cool','dark','deep','fair','free',
@@ -12,6 +55,11 @@ const NOUNS = ['fox','owl','elk','wolf','hawk','bear','lynx','fawn','dove','swan
 const mailboxes = new Map();   // address → MailboxRecord
 const tokenIdx  = new Map();   // token   → address
 
+// Injected by server.js after WS setup
+let _onExpiry = (_address) => {};
+function setExpiryNotifier(fn) { _onExpiry = fn; }
+
+// ── Mailbox record ─────────────────────────────────────────────────────────────
 class MailboxRecord {
     constructor(address, token, ttlMs) {
         this.address   = address;
@@ -20,7 +68,14 @@ class MailboxRecord {
         this.inbox     = [];
         this.drafts    = [];
         this.sent      = [];
+        this._timer    = null;
     }
+}
+
+function _expire(address, token) {
+    tokenIdx.delete(token);
+    mailboxes.delete(address);
+    _onExpiry(address);
 }
 
 // ── Address generation ────────────────────────────────────────────────────────
@@ -31,11 +86,13 @@ function generateAddress(domain) {
 }
 
 // ── Encrypt / expose helpers ──────────────────────────────────────────────────
-function store(email) {
+function storeRecord(email) {
     return {
         ...email,
         body:        encrypt(email.body     || ''),
-        bodyHtml:    email.bodyHtml ? encrypt(email.bodyHtml) : null,
+        bodyHtml:    email.bodyHtml
+            ? encrypt(sanitizeHtml(email.bodyHtml, SANITIZE_OPTS))
+            : null,
         attachments: (email.attachments || []).map(a => ({
             id:          a.id,
             filename:    encrypt(a.filename),
@@ -72,7 +129,15 @@ function expose(stored, full) {
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
-function createMailbox(domain, ttlMs = 60 * 60 * 1000) {
+function mailboxCount() { return mailboxes.size; }
+
+function createMailbox(domain, ttlMs = 60 * 60 * 1000, maxMailboxes = 0) {
+    if (maxMailboxes > 0 && mailboxes.size >= maxMailboxes) {
+        const err = new Error('Server at capacity — try again later');
+        err.status = 503;
+        throw err;
+    }
+
     let address;
     do { address = generateAddress(domain); } while (mailboxes.has(address));
 
@@ -81,14 +146,10 @@ function createMailbox(domain, ttlMs = 60 * 60 * 1000) {
     mailboxes.set(address, mb);
     tokenIdx.set(token, address);
 
-    // Auto-expire
-    setTimeout(() => {
-        tokenIdx.delete(token);
-        mailboxes.delete(address);
-    }, ttlMs);
+    mb._timer = setTimeout(() => _expire(address, token), ttlMs);
 
     // Welcome message
-    mb.inbox.push(store({
+    mb.inbox.push(storeRecord({
         id:      randomHex(16),
         from:    `no-reply@${domain}`,
         to:      address,
@@ -97,10 +158,11 @@ function createMailbox(domain, ttlMs = 60 * 60 * 1000) {
             `Your temporary inbox is ready.`,
             ``,
             `Address:   ${address}`,
-            `Expires:   ${new Date(mb.expiresAt).toLocaleTimeString()} (1 hour)`,
+            `Expires:   ${new Date(mb.expiresAt).toLocaleTimeString()} (in ~1 hour)`,
             ``,
             `Share this address anywhere. Emails arrive here in real time.`,
             `Everything is encrypted in memory and wiped when the session expires.`,
+            `Nothing is ever written to disk.`,
         ].join('\n'),
         ts:   Date.now(),
         read: false,
@@ -119,25 +181,36 @@ function hasAddress(address) {
     return mailboxes.has(address.toLowerCase());
 }
 
+function extendTtl(token, additionalMs = 3600000) {
+    const addr = tokenIdx.get(token);
+    if (!addr) return null;
+    const mb = mailboxes.get(addr);
+    clearTimeout(mb._timer);
+    // Hard cap: no more than 24 h from now
+    mb.expiresAt = Math.min(mb.expiresAt + additionalMs, Date.now() + 24 * 60 * 60 * 1000);
+    mb._timer = setTimeout(() => _expire(addr, token), mb.expiresAt - Date.now());
+    return mb.expiresAt;
+}
+
 // ── Inbox ─────────────────────────────────────────────────────────────────────
 function pushToInbox(address, email) {
     const mb = mailboxes.get(address.toLowerCase());
     if (!mb) return false;
-    mb.inbox.unshift(store(email));
+    mb.inbox.unshift(storeRecord(email));
     return true;
 }
 
 // ── Drafts ────────────────────────────────────────────────────────────────────
 function saveDraft(mb, draft) {
     const id = randomHex(16);
-    mb.drafts.unshift(store({ ...draft, id, ts: Date.now(), from: mb.address, read: true }));
+    mb.drafts.unshift(storeRecord({ ...draft, id, ts: Date.now(), from: mb.address, read: true }));
     return id;
 }
 
 function updateDraft(mb, id, draft) {
     const idx = mb.drafts.findIndex(d => d.id === id);
     if (idx === -1) return false;
-    mb.drafts[idx] = store({ ...draft, id, ts: Date.now(), from: mb.address, read: true });
+    mb.drafts[idx] = storeRecord({ ...draft, id, ts: Date.now(), from: mb.address, read: true });
     return true;
 }
 
@@ -150,7 +223,7 @@ function deleteDraft(mb, id) {
 // ── Sent ──────────────────────────────────────────────────────────────────────
 function pushToSent(mb, email) {
     const id = randomHex(16);
-    mb.sent.unshift(store({ ...email, id, ts: Date.now(), from: mb.address, read: true }));
+    mb.sent.unshift(storeRecord({ ...email, id, ts: Date.now(), from: mb.address, read: true }));
     return id;
 }
 
@@ -186,7 +259,7 @@ function getAttachment(mb, box, emailId, attachId) {
 }
 
 module.exports = {
-    createMailbox, byToken, hasAddress,
-    pushToInbox, saveDraft, updateDraft, deleteDraft, pushToSent,
-    getBox, getEmail, deleteEmail, getAttachment,
+    createMailbox, byToken, hasAddress, extendTtl, mailboxCount,
+    setExpiryNotifier, pushToInbox, saveDraft, updateDraft,
+    deleteDraft, pushToSent, getBox, getEmail, deleteEmail, getAttachment,
 };
