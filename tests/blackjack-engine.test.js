@@ -1,12 +1,12 @@
 'use strict';
-const cardEngine = require('../js/card-engine');
+const cardEngine = require('../js/engines/card-engine');
 global.createDeck = cardEngine.createDeck;
 global.shuffle    = cardEngine.shuffle;
 
 const {
     BJ_STARTING_CHIPS, bjHandValue, bjIsBust, bjIsBlackjack, bjDealerShouldHit,
     bjResult, newBJGame, bjDeal, bjHit, bjDouble, bjStand, bjRunDealer,
-} = require('../js/blackjack-engine');
+} = require('../js/engines/blackjack-engine');
 
 const c  = (rank, suit = 'S') => ({ rank, suit });
 const bj = [c(1), c(13, 'H')];   // blackjack hand

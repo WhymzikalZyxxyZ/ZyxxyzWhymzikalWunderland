@@ -1,5 +1,5 @@
 'use strict';
-const { COLS, ROWS, MAX_SCORE, SHAPES, newBoard, newPiece, collides, rotateShape, clearLines } = require('../js/tetris-engine');
+const { COLS, ROWS, MAX_SCORE, SHAPES, newBoard, newPiece, collides, rotateShape, clearLines } = require('../js/engines/tetris-engine');
 
 // ── Constants ────────────────────────────────────────────────────────────────
 test('COLS is 10', () => expect(COLS).toBe(10));

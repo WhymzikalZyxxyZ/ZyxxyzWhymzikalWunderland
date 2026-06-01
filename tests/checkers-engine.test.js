@@ -2,7 +2,7 @@
 const {
     CK_WHITE, CK_BLACK, newCheckersGame,
     getAllCheckersMovesForColor, applyCheckersMove, getCheckersAIMove, evalCheckers
-} = require('../js/checkers-engine');
+} = require('../js/engines/checkers-engine');
 
 describe('newCheckersGame', () => {
     test('returns correct structure', () => {

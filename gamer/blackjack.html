@@ -9,10 +9,10 @@
     <link rel="preconnect" href="https://www.gstatic.com">
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="/js/firebase-config.js"></script>
+    <script src="/js/config/firebase-config.js"></script>
     <script src="/js/username-gen.js"></script>
-    <script src="/js/card-engine.js"></script>
-    <script src="/js/blackjack-engine.js"></script>
+    <script src="/js/engines/card-engine.js"></script>
+    <script src="/js/engines/blackjack-engine.js"></script>
     <style>
         #bj-page { max-width:680px; margin:0 auto; padding:0 16px 80px; }
         .bj-panel { background:rgba(0,0,0,0.75); border:1px solid #2a2a2a;
@@ -159,7 +159,7 @@
     </div>
 
     <button type="button" onclick="navigateToPage('/gamer/games')">&#8592; Back to Games</button>
-    <script src="/js/gamer-chat.js"></script>
+    <script src="/js/gamer/gamer-chat.js"></script>
     <script src="/js/gamer/blackjack.js" defer></script>
 </body>
 </html>

@@ -3,7 +3,7 @@ const {
     CH_WHITE, CH_BLACK, CH_PAWN, CH_ROOK, CH_QUEEN, CH_KING,
     newChessGame, applyMove, updateStatus,
     isInCheck, findKing, evaluateBoard, getChessAIMove
-} = require('../js/chess-engine');
+} = require('../js/engines/chess-engine');
 
 describe('newChessGame', () => {
     test('returns correct structure', () => {

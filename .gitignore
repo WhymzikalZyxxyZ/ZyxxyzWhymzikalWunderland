@@ -18,7 +18,7 @@ node_modules/
 coverage/
 
 # Firebase config (real credentials — generated at deploy time from secrets)
-js/firebase-config.js
+js/config/firebase-config.js
 
 # IDE files
 .vscode/

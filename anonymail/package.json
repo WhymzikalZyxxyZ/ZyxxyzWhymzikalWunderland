@@ -2,10 +2,10 @@
   "name": "anonymail",
   "version": "1.1.0",
   "description": "Ephemeral encrypted temporary email — in-memory only",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
   },
   "engines": {
     "node": ">=20"

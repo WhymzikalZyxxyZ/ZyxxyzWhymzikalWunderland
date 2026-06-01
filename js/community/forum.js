@@ -135,7 +135,7 @@
             const myUsername = sessionStorage.getItem('forumUsername') || genUsername();
             sessionStorage.setItem('forumUsername', myUsername);
             document.getElementById('chat-username').textContent = myUsername;
-            addSystemMsg('— chat requires Firebase — see /js/firebase-config.js —');
+            addSystemMsg('— chat requires Firebase — see /js/config/firebase-config.js —');
         }
 
         chatSend.addEventListener('click', () => sendMessage());

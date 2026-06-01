@@ -70,7 +70,7 @@ jobs:
           const out = 'const FIREBASE_CONFIG = ' + JSON.stringify(cfg, null, 4) + ';\n' +
               'const FIREBASE_READY = FIREBASE_CONFIG.apiKey !== \"YOUR_API_KEY\";\n' +
               'if (FIREBASE_READY && !firebase.apps.length) { firebase.initializeApp(FIREBASE_CONFIG); }\n';
-          require('fs').writeFileSync('js/firebase-config.js', out);
+          require('fs').writeFileSync('js/config/firebase-config.js', out);
           "
 
       # Minify inside a pinned node:20-alpine container for a reproducible build.

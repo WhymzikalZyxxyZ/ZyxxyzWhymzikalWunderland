@@ -1,5 +1,5 @@
 'use strict';
-const cardEngine = require('../js/card-engine');
+const cardEngine = require('../js/engines/card-engine');
 // Use identity shuffle so newSolitaireGame is deterministic with createDeck()
 global.shuffle    = deck => deck.slice();
 global.createDeck = cardEngine.createDeck;
@@ -8,7 +8,7 @@ const {
     newSolitaireGame, canPlaceOnFoundation, canPlaceOnTableau,
     drawFromStock, wasteToFoundation, wasteToTableau,
     tableauToFoundation, tableauToTableau, calcSolitaireScore,
-} = require('../js/solitaire-engine');
+} = require('../js/engines/solitaire-engine');
 
 function card(rank, suit, faceUp = true) { return { rank, suit, faceUp }; }
 
