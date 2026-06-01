@@ -28,3 +28,6 @@ js/config/firebase-config.js
 
 # Claude Code local config
 .claude/
+
+# Untracked local images (not part of the site build)
+images/zyx.jpg
