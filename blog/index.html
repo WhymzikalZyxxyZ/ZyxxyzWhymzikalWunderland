@@ -52,6 +52,10 @@
 
         #admin-toggle { font-family: 'Courier New', monospace; font-size: 10px; color: #2a2a2a; background: none; border: none; cursor: pointer; float: right; }
         #admin-toggle:hover { color: #555; }
+        .post-delete { background: none; border: none; color: #333; font-size: 11px; cursor: pointer; margin-left: auto; padding: 2px 6px; border-radius: 4px; transition: color 0.15s; }
+        .post-delete:hover { color: #c04040; }
+        .blog-more-btn { display: block; margin: 20px auto 0; background: none; border: 1px solid #2a2a2a; color: #555; font-family: 'Courier New', monospace; font-size: 12px; padding: 9px 24px; border-radius: 8px; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+        .blog-more-btn:hover { border-color: rgba(244,162,97,0.4); color: var(--accent); }
     </style>
 </head>
 <body class="wunderBody">
@@ -63,7 +67,7 @@
             <p>Updates &amp; behind the scenes</p>
         </div>
 
-        <button id="admin-toggle" title="Admin">✦</button>
+        <button id="admin-toggle" title="Admin login" aria-label="Admin login">✦</button>
 
         <div id="blog-write">
             <div class="blog-write-label">New Post</div>
