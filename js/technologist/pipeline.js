@@ -4,7 +4,7 @@
     let jobs = {};
     let runInterval = null;
     let runState = null;
-    let history = [];
+    let _history = [];
     let runCount = 0;
     let allDurations = {};
 
@@ -202,8 +202,8 @@
             document.getElementById('runTime').textContent = `${(elapsed / 1000).toFixed(1)}s`;
             logLine(`<span class="${failed ? 'log-fail' : 'log-pass'}">${failed ? '✗ Pipeline FAILED' : '✓ Pipeline PASSED'} in ${(elapsed/1000).toFixed(1)}s</span>`);
 
-            history.unshift({ id: runCount, status: failed ? 'fail' : 'pass', duration: elapsed, failedJobs, ts: new Date().toLocaleTimeString() });
-            if (history.length > 20) history.pop();
+            _history.unshift({ id: runCount, status: failed ? 'fail' : 'pass', duration: elapsed, failedJobs, ts: new Date().toLocaleTimeString() });
+            if (_history.length > 20) _history.pop();
 
             // Accumulate durations for metrics
             Object.entries(runDurations).forEach(([k, v]) => {
@@ -227,18 +227,18 @@
     }
 
     function renderMetrics() {
-        const total = history.length;
+        const total = _history.length;
         document.getElementById('mTotalRuns').textContent = total;
         if (!total) {
             document.getElementById('mPassRate').textContent = '—';
             document.getElementById('mAvgDuration').textContent = '—';
             document.getElementById('mFastestRun').textContent = '—';
         } else {
-            const passed = history.filter(h => h.status === 'pass').length;
+            const passed = _history.filter(h => h.status === 'pass').length;
             document.getElementById('mPassRate').textContent = Math.round(passed / total * 100) + '%';
-            const avg = history.reduce((a, h) => a + h.duration, 0) / total;
+            const avg = _history.reduce((a, h) => a + h.duration, 0) / total;
             document.getElementById('mAvgDuration').textContent = (avg / 1000).toFixed(1) + 's';
-            const fastest = Math.min(...history.map(h => h.duration));
+            const fastest = Math.min(..._history.map(h => h.duration));
             document.getElementById('mFastestRun').textContent = (fastest / 1000).toFixed(1) + 's';
         }
 
@@ -264,10 +264,10 @@
 
         // History table
         const tbody = document.getElementById('historyBody');
-        if (!history.length) {
+        if (!_history.length) {
             tbody.innerHTML = '<tr><td colspan="5" style="color:#444;text-align:center;padding:20px;">No runs yet.</td></tr>';
         } else {
-            tbody.innerHTML = history.map(h => `
+            tbody.innerHTML = _history.map(h => `
                 <tr>
                     <td>#${h.id}</td>
                     <td><span class="badge badge-${h.status === 'pass' ? 'pass' : 'fail'}">${h.status === 'pass' ? 'Passed' : 'Failed'}</span></td>

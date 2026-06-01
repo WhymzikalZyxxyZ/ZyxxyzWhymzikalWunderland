@@ -1,4 +1,5 @@
 'use strict';
+/* global getOrCreateUsername, shufflePuzzle, newPuzzle, placePiece, calcPuzzleScore */
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 const BOARD_PX  = 520;  // max board dimension in px

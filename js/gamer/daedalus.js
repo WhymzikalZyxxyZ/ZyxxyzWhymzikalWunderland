@@ -1,4 +1,5 @@
 'use strict';
+/* global getOrCreateUsername, navigateToPage */
 
 // ── Direction constants ──────────────────────────────────────────────────────
 const N = 1, S = 2, E = 4, W = 8;

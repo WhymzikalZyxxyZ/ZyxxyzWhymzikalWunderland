@@ -92,7 +92,7 @@ async function run(op) {
         const res = await fetch(API_BASE + '/api/' + endpoint(op), { method: 'POST', body: fd });
         if (!res.ok) {
             let msg = 'Server error (' + res.status + ')';
-            try { const j = await res.json(); msg = j.error || msg; } catch (_) {}
+            try { const j = await res.json(); msg = j.error || msg; } catch (_) { /* non-JSON error body */ }
             setStatus(op, msg, 'error');
             return;
         }
@@ -167,7 +167,7 @@ async function printResult(op) {
     }
     const tab = window.open(url, '_blank');
     if (tab) {
-        tab.onload = () => { try { tab.print(); } catch (_) {} };
+        tab.onload = () => { try { tab.print(); } catch (_) { /* cross-origin print blocked */ } };
     }
 }
 
@@ -175,11 +175,11 @@ function clearOp(op) {
     ['f-merge','f-extract','f-remove','f-rotate','f-compress','f-zip'].forEach(id => {
         const el = document.getElementById(id);
         if (el && el.id === 'f-' + op || (op === 'merge' && el.id === 'f-merge') || (op === 'zip' && el.id === 'f-zip')) {
-            try { el.value = ''; } catch (_) {}
+            try { el.value = ''; } catch (_) { /* read-only input */ }
         }
     });
     const fileInput = document.getElementById('f-' + op);
-    if (fileInput) { try { fileInput.value = ''; } catch (_) {} }
+    if (fileInput) { try { fileInput.value = ''; } catch (_) { /* read-only input */ } }
     const fl = document.getElementById('fl-' + op);
     if (fl) fl.innerHTML = '';
     if (resultBlobs[op]) { URL.revokeObjectURL(resultBlobs[op]); delete resultBlobs[op]; }

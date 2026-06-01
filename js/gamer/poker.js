@@ -1,3 +1,4 @@
+/* global getOrCreateUsername, rankLabel, suitSymbol, newPokerState, startPokerHand, pokerAction, getPokerAIAction, evaluateHand, BIG_BLIND */
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
         const myName   = (typeof getOrCreateUsername === 'function') ? getOrCreateUsername() : 'Guest';

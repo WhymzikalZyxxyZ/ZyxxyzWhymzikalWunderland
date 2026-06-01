@@ -35,7 +35,7 @@ let selected = null;          // {kind:'node'|'edge', id}
 let mode = 'select';          // 'select' | 'place:type' | 'connect'
 let connSrc = null;           // node id when connecting
 let dragging = null;          // {id, ox, oy, mx, my}
-let history = [];             // undo stack (snapshots)
+let _history = [];             // undo stack (snapshots)
 
 const archSVG     = document.getElementById('arch-svg');
 const statusEl    = document.getElementById('arch-status');
@@ -235,11 +235,11 @@ function setMode(m) {
 
 // ── Snapshot for undo ─────────────────────────────────────────────────────────
 function snapshot() {
-    history.push({
+    _history.push({
         nodes: nodes.map(n => ({...n})),
         edges: edges.map(e => ({...e})),
     });
-    if (history.length > 40) history.shift();
+    if (_history.length > 40) _history.shift();
 }
 
 // ── Place a node ──────────────────────────────────────────────────────────────
@@ -430,8 +430,8 @@ function deleteSelected() {
 }
 
 document.getElementById('btn-undo').addEventListener('click', () => {
-    if (!history.length) { statusEl.textContent = 'Nothing to undo.'; return; }
-    const prev = history.pop();
+    if (!_history.length) { statusEl.textContent = 'Nothing to undo.'; return; }
+    const prev = _history.pop();
     nodes = prev.nodes; edges = prev.edges;
     selected = null; render();
 });

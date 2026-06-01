@@ -1,3 +1,4 @@
+/* global getOrCreateUsername, rankLabel, suitSymbol, wasteToFoundation, tableauToFoundation, wasteToTableau, tableauToTableau, drawFromStock, calcSolitaireScore, newSolitaireGame, shuffle, createDeck */
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
         const myName = (typeof getOrCreateUsername === 'function') ? getOrCreateUsername() : 'Guest';

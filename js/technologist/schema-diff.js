@@ -35,7 +35,7 @@
             const cols = {};
             const constraints = [];
             body.split(',').map(s => s.trim()).filter(Boolean).forEach(line => {
-                const colMatch = /^["'`]?(\w+)["'`]?\s+([A-Z][A-Z0-9_\(\),\s]*?)(\s+(?:NOT\s+NULL|NULL|DEFAULT\s+\S+|PRIMARY\s+KEY|UNIQUE|REFERENCES\s+\w+(?:\s*\(\w+\))?|AUTO_INCREMENT|AUTOINCREMENT|CHECK\s*\(.+?\)|\w+))*\s*$/i.exec(line);
+                const colMatch = /^["'`]?(\w+)["'`]?\s+([A-Z][A-Z0-9_()\s,]*?)(\s+(?:NOT\s+NULL|NULL|DEFAULT\s+\S+|PRIMARY\s+KEY|UNIQUE|REFERENCES\s+\w+(?:\s*\(\w+\))?|AUTO_INCREMENT|AUTOINCREMENT|CHECK\s*\(.+?\)|\w+))*\s*$/i.exec(line);
                 const constraintMatch = /^\s*(PRIMARY\s+KEY|UNIQUE|CONSTRAINT|INDEX|KEY|FOREIGN\s+KEY)/i.exec(line);
                 if (constraintMatch) {
                     constraints.push(line.trim());

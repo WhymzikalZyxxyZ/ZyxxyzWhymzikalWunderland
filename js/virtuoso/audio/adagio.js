@@ -645,7 +645,7 @@
 
         function stopTrackSource(track) {
             if (track.activeSource) {
-                try { track.activeSource.stop(); } catch (_) {}
+                try { track.activeSource.stop(); } catch (_) { /* already stopped */ }
                 track.activeSource = null;
             }
             track.activeGain  = null;

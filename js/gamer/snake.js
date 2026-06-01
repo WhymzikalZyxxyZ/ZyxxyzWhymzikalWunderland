@@ -1,3 +1,4 @@
+/* global snakePlaceFood, snakeTick, S_COLS, S_CELL, S_ROWS, SNAKE_MAX_SCORE, snakeChangeDirection */
 // S_COLS, S_ROWS, S_CELL, SNAKE_MAX_SCORE, snakePlaceFood, snakeTick,
         // snakeChangeDirection all provided by /js/snake-engine.js
 

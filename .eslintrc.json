@@ -4,7 +4,8 @@
     "es2021":  true
   },
   "globals": {
-    "firebase": "readonly"
+    "firebase":      "readonly",
+    "FIREBASE_READY": "readonly"
   },
   "extends": "eslint:recommended",
   "parserOptions": {
@@ -16,11 +17,13 @@
   "overrides": [
     {
       "files": [
-        "js/tetris-engine.js", "js/snake-engine.js", "js/forum-utils.js",
-        "js/rps-engine.js",   "js/pong-engine.js",
-        "js/puzzle-engine.js", "js/chess-engine.js",  "js/checkers-engine.js",
-        "js/card-engine.js",   "js/blackjack-engine.js", "js/solitaire-engine.js",
-        "js/poker-engine.js",  "js/five-card-draw-engine.js"
+        "js/engines/tetris-engine.js",        "js/engines/snake-engine.js",
+        "js/engines/rps-engine.js",           "js/engines/pong-engine.js",
+        "js/engines/puzzle-engine.js",        "js/engines/chess-engine.js",
+        "js/engines/checkers-engine.js",      "js/engines/card-engine.js",
+        "js/engines/blackjack-engine.js",     "js/engines/solitaire-engine.js",
+        "js/engines/poker-engine.js",         "js/engines/five-card-draw-engine.js",
+        "js/community/forum-utils.js"
       ],
       "env": { "browser": false, "node": true }
     },
@@ -32,6 +35,10 @@
       "files": ["tests/**/*.js"],
       "env": { "node": true, "jest": true },
       "rules": { "no-undef": "off" }
+    },
+    {
+      "files": ["anonymail/public/js/**/*.js"],
+      "parserOptions": { "sourceType": "module" }
     }
   ]
 }

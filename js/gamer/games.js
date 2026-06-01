@@ -1,3 +1,4 @@
+/* global getOrCreateUsername */
 function fmtDaeMs(ms) {
             const s = Math.floor(ms / 100) / 10;
             const m = Math.floor(s / 60), sec = s % 60;
