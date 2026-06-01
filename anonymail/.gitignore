@@ -3,3 +3,6 @@ node_modules
 *.pem
 *.key
 *.crt
+
+# Wrangler local dev build cache
+worker/.wrangler/
