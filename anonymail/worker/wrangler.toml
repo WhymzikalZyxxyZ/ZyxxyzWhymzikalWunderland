@@ -21,11 +21,11 @@ bindings = [
 tag = "v1"
 new_classes = ["MailboxDO", "RegistryDO"]
 
-# Catch all inbound email to *@mail.zyxwonderland.xyz
-[[email]]
-name = "INBOUND_EMAIL"
+# Inbound email routing is configured in the Cloudflare dashboard (Email Routing),
+# not in wrangler.toml. No binding needed — the Worker's email() export handles it.
 
-# Optional outbound email binding (configure via Cloudflare dashboard)
+# Optional outbound email binding — uncomment after verifying a sender address
+# in the Cloudflare dashboard under Email → Email Routing → Send.
 # [[send_email]]
 # name = "SEND_EMAIL"
 
