@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Snake — ZYXXYZ's Whymzykal Wunderland</title>
@@ -92,12 +92,12 @@
     </div>
 
     <div id="snake-wrapper">
-        <canvas id="snake-board" width="400" height="400"></canvas>
+        <canvas id="snake-board" width="400" height="400" role="img" aria-label="Snake game board" tabindex="0"></canvas>
 
         <div id="snake-sidebar">
             <div class="snake-box">
                 <label>SCORE</label>
-                <span id="snake-score">0</span>
+                <span id="snake-score" aria-live="polite">0</span>
             </div>
             <div class="snake-box" id="snake-best-box">
                 <label>BEST</label>
@@ -111,7 +111,7 @@
                 <label>LENGTH</label>
                 <span id="snake-length">3</span>
             </div>
-            <div id="snake-status"></div>
+            <div id="snake-status" role="status" aria-live="assertive"></div>
             <button id="snake-start" onclick="snakeStartGame()">PLAY</button>
             <div id="snake-keys">
                 <p>&#8592; &#8594; &nbsp;Move</p>

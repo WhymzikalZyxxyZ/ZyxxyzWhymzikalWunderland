@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Tetris — ZYXXYZ's Whymzykal Wunderland</title>
@@ -96,7 +96,7 @@
     </div>
 
     <div id="tetris-wrapper">
-        <canvas id="tetris-board" width="300" height="600"></canvas>
+        <canvas id="tetris-board" width="300" height="600" role="img" aria-label="Tetris game board" tabindex="0"></canvas>
 
         <div id="tetris-sidebar">
             <div class="tetris-box">
@@ -105,7 +105,7 @@
             </div>
             <div class="tetris-box">
                 <label>SCORE</label>
-                <span id="tetris-score">0</span>
+                <span id="tetris-score" aria-live="polite">0</span>
             </div>
             <div class="tetris-box" id="tetris-best-box">
                 <label>BEST</label>
@@ -123,7 +123,7 @@
                 <label>LEVEL</label>
                 <span id="tetris-level">1</span>
             </div>
-            <div id="tetris-status"></div>
+            <div id="tetris-status" role="status" aria-live="assertive"></div>
             <button id="tetris-start" onclick="startGame()">PLAY</button>
             <div id="tetris-keys">
                 <p>&#8592; &#8594; &nbsp;Move</p>
