@@ -21,25 +21,35 @@ function walk(dir, ext, results = []) {
 
 let ok = 0, fail = 0;
 
-const jsFiles = walk(path.join(ROOT, 'js'), '.js');
-for (const f of jsFiles) {
-    try {
-        execSync(`npx terser "${f}" --compress --mangle -o "${f}"`, { stdio: 'pipe' });
-        ok++;
-    } catch {
-        console.warn('terser skip:', path.relative(ROOT, f));
-        fail++;
+const jsDirs = [
+    path.join(ROOT, 'js'),
+    path.join(ROOT, 'anonymail', 'worker', 'public', 'js'),
+];
+for (const dir of jsDirs) {
+    for (const f of walk(dir, '.js')) {
+        try {
+            execSync(`npx terser "${f}" --compress --mangle -o "${f}"`, { stdio: 'pipe' });
+            ok++;
+        } catch {
+            console.warn('terser skip:', path.relative(ROOT, f));
+            fail++;
+        }
     }
 }
 
-const cssFiles = walk(path.join(ROOT, 'css'), '.css');
-for (const f of cssFiles) {
-    try {
-        execSync(`npx cleancss "${f}" -o "${f}"`, { stdio: 'pipe' });
-        ok++;
-    } catch {
-        console.warn('cleancss skip:', path.relative(ROOT, f));
-        fail++;
+const cssDirs = [
+    path.join(ROOT, 'css'),
+    path.join(ROOT, 'anonymail', 'worker', 'public', 'css'),
+];
+for (const dir of cssDirs) {
+    for (const f of walk(dir, '.css')) {
+        try {
+            execSync(`npx cleancss "${f}" -o "${f}"`, { stdio: 'pipe' });
+            ok++;
+        } catch {
+            console.warn('cleancss skip:', path.relative(ROOT, f));
+            fail++;
+        }
     }
 }
 

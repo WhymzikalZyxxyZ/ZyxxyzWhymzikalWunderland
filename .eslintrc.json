@@ -37,7 +37,7 @@
       "rules": { "no-undef": "off" }
     },
     {
-      "files": ["anonymail/public/js/**/*.js"],
+      "files": ["anonymail/worker/public/js/**/*.js"],
       "parserOptions": { "sourceType": "module" }
     }
   ]
