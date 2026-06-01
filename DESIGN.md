@@ -59,6 +59,7 @@ Interactive developer tools and simulators. All tools run entirely in the browse
 | Investor | `js/technologist/investor.js` | Portfolio / returns simulator |
 | Prism | `js/technologist/prism.js` | Color / light spectrum tool |
 | Sorting Hat | `js/technologist/sortinghat.js` | Algorithm sorting visualizer |
+| Distributed Systems | `js/technologist/distributed.js` | Raft consensus, partitions, Lamport clocks |
 
 ### Virtuoso
 Creative content display. These pages are primarily presentational — they render user-created content (drawings, audio, animations, stories, comics, crafts).
@@ -162,6 +163,93 @@ anonymail/public/
 ```
 
 The Anonymail frontend is a single-page app with no framework dependency. State lives in `sessionStorage` to support multiple simultaneous addresses in one browser tab.
+
+---
+
+## Distributed Systems Architecture
+
+The project incorporates distributed systems at two levels: the real infrastructure that runs the site, and an interactive simulator that teaches the underlying concepts.
+
+### Real Distributed Infrastructure
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Client (Browser)                        │
+└──────────────┬──────────────────────────┬───────────────────┘
+               │ HTTP / WebSocket          │ HTTPS
+               ▼                           ▼
+┌──────────────────────────┐  ┌────────────────────────────────┐
+│  Cloudflare Edge Network │  │     GitHub Pages (CDN)         │
+│  ┌────────────────────┐  │  │  Static assets served from     │
+│  │  Anonymail Worker  │  │  │  edge PoPs globally             │
+│  │  (per-region DO)   │  │  └────────────────────────────────┘
+│  │                    │  │
+│  │  ┌─────────────┐   │  │  ┌────────────────────────────────┐
+│  │  │ RegistryDO  │   │  │  │  Firebase Realtime Database    │
+│  │  │ (global     │   │  │  │  Community: forum, guestbook,  │
+│  │  │  singleton) │   │  │  │  wellness, gamer chat          │
+│  │  └─────────────┘   │  │  └────────────────────────────────┘
+│  │  ┌─────────────┐   │  │
+│  │  │ MailboxDO   │   │  │  ┌────────────────────────────────┐
+│  │  │ (per-addr)  │   │  │  │  Cloudflare Email Routing      │
+│  │  └─────────────┘   │  │  │  Inbound SMTP → Worker email() │
+│  └────────────────────┘  │  └────────────────────────────────┘
+└──────────────────────────┘
+```
+
+**Consistency model — Anonymail:**
+Each `MailboxDO` is a single-writer, single-reader Durable Object. Cloudflare guarantees exactly one instance of each DO is active at a time globally, so all reads and writes to a mailbox are serialized — no split-brain, no stale reads. This is CP (Consistent + Partition-tolerant) by design: if the DO's region is unavailable, the mailbox is temporarily unreachable rather than serving stale data.
+
+**Consistency model — Firebase community features:**
+Firebase Realtime Database uses eventual consistency with optimistic local updates. Writes propagate globally within seconds. This makes community features AP (Available + Partition-tolerant): the forum and guestbook stay readable during a Firebase region outage, though fresh writes may be delayed.
+
+**CAP tradeoffs by subsystem:**
+
+| Subsystem | Model | Tradeoff |
+|---|---|---|
+| Anonymail (MailboxDO) | CP | Strongly consistent; unavailable during DO eviction |
+| Anonymail (RegistryDO) | CP | Single global token registry; same eviction caveat |
+| Firebase (forum/guestbook) | AP | Always available; eventual consistency on writes |
+| GitHub Pages | AP | CDN-cached; stale content possible during deploys |
+
+**Lamport clocks — Anonymail:**
+The Anonymail Worker attaches a monotonically incrementing logical clock to every message sent between the Worker and its Durable Objects. This provides a happens-before ordering of events within a single mailbox session, which is important for correct email ordering when multiple WebSocket connections deliver messages concurrently.
+
+**Network partitions — Cloudflare Email Routing:**
+If a MailboxDO is not yet initialized when an email arrives (e.g., the address was never registered or the DO expired), the Worker calls `message.setReject('Mailbox not found')`. The sending MTA receives a bounce, which is the correct partition behavior: reject rather than silently drop.
+
+### Distributed Systems Simulator (`/technologist/distributed`)
+
+An interactive browser-based simulator that demonstrates core distributed systems concepts:
+
+**Raft Consensus (simplified)**
+- Each node runs a state machine: `follower → candidate → leader`
+- Followers start with a random election timeout (2.8s–5.6s)
+- If a follower's timeout expires without a heartbeat, it starts an election: increments its term, votes for itself, and broadcasts `vote-req` to all peers
+- A candidate that collects a majority of `vote-grant` responses becomes leader
+- The leader broadcasts periodic heartbeats to reset follower timeouts and prevent new elections
+
+**Network Partitions**
+- A draggable partition line splits the canvas into two isolated groups
+- Messages between nodes in different groups are silently dropped (simulating packet loss, not TCP reset — the sender doesn't know the message was lost)
+- The "Split Brain" preset pre-creates two leaders on opposite sides of a partition; when the partition heals, one leader is demoted
+
+**Lamport Logical Clocks**
+- Each node maintains a Lamport clock initialized to 0
+- On send: `sender.lamport++`; the clock value is embedded in the message
+- On receive: `receiver.lamport = max(receiver.lamport, msg.lamport) + 1`
+- The sidebar clock bar panel shows all nodes' clocks updating in real time
+
+**Presets:**
+
+| Preset | Purpose |
+|---|---|
+| 3-Node Cluster | Baseline: watch automatic leader election |
+| 5-Node Cluster | Larger quorum; majority = 3 of 5 |
+| Split Brain | Two leaders, one per partition side; heal to trigger re-election |
+| Byzantine (7-Node) | 2 faulty (dead) nodes; demonstrates f < n/3 fault tolerance floor |
+
+**Key invariant modeled:** a leader is only elected when it receives `⌊n/2⌋ + 1` votes from reachable live nodes. A minority partition cannot elect a leader when the majority partition is reachable and already has one.
 
 ---
 
