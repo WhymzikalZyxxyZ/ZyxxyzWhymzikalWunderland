@@ -176,6 +176,30 @@ async function _handleRequest(request, env, url, path, method, ip, requestId) {
         return addSecHeaders(json({ address, token, expiresAt }));
     }
 
+    // POST /api/beacon/burn — navigator.sendBeacon cleanup on page unload.
+    // sendBeacon can only POST and cannot set custom headers, so the token
+    // travels in the JSON body instead of the Authorization header.
+    if (apiPath === '/beacon/burn' && method === 'POST') {
+        let beaconToken;
+        try { ({ token: beaconToken } = await request.json()); } catch { /* malformed */ }
+        if (beaconToken && /^[0-9a-f]{64}$/.test(beaconToken)) {
+            const mb = await resolveMailbox(env, beaconToken);
+            if (mb) {
+                await mb.fetch(new Request('http://do/burn', {
+                    method:  'DELETE',
+                    headers: { Authorization: `Bearer ${beaconToken}` },
+                })).catch(() => {});
+                const reg = env.REGISTRY.get(env.REGISTRY.idFromName('registry'));
+                await reg.fetch(new Request(
+                    `http://do/revoke/${encodeURIComponent(beaconToken)}`,
+                    { method: 'DELETE' },
+                )).catch(() => {});
+                log('info', requestId, 'mailbox.beacon_burn', { token: beaconToken.slice(0, 8) + '…' });
+            }
+        }
+        return addSecHeaders(json({ ok: true }));
+    }
+
     // All remaining routes require auth
     const token = bearer(request);
     const mb    = await resolveMailbox(env, token);

@@ -764,4 +764,21 @@ async function init() {
     }
 }
 
+// ── Cleanup on page leave ─────────────────────────────────────────────────────
+// pagehide fires on tab close, navigation away, and bfcache entry — more
+// reliable than beforeunload for guaranteed delivery. sendBeacon keeps the
+// request alive after the page is gone; it can only POST with no custom
+// headers, so the token travels in the body to /api/beacon/burn.
+window.addEventListener('pagehide', () => {
+    const sessions = API.getSessions();
+    if (!sessions.length) return;
+    sessions.forEach(({ token }) => {
+        const blob = new Blob([JSON.stringify({ token })], { type: 'application/json' });
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon('/api/beacon/burn', blob);
+        }
+    });
+    API.clearAllSessions();
+});
+
 document.addEventListener('DOMContentLoaded', init);
