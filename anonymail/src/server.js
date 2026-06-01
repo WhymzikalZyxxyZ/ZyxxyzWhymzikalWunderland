@@ -96,24 +96,42 @@ const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
 // Map<address, Set<WebSocket>>
 const addressSockets = new Map();
 
-wss.on('connection', (ws, req) => {
-    const params = new URLSearchParams(req.url.replace(/^[^?]*/, ''));
-    const token  = params.get('token');
-    if (!token) { ws.close(4001, 'Token required'); return; }
+wss.on('connection', (ws) => {
+    let addr = null;
 
-    const mb = byToken(token);
-    if (!mb)  { ws.close(4002, 'Invalid or expired session'); return; }
+    // Require { type:'auth', token } as the first message within 10 s.
+    // Token never appears in the URL (and therefore never in server/proxy logs).
+    const authTimeout = setTimeout(() => {
+        if (!addr) ws.close(4001, 'Authentication timeout');
+    }, 10_000);
 
-    const addr = mb.address;
-    if (!addressSockets.has(addr)) addressSockets.set(addr, new Set());
-    addressSockets.get(addr).add(ws);
+    ws.on('message', (raw) => {
+        let msg;
+        try { msg = JSON.parse(raw); } catch { return; }
+
+        if (!addr) {
+            if (msg.type !== 'auth' || !msg.token) {
+                ws.close(4001, 'Token required');
+                return;
+            }
+            const mb = byToken(msg.token);
+            if (!mb) { ws.close(4002, 'Invalid or expired session'); return; }
+            clearTimeout(authTimeout);
+            addr = mb.address;
+            if (!addressSockets.has(addr)) addressSockets.set(addr, new Set());
+            addressSockets.get(addr).add(ws);
+            ws.send(JSON.stringify({ type: 'connected', address: addr, expiresAt: mb.expiresAt }));
+        }
+    });
 
     ws.on('close', () => {
-        const set = addressSockets.get(addr);
-        if (set) { set.delete(ws); if (!set.size) addressSockets.delete(addr); }
+        clearTimeout(authTimeout);
+        if (addr) {
+            const set = addressSockets.get(addr);
+            if (set) { set.delete(ws); if (!set.size) addressSockets.delete(addr); }
+        }
     });
     ws.on('ping', () => ws.pong());
-    ws.send(JSON.stringify({ type: 'connected', address: addr, expiresAt: mb.expiresAt }));
 });
 
 // Notify connected clients of new emails
