@@ -152,7 +152,7 @@ export function openWebSocket(token, address, onEvent) {
         clearInterval(pingInterval);
         // Don't reconnect if server sent 'expired' event
         if (e.code !== 1000 && getActiveToken() === token) {
-            setTimeout(() => openWebSocket(token, onEvent), 3000);
+            setTimeout(() => openWebSocket(token, address, onEvent), 3000);
         }
     });
 
