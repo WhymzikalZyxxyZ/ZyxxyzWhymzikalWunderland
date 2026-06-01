@@ -221,13 +221,13 @@ async function _handleRequest(request, env, url, path, method, ip, requestId) {
         return addSecHeaders(await fwdToMailbox(mb, request, '/qr'));
 
     if (apiPath.startsWith('/box/'))
-        return addSecHeaders(await fwdToMailbox(mb, request, apiPath.slice(4)));
+        return addSecHeaders(await fwdToMailbox(mb, request, apiPath));
 
     if (apiPath === '/draft' && method === 'POST')
         return addSecHeaders(await fwdToMailbox(mb, request, '/draft'));
 
     if (apiPath.startsWith('/draft/') && method === 'PUT')
-        return addSecHeaders(await fwdToMailbox(mb, request, apiPath.slice(4)));
+        return addSecHeaders(await fwdToMailbox(mb, request, apiPath));
 
     if (apiPath === '/send' && method === 'POST')
         return addSecHeaders(await fwdToMailbox(mb, request, '/send'));
