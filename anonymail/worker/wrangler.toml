@@ -1,0 +1,35 @@
+name = "anonymail"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Serve the frontend from the public/ directory alongside the Worker
+[assets]
+directory = "../public"
+not_found_handling = "none"
+
+# Two Durable Object classes:
+#   MAILBOX   – one instance per email address, holds inbox/drafts/sent
+#   REGISTRY  – singleton index mapping bearer token → address
+[durable_objects]
+bindings = [
+    { name = "MAILBOX",  class_name = "MailboxDO"  },
+    { name = "REGISTRY", class_name = "RegistryDO" },
+]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["MailboxDO", "RegistryDO"]
+
+# Catch all inbound email to *@mail.zyxwonderland.xyz
+[[email]]
+name = "INBOUND_EMAIL"
+
+# Optional outbound email binding (configure via Cloudflare dashboard)
+# [[send_email]]
+# name = "SEND_EMAIL"
+
+[vars]
+DOMAIN      = "mail.zyxwonderland.xyz"
+TTL_MS      = "3600000"
+MAX_MAILBOXES = "500"

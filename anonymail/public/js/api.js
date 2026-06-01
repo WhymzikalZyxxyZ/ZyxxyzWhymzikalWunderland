@@ -129,9 +129,10 @@ export async function sendEmail(token, formData) {
 }
 
 // ── WebSocket ──────────────────────────────────────────────────────────────────
-export function openWebSocket(token, onEvent) {
-    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    const ws    = new WebSocket(`${proto}://${location.host}/ws`);
+export function openWebSocket(token, address, onEvent) {
+    const proto   = location.protocol === 'https:' ? 'wss' : 'ws';
+    const addrQ   = address ? `?addr=${encodeURIComponent(address)}` : '';
+    const ws      = new WebSocket(`${proto}://${location.host}/ws${addrQ}`);
     let pingInterval;
 
     ws.addEventListener('open', () => {
