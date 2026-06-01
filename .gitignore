@@ -44,6 +44,13 @@
 *.class
 *.pyc
 
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
 # Office & document formats
 *.pdf
 *.doc
