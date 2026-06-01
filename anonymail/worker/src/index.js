@@ -14,11 +14,14 @@ const SEC_HEADERS = {
     'X-Frame-Options':           'DENY',
     'Referrer-Policy':           'no-referrer',
     'Permissions-Policy':        'camera=(), microphone=(), geolocation=()',
+    // 2 years; includeSubDomains so mail.* inherits the policy
+    'Strict-Transport-Security': 'max-age=63072000; includeSubDomains',
     'Content-Security-Policy':
         "default-src 'self'; " +
         "script-src 'self'; " +
         "style-src 'self' 'unsafe-inline'; " +
-        "connect-src 'self' ws: wss:; " +
+        // 'self' already covers same-origin ws/wss — no need for the broad ws:/wss: wildcards
+        "connect-src 'self'; " +
         "img-src 'self' data: blob:; " +
         "font-src 'self'; " +
         "object-src 'none'; " +
