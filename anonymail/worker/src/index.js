@@ -50,8 +50,11 @@ function _ipAllow(ip, maxReqs = 120, windowMs = 60_000) {
     return true;
 }
 
-// Stricter limit for mailbox creation
-function _ipAllowCreate(ip) { return _ipAllow(ip, 10, 60_000); }
+// Stricter limit for mailbox creation — bypassed when DEV_RATE_BYPASS=true
+function _ipAllowCreate(ip, env) {
+    if (env && env.DEV_RATE_BYPASS === 'true') return true;
+    return _ipAllow(ip, 10, 60_000);
+}
 
 // ── Routing helpers ───────────────────────────────────────────────────────────
 function json(data, status = 200) {
@@ -144,7 +147,7 @@ async function _handleRequest(request, env, url, path, method, ip, requestId) {
 
     // POST /api/mailbox — create a new mailbox (unauthenticated)
     if (apiPath === '/mailbox' && method === 'POST') {
-        if (!_ipAllowCreate(ip)) {
+        if (!_ipAllowCreate(ip, env)) {
             log('warn', requestId, 'rate_limit.create', { ip: ip.slice(0, 8) + '…' });
             return addSecHeaders(err('Too many mailbox requests — slow down', 429));
         }
