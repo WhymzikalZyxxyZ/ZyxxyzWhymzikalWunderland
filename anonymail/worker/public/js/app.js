@@ -182,10 +182,25 @@ function updatePageTitle() {
 // ── Countdown ─────────────────────────────────────────────────────────────────
 let countdownInterval = null;
 
+function showExtendBanner() {
+    if (document.getElementById('extend-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'extend-banner';
+    banner.className = 'extend-banner';
+    banner.innerHTML = `⏰ Under 10 minutes left — <button id="extend-banner-btn">extend now</button><button id="extend-banner-close" aria-label="Dismiss">✕</button>`;
+    document.getElementById('client-view')?.prepend(banner);
+    document.getElementById('extend-banner-btn')?.addEventListener('click', () => {
+        banner.remove();
+        handleExtend();
+    });
+    document.getElementById('extend-banner-close')?.addEventListener('click', () => banner.remove());
+}
+
 function startCountdown(token) {
     const el = document.getElementById('expires-countdown');
     if (!el) return;
     if (countdownInterval) clearInterval(countdownInterval);
+    let bannerShown = false;
 
     function tick() {
         const sessions = API.getSessions();
@@ -202,6 +217,7 @@ function startCountdown(token) {
         const s = Math.floor((rem % 60000) / 1000);
         el.textContent = `${m}:${String(s).padStart(2, '0')} remaining`;
         el.classList.toggle('expiring-soon', rem < 600000); // warn at < 10 min
+        if (rem < 600000 && !bannerShown) { bannerShown = true; showExtendBanner(); }
     }
 
     tick();
@@ -367,6 +383,12 @@ function initKeyboard() {
                 if (state.activeEmail && state.currentBox === 'inbox') {
                     e.preventDefault();
                     replyToActive();
+                }
+                break;
+            case 's':
+                if (state.activeEmailId) {
+                    e.preventDefault();
+                    toggleStar(state.activeEmailId);
                 }
                 break;
             case 'Delete': case 'd':
