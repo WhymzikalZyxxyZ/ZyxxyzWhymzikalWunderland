@@ -150,6 +150,7 @@ const NAV_STRUCTURE = [
         ],
     },
     { label: 'The Lawyer', href: '/technologist/lawyer' },
+    { label: 'Anonymail', href: 'https://mail.zyxwonderland.xyz', target: '_blank' },
     {
         label: 'Community', href: '/community/forum',
         children: [
@@ -213,6 +214,7 @@ function buildNavbar() {
             a.className = 'nav-link';
             a.href = item.href;
             a.textContent = item.label;
+            if (item.target) { a.target = item.target; a.rel = 'noopener noreferrer'; }
             if (path === item.href || path.endsWith(item.href)) a.classList.add('nav-active');
             linksWrap.appendChild(a);
             return;
