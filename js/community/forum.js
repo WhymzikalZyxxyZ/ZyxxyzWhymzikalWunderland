@@ -85,12 +85,14 @@
         }
 
         // ── Firebase ──────────────────────────────────────────────────────────────────
+        let sendMessage = () => {};
+
         if (typeof FIREBASE_READY !== 'undefined' && FIREBASE_READY) {
             const messagesRef = firebase.database().ref('forum/messages');
             let myUsername    = null;
             let lastSent      = 0;
 
-            window.sendMessage = function () {
+            sendMessage = function () {
                 if (!myUsername) return;
                 const text = chatInput.value.trim();
                 if (!text || text.length > 500) return;
@@ -134,9 +136,9 @@
             sessionStorage.setItem('forumUsername', myUsername);
             document.getElementById('chat-username').textContent = myUsername;
             addSystemMsg('— chat requires Firebase — see /js/firebase-config.js —');
-            window.sendMessage = function () {};
         }
 
+        chatSend.addEventListener('click', () => sendMessage());
         chatInput.addEventListener('keydown', e => {
             if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
         });

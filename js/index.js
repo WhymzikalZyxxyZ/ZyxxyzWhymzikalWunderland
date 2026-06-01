@@ -228,3 +228,6 @@ function handleNewsletterSignup(btn) {
     btn.textContent = 'Thanks! ✓';
     input.disabled = true;
 }
+
+const _nb = document.querySelector('.newsletter-btn');
+if (_nb) _nb.addEventListener('click', function () { handleNewsletterSignup(this); });

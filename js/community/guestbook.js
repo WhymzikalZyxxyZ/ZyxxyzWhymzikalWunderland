@@ -1,16 +1,14 @@
 'use strict';
 
-// esc(), fmtDate(), showToast(), withFirebase() from /js/utils.js
+// esc(), fmtDate(), showToast(), withFirebase(),
+// verifyPin(), isAdmin(), rateGuard(), safeUrl() from /js/utils.js
 
-const MAX_MSG    = 400;
+const MAX_MSG     = 400;
 const MAX_ENTRIES = 200;
-const PAGE_SIZE  = 20;
-const ADMIN_KEY  = 'blog_admin_unlocked';
+const PAGE_SIZE   = 20;
 
 let allEntries   = [];
 let visibleCount = PAGE_SIZE;
-
-function isAdmin() { return sessionStorage.getItem(ADMIN_KEY) === '1'; }
 
 // ── Admin toggle ──────────────────────────────────────────────────────────────
 (function initAdmin() {
@@ -23,10 +21,12 @@ function isAdmin() { return sessionStorage.getItem(ADMIN_KEY) === '1'; }
             return;
         }
         const pin = prompt('Admin PIN:');
-        if (pin === 'ZYXXYZ') {
+        if (!pin) return;
+        verifyPin(pin).then(valid => {
+            if (!valid) return;
             sessionStorage.setItem(ADMIN_KEY, '1');
             document.querySelectorAll('.gb-delete').forEach(b => b.hidden = false);
-        }
+        });
     });
 })();
 
@@ -42,6 +42,8 @@ document.getElementById('gb-msg').addEventListener('keydown', e => {
 });
 
 function submitEntry() {
+    if (!rateGuard('gb-submit', 30000)) { showToast('Please wait before signing again.', 'error'); return; }
+
     const name = document.getElementById('gb-name').value.trim();
     const url  = document.getElementById('gb-url').value.trim();
     const msg  = document.getElementById('gb-msg').value.trim();
@@ -96,7 +98,7 @@ function renderEntries() {
         <div class="gb-entry">
             <div class="gb-entry-meta">
                 <span class="gb-name">${esc(e.name)}</span>
-                ${e.url ? `<a class="gb-url" href="${esc(e.url)}" target="_blank" rel="noopener noreferrer">${esc(new URL(e.url).hostname)}</a>` : ''}
+                ${safeUrl(e.url) ? `<a class="gb-url" href="${safeUrl(e.url)}" target="_blank" rel="noopener noreferrer">${esc(new URL(e.url).hostname)}</a>` : ''}
                 <span class="gb-date">${fmtDate(e.ts)}</span>
                 <button class="gb-delete" data-key="${esc(e.key)}" aria-label="Delete entry"${isAdmin() ? '' : ' hidden'}>✕</button>
             </div>
@@ -121,7 +123,7 @@ function renderEntries() {
 }
 
 function deleteEntry(key) {
-    if (!confirm('Delete this entry?')) return;
+    if (!isAdmin() || !confirm('Delete this entry?')) return;
     firebase.database().ref('guestbook/entries/' + key).remove()
         .then(() => showToast('Entry deleted.', 'success'))
         .catch(() => showToast('Delete failed.', 'error'));
