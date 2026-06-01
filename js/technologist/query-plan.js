@@ -20,8 +20,6 @@ const EXAMPLES = [
     // ── SQL Parser (simplified) ───────────────────────────────────────────────────
     function parseSQL(sql) {
         const upper  = sql.toUpperCase().replace(/\s+/g,' ').trim();
-        const tokens = upper.split(' ');
-
         const result = {
             type: 'SELECT',
             tables: [], joins: [], conditions: [],

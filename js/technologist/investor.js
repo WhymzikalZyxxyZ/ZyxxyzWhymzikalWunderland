@@ -692,7 +692,7 @@
 
         const opts = document.createElement('div');
         opts.className = 'quiz-options';
-        q.opts.forEach((opt, i) => {
+        q.opts.forEach((opt) => {
             const btn = document.createElement('button');
             btn.className = 'quiz-opt' + (quizState.answers[quizState.current] === opt.pts ? ' sel' : '');
             btn.textContent = opt.text;

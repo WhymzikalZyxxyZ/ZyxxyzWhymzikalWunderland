@@ -10,6 +10,8 @@
     "alpha-value-notation":                         null,
     "color-function-notation":                      null,
     "selector-type-no-unknown":                     null,
-    "declaration-property-value-no-unknown":        null
+    "declaration-property-value-no-unknown":        null,
+    "declaration-block-single-line-max-declarations": null,
+    "media-feature-range-notation":                 null
   }
 }

@@ -345,10 +345,9 @@
         });
 
         // Black keys
-        let blackOffset = 0;
         whites.forEach((note, i) => {
             const bn = blacks[i];
-            if (!bn) { blackOffset = 0; return; }
+            if (!bn) { return; }
             const inAnswer = answer.includes(bn);
             const bx = i*W + W - bW/2;
             const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
@@ -514,15 +513,10 @@
     function buildComposePalette() {
         const palette = document.getElementById('compose-palette');
         palette.innerHTML = '';
-        const key = document.getElementById('compose-key').value.replace('♯','#').replace('♭','b');
         const scaleType = document.getElementById('compose-scale').value;
 
         // Build scale from selections
         const rootClean = document.getElementById('compose-key').value;
-        const rootIdx = CHROMATIC.indexOf(rootClean.replace('♭', (function(){
-            const enharMap = {'B♭':'A♯','E♭':'D♯','A♭':'G♯','D♭':'C♯','G♭':'F♯'};
-            return enharMap[rootClean] ? CHROMATIC[CHROMATIC.indexOf(enharMap[rootClean])] : rootClean;
-        })()));
 
         const formula = SCALE_FORMULAS[scaleType] || SCALE_FORMULAS['Major'];
         const scaleNotes = formula.map(s => CHROMATIC[(CHROMATIC.indexOf(rootClean.length > 1 && CHROMATIC.includes(rootClean) ? rootClean : CHROMATIC[0]) + s) % 12]);
@@ -597,7 +591,7 @@
         // Detect repeated notes (motif potential)
         const freq = {};
         composedNotes.forEach(n => freq[n] = (freq[n]||0)+1);
-        const repeated = Object.entries(freq).filter(([n,c]) => c > 1).map(([n,c]) => n + ' ×' + c);
+        const repeated = Object.entries(freq).filter(([,c]) => c > 1).map(([n,c]) => n + ' ×' + c);
 
         let html = `<strong style="color:#f4a261;">Analysis: ${root} ${scaleType}</strong><br><br>`;
         html += `<span style="color:#aaa;">Length:</span> ${composedNotes.length} notes — `;

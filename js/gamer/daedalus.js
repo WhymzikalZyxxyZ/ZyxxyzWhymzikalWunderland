@@ -820,6 +820,7 @@ function runCutscene() {
     const PH_EXIT_GLANCE = 4.4;   // face exit: Icarus tiny in sky, feathers melting
     const PH_LOOKBACK2   = 5.5;   // whip-pan: minotaur closer, heavy footfalls
     const PH_EXIT_GROW   = 6.6;   // sprint: exit aperture surges open
+    // eslint-disable-next-line no-unused-vars
     const PH_COLLISION   = 7.4;   // final look back: minotaur fills screen, impact
     const PH_BLACK       = 7.9;   // black
     const PH_TEXT        = 8.2;   // text types out
@@ -829,6 +830,7 @@ function runCutscene() {
     const drawMinotaur = (s, ha, ang) => _drawMinotaur(cx, W, H, s, ha, ang);
 
     // ── Forward corridor with tiny Icarus visible far in the sky ────────────
+    // eslint-disable-next-line no-unused-vars
     function drawExitGlance(phase, icarusT, melt) {
         const depth  = 0.24;
         const torchT = icarusT;
@@ -1354,6 +1356,7 @@ function runLevel5Cutscene(cb) {
     const PH_CHARGE = 3.0;   // Minotaur spots player, charges
     const PH_SPRINT = 4.5;   // Player sprints forward frantically
     const PH_TURN   = 5.0;   // Whip-pan: player turns corner
+    // eslint-disable-next-line no-unused-vars
     const PH_PASS   = 6.5;   // Minotaur thunders past junction (misses turn)
     const PH_FADE   = 7.6;   // Fade to black
     const PH_TEXT   = 7.9;   // Red text types out
@@ -1508,6 +1511,7 @@ function runLevel6Cutscene(cb) {
     let rafId6 = null;
 
     const PH_DARK  = 2.6;   // torches flicker and die progressively
+    // eslint-disable-next-line no-unused-vars
     const PH_FADE  = 3.8;   // fade to full black
     const PH_TEXT  = 4.1;   // text types out
     const PH_END   = 6.8;   // ends → gameplay
