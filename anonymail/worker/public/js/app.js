@@ -856,11 +856,12 @@ async function init() {
     const splash = document.getElementById('loading-splash');
     startPhrases('splash-phrase', 650);
 
+    initKeyboard();
+    initTheme();
+
     try {
         Compose.initCompose();
-        initKeyboard();
         initSearch();
-        initTheme();
 
         // Wire nav
         document.querySelectorAll('.nav-item').forEach(el =>
