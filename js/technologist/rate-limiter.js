@@ -4,7 +4,7 @@
     let fixedWindowStart = Date.now(), fixedCount = 0;
     let leakyQueue = 0, lastLeak = Date.now();
     let passed = 0, denied = 0;
-    let history = []; // {t, result} for canvas
+    let _history = []; // {t, result} for canvas
     let autoTimer = null;
     let autoRunning = false;
     const MAX_HISTORY = 120;
@@ -30,7 +30,7 @@
         tokens = c.burst; lastRefill = Date.now();
         windowLog = []; fixedWindowStart = Date.now(); fixedCount = 0;
         leakyQueue = 0; lastLeak = Date.now();
-        passed = 0; denied = 0; history = [];
+        passed = 0; denied = 0; _history = [];
         document.getElementById('log').innerHTML = '';
         updateStats(); drawViz();
     }
@@ -60,8 +60,8 @@
         }
 
         if (allow) passed++; else denied++;
-        history.push({ t: now, result: allow });
-        if (history.length > MAX_HISTORY) history.shift();
+        _history.push({ t: now, result: allow });
+        if (_history.length > MAX_HISTORY) _history.shift();
 
         addLog(allow, now);
         updateStats();
@@ -132,7 +132,7 @@
         ctx.roundRect(0, 0, W, 160, 6);
         ctx.fill();
 
-        if (!history.length) return;
+        if (!_history.length) return;
 
         const now    = Date.now();
         const span   = 10000; // 10 second window
@@ -154,7 +154,7 @@
         ctx.fillText('now', W - 30, 155);
 
         // Bars
-        history.forEach(h => {
+        _history.forEach(h => {
             const x = xFor(h.t);
             if (x < 0 || x > W) return;
             ctx.fillStyle = h.result ? 'rgba(76,175,80,0.7)' : 'rgba(239,83,80,0.7)';

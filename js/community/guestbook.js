@@ -1,4 +1,5 @@
 'use strict';
+/* global isAdmin, ADMIN_KEY, verifyPin, rateGuard, showToast, esc, safeUrl, fmtDate */
 
 // esc(), fmtDate(), showToast(), withFirebase(),
 // verifyPin(), isAdmin(), rateGuard(), safeUrl() from /js/utils.js

@@ -1,3 +1,4 @@
+/* global getOrCreateUsername, newCheckersGame, getAllCheckersMovesForColor, CK_WHITE, CK_BLACK, applyCheckersMove, getCheckersAIMove, CK_MAX_SCORE */
 const myName   = (typeof getOrCreateUsername === 'function') ? getOrCreateUsername() : 'Guest';
         const FB_HS    = 'scores/checkers';
         const CK_SIZE  = 480;

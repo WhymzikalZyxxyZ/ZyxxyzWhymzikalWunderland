@@ -1,3 +1,4 @@
+/* global getOrCreateUsername, PONG_W, PONG_H, newPongState, getAIPaddleY, pongTick, PADDLE_W, PADDLE_H, BALL_R, PONG_MAX_SCORE */
 const myName = (typeof getOrCreateUsername === 'function') ? getOrCreateUsername() : 'Guest';
         document.getElementById('user-label').textContent = myName;
 

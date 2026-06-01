@@ -1,3 +1,4 @@
+/* global navigateToPage */
 (function () {
     'use strict';
 
@@ -29,7 +30,7 @@
 
     var SUIT_SYMS = ['♠', '♥', '♦', '♣'];
     var floaters = [];
-    for (var i = 0; i < 28; i++) {
+    for (i = 0; i < 28; i++) {
         var sym = SUIT_SYMS[i % 4];
         floaters.push({ sym: sym, x: Math.random(), y: 0.08 + Math.random() * 0.85, vx: (Math.random() - 0.5) * 0.0014, vy: -(Math.random() * 0.0045 + 0.001), rot: Math.random() * Math.PI * 2, rotV: (Math.random() - 0.5) * 0.011, size: Math.random() * 14 + 7, alpha: Math.random() * 0.28 + 0.08, phase: Math.random() * Math.PI * 2, col: SUIT_COLS[sym] });
     }
@@ -119,7 +120,7 @@
         for (var x = 0; x <= W; x += 4) { var frac = x / W; ctx.lineTo(x, wireY + Math.sin(frac * Math.PI) * droop); }
         ctx.stroke();
         for (var li = 0; li < N_LIGHTS; li++) {
-            var frac = (li + 0.5) / N_LIGHTS;
+            frac = (li + 0.5) / N_LIGHTS;
             var wx = frac * W, wy = wireY + Math.sin(frac * Math.PI) * droop + 7;
             var col = LIGHT_COLS[li % LIGHT_COLS.length];
             var pulse = 0.55 + Math.sin(t * 2.4 + li * 0.95) * 0.42;

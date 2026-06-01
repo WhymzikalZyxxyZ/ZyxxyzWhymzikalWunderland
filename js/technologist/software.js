@@ -1,3 +1,4 @@
+/* global Sk, initSqlJs */
 // ════════════════════════════════════════════════════════════════════════
 // TABS
 // ════════════════════════════════════════════════════════════════════════
@@ -361,7 +362,7 @@ console.log("fib(50) =", memoFib(50));` },
       n = reset ? 0 : n + d;
       document.getElementById('count').textContent = n;
     }
-  <\/script>
+  </script>
 </body></html>` },
     { label:'Blank', code:'<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family:sans-serif; padding:20px; }\n  </style>\n</head>\n<body>\n  <!-- Write your HTML here -->\n</body>\n</html>' },
   ],

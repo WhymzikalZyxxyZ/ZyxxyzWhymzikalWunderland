@@ -123,16 +123,16 @@ function applyZoom() {
 //  HISTORY
 // ═══════════════════════════════════════════════════════════
 const MAX_HISTORY = 50;
-let history     = [];  // [{label, layerIdx, snap: ImageData[]}]
+let _history     = [];  // [{label, layerIdx, snap: ImageData[]}]
 let historyPos  = -1;  // points to current state
 
 function historySnapshot(label) {
     // Truncate future
-    history = history.slice(0, historyPos + 1);
+    _history = _history.slice(0, historyPos + 1);
     const snaps = layers.map(l => l.ctx.getImageData(0, 0, l.canvas.width, l.canvas.height));
-    history.push({ label, layerIdx: activeLayerIdx, snaps });
-    if (history.length > MAX_HISTORY) history.shift();
-    historyPos = history.length - 1;
+    _history.push({ label, layerIdx: activeLayerIdx, snaps });
+    if (_history.length > MAX_HISTORY) _history.shift();
+    historyPos = _history.length - 1;
     renderHistoryPanel();
     updateMenuStates();
 }
@@ -144,13 +144,13 @@ function undo() {
 }
 
 function redo() {
-    if (historyPos >= history.length - 1) return;
+    if (historyPos >= _history.length - 1) return;
     historyPos++;
     restoreHistory(historyPos);
 }
 
 function restoreHistory(idx) {
-    const entry = history[idx];
+    const entry = _history[idx];
     // Rebuild layers to match snapshot count
     while (layers.length < entry.snaps.length) layers.push(makeLayer('Layer ' + layers.length));
     while (layers.length > entry.snaps.length) layers.pop();
@@ -164,7 +164,7 @@ function restoreHistory(idx) {
 
 function updateMenuStates() {
     const canUndo = historyPos > 0;
-    const canRedo = historyPos < history.length - 1;
+    const canRedo = historyPos < _history.length - 1;
     document.getElementById('mi-undo').classList.toggle('disabled', !canUndo);
     document.getElementById('mi-redo').classList.toggle('disabled', !canRedo);
 }
@@ -741,9 +741,9 @@ document.getElementById('btn-layer-down').addEventListener('click', () => {
 //  HISTORY PANEL
 // ═══════════════════════════════════════════════════════════
 function renderHistoryPanel() {
-    const list = document.getElementById('history-list');
+    const list = document.getElementById('_history-list');
     list.innerHTML = '';
-    history.forEach((entry, i) => {
+    _history.forEach((entry, i) => {
         const div = document.createElement('div');
         div.className = 'hist-item' +
             (i === historyPos ? ' current' : '') +
@@ -1005,7 +1005,7 @@ function newCanvas() {
     activeLayerIdx = 0;
     layers[0].ctx.fillStyle = '#ffffff';
     layers[0].ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-    history = []; historyPos = -1;
+    _history = []; historyPos = -1;
     historySnapshot('New');
     composite(); renderLayerPanel(); renderHistoryPanel();
 }
@@ -1182,7 +1182,7 @@ function updateStatusBar(x, y) {
     try {
         const px = displayCtx.getImageData(cx, cy, 1, 1).data;
         document.getElementById('status-color').textContent = `rgb(${px[0]}, ${px[1]}, ${px[2]})`;
-    } catch (_) {}
+    } catch (_) { /* getImageData can fail on cross-origin canvas */ }
 }
 
 // ═══════════════════════════════════════════════════════════

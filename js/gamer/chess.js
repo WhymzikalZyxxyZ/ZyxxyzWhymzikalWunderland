@@ -1,3 +1,4 @@
+/* global getOrCreateUsername, CH_PAWN, CH_WHITE, CH_KNIGHT, CH_BISHOP, CH_ROOK, CH_QUEEN, CH_KING, CH_BLACK, newChessGame, updateStatus, applyMove, getChessAIMove, findKing, CH_MAX_SCORE */
 const myName   = (typeof getOrCreateUsername === 'function') ? getOrCreateUsername() : 'Guest';
         const FB_HS    = 'scores/chess';
         const CH_SIZE  = 480;

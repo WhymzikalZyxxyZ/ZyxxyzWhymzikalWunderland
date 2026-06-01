@@ -1,3 +1,4 @@
+/* global COLORS, COLS, BLOCK, ROWS, collides, clearLines, newPiece, MAX_SCORE, newBoard, rotateShape */
 // COLS, ROWS, BLOCK, COLORS, SHAPES, MAX_SCORE, newBoard, newPiece,
         // collides, rotateShape, clearLines all provided by /js/tetris-engine.js
 

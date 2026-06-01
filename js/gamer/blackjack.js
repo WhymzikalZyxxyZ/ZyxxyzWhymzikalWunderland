@@ -1,3 +1,4 @@
+/* global getOrCreateUsername, rankLabel, suitSymbol, newBJGame, bjDeal, bjHandValue, bjIsBlackjack, bjHit, bjStand, bjDouble */
 const myName = (typeof getOrCreateUsername === 'function') ? getOrCreateUsername() : 'Guest';
         const FB_HS  = 'scores/blackjack';
         document.getElementById('user-label').textContent = myName;

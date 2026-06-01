@@ -993,7 +993,7 @@ function loadMyList() {
             const s = STOCK_DB.find(d => d.symbol === sym);
             if (s) _myListAdd(s, false);
         });
-    } catch(e) {}
+    } catch(e) { /* ignore invalid saved data */ }
 }
 function saveMyList() {
     localStorage.setItem('lp_mylist', JSON.stringify(myList));

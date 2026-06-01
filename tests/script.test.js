@@ -4,11 +4,27 @@ let navigateToPage;
 
 beforeEach(() => {
     jest.resetModules();
-    global.window = { location: { href: '' } };
+    const mockEl = () => ({ appendChild: () => {}, setAttribute: () => {}, getAttribute: () => null });
+    global.document = {
+        head:            mockEl(),
+        title:           '',
+        documentElement: mockEl(),
+        querySelector:    () => null,
+        querySelectorAll: () => ({ forEach: () => {} }),
+        createElement:    () => mockEl(),
+        addEventListener: () => {},
+        getElementById:   () => null,
+    };
+    global.localStorage = { getItem: () => null, setItem: () => {} };
+    global.navigator    = {};
+    global.window       = { location: { href: '', pathname: '/' }, addEventListener: () => {} };
     navigateToPage = require('../js/script').navigateToPage;
 });
 
 afterEach(() => {
+    delete global.document;
+    delete global.localStorage;
+    delete global.navigator;
     delete global.window;
 });
 

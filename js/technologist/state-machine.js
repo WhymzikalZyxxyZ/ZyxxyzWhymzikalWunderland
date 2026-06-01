@@ -44,23 +44,6 @@
         draw();
     }
 
-    // ── Mode ─────────────────────────────────────────────────────────────────────
-    function setMode(m) {
-        mode = m; transFrom = null;
-        document.querySelectorAll('.btn[id^="mode-"]').forEach(b => b.classList.remove('active'));
-        document.getElementById('mode-' + m.replace('add','add-').replace(/([A-Z])/g,c=>'-'+c.toLowerCase()).replace('--','-')).classList.add('active');
-        document.getElementById('mode-lbl').textContent = 'Mode: ' + {addState:'Add State',addTrans:'Add Transition',select:'Select',run:'Run'}[m];
-        document.getElementById('panel-state').style.display  = m === 'addState' ? '' : 'none';
-        document.getElementById('panel-trans').style.display  = m === 'addTrans' ? '' : 'none';
-        document.getElementById('panel-run').style.display    = m === 'run'      ? '' : 'none';
-        document.getElementById('canvas-hint').textContent =
-            m==='addState' ? 'Click canvas to add a state' :
-            m==='addTrans' ? 'Click source state, then target state' :
-            m==='select'   ? 'Click to select · Drag to move' : 'Fire events to run the machine';
-        if (m === 'run') { buildEventList(); if (!currentState) resetRun(); }
-        draw();
-    }
-
     // ── Canvas interaction ───────────────────────────────────────────────────────
     function getPos(e) {
         const r = canvas.getBoundingClientRect();
@@ -251,7 +234,7 @@
             ctx.lineWidth   = isActive || isFromSel ? 2.5 : 1.5;
             ctx.beginPath(); ctx.arc(s.x, s.y, R, 0, Math.PI*2); ctx.stroke();
 
-            if (s.final) { ctx.strokeStyle = ctx.strokeStyle; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(s.x,s.y,R-5,0,Math.PI*2); ctx.stroke(); }
+            if (s.final) { ctx.lineWidth=1; ctx.beginPath(); ctx.arc(s.x,s.y,R-5,0,Math.PI*2); ctx.stroke(); }
 
             ctx.fillStyle  = isActive ? '#a5d6a7' : '#f4d0aa';
             ctx.font       = `bold ${Math.min(12,26/s.name.length*2)}px Courier New`;

@@ -189,7 +189,7 @@ const EXAMPLES = [
             <div class="cost-bar-label"><span>0</span><span>${totalCost}</span><span>100 (max)</span></div>
             <div class="cost-bar-bg"><div class="cost-bar-fill" style="width:${Math.min(100,totalCost)}%"></div></div>
         </div>
-        <div style="margin-top:8px;color:${totalCost<30?'#4caf50':totalCost<60?'#f4a261':'#ef5350'};font-family:\'Courier New\',monospace;font-size:13px;font-weight:bold;">${totalCost < 30 ? 'Low cost query' : totalCost < 60 ? 'Moderate cost — review joins' : 'High cost — optimisation needed'}</div>`);
+        <div style="margin-top:8px;color:${totalCost<30?'#4caf50':totalCost<60?'#f4a261':'#ef5350'};font-family:'Courier New',monospace;font-size:13px;font-weight:bold;">${totalCost < 30 ? 'Low cost query' : totalCost < 60 ? 'Moderate cost — review joins' : 'High cost — optimisation needed'}</div>`);
 
         // Warnings
         const warnings = [];

@@ -259,7 +259,7 @@ function buildCmdTable(containerId, rows) {
 // ════════════════════════════════════════════════════════════════════════
 let currentShell = 'bash';
 let cwd          = '/home/zyxxyz';
-let history      = [];
+let _history      = [];
 let histIdx      = -1;
 
 // Virtual filesystem
@@ -342,7 +342,7 @@ function resolveCmd(raw) {
 function runCommand(input) {
     const trimmed = input.trim();
     if (!trimmed) return;
-    history.unshift(trimmed);
+    _history.unshift(trimmed);
     histIdx = -1;
 
     printLine(getPrompt() + trimmed, 'prompt');
@@ -370,7 +370,7 @@ function runCommand(input) {
         case 'uptime':  printLine(' 11:42:07 up 3 days, 14:21,  1 user,  load average: 0.08, 0.12, 0.10'); break;
         case 'df':      cmdDf();                    break;
         case 'free':    cmdFree();                  break;
-        case 'history': history.slice(0,20).forEach((h,i)=>printLine('  '+(i+1).toString().padStart(3)+' '+h)); break;
+        case 'history': _history.slice(0,20).forEach((h,i)=>printLine('  '+(i+1).toString().padStart(3)+' '+h)); break;
         default:
             printLine(currentShell === 'ps'
                 ? "'" + rawCmd + "' is not recognized as a cmdlet, function, script file, or operable program."
@@ -526,11 +526,11 @@ function handleTermKey(e) {
         runCommand(val);
     } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        if (histIdx < history.length - 1) { histIdx++; input.value = history[histIdx]; }
+        if (histIdx < _history.length - 1) { histIdx++; input.value = _history[histIdx]; }
         input.setSelectionRange(input.value.length, input.value.length);
     } else if (e.key === 'ArrowDown') {
         e.preventDefault();
-        if (histIdx > 0) { histIdx--; input.value = history[histIdx]; }
+        if (histIdx > 0) { histIdx--; input.value = _history[histIdx]; }
         else if (histIdx === 0) { histIdx = -1; input.value = ''; }
         input.setSelectionRange(input.value.length, input.value.length);
     } else if (e.key === 'Tab') {
@@ -569,7 +569,7 @@ function changeShell() {
 
 function resetTerminal() {
     cwd = currentShell === 'ps' ? 'C:\\Users\\zyxxyz' : '/home/zyxxyz';
-    history = [];
+    _history = [];
     histIdx = -1;
     clearTerminal();
     updatePromptLabel();

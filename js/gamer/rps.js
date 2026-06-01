@@ -1,7 +1,8 @@
+/* global getOrCreateUsername, getComputerChoice, rpsResult, RPS_CHOICES */
 const EMOJI  = { rock:'🪨', paper:'📄', scissors:'✂️' };
         const FB_PATH = 'scores/rps';
         const myName  = (typeof getOrCreateUsername === 'function') ? getOrCreateUsername() : 'Guest';
-        let history  = [];
+        let _history  = [];
         let wins=0, losses=0, draws=0, streak=0, bestStreak=0;
         let difficulty = 3;
         let busy = false;
@@ -26,12 +27,12 @@ const EMOJI  = { rock:'🪨', paper:'📄', scissors:'✂️' };
             if (busy) return;
             busy = true;
             setChoiceBtns(true);
-            const cpuChoice = getComputerChoice(difficulty, history);
+            const cpuChoice = getComputerChoice(difficulty, _history);
             const result    = rpsResult(playerChoice, cpuChoice);
             document.getElementById('your-choice').textContent = EMOJI[playerChoice];
             document.getElementById('cpu-choice').textContent  = EMOJI[cpuChoice];
-            history.push(playerChoice);
-            if (history.length > 20) history.shift();
+            _history.push(playerChoice);
+            if (_history.length > 20) _history.shift();
 
             if (result === 'win')  { wins++;   streak++; if (streak > bestStreak) bestStreak = streak; }
             else if (result === 'lose') { losses++; streak = 0; }
