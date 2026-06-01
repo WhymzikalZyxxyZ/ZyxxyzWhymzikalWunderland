@@ -43,15 +43,6 @@ jobs:
         run: npm ci
         working-directory: anonymail/worker
 
-      - name: Debug worker environment
-        run: |
-          echo "=== CWD ===" && pwd
-          echo "=== Files ===" && ls -la
-          echo "=== Config ===" && cat wrangler.jsonc
-          echo "=== Wrangler binary ===" && ls node_modules/.bin/wrangler && node_modules/.bin/wrangler --version
-          echo "=== Assets dir ===" && ls ../public
-        working-directory: anonymail/worker
-
       - name: Deploy Anonymail Worker to Cloudflare
         run: node_modules/.bin/wrangler deploy --yes
         working-directory: anonymail/worker
