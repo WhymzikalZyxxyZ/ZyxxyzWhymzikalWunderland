@@ -1,0 +1,25 @@
+name                = "anonymail"
+main                = "src/index.js"
+compatibility_date  = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "./public"
+
+[[durable_objects.bindings]]
+name       = "MAILBOX"
+class_name = "MailboxDO"
+
+[[durable_objects.bindings]]
+name       = "REGISTRY"
+class_name = "RegistryDO"
+
+[[migrations]]
+tag                 = "v1"
+new_sqlite_classes  = ["MailboxDO", "RegistryDO"]
+
+[vars]
+DOMAIN          = "mail.zyxwonderland.xyz"
+TTL_MS          = "3600000"
+MAX_MAILBOXES   = "500"
+DEV_RATE_BYPASS = "true"
