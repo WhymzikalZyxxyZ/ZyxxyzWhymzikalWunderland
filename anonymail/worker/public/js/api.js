@@ -44,8 +44,18 @@ export function clearAllSessions() {
 }
 
 // ── HTTP helpers ──────────────────────────────────────────────────────────────
+let _onUnauthorized = null;
+export function setOnUnauthorized(fn) { _onUnauthorized = fn; }
+
 function authHeaders(token, extra = {}) {
     return { Authorization: `Bearer ${token}`, ...extra };
+}
+
+function throwApiError(msg, status) {
+    const e = new Error(msg);
+    e.status = status;
+    if (status === 401 && _onUnauthorized) _onUnauthorized();
+    throw e;
 }
 
 async function request(method, path, token, body, isForm = false) {
@@ -58,8 +68,8 @@ async function request(method, path, token, body, isForm = false) {
     if (body) opts.body = isForm ? body : JSON.stringify(body);
     const res = await fetch(path, opts);
     if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: res.statusText }));
-        throw new Error(err.error || res.statusText);
+        const { error } = await res.json().catch(() => ({ error: res.statusText }));
+        throwApiError(error || res.statusText, res.status);
     }
     return res.json();
 }
@@ -107,7 +117,10 @@ export async function saveDraft(token, formData) {
     const res = await fetch('/api/draft', {
         method: 'POST', headers: authHeaders(token), body: formData,
     });
-    if (!res.ok) throw new Error((await res.json()).error);
+    if (!res.ok) {
+        const { error } = await res.json().catch(() => ({ error: res.statusText }));
+        throwApiError(error || res.statusText, res.status);
+    }
     return res.json();
 }
 
@@ -115,7 +128,10 @@ export async function updateDraft(token, id, formData) {
     const res = await fetch(`/api/draft/${id}`, {
         method: 'PUT', headers: authHeaders(token), body: formData,
     });
-    if (!res.ok) throw new Error((await res.json()).error);
+    if (!res.ok) {
+        const { error } = await res.json().catch(() => ({ error: res.statusText }));
+        throwApiError(error || res.statusText, res.status);
+    }
     return res.json();
 }
 
@@ -124,7 +140,10 @@ export async function sendEmail(token, formData) {
     const res = await fetch('/api/send', {
         method: 'POST', headers: authHeaders(token), body: formData,
     });
-    if (!res.ok) throw new Error((await res.json()).error);
+    if (!res.ok) {
+        const { error } = await res.json().catch(() => ({ error: res.statusText }));
+        throwApiError(error || res.statusText, res.status);
+    }
     return res.json();
 }
 
