@@ -1,10 +1,57 @@
 .vs/
 
-# Binary working files
+# Binary working files — image editors
 *.pdn
 *.pclx
 *.psd
 *.ai
+*.xcf
+*.sketch
+
+# Archives & compressed files
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.tar.bz2
+*.rar
+*.7z
+*.gz
+*.bz2
+
+# Video & audio
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.wmv
+*.flv
+*.webm
+*.mp3
+*.wav
+*.ogg
+*.flac
+*.aac
+*.m4a
+
+# Compiled binaries & libraries
+*.exe
+*.dll
+*.so
+*.dylib
+*.bin
+*.out
+*.class
+*.pyc
+
+# Office & document formats
+*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
 
 # OS files
 .DS_Store

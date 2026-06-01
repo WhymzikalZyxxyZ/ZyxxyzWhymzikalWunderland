@@ -852,6 +852,13 @@ function showClient() {
     initNotifButton();
 }
 
+function handleSessionExpired() {
+    API.setOnUnauthorized(null); // prevent double-trigger
+    API.clearAllSessions();
+    toast('Session expired — generating a new address…', 'error');
+    setTimeout(() => location.reload(), 1500);
+}
+
 async function init() {
     const splash = document.getElementById('loading-splash');
     startPhrases('splash-phrase', 650);
@@ -905,16 +912,15 @@ async function init() {
             API.addSession({ address, token, expiresAt });
         }
 
-        stopPhrases();
-        splash.classList.add('splash-out');
-        setTimeout(() => { splash.hidden = true; }, 400);
+        // Session is confirmed valid — enable 401 recovery for active use
+        API.setOnUnauthorized(handleSessionExpired);
         showClient();
     } catch (err) {
-        stopPhrases();
-        splash.classList.add('splash-out');
-        setTimeout(() => { splash.hidden = true; }, 400);
         console.error('init() failed:', err);
-        toast('Could not create mailbox: ' + err.message, 'error');
+        toast('Could not start: ' + err.message, 'error');
+    } finally {
+        stopPhrases();
+        if (splash) splash.style.display = 'none';
     }
 }
 
