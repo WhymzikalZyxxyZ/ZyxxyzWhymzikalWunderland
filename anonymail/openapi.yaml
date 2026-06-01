@@ -1,0 +1,603 @@
+openapi: 3.1.0
+
+info:
+  title: Anonymail API
+  version: 1.0.0
+  description: |
+    REST + WebSocket API for Anonymail — a temporary, encrypted, in-memory email service.
+
+    All email data is held in Cloudflare Durable Object memory and never written to disk.
+    Mailboxes expire after 1 hour by default (configurable up to 24 hours via the extend endpoint).
+
+    ## Authentication
+    All endpoints except `POST /api/mailbox` require a Bearer token obtained from mailbox creation.
+    Tokens are 256-bit random hex strings. Never place a token in a URL — always use the
+    `Authorization` header.
+
+    ## Rate limits
+    - Global: 120 requests / minute per IP
+    - Mailbox creation: 10 requests / minute per IP
+
+servers:
+  - url: https://mail.zyxwonderland.xyz
+    description: Production (Cloudflare Worker)
+  - url: http://localhost:8787
+    description: Local development (wrangler dev)
+
+tags:
+  - name: Mailbox
+    description: Create and manage temporary mailboxes
+  - name: Email
+    description: Read and delete emails
+  - name: Compose
+    description: Draft and send outbound email
+  - name: Utility
+    description: QR code and health endpoints
+
+# ── Security ──────────────────────────────────────────────────────────────────
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: hex64
+      description: 256-bit random hex token returned by POST /api/mailbox
+
+  schemas:
+    MailboxInfo:
+      type: object
+      required: [address, expiresAt]
+      properties:
+        address:
+          type: string
+          example: quirky-tangerine-fox@mail.zyxwonderland.xyz
+        expiresAt:
+          type: integer
+          description: Unix timestamp (ms) when the mailbox expires
+          example: 1748800000000
+
+    MailboxCreated:
+      allOf:
+        - $ref: '#/components/schemas/MailboxInfo'
+        - type: object
+          required: [token]
+          properties:
+            token:
+              type: string
+              description: 256-bit hex bearer token — store securely, never share
+              example: a3f9c2...64 hex chars
+
+    EmailSummary:
+      type: object
+      required: [id, from, subject, receivedAt, hasAttachments]
+      properties:
+        id:
+          type: string
+          example: e1a2b3c4
+        from:
+          type: string
+          example: sender@example.com
+        subject:
+          type: string
+          example: Hello from the internet
+        receivedAt:
+          type: integer
+          description: Unix timestamp (ms)
+          example: 1748796400000
+        hasAttachments:
+          type: boolean
+
+    EmailFull:
+      allOf:
+        - $ref: '#/components/schemas/EmailSummary'
+        - type: object
+          properties:
+            to:
+              type: string
+            cc:
+              type: string
+            body:
+              type: string
+              description: Plain-text body (decrypted)
+            bodyHtml:
+              type: string
+              nullable: true
+              description: HTML body (decrypted), null if not present
+            attachments:
+              type: array
+              items:
+                $ref: '#/components/schemas/AttachmentMeta'
+
+    AttachmentMeta:
+      type: object
+      required: [id, filename, contentType, size]
+      properties:
+        id:
+          type: string
+        filename:
+          type: string
+        contentType:
+          type: string
+        size:
+          type: integer
+          description: Size in bytes
+
+    DraftSaved:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          example: Invalid or expired session
+
+    Health:
+      type: object
+      required: [status, version, timestamp]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+        version:
+          type: string
+          example: 1.0.0
+        timestamp:
+          type: integer
+          description: Unix timestamp (ms) of the response
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid bearer token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Invalid or expired session
+
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Too many requests — slow down
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+# ── Paths ──────────────────────────────────────────────────────────────────────
+paths:
+
+  /api/mailbox:
+    post:
+      tags: [Mailbox]
+      summary: Create a new mailbox
+      description: |
+        Generates a random email address and a 256-bit bearer token.
+        The address is live immediately. No authentication required.
+      operationId: createMailbox
+      responses:
+        '200':
+          description: Mailbox created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailboxCreated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+    get:
+      tags: [Mailbox]
+      summary: Get mailbox info
+      description: Returns the current address and expiry timestamp.
+      operationId: getMailboxInfo
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Mailbox info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailboxInfo'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    delete:
+      tags: [Mailbox]
+      summary: Burn mailbox immediately
+      description: |
+        Destroys the mailbox, all emails, and all WebSocket connections immediately.
+        The token is invalidated. This action is irreversible.
+      operationId: burnMailbox
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Mailbox destroyed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/mailbox/extend:
+    post:
+      tags: [Mailbox]
+      summary: Extend mailbox lifetime
+      operationId: extendMailbox
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                extra:
+                  type: integer
+                  description: Milliseconds to add to the current expiry (max total 24h)
+                  default: 3600000
+                  example: 3600000
+      responses:
+        '200':
+          description: Expiry extended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailboxInfo'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/qr:
+    get:
+      tags: [Utility]
+      summary: Get QR code for the mailbox address
+      operationId: getQr
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: QR code as data URI
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [dataUrl]
+                properties:
+                  dataUrl:
+                    type: string
+                    description: PNG data URI of the QR code
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /health:
+    get:
+      tags: [Utility]
+      summary: Worker health check
+      operationId: getHealth
+      description: Returns operational status and version. No authentication required.
+      responses:
+        '200':
+          description: Worker is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+
+  /api/box/{box}:
+    get:
+      tags: [Email]
+      summary: List emails in a mailbox
+      operationId: listBox
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: box
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [inbox, drafts, sent]
+      responses:
+        '200':
+          description: List of email summaries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  emails:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EmailSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/box/{box}/{id}:
+    get:
+      tags: [Email]
+      summary: Fetch a single email
+      operationId: getEmail
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: box
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [inbox, drafts, sent]
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Full email with decrypted body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailFull'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Email]
+      summary: Delete an email
+      operationId: deleteEmail
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: box
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [inbox, drafts, sent]
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Email deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/box/{box}/{emailId}/attachment/{attachId}:
+    get:
+      tags: [Email]
+      summary: Download an attachment
+      description: |
+        The token is passed as a query parameter `_t` (first 8 chars only) rather than
+        a header because this URL is opened directly by the browser (anchor tag download).
+        The short prefix is not the full token and cannot be used for authentication.
+      operationId: getAttachment
+      parameters:
+        - name: box
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [inbox, drafts, sent]
+        - name: emailId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: attachId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: _t
+          in: query
+          required: true
+          description: First 8 characters of the bearer token (used for routing only, not full auth)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Attachment binary
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/draft:
+    post:
+      tags: [Compose]
+      summary: Save a new draft
+      operationId: saveDraft
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                to:
+                  type: string
+                cc:
+                  type: string
+                subject:
+                  type: string
+                body:
+                  type: string
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200':
+          description: Draft saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftSaved'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/draft/{id}:
+    put:
+      tags: [Compose]
+      summary: Update an existing draft
+      operationId: updateDraft
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                to:
+                  type: string
+                cc:
+                  type: string
+                subject:
+                  type: string
+                body:
+                  type: string
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200':
+          description: Draft updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftSaved'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/send:
+    post:
+      tags: [Compose]
+      summary: Send an email
+      operationId: sendEmail
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [to, subject]
+              properties:
+                to:
+                  type: string
+                  example: recipient@example.com
+                cc:
+                  type: string
+                subject:
+                  type: string
+                body:
+                  type: string
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200':
+          description: Email sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /ws:
+    get:
+      tags: [Mailbox]
+      summary: Open a WebSocket connection for real-time events
+      description: |
+        Upgrade to WebSocket. Pass the email address as `?addr=` query param.
+
+        After the connection opens, send `{"type":"auth","token":"<your token>"}` as
+        the first message. The server will reject unauthenticated connections.
+
+        **Events pushed by the server:**
+        - `{"type":"new_email","box":"inbox","id":"..."}` — new email arrived
+        - `{"type":"expired"}` — mailbox TTL reached, connection will close with code 1000
+        - `{"type":"pong"}` — response to a client ping
+
+        **Client keep-alive:** send `{"type":"ping"}` every 25 seconds to prevent
+        proxy timeouts.
+      parameters:
+        - name: addr
+          in: query
+          required: true
+          description: The email address of the mailbox to subscribe to
+          schema:
+            type: string
+            example: quirky-tangerine-fox@mail.zyxwonderland.xyz
+      responses:
+        '101':
+          description: Switching Protocols — WebSocket connection established
+        '400':
+          description: Missing or invalid address parameter

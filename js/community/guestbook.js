@@ -1,8 +1,9 @@
 'use strict';
-/* global isAdmin, ADMIN_KEY, verifyPin, rateGuard, showToast, esc, safeUrl, fmtDate */
+/* global isAdmin, ADMIN_KEY, verifyPin, rateGuard, showToast, esc, safeUrl, fmtDate, fbRead, fbWrite, firebaseBreaker, EventBus */
 
-// esc(), fmtDate(), showToast(), withFirebase(),
-// verifyPin(), isAdmin(), rateGuard(), safeUrl() from /js/utils.js
+// esc(), fmtDate(), showToast(), verifyPin(), isAdmin(), rateGuard(), safeUrl() — /js/utils.js
+// fbRead(), fbWrite(), firebaseBreaker — /js/circuit-breaker.js
+// EventBus — /js/event-bus.js
 
 const MAX_MSG     = 400;
 const MAX_ENTRIES = 200;
@@ -63,19 +64,23 @@ function submitEntry() {
     const btn = document.getElementById('gb-submit');
     btn.disabled = true; btn.textContent = 'Signing…';
 
-    firebase.database().ref('guestbook/entries').push({
+    fbWrite(() => firebase.database().ref('guestbook/entries').push({
         name: name.slice(0, 40),
         url:  url.slice(0, 100),
         msg:  msg.slice(0, MAX_MSG),
         ts:   Date.now(),
-    }).then(() => {
+    })).then(() => {
         document.getElementById('gb-name').value = '';
         document.getElementById('gb-url').value  = '';
         document.getElementById('gb-msg').value  = '';
         document.getElementById('gb-chars').textContent = '0';
         showToast('Entry added — thanks for signing!', 'success');
-    }).catch(() => {
-        showToast('Something went wrong. Please try again.', 'error');
+        EventBus.emit('guestbook.signed', { name: name.slice(0, 40), ts: Date.now() });
+    }).catch(e => {
+        const msg2 = e.name === 'CircuitBreakerOpenError'
+            ? 'Firebase is unavailable — try again in a moment.'
+            : 'Something went wrong. Please try again.';
+        showToast(msg2, 'error');
     }).finally(() => {
         btn.disabled = false; btn.textContent = 'Sign the book →';
     });
@@ -125,8 +130,11 @@ function renderEntries() {
 
 function deleteEntry(key) {
     if (!isAdmin() || !confirm('Delete this entry?')) return;
-    firebase.database().ref('guestbook/entries/' + key).remove()
-        .then(() => showToast('Entry deleted.', 'success'))
+    fbWrite(() => firebase.database().ref('guestbook/entries/' + key).remove())
+        .then(() => {
+            showToast('Entry deleted.', 'success');
+            EventBus.emit('guestbook.deleted', { key: key, ts: Date.now() });
+        })
         .catch(() => showToast('Delete failed.', 'error'));
 }
 
@@ -136,14 +144,27 @@ function loadEntries() {
         document.getElementById('gb-feed').innerHTML = '<div class="gb-empty">Not connected.</div>';
         return;
     }
-    firebase.database().ref('guestbook/entries')
+    fbRead(() => firebase.database().ref('guestbook/entries')
         .orderByChild('ts')
         .limitToLast(MAX_ENTRIES)
-        .on('value', snap => {
-            allEntries = [];
-            snap.forEach(c => allEntries.unshift({ key: c.key, ...c.val() }));
-            renderEntries();
-        });
+        .once('value')
+    ).then(snap => {
+        allEntries = [];
+        snap.forEach(c => allEntries.unshift({ key: c.key, ...c.val() }));
+        renderEntries();
+        // After initial load, attach live listener for updates
+        firebase.database().ref('guestbook/entries')
+            .orderByChild('ts')
+            .limitToLast(MAX_ENTRIES)
+            .on('value', s => {
+                allEntries = [];
+                s.forEach(c => allEntries.unshift({ key: c.key, ...c.val() }));
+                renderEntries();
+            });
+    }).catch(() => {
+        document.getElementById('gb-feed').innerHTML =
+            '<div class="gb-empty">Could not load entries — Firebase may be unavailable. Refresh to try again.</div>';
+    });
 }
 
 loadEntries();

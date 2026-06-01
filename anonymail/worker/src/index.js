@@ -87,118 +87,160 @@ async function fwdToMailbox(doStub, request, newPath, opts = {}) {
     return doStub.fetch(fwdReq);
 }
 
+// ── Observability ─────────────────────────────────────────────────────────────
+const WORKER_VERSION = '1.0.0';
+
+function newRequestId() {
+    // 8-byte hex request ID for log correlation
+    return randomHex(8);
+}
+
+function log(level, requestId, event, fields = {}) {
+    console.log(JSON.stringify({ level, requestId, event, ts: Date.now(), ...fields }));
+}
+
+// ── Core request handler (extracted for testability and error wrapping) ───────
+async function _handleRequest(request, env, url, path, method, ip, requestId) {
+    // Global rate limit
+    if (!_ipAllow(ip)) {
+        log('warn', requestId, 'rate_limit.global', { ip: ip.slice(0, 8) + '…' });
+        return addSecHeaders(err('Too many requests — slow down', 429));
+    }
+
+    // ── Health check ──────────────────────────────────────────────────────────
+    if (path === '/health' && method === 'GET') {
+        let mailboxStats = {};
+        try {
+            const reg = env.REGISTRY.get(env.REGISTRY.idFromName('registry'));
+            const res = await reg.fetch(new Request('http://do/stats'));
+            if (res.ok) mailboxStats = await res.json();
+        } catch (_) { /* registry unavailable — still return ok */ }
+        return addSecHeaders(json({
+            status:    'ok',
+            version:   WORKER_VERSION,
+            timestamp: Date.now(),
+            mailboxes: mailboxStats,
+        }));
+    }
+
+    // ── WebSocket upgrade ─────────────────────────────────────────────────────
+    // Route by ?addr= so the token is never exposed in the URL.
+    if (path === '/ws' && request.headers.get('Upgrade') === 'websocket') {
+        const addr = url.searchParams.get('addr');
+        if (!addr || addr.length > 320) return addSecHeaders(err('Missing address', 400));
+        const mb = env.MAILBOX.get(env.MAILBOX.idFromName(addr.toLowerCase()));
+        return mb.fetch(request);
+    }
+
+    // ── API routes ────────────────────────────────────────────────────────────
+    if (!path.startsWith('/api/')) {
+        return addSecHeaders(new Response('Not Found', { status: 404 }));
+    }
+
+    const apiPath = path.slice(4); // strip /api
+
+    // POST /api/mailbox — create a new mailbox (unauthenticated)
+    if (apiPath === '/mailbox' && method === 'POST') {
+        if (!_ipAllowCreate(ip)) {
+            log('warn', requestId, 'rate_limit.create', { ip: ip.slice(0, 8) + '…' });
+            return addSecHeaders(err('Too many mailbox requests — slow down', 429));
+        }
+
+        const domain = env.DOMAIN  || 'mail.zyxwonderland.xyz';
+        const ttlMs  = Math.min(parseInt(env.TTL_MS) || 3_600_000, 86_400_000);
+        const address = generateAddress(domain);
+        const token   = randomHex(32);
+
+        const mb  = env.MAILBOX.get(env.MAILBOX.idFromName(address));
+        const res = await mb.fetch(new Request('http://do/init', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ address, token, ttlMs }),
+        }));
+        const { expiresAt } = await res.json();
+
+        const reg = env.REGISTRY.get(env.REGISTRY.idFromName('registry'));
+        const regRes = await reg.fetch(new Request('http://do/register', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ token, address, expiresAt }),
+        }));
+
+        if (!regRes.ok) {
+            const { error } = await regRes.json().catch(() => ({ error: 'capacity' }));
+            log('warn', requestId, 'mailbox.create.rejected', { reason: error });
+            return addSecHeaders(err(error || 'Mailbox capacity reached', 503));
+        }
+
+        log('info', requestId, 'mailbox.created', { address, expiresAt });
+        return addSecHeaders(json({ address, token, expiresAt }));
+    }
+
+    // All remaining routes require auth
+    const token = bearer(request);
+    const mb    = await resolveMailbox(env, token);
+    if (!mb) return addSecHeaders(err('Invalid or expired session', 401));
+
+    if (apiPath === '/mailbox' && method === 'GET')
+        return addSecHeaders(await fwdToMailbox(mb, request, '/info'));
+
+    if (apiPath === '/mailbox/extend' && method === 'POST')
+        return addSecHeaders(await fwdToMailbox(mb, request, '/extend'));
+
+    if (apiPath === '/mailbox' && method === 'DELETE')
+        return addSecHeaders(await fwdToMailbox(mb, request, '/burn'));
+
+    if (apiPath === '/qr' && method === 'GET')
+        return addSecHeaders(await fwdToMailbox(mb, request, '/qr'));
+
+    if (apiPath.startsWith('/box/'))
+        return addSecHeaders(await fwdToMailbox(mb, request, apiPath.slice(4)));
+
+    if (apiPath === '/draft' && method === 'POST')
+        return addSecHeaders(await fwdToMailbox(mb, request, '/draft'));
+
+    if (apiPath.startsWith('/draft/') && method === 'PUT')
+        return addSecHeaders(await fwdToMailbox(mb, request, apiPath.slice(4)));
+
+    if (apiPath === '/send' && method === 'POST')
+        return addSecHeaders(await fwdToMailbox(mb, request, '/send'));
+
+    return addSecHeaders(err('Not Found', 404));
+}
+
 // ── Main Worker ───────────────────────────────────────────────────────────────
 export default {
     // ── HTTP handler ─────────────────────────────────────────────────────────────
     async fetch(request, env) {
-        const url    = new URL(request.url);
-        const path   = url.pathname;
-        const method = request.method;
-        const ip     = request.headers.get('CF-Connecting-IP') || '0.0.0.0';
+        const requestId = newRequestId();
+        const start     = Date.now();
+        const url       = new URL(request.url);
+        const path      = url.pathname;
+        const method    = request.method;
+        const ip        = request.headers.get('CF-Connecting-IP') || '0.0.0.0';
 
-        // Global rate limit
-        if (!_ipAllow(ip)) {
-            return addSecHeaders(err('Too many requests — slow down', 429));
+        log('info', requestId, 'request.start', { method, path, ip: ip.slice(0, 8) + '…' });
+
+        let response;
+        try {
+            response = await _handleRequest(request, env, url, path, method, ip, requestId);
+        } catch (e) {
+            log('error', requestId, 'request.error', { error: e.message, stack: e.stack });
+            response = addSecHeaders(err('Internal server error', 500));
         }
 
-        // ── WebSocket upgrade ─────────────────────────────────────────────────
-        // Route by ?addr= (email address, not sensitive) so the token is never
-        // exposed in the URL. Auth still happens via the first WS message in the DO.
-        if (path === '/ws' && request.headers.get('Upgrade') === 'websocket') {
-            const addr = url.searchParams.get('addr');
-            if (!addr || addr.length > 320) return addSecHeaders(err('Missing address', 400));
-            const mb = env.MAILBOX.get(env.MAILBOX.idFromName(addr.toLowerCase()));
-            return mb.fetch(request);
-        }
+        const duration = Date.now() - start;
+        log('info', requestId, 'request.end', { status: response.status, duration });
 
-        // ── API routes ────────────────────────────────────────────────────────
-        if (!path.startsWith('/api/')) {
-            // Static assets are served by the [assets] binding automatically;
-            // anything that falls through here is a 404.
-            return addSecHeaders(new Response('Not Found', { status: 404 }));
-        }
-
-        const apiPath = path.slice(4); // strip /api
-
-        // POST /api/mailbox — create a new mailbox (unauthenticated)
-        if (apiPath === '/mailbox' && method === 'POST') {
-            if (!_ipAllowCreate(ip)) return addSecHeaders(err('Too many mailbox requests — slow down', 429));
-
-            const domain  = env.DOMAIN    || 'mail.zyxwonderland.xyz';
-            const ttlMs   = Math.min(parseInt(env.TTL_MS)      || 3_600_000, 86_400_000);
-            const maxMb   = parseInt(env.MAX_MAILBOXES) || 0;
-
-            // Check capacity via registry size (best-effort — registry is in-memory)
-            const address = generateAddress(domain);
-            const token   = randomHex(32);   // 256-bit bearer token
-
-            const mb  = env.MAILBOX.get(env.MAILBOX.idFromName(address));
-            const res = await mb.fetch(new Request('http://do/init', {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify({ address, token, ttlMs }),
-            }));
-            const { expiresAt } = await res.json();
-
-            // Register token in the registry
-            const reg = env.REGISTRY.get(env.REGISTRY.idFromName('registry'));
-            await reg.fetch(new Request('http://do/register', {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify({ token, address, expiresAt }),
-            }));
-
-            return addSecHeaders(json({ address, token, expiresAt }));
-        }
-
-        // All remaining routes require auth
-        const token = bearer(request);
-        const mb    = await resolveMailbox(env, token);
-        if (!mb) return addSecHeaders(err('Invalid or expired session', 401));
-
-        // GET /api/mailbox
-        if (apiPath === '/mailbox' && method === 'GET') {
-            return addSecHeaders(await fwdToMailbox(mb, request, '/info'));
-        }
-
-        // POST /api/mailbox/extend
-        if (apiPath === '/mailbox/extend' && method === 'POST') {
-            return addSecHeaders(await fwdToMailbox(mb, request, '/extend'));
-        }
-
-        // DELETE /api/mailbox
-        if (apiPath === '/mailbox' && method === 'DELETE') {
-            return addSecHeaders(await fwdToMailbox(mb, request, '/burn'));
-        }
-
-        // GET /api/qr
-        if (apiPath === '/qr' && method === 'GET') {
-            return addSecHeaders(await fwdToMailbox(mb, request, '/qr'));
-        }
-
-        // /api/box/* routes
-        if (apiPath.startsWith('/box/')) {
-            const sub = apiPath.slice(4); // /box/...
-            return addSecHeaders(await fwdToMailbox(mb, request, sub));
-        }
-
-        // /api/draft and /api/draft/:id
-        if (apiPath === '/draft' && method === 'POST') {
-            return addSecHeaders(await fwdToMailbox(mb, request, '/draft'));
-        }
-        if (apiPath.startsWith('/draft/') && method === 'PUT') {
-            return addSecHeaders(await fwdToMailbox(mb, request, apiPath.slice(4)));
-        }
-
-        // POST /api/send
-        if (apiPath === '/send' && method === 'POST') {
-            return addSecHeaders(await fwdToMailbox(mb, request, '/send'));
-        }
-
-        return addSecHeaders(err('Not Found', 404));
+        // Attach request ID and timing to every response for client-side debugging
+        const r = new Response(response.body, response);
+        r.headers.set('X-Request-Id', requestId);
+        r.headers.set('X-Response-Time', `${duration}ms`);
+        return r;
     },
 
     // ── Inbound email handler (Cloudflare Email Routing) ─────────────────────
+
     async email(message, env) {
         const to = (message.to || '').toLowerCase();
 
