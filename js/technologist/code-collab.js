@@ -87,7 +87,7 @@
         edB.value = INITIAL_DOC;
         document.getElementById('mergedDoc').textContent = INITIAL_DOC;
 
-        function handleChange(actor, editor, otherEditor, statusId, otherStatusId) {
+        function handleChange(actor, editor, otherEditor, statusId, _otherStatusId) {
             const delay = parseInt(document.getElementById('syncDelay').value) || 400;
             const newText = editor.value;
             const op = diffStrings(actor === 'alice' ? aliceVersion : bobVersion, newText);

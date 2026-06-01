@@ -272,7 +272,7 @@
         e.preventDefault();
 
         const editableRows = getEditableRows();
-        const nonReadonly  = editableRows.filter(r => !r.readonly && r.type !== 'action');
+        const nonReadonly  = editableRows.filter(r => !r.readonly && r.type !== 'action'); // eslint-disable-line no-unused-vars
 
         switch (e.key) {
             case 'ArrowUp':

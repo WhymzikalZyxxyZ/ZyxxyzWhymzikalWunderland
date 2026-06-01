@@ -442,7 +442,6 @@ function generatePlan() {
 
     // Weekly schedule
     const template = (PLAN_TEMPLATES[goal][days] || PLAN_TEMPLATES[goal][3]);
-    const restDays = 7 - days;
     const weekGrid = document.getElementById('week-grid');
     weekGrid.innerHTML = '';
 

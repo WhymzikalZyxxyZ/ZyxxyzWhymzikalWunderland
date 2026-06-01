@@ -485,7 +485,7 @@ function cmdPs() {
     ].forEach(r => printLine(r[0].padEnd(5) + ' ' + r[1].padEnd(13) + r[2] + ' ' + r[3]));
 }
 
-function cmdDf(args) {
+function cmdDf(_args) {
     printLine('Filesystem      Size  Used Avail Use% Mounted on');
     printLine('/dev/sda1        50G   18G   30G  38% /');
     printLine('tmpfs           3.9G     0  3.9G   0% /dev/shm');

@@ -524,7 +524,6 @@ Product,78,92,8.3,5.9,88,14`,
             ctx.strokeStyle='rgba(244,162,97,0.5)'; ctx.lineWidth=1.5; ctx.setLineDash([5,4]);
             ctx.beginPath();
             for(let i=0;i<n;i++){
-                const fx=px(txs[i]), fy=py(txs[i]===txs[i]?yVals[i]:0);
                 const lx=px(txs[i]), ly=py(reg.slope*i+reg.intercept);
                 if(i===0) ctx.moveTo(lx,ly); else ctx.lineTo(lx,ly);
             }

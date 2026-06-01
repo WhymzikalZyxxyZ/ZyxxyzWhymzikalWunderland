@@ -79,7 +79,7 @@
         requestAnimationFrame(frame);
     }
 
-    function drawBackground(W, H, t) {
+    function drawBackground(W, H, _t) {
         var sky = ctx.createLinearGradient(0, 0, 0, H * 0.68);
         sky.addColorStop(0, '#180530'); sky.addColorStop(0.28, '#2e0a55');
         sky.addColorStop(0.55, '#6b1848'); sky.addColorStop(0.78, '#b84020'); sky.addColorStop(1, '#e8710a');

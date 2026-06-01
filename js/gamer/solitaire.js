@@ -111,7 +111,7 @@ function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
             }
         }
 
-        function doClickFoundation(suit) {
+        function doClickFoundation(_suit) {
             if (!selection) return;
             let next;
             if (selection.source === 'waste')

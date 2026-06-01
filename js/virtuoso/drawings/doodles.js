@@ -108,7 +108,6 @@ function drawChecker(ctx, w, h) {
 
 function applyZoom() {
     wrap.style.transform = `scale(${zoomLevel})`;
-    const w = displayCanvas.width * zoomLevel;
     const h = displayCanvas.height * zoomLevel;
     wrap.style.width  = displayCanvas.width  + 'px';
     wrap.style.height = displayCanvas.height + 'px';
