@@ -149,4 +149,26 @@
                     document.getElementById('snake-world').textContent = (Number.isFinite(v) && v >= 0) ? v : 0;
                 });
             }
+
+            // ── Touch controls ────────────────────────────────────────────────
+            let sTouchStartX, sTouchStartY;
+            sCanvas.addEventListener('touchstart', e => {
+                e.preventDefault();
+                sTouchStartX = e.touches[0].clientX;
+                sTouchStartY = e.touches[0].clientY;
+            }, { passive: false });
+            sCanvas.addEventListener('touchend', e => {
+                if (sGameOver || sPaused) return;
+                e.preventDefault();
+                const dx    = e.changedTouches[0].clientX - sTouchStartX;
+                const dy    = e.changedTouches[0].clientY - sTouchStartY;
+                const absDx = Math.abs(dx);
+                const absDy = Math.abs(dy);
+                if (absDx < 10 && absDy < 10) return;
+                const key   = absDx > absDy
+                    ? (dx < 0 ? 'ArrowLeft' : 'ArrowRight')
+                    : (dy < 0 ? 'ArrowUp'   : 'ArrowDown');
+                const newDir = snakeChangeDirection(sDir, sNextDir, key);
+                if (newDir !== sNextDir) sNextDir = newDir;
+            }, { passive: false });
         });
