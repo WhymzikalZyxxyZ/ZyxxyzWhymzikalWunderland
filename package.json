@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "lint:js":   "eslint \"js/**/*.js\" \"tests/**/*.js\"",
-    "lint:css":  "stylelint \"css/*.css\"",
+    "lint:js":   "eslint \"js/**/*.js\" \"tests/**/*.js\" \"anonymail/worker/public/js/**/*.js\"",
+    "lint:css":  "stylelint \"css/*.css\" \"anonymail/worker/public/css/*.css\"",
     "lint:html": "htmlhint \"**/*.html\" --ignore \"node_modules/**,coverage/**\"",
     "lint":      "npm run lint:js && npm run lint:css && npm run lint:html",
     "test":      "jest --coverage",
