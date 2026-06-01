@@ -142,7 +142,7 @@
                 statusDot.classList.toggle('live', !!snap.val());
             });
 
-            function loadOlderMessages() {
+            const loadOlderMessages = () => {
                 if (loadingOlder || earliestTs === Infinity) return;
                 loadingOlder = true;
                 if (loadOlderBtn) { loadOlderBtn.disabled = true; loadOlderBtn.textContent = 'Loading…'; }
