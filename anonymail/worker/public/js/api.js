@@ -129,7 +129,7 @@ export async function sendEmail(token, formData) {
 }
 
 // ── WebSocket ──────────────────────────────────────────────────────────────────
-export function openWebSocket(token, address, onEvent) {
+export function openWebSocket(token, address, onEvent, onClose) {
     const proto   = location.protocol === 'https:' ? 'wss' : 'ws';
     const addrQ   = address ? `?addr=${encodeURIComponent(address)}` : '';
     const ws      = new WebSocket(`${proto}://${location.host}/ws${addrQ}`);
@@ -142,6 +142,7 @@ export function openWebSocket(token, address, onEvent) {
             if (ws.readyState === WebSocket.OPEN)
                 ws.send(JSON.stringify({ type: 'ping' }));
         }, 25_000);
+        onEvent({ type: 'ws_open' });
     });
 
     ws.addEventListener('message', e => {
@@ -150,10 +151,7 @@ export function openWebSocket(token, address, onEvent) {
 
     ws.addEventListener('close', (e) => {
         clearInterval(pingInterval);
-        // Don't reconnect if server sent 'expired' event
-        if (e.code !== 1000 && getActiveToken() === token) {
-            setTimeout(() => openWebSocket(token, address, onEvent), 3000);
-        }
+        if (onClose) onClose(e.code);
     });
 
     ws.addEventListener('error', () => ws.close());
