@@ -219,4 +219,39 @@
                     document.getElementById('tetris-world').textContent = (Number.isFinite(v) && v >= 0) ? v : 0;
                 });
             }
+
+            // ── Touch controls ────────────────────────────────────────────────
+            let touchStartX, touchStartY;
+            canvas.addEventListener('touchstart', e => {
+                e.preventDefault();
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }, { passive: false });
+            canvas.addEventListener('touchend', e => {
+                if (gameOver || paused) return;
+                e.preventDefault();
+                const dx    = e.changedTouches[0].clientX - touchStartX;
+                const dy    = e.changedTouches[0].clientY - touchStartY;
+                const absDx = Math.abs(dx);
+                const absDy = Math.abs(dy);
+                if (absDx < 15 && absDy < 15) {
+                    // Tap = hard drop
+                    hardDrop(); render();
+                } else if (absDx > absDy) {
+                    if (dx < 0) { if (!collides(board, piece, -1)) { piece.x--; render(); } }
+                    else        { if (!collides(board, piece,  1)) { piece.x++; render(); } }
+                } else if (dy < 0) {
+                    // Swipe up = rotate
+                    const rotated = rotateShape(piece.shape);
+                    for (const kick of [0, -1, 1, -2, 2]) {
+                        if (!collides(board, { x: piece.x + kick, y: piece.y, shape: piece.shape }, 0, 0, rotated)) {
+                            piece.shape = rotated; piece.x += kick; break;
+                        }
+                    }
+                    render();
+                } else {
+                    // Swipe down = soft drop
+                    drop(); lastDrop = performance.now(); render();
+                }
+            }, { passive: false });
         });

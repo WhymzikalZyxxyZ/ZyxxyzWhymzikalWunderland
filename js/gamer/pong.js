@@ -66,8 +66,12 @@ const myName = (typeof getOrCreateUsername === 'function') ? getOrCreateUsername
             if (!running || paused) return;
             const speed = 4;
             let leftY = state.left.y;
-            if (keysDown['w'] || keysDown['W'] || keysDown['ArrowUp'])    leftY -= speed;
-            if (keysDown['s'] || keysDown['S'] || keysDown['ArrowDown'])  leftY += speed;
+            if (keysDown._touchLeftY !== undefined) {
+                leftY = keysDown._touchLeftY;
+            } else {
+                if (keysDown['w'] || keysDown['W'] || keysDown['ArrowUp'])    leftY -= speed;
+                if (keysDown['s'] || keysDown['S'] || keysDown['ArrowDown'])  leftY += speed;
+            }
             const aiRightY = getAIPaddleY(state, 'right', diff);
             state = pongTick(state, leftY, aiRightY);
             document.getElementById('score-left').textContent  = state.score.left;
@@ -197,6 +201,17 @@ const myName = (typeof getOrCreateUsername === 'function') ? getOrCreateUsername
             c.fillRect(PONG_W-PADDLE_W,s.right.y,PADDLE_W,PADDLE_H);
             c.beginPath(); c.arc(s.ball.x,s.ball.y,BALL_R,0,Math.PI*2); c.fill();
         }
+
+        // ── Touch controls (left paddle tracks finger Y) ──────────────────────
+        canvas.addEventListener('touchstart', e => { e.preventDefault(); }, { passive: false });
+        canvas.addEventListener('touchmove',  e => {
+            e.preventDefault();
+            if (!running || paused) return;
+            const rect  = canvas.getBoundingClientRect();
+            const gameY = ((e.touches[0].clientY - rect.top) / rect.height) * PONG_H - PADDLE_H / 2;
+            keysDown._touchLeftY = Math.max(0, Math.min(PONG_H - PADDLE_H, gameY));
+        }, { passive: false });
+        canvas.addEventListener('touchend', () => { delete keysDown._touchLeftY; }, { passive: false });
 
         // Initial render
         render(state);
