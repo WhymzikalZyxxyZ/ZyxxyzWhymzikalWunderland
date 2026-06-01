@@ -397,7 +397,8 @@ function renderSkeleton() {
 // ── WS ────────────────────────────────────────────────────────────────────────
 function connectWS(token) {
     if (state.ws) state.ws.close();
-    state.ws = API.openWebSocket(token, handleWsEvent);
+    const session = API.getSessions().find(s => s.token === token);
+    state.ws = API.openWebSocket(token, session?.address, handleWsEvent);
 }
 
 function handleWsEvent(event) {
