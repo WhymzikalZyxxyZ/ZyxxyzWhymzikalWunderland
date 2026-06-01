@@ -27,20 +27,20 @@ const SANITIZE_OPTS = {
             attribs: { ...attribs, rel: 'noopener noreferrer', target: '_blank' },
         }),
     },
-    // Strip style values containing url() or JS expressions
+    // Explicit allowlists — no url(), expression(), or arbitrary values
     allowedStyles: {
         '*': {
-            color:              [/.*/],
-            'background-color': [/.*/],
-            'font-size':        [/.*/],
-            'font-weight':      [/.*/],
-            'font-style':       [/.*/],
-            'text-align':       [/.*/],
-            'text-decoration':  [/.*/],
-            padding:            [/.*/],
-            margin:             [/.*/],
-            border:             [/.*/],
-            width:              [/.*/],
+            'color':              [/^(?:#[0-9a-f]{3,8}|rgba?\([\d\s,.%]+\)|hsla?\([\d\s,.%]+\)|[a-zA-Z]+)$/i],
+            'background-color':   [/^(?:#[0-9a-f]{3,8}|rgba?\([\d\s,.%]+\)|hsla?\([\d\s,.%]+\)|[a-zA-Z]+)$/i],
+            'font-size':          [/^[\d.]+(?:px|em|rem|%|pt|vw|vh|ex|ch)$/i],
+            'font-weight':        [/^(?:normal|bold|bolder|lighter|[1-9]00)$/i],
+            'font-style':         [/^(?:normal|italic|oblique)$/i],
+            'text-align':         [/^(?:left|right|center|justify|start|end)$/i],
+            'text-decoration':    [/^(?:none|underline|overline|line-through)$/i],
+            'padding':            [/^(?:0|auto|[\d.]+(?:px|em|rem|%|pt)(?:\s+(?:0|auto|[\d.]+(?:px|em|rem|%|pt))){0,3})$/i],
+            'margin':             [/^(?:0|auto|[\d.]+(?:px|em|rem|%|pt)(?:\s+(?:0|auto|[\d.]+(?:px|em|rem|%|pt))){0,3})$/i],
+            'border':             [/^[\d.]+(?:px|em|rem)\s+(?:solid|dashed|dotted|double|none)\s+(?:#[0-9a-f]{3,8}|rgba?\([\d\s,.%]+\)|[a-zA-Z]+)$/i],
+            'width':              [/^(?:0|auto|[\d.]+(?:px|em|rem|%|pt|vw))$/i],
         },
     },
 };
@@ -82,13 +82,19 @@ function _expire(address, token) {
 function generateAddress(domain) {
     const adj  = ADJS[Math.floor(Math.random() * ADJS.length)];
     const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
-    return `${adj}.${noun}.${randomHex(3)}@${domain}`;
+    return `${adj}.${noun}.${randomHex(6)}@${domain}`;
 }
 
 // ── Encrypt / expose helpers ──────────────────────────────────────────────────
 function storeRecord(email) {
     return {
-        ...email,
+        id:          email.id,
+        from:        encrypt(email.from    || ''),
+        to:          encrypt(email.to      || ''),
+        cc:          encrypt(email.cc      || ''),
+        subject:     encrypt(email.subject || ''),
+        ts:          email.ts,
+        read:        email.read  || false,
         body:        encrypt(email.body     || ''),
         bodyHtml:    email.bodyHtml
             ? encrypt(sanitizeHtml(email.bodyHtml, SANITIZE_OPTS))
@@ -106,10 +112,10 @@ function storeRecord(email) {
 function expose(stored, full) {
     const e = {
         id:             stored.id,
-        from:           stored.from,
-        to:             stored.to,
-        cc:             stored.cc    || '',
-        subject:        stored.subject,
+        from:           decrypt(stored.from),
+        to:             decrypt(stored.to),
+        cc:             decrypt(stored.cc),
+        subject:        decrypt(stored.subject),
         ts:             stored.ts,
         read:           stored.read  || false,
         hasAttachments: (stored.attachments || []).length > 0,

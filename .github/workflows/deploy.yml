@@ -86,7 +86,8 @@ jobs:
         run: |
           rm -rf node_modules tests coverage package.json package-lock.json \
                  CODEOWNERS README.md .eslintrc* .stylelintrc* .htmlhintrc \
-                 .github Dockerfile docker-compose.yml docker scripts
+                 .github Dockerfile docker-compose.yml docker scripts \
+                 anonymail
 
       - name: Configure Pages
         uses: actions/configure-pages@v4

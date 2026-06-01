@@ -9,17 +9,47 @@ const store            = require('./mailstore');
 let notify = () => {};
 function setNotifier(fn) { notify = fn; }
 
+// ── Per-IP SMTP rate limiter ───────────────────────────────────────────────────
+const _smtpRates = new Map();
+
+function _smtpAllow(ip) {
+    const now = Date.now();
+    const e   = _smtpRates.get(ip);
+    if (!e || now > e.reset) {
+        _smtpRates.set(ip, { count: 1, reset: now + 60_000 });
+        return true;
+    }
+    if (e.count >= 20) return false;
+    e.count++;
+    return true;
+}
+
+setInterval(() => {
+    const now = Date.now();
+    for (const [k, v] of _smtpRates) if (now > v.reset) _smtpRates.delete(k);
+}, 5 * 60_000);
+
 function buildSmtpServer({ hostname, secure, tlsKey, tlsCert } = {}) {
     const opts = {
         name:             hostname || 'anonymail.local',
         banner:           'Anonymail SMTP ready',
         authOptional:     true,
         disabledCommands: ['AUTH'],
+        maxClients:       100,
         // STARTTLS is always offered when a cert is present
         secure:           !!secure,
         hideSTARTTLS:     !tlsCert,
         key:              tlsKey  || undefined,
         cert:             tlsCert || undefined,
+
+        onConnect(session, cb) {
+            if (!_smtpAllow(session.remoteAddress)) {
+                const err = new Error('Too many connections from this IP — slow down');
+                err.responseCode = 421;
+                return cb(err);
+            }
+            cb();
+        },
 
         onRcptTo(address, _session, cb) {
             if (store.hasAddress(address.address.toLowerCase())) {

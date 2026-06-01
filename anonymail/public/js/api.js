@@ -131,10 +131,12 @@ export async function sendEmail(token, formData) {
 // ── WebSocket ──────────────────────────────────────────────────────────────────
 export function openWebSocket(token, onEvent) {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    const ws    = new WebSocket(`${proto}://${location.host}/ws?token=${token}`);
+    const ws    = new WebSocket(`${proto}://${location.host}/ws`);
     let pingInterval;
 
     ws.addEventListener('open', () => {
+        // Send token as the first message — never in the URL where it would appear in logs
+        ws.send(JSON.stringify({ type: 'auth', token }));
         pingInterval = setInterval(() => {
             if (ws.readyState === WebSocket.OPEN)
                 ws.send(JSON.stringify({ type: 'ping' }));
