@@ -45,7 +45,8 @@ jobs:
         working-directory: anonymail/worker
 
       - name: Deploy Anonymail Worker to Cloudflare
-        run: anonymail/worker/node_modules/.bin/wrangler deploy
+        run: npx wrangler deploy
+        working-directory: anonymail/worker
         env:
           CLOUDFLARE_API_TOKEN:   ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID:  ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
