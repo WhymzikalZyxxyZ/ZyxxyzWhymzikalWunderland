@@ -2,7 +2,7 @@
 const {
     SUITS, RANKS, createDeck, shuffle, rankLabel, suitSymbol, cardLabel,
     isRed, evaluateHand, compareHands, compareTB, hiRanks,
-} = require('../js/card-engine');
+} = require('../js/engines/card-engine');
 
 // ── createDeck ────────────────────────────────────────────────────────────────
 describe('createDeck', () => {

@@ -1,5 +1,5 @@
 'use strict';
-const { S_COLS, S_ROWS, SNAKE_MAX_SCORE, snakePlaceFood, snakeTick, snakeChangeDirection } = require('../js/snake-engine');
+const { S_COLS, S_ROWS, SNAKE_MAX_SCORE, snakePlaceFood, snakeTick, snakeChangeDirection } = require('../js/engines/snake-engine');
 
 // ── Constants ────────────────────────────────────────────────────────────────
 test('S_COLS is 20', () => expect(S_COLS).toBe(20));

@@ -1,14 +1,12 @@
 'use strict';
 
-// esc(), fmtDateLong(), renderMd(), showToast(), withFirebase() from /js/utils.js
+// esc(), fmtDateLong(), renderMd(), showToast(), withFirebase(),
+// verifyPin(), isAdmin(), rateGuard() from /js/utils.js
 
-const ADMIN_KEY  = 'blog_admin_unlocked';
-const EMOJIS     = ['👍','❤️','😂','🤯','✨'];
-const PAGE_SIZE  = 10;
+const EMOJIS    = ['👍','❤️','😂','🤯','✨'];
+const PAGE_SIZE = 10;
 
 let allPosts = [];
-
-function isAdmin() { return sessionStorage.getItem(ADMIN_KEY) === '1'; }
 
 document.getElementById('admin-toggle').addEventListener('click', () => {
     if (isAdmin()) {
@@ -18,17 +16,20 @@ document.getElementById('admin-toggle').addEventListener('click', () => {
         return;
     }
     const pin = prompt('Admin PIN:');
-    if (pin === 'ZYXXYZ') {
+    if (!pin) return;
+    verifyPin(pin).then(valid => {
+        if (!valid) return;
         sessionStorage.setItem(ADMIN_KEY, '1');
         document.getElementById('blog-write').classList.add('visible');
         document.querySelectorAll('.post-delete').forEach(b => b.hidden = false);
-    }
+    });
 });
 
 if (isAdmin()) document.getElementById('blog-write').classList.add('visible');
 
 // ── Publish ───────────────────────────────────────────────────────────────────
 document.getElementById('post-submit').addEventListener('click', () => {
+    if (!isAdmin()) return;
     const title = document.getElementById('post-title-input').value.trim();
     const body  = document.getElementById('post-body-input').value.trim();
     const tag   = document.getElementById('post-tag-input').value.trim().toLowerCase() || 'update';
@@ -82,7 +83,7 @@ function renderPost(key, data) {
 }
 
 function deletePost(key) {
-    if (!confirm('Delete this post?')) return;
+    if (!isAdmin() || !confirm('Delete this post?')) return;
     firebase.database().ref('blog/posts/' + key).remove()
         .then(() => showToast('Post deleted.', 'success'))
         .catch(() => showToast('Delete failed.', 'error'));
@@ -90,6 +91,7 @@ function deletePost(key) {
 
 function handleReact(btn, key, emoji, storageKey) {
     if (!window.FIREBASE_READY) return;
+    if (!rateGuard('react-' + key + emoji, 2000)) return;
     const ref     = firebase.database().ref(`blog/reactions/${key}/${emoji}`);
     const already = !!localStorage.getItem(storageKey);
     ref.transaction(cur => (cur || 0) + (already ? -1 : 1));

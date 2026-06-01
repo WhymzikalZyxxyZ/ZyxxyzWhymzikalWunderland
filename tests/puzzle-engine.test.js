@@ -3,7 +3,7 @@ const {
     PUZZLE_MIN_PIECES, PUZZLE_MAX_PIECES,
     gridDims, newPuzzle, shufflePuzzle, placePiece, isPuzzleSolved, calcPuzzleScore,
     puzzlePaletteGradients
-} = require('../js/puzzle-engine');
+} = require('../js/engines/puzzle-engine');
 
 describe('gridDims', () => {
     test('returns cols and rows for 9', () => {

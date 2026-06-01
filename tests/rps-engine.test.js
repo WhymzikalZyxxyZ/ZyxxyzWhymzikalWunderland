@@ -1,5 +1,5 @@
 'use strict';
-const { RPS_CHOICES, rpsResult, getComputerChoice, countsFromResults } = require('../js/rps-engine');
+const { RPS_CHOICES, rpsResult, getComputerChoice, countsFromResults } = require('../js/engines/rps-engine');
 
 describe('RPS_CHOICES', () => {
     test('contains exactly rock, paper, scissors', () => {

@@ -1,5 +1,5 @@
 'use strict';
-const cardEngine = require('../js/card-engine');
+const cardEngine = require('../js/engines/card-engine');
 global.createDeck   = cardEngine.createDeck;
 global.shuffle      = cardEngine.shuffle;
 global.evaluateHand = cardEngine.evaluateHand;
@@ -9,7 +9,7 @@ const {
     FCD_STARTING_CHIPS, FCD_ANTE,
     newFCDState, startFCDHand, fcdAction, fcdDraw,
     fcdShowdown, fcdNextActive, getFCDAIAction, fcdAIDiscards,
-} = require('../js/five-card-draw-engine');
+} = require('../js/engines/five-card-draw-engine');
 
 const NAMES = ['Alice', 'Bob'];
 const c = (rank, suit = 'S') => ({ rank, suit });

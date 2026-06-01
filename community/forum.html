@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://www.gstatic.com">
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="/js/firebase-config.js"></script>
+    <script src="/js/config/firebase-config.js"></script>
     <style>
         .chat-window {
             max-width: 680px;
@@ -164,7 +164,7 @@
         <div class="chat-messages" id="chat-messages"></div>
         <div class="chat-input-bar">
             <input type="text" id="chat-input" placeholder="getting your name..." maxlength="500" autocomplete="off" disabled>
-            <button id="chat-send" onclick="sendMessage()" disabled>SEND</button>
+            <button id="chat-send" disabled>SEND</button>
         </div>
     </div>
     <div class="char-count" id="char-count">0 / 500</div>

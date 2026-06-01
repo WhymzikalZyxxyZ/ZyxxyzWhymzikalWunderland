@@ -1,5 +1,5 @@
 'use strict';
-const cardEngine = require('../js/card-engine');
+const cardEngine = require('../js/engines/card-engine');
 global.createDeck   = cardEngine.createDeck;
 global.shuffle      = cardEngine.shuffle;
 global.evaluateHand = cardEngine.evaluateHand;
@@ -9,7 +9,7 @@ const {
     POKER_STARTING_CHIPS, SMALL_BLIND, BIG_BLIND,
     newPokerState, startPokerHand, pokerAction,
     pokerAdvancePhase, pokerShowdown, pokerNextActive, getPokerAIAction,
-} = require('../js/poker-engine');
+} = require('../js/engines/poker-engine');
 
 const NAMES = ['Alice', 'Bob', 'Carol'];
 

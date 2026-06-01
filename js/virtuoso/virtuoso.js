@@ -50,7 +50,7 @@
         function initGallery() {
             if (typeof FIREBASE_READY === 'undefined' || !FIREBASE_READY) {
                 emptyState.style.display = 'block';
-                emptyState.textContent = 'Gallery requires Firebase — see /js/firebase-config.js ✨';
+                emptyState.textContent = 'Gallery requires Firebase — see /js/config/firebase-config.js ✨';
                 return;
             }
 

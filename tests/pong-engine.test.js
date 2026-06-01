@@ -2,7 +2,7 @@
 const {
     PONG_W, PONG_H, PADDLE_H, BALL_R, PONG_MAX_SCORE,
     newPongState, pongTick, resetBall, getAIPaddleY, clampPaddleY
-} = require('../js/pong-engine');
+} = require('../js/engines/pong-engine');
 
 describe('newPongState', () => {
     test('returns expected structure', () => {

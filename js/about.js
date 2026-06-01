@@ -520,4 +520,7 @@
     }
 
     requestAnimationFrame(frame);
+
+    var homeBtn = document.getElementById('home-btn');
+    if (homeBtn) homeBtn.addEventListener('click', function () { navigateToPage('/'); });
 }());

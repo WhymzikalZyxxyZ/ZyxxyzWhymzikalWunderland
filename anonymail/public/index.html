@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anonymail — Temporary Encrypted Inbox</title>
+    <meta name="description" content="Generate a temporary email address. Receive emails in real time. Nothing is ever stored to disk.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+
+<!-- ══ LOADING SPLASH ════════════════════════════════════════════════════════ -->
+<div id="loading-splash" aria-hidden="true">
+    <div class="splash-logo">Anonym<span>ail</span></div>
+    <p id="splash-phrase"></p>
+    <div class="splash-dots">
+        <span></span><span></span><span></span>
+    </div>
+</div>
+
+<!-- ══ LANDING ══════════════════════════════════════════════════════════════ -->
+<section id="landing" hidden>
+    <div class="landing-logo">Anonym<span>ail</span></div>
+    <p class="landing-tagline">A temporary inbox that vanishes when you're done.</p>
+
+    <div class="landing-card">
+        <h2>Get a disposable email address</h2>
+        <p>
+            One click. No sign-up. Your address is live for <strong>1 hour</strong>.<br>
+            All data is encrypted in memory — nothing touches a database or disk.
+        </p>
+        <button id="create-btn" class="btn-hero">Generate my address →</button>
+
+        <div class="feature-grid">
+            <div class="feature-item">
+                <strong>🔒 AES-256-GCM</strong>
+                Emails are encrypted the moment they arrive.
+            </div>
+            <div class="feature-item">
+                <strong>⚡ Real-time</strong>
+                New mail appears instantly via WebSocket.
+            </div>
+            <div class="feature-item">
+                <strong>📎 Attachments</strong>
+                Send and receive files up to 25 MB each.
+            </div>
+            <div class="feature-item">
+                <strong>🔥 Auto-expire</strong>
+                Address and all emails vanish after 1 hour.
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══ CLIENT ═══════════════════════════════════════════════════════════════ -->
+<div id="client" hidden>
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-logo">Anonym<span>ail</span></div>
+
+        <div class="header-address">
+            <div class="address-pill">
+                <span id="address-display"></span>
+                <button id="address-copy" title="Copy address" aria-label="Copy address">⎘</button>
+            </div>
+            <span id="expires-countdown"></span>
+        </div>
+
+        <div class="header-actions">
+            <button id="extend-btn" title="Extend mailbox lifetime by 1 hour" aria-label="Extend lifetime">⏱ Extend</button>
+            <button id="qr-btn" title="Show QR code for this address" aria-label="Show QR code">⬜ QR</button>
+            <button id="notif-btn" title="Enable desktop notifications" aria-label="Enable notifications">🔔</button>
+            <button id="shortcuts-btn" title="Keyboard shortcuts" aria-label="Keyboard shortcuts">⌨ ?</button>
+            <button id="burn-btn" title="Destroy this mailbox immediately" aria-label="Burn mailbox">🔥 Burn</button>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" aria-label="Mailboxes">
+        <div class="compose-btn-wrap">
+            <button id="compose-btn">✏ Compose</button>
+        </div>
+
+        <!-- Address list -->
+        <div class="address-section">
+            <div class="address-section-label">Addresses</div>
+            <div id="address-list" role="list" aria-label="Active addresses"></div>
+            <button id="add-address-btn" class="add-address-btn" title="Generate a new address">+ New address</button>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <!-- Mailbox nav -->
+        <div class="nav-item active" data-box="inbox" role="button" tabindex="0" aria-label="Inbox">
+            <span class="nav-icon">📥</span>
+            <span class="nav-label">Inbox</span>
+            <span class="nav-badge" id="badge-inbox" hidden></span>
+        </div>
+        <div class="nav-item" data-box="drafts" role="button" tabindex="0" aria-label="Drafts">
+            <span class="nav-icon">📝</span>
+            <span class="nav-label">Drafts</span>
+            <span class="nav-badge" id="badge-drafts" hidden></span>
+        </div>
+        <div class="nav-item" data-box="sent" role="button" tabindex="0" aria-label="Sent">
+            <span class="nav-icon">📤</span>
+            <span class="nav-label">Sent</span>
+            <span class="nav-badge" id="badge-sent" hidden></span>
+        </div>
+
+        <div class="sidebar-spacer"></div>
+
+        <div class="sidebar-footer">
+            In-memory only · nothing persisted
+        </div>
+    </nav>
+
+    <!-- Email list panel -->
+    <section class="email-list-panel" aria-label="Email list">
+        <div class="list-header" id="list-header">Inbox</div>
+        <div class="list-search">
+            <input id="search-input" type="search" placeholder="Search…" aria-label="Search emails">
+        </div>
+        <div id="email-list" role="list"></div>
+    </section>
+
+    <!-- Email view panel -->
+    <main class="email-view-panel" id="email-view" aria-label="Email view">
+        <button class="back-btn" id="back-btn" aria-label="Back to list">← Back</button>
+        <div class="view-empty">
+            <div class="view-empty-icon">✉</div>
+            <p>Select an email to read it</p>
+        </div>
+    </main>
+
+</div><!-- /#client -->
+
+<!-- ══ QR MODAL ══════════════════════════════════════════════════════════════ -->
+<div id="qr-overlay" hidden aria-hidden="true"></div>
+<div id="qr-modal" role="dialog" aria-modal="true" aria-label="QR code" hidden>
+    <div class="qr-card">
+        <div class="qr-header">
+            <span>Scan to share your address</span>
+            <button id="qr-close" aria-label="Close QR modal">✕</button>
+        </div>
+        <img id="qr-image" src="" alt="QR code for your temporary email address">
+        <div id="qr-address-label" class="qr-address"></div>
+    </div>
+</div>
+
+<!-- ══ SHORTCUTS MODAL ═══════════════════════════════════════════════════════ -->
+<div id="shortcuts-overlay" hidden aria-hidden="true"></div>
+<div id="shortcuts-modal" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts" hidden>
+    <div class="shortcuts-card">
+        <div class="shortcuts-header">
+            <span>Keyboard shortcuts</span>
+            <button id="shortcuts-close" aria-label="Close shortcuts">✕</button>
+        </div>
+        <div class="shortcuts-grid">
+            <div class="shortcut-row"><kbd>n</kbd> <span>or</span> <kbd>c</kbd> <span>Compose new email</span></div>
+            <div class="shortcut-row"><kbd>r</kbd> <span>Reply to selected</span></div>
+            <div class="shortcut-row"><kbd>Del</kbd> <span>or</span> <kbd>d</kbd> <span>Delete selected</span></div>
+            <div class="shortcut-row"><kbd>j</kbd> <span>Next email</span></div>
+            <div class="shortcut-row"><kbd>k</kbd> <span>Previous email</span></div>
+            <div class="shortcut-row"><kbd>/</kbd> <span>Focus search</span></div>
+            <div class="shortcut-row"><kbd>Esc</kbd> <span>Close / back</span></div>
+            <div class="shortcut-row"><kbd>?</kbd> <span>Toggle this dialog</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ COMPOSE MODAL ════════════════════════════════════════════════════════ -->
+<div id="compose-overlay" hidden aria-hidden="true"></div>
+
+<div id="compose-modal" role="dialog" aria-modal="true" aria-label="Compose email" hidden>
+    <div class="compose-header">
+        <span>New message</span>
+        <button id="compose-close" aria-label="Close compose window">✕</button>
+    </div>
+
+    <div class="compose-fields">
+        <div class="compose-field">
+            <label for="compose-to">To</label>
+            <input id="compose-to" type="email" multiple placeholder="recipient@example.com" autocomplete="off">
+        </div>
+        <div class="compose-field">
+            <label for="compose-cc">CC</label>
+            <input id="compose-cc" type="email" multiple placeholder="optional" autocomplete="off">
+        </div>
+        <div class="compose-field">
+            <label for="compose-subject">Subject</label>
+            <input id="compose-subject" type="text" placeholder="(no subject)" autocomplete="off">
+        </div>
+    </div>
+
+    <div id="compose-dropzone">
+        <textarea id="compose-body" placeholder="Write your message here…
+(or drag &amp; drop files anywhere in this area to attach them)"></textarea>
+    </div>
+
+    <div class="compose-attachments" id="compose-file-list"></div>
+
+    <input type="file" id="compose-file-input" multiple aria-hidden="true">
+
+    <div class="compose-footer">
+        <button id="compose-send" class="btn btn-primary">Send</button>
+        <button id="compose-draft" class="btn btn-secondary">Save draft</button>
+        <button id="compose-attach-btn" class="btn btn-ghost" title="Attach files">📎 Attach</button>
+        <span id="compose-error" role="alert" aria-live="polite"></span>
+    </div>
+</div>
+
+<!-- ══ TOAST ════════════════════════════════════════════════════════════════ -->
+<div id="toast-container" aria-live="polite" aria-atomic="false"></div>
+
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>

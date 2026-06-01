@@ -1,5 +1,5 @@
 'use strict';
-const { ADJS, NOUNS, genUsername, escHtml, fmtTime } = require('../js/forum-utils');
+const { ADJS, NOUNS, genUsername, escHtml, fmtTime } = require('../js/community/forum-utils');
 
 // ── genUsername ──────────────────────────────────────────────────────────────
 describe('genUsername', () => {
