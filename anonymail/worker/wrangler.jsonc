@@ -23,8 +23,9 @@
     ],
 
     "vars": {
-        "DOMAIN":         "mail.zyxwonderland.xyz",
-        "TTL_MS":         "3600000",
-        "MAX_MAILBOXES":  "500"
+        "DOMAIN":           "mail.zyxwonderland.xyz",
+        "TTL_MS":           "3600000",
+        "MAX_MAILBOXES":    "500",
+        "DEV_RATE_BYPASS":  "true"
     }
 }

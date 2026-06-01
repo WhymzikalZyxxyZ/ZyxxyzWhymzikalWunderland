@@ -835,22 +835,8 @@ async function burnAll() {
 }
 
 // ── Landing & init ────────────────────────────────────────────────────────────
-async function handleCreate() {
-    const btn = document.getElementById('create-btn');
-    btn.disabled = true; btn.textContent = 'Creating…';
-    try {
-        const { address, token, expiresAt } = await API.createMailbox();
-        API.addSession({ address, token, expiresAt });
-        showClient();
-    } catch (err) {
-        toast('Failed: ' + err.message, 'error');
-        btn.disabled = false; btn.textContent = 'Generate my address →';
-    }
-}
-
 function showClient() {
-    document.getElementById('landing').hidden = true;
-    document.getElementById('client').hidden  = false;
+    document.getElementById('client').hidden = false;
 
     const token   = API.getActiveToken();
     const sessions = API.getSessions();
@@ -867,70 +853,68 @@ function showClient() {
 }
 
 async function init() {
-    // Show loading splash immediately
     const splash = document.getElementById('loading-splash');
     startPhrases('splash-phrase', 650);
 
-    Compose.initCompose();
     initKeyboard();
-    initSearch();
     initTheme();
 
-    // Wire nav
-    document.querySelectorAll('.nav-item').forEach(el =>
-        el.addEventListener('click', () => loadBox(el.dataset.box)));
+    try {
+        Compose.initCompose();
+        initSearch();
 
-    // Wire buttons
-    document.getElementById('compose-btn').addEventListener('click', () => openCompose());
-    document.getElementById('burn-btn').addEventListener('click', burnActive);
-    document.getElementById('create-btn').addEventListener('click', handleCreate);
-    document.getElementById('share-btn').addEventListener('click', () => {
-        navigator.clipboard.writeText(location.href).then(() => {
-            const btn = document.getElementById('share-btn');
-            btn.textContent = '✓ Copied!';
-            setTimeout(() => { btn.textContent = '🔗 Copy link'; }, 2000);
+        // Wire nav
+        document.querySelectorAll('.nav-item').forEach(el =>
+            el.addEventListener('click', () => loadBox(el.dataset.box)));
+
+        // Wire buttons
+        document.getElementById('compose-btn').addEventListener('click', () => openCompose());
+        document.getElementById('burn-btn').addEventListener('click', burnActive);
+        document.getElementById('add-address-btn').addEventListener('click', addNewAddress);
+        document.getElementById('extend-btn').addEventListener('click', handleExtend);
+        document.getElementById('qr-btn').addEventListener('click', showQr);
+        document.getElementById('shortcuts-btn').addEventListener('click', toggleShortcutHelp);
+        document.getElementById('qr-close').addEventListener('click', closeQrModal);
+        document.getElementById('shortcuts-close').addEventListener('click', closeShortcutHelp);
+        document.getElementById('address-copy').addEventListener('click', () => {
+            const addr = document.getElementById('address-display').textContent;
+            copyToClipboard(addr);
         });
-    });
-    document.getElementById('add-address-btn').addEventListener('click', addNewAddress);
-    document.getElementById('extend-btn').addEventListener('click', handleExtend);
-    document.getElementById('qr-btn').addEventListener('click', showQr);
-    document.getElementById('shortcuts-btn').addEventListener('click', toggleShortcutHelp);
-    document.getElementById('qr-close').addEventListener('click', closeQrModal);
-    document.getElementById('shortcuts-close').addEventListener('click', closeShortcutHelp);
-    document.getElementById('address-copy').addEventListener('click', () => {
-        const addr = document.getElementById('address-display').textContent;
-        copyToClipboard(addr);
-    });
+        document.getElementById('address-display').addEventListener('click', () => {
+            copyToClipboard(document.getElementById('address-display').textContent);
+        });
 
-    // Address copy on click in address pill
-    document.getElementById('address-display').addEventListener('click', () => {
-        copyToClipboard(document.getElementById('address-display').textContent);
-    });
+        // Restore session
+        const sessions = API.getSessions().filter(s => s.expiresAt > Date.now());
+        API.saveSessions(sessions);
 
-    // Restore session
-    const sessions = API.getSessions().filter(s => s.expiresAt > Date.now());
-    API.saveSessions(sessions);
-
-    let restored = false;
-    if (sessions.length > 0) {
-        const token = API.getActiveToken() || sessions[0].token;
-        API.setActiveToken(token);
-        try {
-            await API.getMailboxInfo(token);
-            restored = true;
-        } catch {
-            API.removeSession(token);
+        let restored = false;
+        if (sessions.length > 0) {
+            const token = API.getActiveToken() || sessions[0].token;
+            API.setActiveToken(token);
+            try {
+                await API.getMailboxInfo(token);
+                restored = true;
+            } catch {
+                API.removeSession(token);
+            }
         }
-    }
 
-    stopPhrases();
-    splash.classList.add('splash-out');
-    setTimeout(() => { splash.hidden = true; }, 400);
+        if (!restored) {
+            const { address, token, expiresAt } = await API.createMailbox();
+            API.addSession({ address, token, expiresAt });
+        }
 
-    if (restored) {
+        stopPhrases();
+        splash.classList.add('splash-out');
+        setTimeout(() => { splash.hidden = true; }, 400);
         showClient();
-    } else {
-        document.getElementById('landing').hidden = false;
+    } catch (err) {
+        stopPhrases();
+        splash.classList.add('splash-out');
+        setTimeout(() => { splash.hidden = true; }, 400);
+        console.error('init() failed:', err);
+        toast('Could not create mailbox: ' + err.message, 'error');
     }
 }
 
