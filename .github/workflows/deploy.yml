@@ -39,6 +39,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install Worker dependencies
+        run: npm ci
+        working-directory: anonymail/worker
+
       - name: Deploy Anonymail Worker to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:
