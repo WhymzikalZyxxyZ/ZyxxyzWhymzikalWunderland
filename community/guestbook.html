@@ -46,6 +46,12 @@
         .gb-count { font-family: 'Courier New', monospace; font-size: 11px; color: #444; text-align: center; margin-top: 20px; }
         .gb-empty { text-align: center; font-family: 'Courier New', monospace; font-size: 12px; color: #333; padding: 50px 0; }
         .gb-loading { text-align: center; padding: 40px; }
+        .gb-delete { background: none; border: none; color: #333; font-size: 11px; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: color 0.15s; }
+        .gb-delete:hover { color: #c04040; }
+        #gb-admin-toggle { font-family: 'Courier New', monospace; font-size: 10px; color: #2a2a2a; background: none; border: none; cursor: pointer; float: right; margin-bottom: 4px; }
+        #gb-admin-toggle:hover { color: #555; }
+        .gb-more-btn { display: block; margin: 16px auto 0; background: none; border: 1px solid #2a2a2a; color: #555; font-family: 'Courier New', monospace; font-size: 12px; padding: 8px 22px; border-radius: 8px; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+        .gb-more-btn:hover { border-color: rgba(244,162,97,0.4); color: var(--accent); }
     </style>
 </head>
 <body class="wunderBody">
@@ -69,6 +75,7 @@
             </div>
         </div>
 
+        <button id="gb-admin-toggle" title="Admin login" aria-label="Admin login">✦</button>
         <div class="gb-eyebrow"><span>entries</span></div>
         <div id="gb-feed"><div class="gb-loading"><span class="firebase-loading"></span></div></div>
         <div class="gb-count" id="gb-count"></div>

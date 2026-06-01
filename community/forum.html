@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Publyk Forum — ZYXXYZ's Whymzykal Wunderland</title>
+    <meta name="description" content="Drop in, say hello, leave a suggestion, or just lurk. All welcome.">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/js/script.js" defer></script>
     <link rel="preconnect" href="https://www.gstatic.com">
@@ -37,7 +39,7 @@
             color: #888;
         }
         .chat-user-badge span {
-            color: #f4a261;
+            color: var(--accent);
             font-weight: bold;
         }
         .chat-status-dot {
@@ -70,7 +72,7 @@
             margin-bottom: 3px;
             padding: 0 4px;
         }
-        .msg.mine .msg-meta   { color: #f4a261; text-align: right; }
+        .msg.mine .msg-meta   { color: var(--accent); text-align: right; }
         .msg.theirs .msg-meta { color: #888; }
         .msg-meta .sender { font-weight: bold; }
         .msg-meta .time   { opacity: 0.6; }
@@ -120,11 +122,11 @@
             outline: none;
             transition: border-color 0.2s;
         }
-        .chat-input-bar input:focus { border-color: #f4a261; }
+        .chat-input-bar input:focus { border-color: var(--accent); }
         .chat-input-bar input:disabled { opacity: 0.5; cursor: not-allowed; }
         .chat-input-bar input::placeholder { color: #555; }
         #chat-send {
-            background: #f4a261;
+            background: var(--accent);
             border: none;
             border-radius: 8px;
             padding: 9px 20px;
@@ -136,7 +138,7 @@
             margin: 0;
             transition: background 0.2s;
         }
-        #chat-send:hover:not(:disabled) { background: #e76f51; color: #fff; }
+        #chat-send:hover:not(:disabled) { background: var(--accent-dark); color: #fff; }
         #chat-send:disabled { background: #555; color: #888; cursor: default; }
         .char-count {
             font-family: 'Courier New', monospace;
@@ -147,24 +149,12 @@
             margin: 0 auto 4px;
             padding: 0 4px;
         }
-        .char-count.warn { color: #f4a261; }
+        .char-count.warn { color: var(--accent); }
     </style>
 </head>
 <body class="wunderBody">
 
-    <h2>Publyk Forum</h2>
-
-    <div class="navbar">
-        <a href="/">Home</a>
-        <a href="/about">About</a>
-        <a href="/virtuoso/virtuoso">Virtuoso</a>
-        <a href="/gamer/games">Gamer</a>
-        <a href="/technologist/apps">Technologist</a>
-        <a href="/community/forum">Forum</a>
-        <a href="/community/wellness">Wellness</a>
-    </div>
-
-    <div class="banner"></div>
+    <div class="navbar"></div>
 
     <div class="chat-window">
         <div class="chat-header">
