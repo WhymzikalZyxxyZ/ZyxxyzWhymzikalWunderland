@@ -128,7 +128,8 @@ a      { color: var(--accent); }
     border-bottom: 1px solid var(--border);
 }
 
-.header-logo { font-size: 1.1rem; font-weight: 700; color: var(--text-1); flex-shrink: 0; }
+.header-logo { font-size: 1.1rem; font-weight: 700; color: var(--text-1); flex-shrink: 0; text-decoration: none; }
+.header-logo:hover { opacity: 0.8; }
 .header-logo span { color: var(--accent); }
 
 .header-address { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
