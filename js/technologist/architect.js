@@ -1,3 +1,5 @@
+'use strict';
+
 // ─── Tab switching ─────────────────────────────────────────────────────────────
 document.querySelectorAll('#arch-app .arch-tab').forEach(t => {
     t.addEventListener('click', () => {
@@ -21,6 +23,7 @@ document.querySelectorAll('#arch-app .gl-q').forEach(q => {
 // ═══════════════════════════════════════════════════════════════════════════════
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const VB_W = 960, VB_H = 600;
+const MIN_W = 40, MIN_H = 28;
 
 const NODE_DIMS = {
     process:  {w:140, h:50},
@@ -28,36 +31,73 @@ const NODE_DIMS = {
     terminal: {w:120, h:48},
     database: {w:110, h:62},
     io:       {w:140, h:50},
+    actor:    {w:60,  h:80},
+    note:     {w:130, h:70},
 };
 
-let nodes = [], edges = [], nextId = 1;
-let selected = null;          // {kind:'node'|'edge', id}
-let mode = 'select';          // 'select' | 'place:type' | 'connect'
-let connSrc = null;           // node id when connecting
-let dragging = null;          // {id, ox, oy, mx, my}
-let _history = [];             // undo stack (snapshots)
+const NODE_LABELS = {
+    process:'Process', decision:'Decision', terminal:'Start/End',
+    database:'Database', io:'Input/Output', actor:'Actor', note:'Note',
+};
 
+// ── State ─────────────────────────────────────────────────────────────────────
+let nodes = [], edges = [], nextId = 1;
+let selectedIds = new Set();
+let selKind     = null;        // 'node' | 'edge' | null
+let mode        = 'select';
+let connSrc     = null;
+let dragging    = null;        // {starts:[{id,ox,oy}], smx, smy}
+let resizing    = null;        // {id,handle,ox,oy,ow,oh,smx,smy}
+let marquee     = null;        // {x1,y1,x2,y2} in SVG coords
+let panning     = null;        // {startClientX,startClientY,startVbX,startVbY}
+let spaceDown   = false;
+let clipboard   = null;        // {nodes, edges}
+let _history    = [];
+let _redo       = [];
+
+// ViewBox (zoom + pan state)
+let vbX = 0, vbY = 0, vbW = VB_W, vbH = VB_H;
+
+// ── DOM refs ──────────────────────────────────────────────────────────────────
 const archSVG     = document.getElementById('arch-svg');
 const statusEl    = document.getElementById('arch-status');
 const labelIn     = document.getElementById('label-input');
 const sidebarInp  = document.getElementById('sidebar-lbl-inp');
 const sidebarWrap = document.getElementById('sidebar-label-wrap');
 const sidebarHead = document.getElementById('lbl-sec-head');
+const stylePanel  = document.getElementById('sidebar-style-wrap');
+const styleHead   = document.getElementById('style-sec-head');
+const zoomLabel   = document.getElementById('zoom-label');
+const ctxMenu     = document.getElementById('ctx-menu');
 
-// ── Sidebar label sync ────────────────────────────────────────────────────────
-function syncSidebarLabel() {
-    if (selected?.kind === 'node') {
-        const node = nodes.find(n => n.id === selected.id);
-        if (node) {
-            sidebarWrap.style.display = 'block';
-            sidebarHead.style.display = 'block';
-            // Only update value if the input isn't actively being edited
-            if (document.activeElement !== sidebarInp) sidebarInp.value = node.label;
-            return;
-        }
-    }
-    sidebarWrap.style.display = 'none';
-    sidebarHead.style.display = 'none';
+// ── ViewBox / zoom / pan ──────────────────────────────────────────────────────
+function applyVb() {
+    archSVG.setAttribute('viewBox', `${vbX} ${vbY} ${vbW} ${vbH}`);
+    if (zoomLabel) zoomLabel.textContent = Math.round(VB_W / vbW * 100) + '%';
+}
+
+function svgPt(clientX, clientY) {
+    const r = archSVG.getBoundingClientRect();
+    return [
+        vbX + (clientX - r.left) / r.width  * vbW,
+        vbY + (clientY - r.top)  / r.height * vbH,
+    ];
+}
+
+function zoomAt(clientX, clientY, factor) {
+    const r  = archSVG.getBoundingClientRect();
+    const cx = vbX + (clientX - r.left) / r.width  * vbW;
+    const cy = vbY + (clientY - r.top)  / r.height * vbH;
+    vbW = Math.max(240, Math.min(VB_W * 6, vbW * factor));
+    vbH = vbW * (VB_H / VB_W);
+    vbX = cx - (clientX - r.left) / r.width  * vbW;
+    vbY = cy - (clientY - r.top)  / r.height * vbH;
+    applyVb();
+}
+
+function fitView() {
+    vbX = 0; vbY = 0; vbW = VB_W; vbH = VB_H;
+    applyVb();
 }
 
 // ── SVG helpers ───────────────────────────────────────────────────────────────
@@ -67,41 +107,40 @@ function svgE(tag, attrs = {}) {
     return el;
 }
 
-function svgPt(e) {
-    const rect = archSVG.getBoundingClientRect();
-    return [
-        (e.clientX - rect.left) / rect.width  * VB_W,
-        (e.clientY - rect.top)  / rect.height * VB_H,
-    ];
-}
-
-// ── Connection point: nearest border point of node toward (tx, ty) ────────────
+// ── Connection point (nearest border toward target) ───────────────────────────
 function connPt(node, tx, ty) {
     const cx = node.x + node.w / 2, cy = node.y + node.h / 2;
     const dx = tx - cx, dy = ty - cy;
     if (!dx && !dy) return [cx, cy];
-
-    if (node.type === 'terminal') {
+    if (node.type === 'terminal' || node.type === 'actor') {
         const rx = node.w / 2, ry = node.h / 2;
-        const ang = Math.atan2(dy * rx, dx * ry);
-        return [cx + rx * Math.cos(ang), cy + ry * Math.sin(ang)];
+        const a = Math.atan2(dy * rx, dx * ry);
+        return [cx + rx * Math.cos(a), cy + ry * Math.sin(a)];
     }
     if (node.type === 'decision') {
         const hw = node.w / 2, hh = node.h / 2;
-        const adx = Math.abs(dx), ady = Math.abs(dy);
-        const t = 1 / (adx / hw + ady / hh + 1e-9);
+        const t = 1 / (Math.abs(dx) / hw + Math.abs(dy) / hh + 1e-9);
         return [cx + dx * t, cy + dy * t];
     }
-    // rect / database / io: bounding box
     const hw = node.w / 2, hh = node.h / 2;
     const adx = Math.abs(dx), ady = Math.abs(dy);
-    if (adx * hh >= ady * hw) {
-        return [cx + Math.sign(dx) * hw, cy + dy * (hw / (adx + 1e-9))];
-    }
+    if (adx * hh >= ady * hw) return [cx + Math.sign(dx) * hw, cy + dy * (hw / (adx + 1e-9))];
     return [cx + dx * (hh / (ady + 1e-9)), cy + Math.sign(dy) * hh];
 }
 
-// ── Build SVG shape for a node ─────────────────────────────────────────────────
+// ── Orthogonal edge path ──────────────────────────────────────────────────────
+function buildEdgePath(src, dst) {
+    const scx = src.x + src.w / 2, scy = src.y + src.h / 2;
+    const dcx = dst.x + dst.w / 2, dcy = dst.y + dst.h / 2;
+    const [x1, y1] = connPt(src, dcx, dcy);
+    const [x2, y2] = connPt(dst, scx, scy);
+    const adx = Math.abs(x2 - x1), ady = Math.abs(y2 - y1);
+    if (adx < 8 || ady < 8) return `M${x1} ${y1} L${x2} ${y2}`;
+    const mx = (x1 + x2) / 2;
+    return `M${x1} ${y1} L${mx} ${y1} L${mx} ${y2} L${x2} ${y2}`;
+}
+
+// ── Node shape builders ───────────────────────────────────────────────────────
 function buildNodeShapes(node, fill, stroke, sw) {
     const {x, y, w, h, type} = node;
     const cx = x + w / 2, cy = y + h / 2;
@@ -111,362 +150,755 @@ function buildNodeShapes(node, fill, stroke, sw) {
         els.push(svgE('rect', {x, y, width:w, height:h, rx:4, fill, stroke, 'stroke-width':sw}));
     } else if (type === 'decision') {
         els.push(svgE('polygon', {
-            points: `${cx},${y} ${x+w},${cy} ${cx},${y+h} ${x},${cy}`,
+            points:`${cx},${y} ${x+w},${cy} ${cx},${y+h} ${x},${cy}`,
             fill, stroke, 'stroke-width':sw,
         }));
     } else if (type === 'terminal') {
         els.push(svgE('ellipse', {cx, cy, rx:w/2, ry:h/2, fill, stroke, 'stroke-width':sw}));
     } else if (type === 'database') {
-        const ery = 10;
+        const ery = Math.min(10, h / 4);
         els.push(svgE('rect',    {x, y:y+ery, width:w, height:h-ery, fill, stroke, 'stroke-width':sw}));
         els.push(svgE('ellipse', {cx, cy:y+ery, rx:w/2, ry:ery, fill, stroke, 'stroke-width':sw}));
-        // bottom arc to close cylinder
-        const arc = svgE('path', {
-            d: `M ${x} ${y+h-ery} A ${w/2} ${ery} 0 0 0 ${x+w} ${y+h-ery}`,
-            fill:'none', stroke, 'stroke-width':sw,
-        });
-        els.push(arc);
+        els.push(svgE('path',    {d:`M${x} ${y+h-ery} A${w/2} ${ery} 0 0 0 ${x+w} ${y+h-ery}`, fill:'none', stroke, 'stroke-width':sw}));
     } else if (type === 'io') {
-        const off = 14;
+        const off = Math.min(14, w / 5);
         els.push(svgE('polygon', {
-            points: `${x+off},${y} ${x+w},${y} ${x+w-off},${y+h} ${x},${y+h}`,
+            points:`${x+off},${y} ${x+w},${y} ${x+w-off},${y+h} ${x},${y+h}`,
             fill, stroke, 'stroke-width':sw,
+        }));
+    } else if (type === 'actor') {
+        const hr = Math.min(w * 0.28, h * 0.18, 14);
+        const hcy = y + hr + 2;
+        const bt  = hcy + hr + 3;
+        const bh  = (h - hr * 2 - 5) * 0.52;
+        const bx  = cx;
+        els.push(svgE('circle', {cx:bx,  cy:hcy,     r:hr,       fill, stroke, 'stroke-width':sw}));
+        els.push(svgE('rect',   {x:x+w*0.22, y:bt, width:w*0.56, height:bh, rx:3, fill, stroke, 'stroke-width':sw}));
+        els.push(svgE('line',   {x1:x+3, y1:bt+4, x2:x+w-3, y2:bt+4, stroke, 'stroke-width':sw}));
+        els.push(svgE('line',   {x1:bx, y1:bt+bh, x2:x+w*0.2, y2:y+h-2, stroke, 'stroke-width':sw}));
+        els.push(svgE('line',   {x1:bx, y1:bt+bh, x2:x+w*0.8, y2:y+h-2, stroke, 'stroke-width':sw}));
+        els.push(svgE('rect',   {x, y, width:w, height:h, fill:'transparent', stroke:'none'}));
+    } else if (type === 'note') {
+        const fold = Math.min(16, w / 4, h / 3);
+        els.push(svgE('polygon', {
+            points:`${x},${y} ${x+w-fold},${y} ${x+w},${y+fold} ${x+w},${y+h} ${x},${y+h}`,
+            fill, stroke, 'stroke-width':sw,
+        }));
+        els.push(svgE('polyline', {
+            points:`${x+w-fold},${y} ${x+w-fold},${y+fold} ${x+w},${y+fold}`,
+            fill:'none', stroke, 'stroke-width':sw,
         }));
     }
     return els;
 }
 
-// ── Full render ────────────────────────────────────────────────────────────────
+// ── Resize handle positions ───────────────────────────────────────────────────
+const HANDLE_CURSORS = {
+    nw:'nw-resize', n:'n-resize',  ne:'ne-resize',
+    e:'e-resize',   se:'se-resize', s:'s-resize',
+    sw:'sw-resize', w:'w-resize',
+};
+
+function getHandles(node) {
+    const {x, y, w, h} = node;
+    return [
+        {id:'nw', cx:x,     cy:y},       {id:'n',  cx:x+w/2, cy:y},
+        {id:'ne', cx:x+w,   cy:y},       {id:'e',  cx:x+w,   cy:y+h/2},
+        {id:'se', cx:x+w,   cy:y+h},     {id:'s',  cx:x+w/2, cy:y+h},
+        {id:'sw', cx:x,     cy:y+h},     {id:'w',  cx:x,     cy:y+h/2},
+    ];
+}
+
+// ── Sidebar sync ──────────────────────────────────────────────────────────────
+function syncSidebar() {
+    const singleNode = selKind === 'node' && selectedIds.size === 1
+        ? nodes.find(n => n.id === [...selectedIds][0]) : null;
+
+    if (singleNode) {
+        sidebarWrap.style.display = 'block';
+        sidebarHead.style.display = 'block';
+        if (document.activeElement !== sidebarInp) sidebarInp.value = singleNode.label;
+        styleHead.style.display  = 'block';
+        stylePanel.style.display = 'block';
+        const nodeFill   = singleNode.fill   || '#1a1a26';
+        const nodeStroke = singleNode.stroke || '#2563eb';
+        document.querySelectorAll('#sidebar-fill-swatches .swatch').forEach(sw =>
+            sw.classList.toggle('active', sw.dataset.color === nodeFill));
+        document.querySelectorAll('#sidebar-stroke-swatches .swatch').forEach(sw =>
+            sw.classList.toggle('active', sw.dataset.color === nodeStroke));
+    } else {
+        sidebarWrap.style.display = 'none';
+        sidebarHead.style.display = 'none';
+        styleHead.style.display   = 'none';
+        stylePanel.style.display  = 'none';
+    }
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
 function render() {
-    // Remove all children except <defs> and background rect
-    const children = Array.from(archSVG.children);
-    children.forEach(c => {
+    Array.from(archSVG.children).forEach(c => {
         if (c.tagName !== 'defs' && c.id !== 'arch-bg') archSVG.removeChild(c);
     });
 
-    // Edges first (underneath nodes)
+    // Marquee selection rect
+    if (marquee) {
+        archSVG.appendChild(svgE('rect', {
+            x:     Math.min(marquee.x1, marquee.x2),
+            y:     Math.min(marquee.y1, marquee.y2),
+            width: Math.abs(marquee.x2 - marquee.x1),
+            height:Math.abs(marquee.y2 - marquee.y1),
+            fill:'rgba(37,99,235,0.08)', stroke:'#2563eb',
+            'stroke-width':'1', 'stroke-dasharray':'4 3',
+        }));
+    }
+
+    // Edges
     edges.forEach(edge => {
         const src = nodes.find(n => n.id === edge.src);
         const dst = nodes.find(n => n.id === edge.dst);
         if (!src || !dst) return;
-
-        const scx = src.x + src.w / 2, scy = src.y + src.h / 2;
-        const dcx = dst.x + dst.w / 2, dcy = dst.y + dst.h / 2;
-        const [x1, y1] = connPt(src, dcx, dcy);
-        const [x2, y2] = connPt(dst, scx, scy);
-
-        const isSel = selected?.kind === 'edge' && selected.id === edge.id;
-        const edgePath = svgE('path', {
-            d: `M ${x1} ${y1} L ${x2} ${y2}`,
-            stroke: isSel ? '#f59e0b' : '#60a5fa',
-            'stroke-width': isSel ? 2.5 : 1.8,
-            fill: 'none',
-            'marker-end': isSel ? 'url(#arch-arrow-sel)' : 'url(#arch-arrow)',
+        const isSel = selectedIds.has(edge.id);
+        const path  = svgE('path', {
+            d:               buildEdgePath(src, dst),
+            fill:            'none',
+            stroke:          isSel ? '#f59e0b' : '#60a5fa',
+            'stroke-width':  isSel ? 2.5 : 1.8,
+            'marker-end':    isSel ? 'url(#arch-arrow-sel)' : 'url(#arch-arrow)',
             'stroke-dasharray': isSel ? '6 3' : 'none',
-            'data-edge-id': edge.id,
-            style: 'cursor:pointer',
+            style:           'cursor:pointer',
         });
-        edgePath.dataset.edgeId = edge.id;
-        archSVG.appendChild(edgePath);
+        path.dataset.edgeId = edge.id;
+        archSVG.appendChild(path);
+
+        if (edge.label) {
+            const scx = src.x+src.w/2, scy = src.y+src.h/2;
+            const dcx = dst.x+dst.w/2, dcy = dst.y+dst.h/2;
+            const [x1, y1] = connPt(src, dcx, dcy);
+            const [x2, y2] = connPt(dst, scx, scy);
+            const lx = (x1+x2)/2, ly = (y1+y2)/2;
+            const tw = edge.label.length * 7 + 8;
+            archSVG.appendChild(svgE('rect', {x:lx-tw/2, y:ly-9, width:tw, height:14, fill:'#111118', rx:3}));
+            const t = svgE('text', {
+                x:lx, y:ly, 'text-anchor':'middle', 'dominant-baseline':'central',
+                'font-family':'Courier New,monospace', 'font-size':'10', fill:'#94a3b8',
+                style:'pointer-events:none;user-select:none;',
+            });
+            t.textContent = edge.label;
+            archSVG.appendChild(t);
+        }
     });
 
-    // Nodes on top
+    // Nodes
     nodes.forEach(node => {
-        const isSel     = selected?.kind === 'node' && selected.id === node.id;
+        const isSel     = selectedIds.has(node.id);
         const isConnSrc = connSrc === node.id;
-        const stroke    = isConnSrc ? '#10b981' : isSel ? '#f59e0b' : '#2563eb';
-        const sw        = isSel || isConnSrc ? '2.5' : '1.8';
-        const fill      = '#1a1a26';
+        const fill   = node.fill   || '#1a1a26';
+        const stroke = isConnSrc ? '#10b981' : isSel ? '#f59e0b' : (node.stroke || '#2563eb');
+        const sw     = isSel || isConnSrc ? '2.5' : '1.8';
 
         const g = svgE('g', {style:'cursor:grab'});
         g.dataset.nodeId = node.id;
 
+        if (isSel) {
+            g.appendChild(svgE('rect', {
+                x:node.x-4, y:node.y-4, width:node.w+8, height:node.h+8,
+                rx:6, fill:'none', stroke:'#f59e0b', 'stroke-width':'1', opacity:'0.35',
+            }));
+        }
         buildNodeShapes(node, fill, stroke, sw).forEach(s => g.appendChild(s));
 
-        if (isSel) {
-            // subtle glow highlight
-            const halo = svgE('rect', {
-                x: node.x - 4, y: node.y - 4,
-                width: node.w + 8, height: node.h + 8,
-                rx: 6, fill: 'none',
-                stroke: '#f59e0b', 'stroke-width': '1', opacity: '0.35',
-            });
-            g.insertBefore(halo, g.firstChild);
-        }
-
-        const cx = node.x + node.w / 2, cy = node.y + node.h / 2;
-        const text = svgE('text', {
-            x: cx, y: cy,
-            'text-anchor': 'middle',
-            'dominant-baseline': 'central',
-            'font-family': 'Courier New, monospace',
-            'font-size': '12',
-            fill: '#e2e8f0',
-            style: 'pointer-events:none; user-select:none;',
+        const lblY = node.type === 'actor' ? node.y + node.h + 10 : node.y + node.h / 2;
+        const t = svgE('text', {
+            x: node.x + node.w / 2, y: lblY,
+            'text-anchor':'middle', 'dominant-baseline':'central',
+            'font-family':'Courier New,monospace', 'font-size':'12', fill:'#e2e8f0',
+            style:'pointer-events:none;user-select:none;',
         });
-        text.textContent = node.label;
-        g.appendChild(text);
-
+        t.textContent = node.label;
+        g.appendChild(t);
         archSVG.appendChild(g);
     });
 
-    // SVG cursor
-    archSVG.className = mode.startsWith('place') ? 'placing' : mode === 'connect' ? 'connecting' : '';
+    // Resize handles (single-node selection only)
+    if (selKind === 'node' && selectedIds.size === 1) {
+        const node = nodes.find(n => n.id === [...selectedIds][0]);
+        if (node) {
+            getHandles(node).forEach(h => {
+                const el = svgE('rect', {
+                    x:h.cx-4, y:h.cy-4, width:8, height:8,
+                    fill:'#09090f', stroke:'#f59e0b', 'stroke-width':'1.5', rx:1,
+                    style:`cursor:${HANDLE_CURSORS[h.id]}`,
+                });
+                el.dataset.resizeHandle = h.id;
+                el.dataset.nodeId = node.id;
+                archSVG.appendChild(el);
+            });
+        }
+    }
 
-    syncSidebarLabel();
+    // Connection anchor dots (connect mode)
+    if (mode === 'connect') {
+        nodes.forEach(node => {
+            [
+                {x:node.x+node.w/2, y:node.y},
+                {x:node.x+node.w,   y:node.y+node.h/2},
+                {x:node.x+node.w/2, y:node.y+node.h},
+                {x:node.x,          y:node.y+node.h/2},
+            ].forEach(a => {
+                archSVG.appendChild(svgE('circle', {
+                    cx:a.x, cy:a.y, r:5,
+                    fill:'#10b981', stroke:'#fff', 'stroke-width':'1', opacity:'0.75',
+                    style:'pointer-events:none',
+                }));
+            });
+        });
+    }
+
+    archSVG.className = mode.startsWith('place') ? 'placing'
+        : mode === 'connect' ? 'connecting'
+        : (spaceDown || panning) ? 'panning' : '';
+    syncSidebar();
 }
 
 // ── Mode management ───────────────────────────────────────────────────────────
 function setMode(m) {
-    mode = m;
-    connSrc = null;
+    mode = m; connSrc = null;
     document.querySelectorAll('#arch-app .shape-item, #arch-app .arch-btn').forEach(el => el.classList.remove('active'));
     if (m.startsWith('place:')) {
         document.querySelector(`[data-type="${m.slice(6)}"]`)?.classList.add('active');
-        statusEl.textContent = `Click on the canvas to place a ${m.slice(6)} node. Press Escape to cancel.`;
+        statusEl.textContent = `Placing ${m.slice(6)} — click canvas. Esc to cancel.`;
     } else if (m === 'connect') {
         document.getElementById('btn-connect').classList.add('active');
-        statusEl.textContent = 'Click the source node, then the destination node to draw an arrow. Press Escape to cancel.';
+        statusEl.textContent = 'Click source node, then destination node. Esc to cancel.';
     } else {
-        statusEl.textContent = 'Click a shape to place it, or click existing nodes to select and move them. Double-click a node to rename it.';
+        statusEl.textContent = 'Select & drag · Shift+click multi-select · Scroll to zoom · Middle-drag/Space+drag to pan · Ctrl+C/V/D · Del to delete';
     }
     render();
 }
 
-// ── Snapshot for undo ─────────────────────────────────────────────────────────
+// ── Snapshot / undo / redo ────────────────────────────────────────────────────
 function snapshot() {
-    _history.push({
-        nodes: nodes.map(n => ({...n})),
-        edges: edges.map(e => ({...e})),
-    });
-    if (_history.length > 40) _history.shift();
+    _history.push({nodes: nodes.map(n => ({...n})), edges: edges.map(e => ({...e}))});
+    if (_history.length > 60) _history.shift();
+    _redo = [];
+}
+
+function undo() {
+    if (!_history.length) { statusEl.textContent = 'Nothing to undo.'; return; }
+    _redo.push({nodes: nodes.map(n => ({...n})), edges: edges.map(e => ({...e}))});
+    const p = _history.pop();
+    nodes = p.nodes; edges = p.edges;
+    selectedIds.clear(); selKind = null; render();
+}
+
+function redo() {
+    if (!_redo.length) { statusEl.textContent = 'Nothing to redo.'; return; }
+    _history.push({nodes: nodes.map(n => ({...n})), edges: edges.map(e => ({...e}))});
+    const n = _redo.pop();
+    nodes = n.nodes; edges = n.edges;
+    selectedIds.clear(); selKind = null; render();
 }
 
 // ── Place a node ──────────────────────────────────────────────────────────────
 function placeNode(e, type) {
-    const [px, py] = svgPt(e);
-    const {w, h} = NODE_DIMS[type];
-    const labels = {process:'Process', decision:'Decision', terminal:'Start/End', database:'Database', io:'Input/Output'};
+    const [px, py] = svgPt(e.clientX, e.clientY);
+    const {w, h}   = NODE_DIMS[type];
     snapshot();
-    const newNode = {id: 'n'+(nextId++), type, x: px - w/2, y: py - h/2, w, h, label: labels[type]};
-    nodes.push(newNode);
-    selected = {kind:'node', id: newNode.id};
+    const node = {
+        id: 'n' + (nextId++), type,
+        x: px - w / 2, y: py - h / 2, w, h,
+        label:  NODE_LABELS[type],
+        fill:   '#1a1a26',
+        stroke: '#2563eb',
+    };
+    nodes.push(node);
+    selectedIds = new Set([node.id]);
+    selKind = 'node';
     setMode('select');
-    render();
-    // Auto-focus sidebar label input so the user can immediately type the label
-    sidebarInp.focus();
-    sidebarInp.select();
+    sidebarInp.focus(); sidebarInp.select();
 }
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+function deleteSelected() {
+    if (!selectedIds.size) { statusEl.textContent = 'Nothing selected.'; return; }
+    snapshot();
+    if (selKind === 'node') {
+        nodes = nodes.filter(n => !selectedIds.has(n.id));
+        edges = edges.filter(e => !selectedIds.has(e.src) && !selectedIds.has(e.dst));
+    } else {
+        edges = edges.filter(e => !selectedIds.has(e.id));
+    }
+    selectedIds.clear(); selKind = null; render();
+}
+
+// ── Copy / paste ──────────────────────────────────────────────────────────────
+function copySelected() {
+    if (selKind !== 'node' || !selectedIds.size) return;
+    const copied = nodes.filter(n => selectedIds.has(n.id));
+    const ids    = new Set(copied.map(n => n.id));
+    clipboard    = {
+        nodes: copied.map(n => ({...n})),
+        edges: edges.filter(e => ids.has(e.src) && ids.has(e.dst)).map(e => ({...e})),
+    };
+    statusEl.textContent = `Copied ${copied.length} node(s).`;
+}
+
+function pasteClipboard() {
+    if (!clipboard?.nodes.length) return;
+    snapshot();
+    const idMap    = {};
+    const newNodes = clipboard.nodes.map(n => {
+        const newId = 'n' + (nextId++);
+        idMap[n.id] = newId;
+        return {...n, id:newId, x:n.x+20, y:n.y+20};
+    });
+    const newEdges = clipboard.edges.map(e => ({
+        ...e, id:'e'+(nextId++), src:idMap[e.src], dst:idMap[e.dst],
+    }));
+    nodes.push(...newNodes);
+    edges.push(...newEdges);
+    selectedIds = new Set(newNodes.map(n => n.id));
+    selKind = 'node';
+    render();
+}
+
+function selectAll() {
+    if (!nodes.length) return;
+    selectedIds = new Set(nodes.map(n => n.id));
+    selKind = 'node';
+    render();
+}
+
+function duplicateSelected() { copySelected(); pasteClipboard(); }
+
+// ── Clear all ─────────────────────────────────────────────────────────────────
+function clearAll() {
+    if (!nodes.length && !edges.length) return;
+    snapshot(); nodes = []; edges = [];
+    selectedIds.clear(); selKind = null; render();
+    statusEl.textContent = 'Canvas cleared.';
+}
+
+// ── Z-order ───────────────────────────────────────────────────────────────────
+function bringForward(id) {
+    const i = nodes.findIndex(n => n.id === id);
+    if (i < nodes.length - 1) { snapshot(); [nodes[i], nodes[i+1]] = [nodes[i+1], nodes[i]]; render(); }
+}
+
+function sendBackward(id) {
+    const i = nodes.findIndex(n => n.id === id);
+    if (i > 0) { snapshot(); [nodes[i-1], nodes[i]] = [nodes[i], nodes[i-1]]; render(); }
+}
+
+// ── Zoom wheel ────────────────────────────────────────────────────────────────
+archSVG.addEventListener('wheel', e => {
+    e.preventDefault();
+    zoomAt(e.clientX, e.clientY, e.deltaY > 0 ? 1.12 : 1 / 1.12);
+}, {passive: false});
 
 // ── Mouse events ──────────────────────────────────────────────────────────────
 archSVG.addEventListener('mousedown', e => {
     if (e.target === labelIn) return;
     commitLabel();
 
-    const nodeEl = e.target.closest('[data-node-id]');
-    const edgeEl = e.target.closest('[data-edge-id]');
+    // Middle mouse or Space+drag → pan
+    if (e.button === 1 || (e.button === 0 && spaceDown)) {
+        if (e.button === 1) e.preventDefault();
+        panning = {startClientX:e.clientX, startClientY:e.clientY, startVbX:vbX, startVbY:vbY};
+        return;
+    }
+    if (e.button !== 0) return;
+
+    const resizeEl = e.target.closest('[data-resize-handle]');
+    const nodeEl   = !resizeEl && e.target.closest('[data-node-id]');
+    const edgeEl   = !resizeEl && !nodeEl && e.target.closest('[data-edge-id]');
+
+    if (resizeEl) {
+        const id   = resizeEl.dataset.nodeId;
+        const node = nodes.find(n => n.id === id);
+        if (!node) return;
+        snapshot();
+        const [smx, smy] = svgPt(e.clientX, e.clientY);
+        resizing = {id, handle:resizeEl.dataset.resizeHandle,
+                    ox:node.x, oy:node.y, ow:node.w, oh:node.h, smx, smy};
+        e.stopPropagation(); return;
+    }
 
     if (nodeEl) {
-        const id = nodeEl.dataset.nodeId;
+        const id       = nodeEl.dataset.nodeId;
+        const additive = e.shiftKey || e.ctrlKey || e.metaKey;
+
         if (mode === 'connect') {
             if (!connSrc) {
                 connSrc = id;
                 statusEl.textContent = 'Now click the destination node.';
                 render();
             } else if (connSrc === id) {
-                connSrc = null;
-                statusEl.textContent = 'Click the source node, then the destination node to draw an arrow.';
-                render();
+                connSrc = null; render();
             } else {
                 snapshot();
-                edges.push({id:'e'+(nextId++), src:connSrc, dst:id});
+                edges.push({id:'e'+(nextId++), src:connSrc, dst:id, label:''});
                 connSrc = null;
-                statusEl.textContent = 'Arrow created. Click another source node to continue, or press Escape.';
+                statusEl.textContent = 'Connected. Click another source node, or Esc.';
                 render();
             }
-        } else if (mode === 'select') {
-            selected = {kind:'node', id};
-            const [mx, my] = svgPt(e);
-            const node = nodes.find(n => n.id === id);
-            dragging = {id, ox:node.x, oy:node.y, mx, my};
-            render();
-        }
-        e.stopPropagation();
-
-    } else if (edgeEl) {
-        if (mode === 'select') {
-            selected = {kind:'edge', id: edgeEl.dataset.edgeId};
-            render();
-        }
-        e.stopPropagation();
-
-    } else {
-        // background click
-        if (mode.startsWith('place:')) {
-            placeNode(e, mode.slice(6));
         } else {
-            selected = null;
+            if (!additive && !selectedIds.has(id)) {
+                selectedIds = new Set([id]); selKind = 'node';
+            } else if (additive) {
+                if (selectedIds.has(id)) {
+                    selectedIds.delete(id);
+                    if (!selectedIds.size) selKind = null;
+                } else {
+                    selectedIds.add(id); selKind = 'node';
+                }
+            }
+            const [smx, smy] = svgPt(e.clientX, e.clientY);
+            snapshot();
+            const starts = [...selectedIds]
+                .map(sid => nodes.find(n => n.id === sid))
+                .filter(Boolean)
+                .map(n => ({id:n.id, ox:n.x, oy:n.y}));
+            dragging = {starts, smx, smy, moved:false};
             render();
         }
+        e.stopPropagation(); return;
+    }
+
+    if (edgeEl) {
+        selectedIds = new Set([edgeEl.dataset.edgeId]);
+        selKind = 'edge';
+        render();
+        e.stopPropagation(); return;
+    }
+
+    // Background
+    if (mode.startsWith('place:')) {
+        placeNode(e, mode.slice(6));
+    } else {
+        if (!e.shiftKey) { selectedIds.clear(); selKind = null; }
+        const [sx, sy] = svgPt(e.clientX, e.clientY);
+        marquee = {x1:sx, y1:sy, x2:sx, y2:sy};
+        render();
     }
 });
 
 document.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    const [mx, my] = svgPt(e);
-    const node = nodes.find(n => n.id === dragging.id);
-    if (!node) return;
-    node.x = Math.max(0, Math.min(VB_W - node.w, dragging.ox + mx - dragging.mx));
-    node.y = Math.max(0, Math.min(VB_H - node.h, dragging.oy + my - dragging.my));
-    render();
+    if (panning) {
+        const r = archSVG.getBoundingClientRect();
+        vbX = panning.startVbX - (e.clientX - panning.startClientX) * (vbW / r.width);
+        vbY = panning.startVbY - (e.clientY - panning.startClientY) * (vbH / r.height);
+        applyVb(); return;
+    }
+
+    if (resizing) {
+        const [mx, my] = svgPt(e.clientX, e.clientY);
+        const dx = mx - resizing.smx, dy = my - resizing.smy;
+        const node = nodes.find(n => n.id === resizing.id);
+        if (!node) return;
+        const {handle, ox, oy, ow, oh} = resizing;
+        let nx = ox, ny = oy, nw = ow, nh = oh;
+        if (handle.includes('e')) nw = Math.max(MIN_W, ow + dx);
+        if (handle.includes('s')) nh = Math.max(MIN_H, oh + dy);
+        if (handle.includes('w')) { nw = Math.max(MIN_W, ow - dx); if (nw > MIN_W) nx = ox + dx; }
+        if (handle.includes('n')) { nh = Math.max(MIN_H, oh - dy); if (nh > MIN_H) ny = oy + dy; }
+        node.x = nx; node.y = ny; node.w = nw; node.h = nh;
+        render(); return;
+    }
+
+    if (dragging) {
+        const [mx, my] = svgPt(e.clientX, e.clientY);
+        const ddx = mx - dragging.smx, ddy = my - dragging.smy;
+        dragging.starts.forEach(s => {
+            const n = nodes.find(n => n.id === s.id);
+            if (n) { n.x = s.ox + ddx; n.y = s.oy + ddy; }
+        });
+        dragging.moved = true;
+        render(); return;
+    }
+
+    if (marquee) {
+        const [mx, my] = svgPt(e.clientX, e.clientY);
+        marquee.x2 = mx; marquee.y2 = my;
+        render();
+    }
 });
 
-document.addEventListener('mouseup', () => {
-    if (dragging) { snapshot(); dragging = null; }
+document.addEventListener('mouseup', e => {
+    if (panning) { panning = null; render(); return; }
+
+    if (resizing) { resizing = null; render(); return; }
+
+    if (dragging) {
+        if (!dragging.moved) _history.pop(); // revert snapshot if nothing moved
+        dragging = null; render(); return;
+    }
+
+    if (marquee) {
+        const mx1 = Math.min(marquee.x1, marquee.x2), my1 = Math.min(marquee.y1, marquee.y2);
+        const mx2 = Math.max(marquee.x1, marquee.x2), my2 = Math.max(marquee.y1, marquee.y2);
+        if (mx2 - mx1 > 4 || my2 - my1 > 4) {
+            nodes.filter(n => n.x < mx2 && n.x+n.w > mx1 && n.y < my2 && n.y+n.h > my1)
+                .forEach(n => { selectedIds.add(n.id); selKind = 'node'; });
+        }
+        marquee = null; render();
+    }
 });
 
-// ── Double-click: edit label ──────────────────────────────────────────────────
+// ── Double-click: label editing ────────────────────────────────────────────────
 archSVG.addEventListener('dblclick', e => {
     const nodeEl = e.target.closest('[data-node-id]');
-    if (!nodeEl) return;
-    const node = nodes.find(n => n.id === nodeEl.dataset.nodeId);
-    if (!node) return;
-    startEdit(node);
+    const edgeEl = !nodeEl && e.target.closest('[data-edge-id]');
+    if (nodeEl) {
+        const node = nodes.find(n => n.id === nodeEl.dataset.nodeId);
+        if (node) startNodeEdit(node);
+    } else if (edgeEl) {
+        const edge = edges.find(ed => ed.id === edgeEl.dataset.edgeId);
+        if (edge) startEdgeEdit(edge);
+    }
 });
 
-function startEdit(node) {
-    const rect = archSVG.getBoundingClientRect();
-    const sx = rect.left + (node.x + node.w / 2) / VB_W * rect.width;
-    const sy = rect.top  + (node.y + node.h / 2) / VB_H * rect.height;
+function startNodeEdit(node) {
+    const r  = archSVG.getBoundingClientRect();
+    const sx = r.left + (node.x + node.w / 2 - vbX) / vbW * r.width;
+    const sy = r.top  + (node.y + node.h / 2 - vbY) / vbH * r.height;
     labelIn.dataset.nodeId = node.id;
+    labelIn.dataset.edgeId = '';
     labelIn.value = node.label;
-    labelIn.style.left = sx + 'px';
-    labelIn.style.top  = sy + 'px';
+    labelIn.style.left    = sx + 'px';
+    labelIn.style.top     = sy + 'px';
+    labelIn.style.width   = Math.max(80, node.w / vbW * r.width - 16) + 'px';
     labelIn.style.display = 'block';
-    labelIn.style.width = Math.max(80, node.w * rect.width / VB_W - 16) + 'px';
-    labelIn.focus();
-    labelIn.select();
+    labelIn.focus(); labelIn.select();
+}
+
+function startEdgeEdit(edge) {
+    const src = nodes.find(n => n.id === edge.src);
+    const dst = nodes.find(n => n.id === edge.dst);
+    if (!src || !dst) return;
+    const [x1, y1] = connPt(src, dst.x+dst.w/2, dst.y+dst.h/2);
+    const [x2, y2] = connPt(dst, src.x+src.w/2, src.y+src.h/2);
+    const r  = archSVG.getBoundingClientRect();
+    const lx = (x1 + x2) / 2, ly = (y1 + y2) / 2;
+    const sx = r.left + (lx - vbX) / vbW * r.width;
+    const sy = r.top  + (ly - vbY) / vbH * r.height;
+    labelIn.dataset.nodeId = '';
+    labelIn.dataset.edgeId = edge.id;
+    labelIn.value = edge.label || '';
+    labelIn.style.left    = sx + 'px';
+    labelIn.style.top     = sy + 'px';
+    labelIn.style.width   = '100px';
+    labelIn.style.display = 'block';
+    labelIn.focus(); labelIn.select();
 }
 
 function commitLabel() {
     if (labelIn.style.display === 'none') return;
-    const id = labelIn.dataset.nodeId;
-    const node = nodes.find(n => n.id === id);
-    if (node && labelIn.value.trim()) {
-        snapshot();
-        node.label = labelIn.value.trim();
-        render();
+    const nid = labelIn.dataset.nodeId;
+    const eid = labelIn.dataset.edgeId;
+    if (nid) {
+        const node = nodes.find(n => n.id === nid);
+        if (node) { snapshot(); node.label = labelIn.value.trim() || node.label; render(); }
+    } else if (eid) {
+        const edge = edges.find(e => e.id === eid);
+        if (edge) { snapshot(); edge.label = labelIn.value.trim(); render(); }
     }
     labelIn.style.display = 'none';
 }
 
 labelIn.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); commitLabel(); }
-    if (e.key === 'Escape') { labelIn.style.display = 'none'; }
+    if (e.key === 'Enter')  { e.preventDefault(); commitLabel(); }
+    if (e.key === 'Escape') labelIn.style.display = 'none';
 });
 labelIn.addEventListener('blur', commitLabel);
 
 // ── Sidebar label input ───────────────────────────────────────────────────────
 sidebarInp.addEventListener('input', () => {
-    if (!selected || selected.kind !== 'node') return;
-    const node = nodes.find(n => n.id === selected.id);
-    if (!node) return;
-    node.label = sidebarInp.value;
-    render();
+    if (selKind !== 'node' || selectedIds.size !== 1) return;
+    const node = nodes.find(n => n.id === [...selectedIds][0]);
+    if (node) { node.label = sidebarInp.value; render(); }
 });
 
 sidebarInp.addEventListener('keydown', e => {
-    // Prevent canvas-level shortcuts (Delete, Escape) while editing label
     e.stopPropagation();
-    if (e.key === 'Enter') {
-        snapshot();
-        sidebarInp.blur();
-        archSVG.focus();
+    if (e.key === 'Enter') { snapshot(); sidebarInp.blur(); archSVG.focus(); }
+});
+
+// ── Context menu ──────────────────────────────────────────────────────────────
+function showCtx(x, y, items) {
+    ctxMenu.innerHTML = '';
+    items.forEach(item => {
+        if (item === '-') {
+            ctxMenu.appendChild(Object.assign(document.createElement('div'), {className:'ctx-sep'}));
+            return;
+        }
+        const el = Object.assign(document.createElement('div'), {
+            className: 'ctx-item', textContent: item.label,
+        });
+        el.addEventListener('mousedown', ev => { ev.stopPropagation(); });
+        el.addEventListener('click', () => { hideCtx(); item.action(); });
+        ctxMenu.appendChild(el);
+    });
+    ctxMenu.style.left    = x + 'px';
+    ctxMenu.style.top     = y + 'px';
+    ctxMenu.style.display = 'block';
+}
+
+function hideCtx() { ctxMenu.style.display = 'none'; }
+
+archSVG.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    const resizeEl = e.target.closest('[data-resize-handle]');
+    if (resizeEl) return;
+    const nodeEl = e.target.closest('[data-node-id]');
+    const edgeEl = !nodeEl && e.target.closest('[data-edge-id]');
+
+    if (nodeEl) {
+        const id = nodeEl.dataset.nodeId;
+        if (!selectedIds.has(id)) { selectedIds = new Set([id]); selKind = 'node'; render(); }
+        showCtx(e.clientX, e.clientY, [
+            {label:'✕  Delete',        action: deleteSelected},
+            {label:'⧉  Duplicate',     action: duplicateSelected},
+            '-',
+            {label:'↑  Bring Forward', action: () => bringForward(id)},
+            {label:'↓  Send Backward', action: () => sendBackward(id)},
+        ]);
+    } else if (edgeEl) {
+        const id = edgeEl.dataset.edgeId;
+        selectedIds = new Set([id]); selKind = 'edge'; render();
+        showCtx(e.clientX, e.clientY, [
+            {label:'✕  Delete',     action: deleteSelected},
+            {label:'✏  Edit Label', action: () => {
+                const edge = edges.find(ed => ed.id === id);
+                if (edge) startEdgeEdit(edge);
+            }},
+        ]);
+    } else {
+        showCtx(e.clientX, e.clientY, [
+            {label:'⧉  Paste',      action: pasteClipboard},
+            {label:'⊡  Select All', action: selectAll},
+            '-',
+            {label:'⊘  Clear All',  action: clearAll},
+            {label:'⊡  Fit View',   action: fitView},
+        ]);
     }
 });
 
+document.addEventListener('click',   () => hideCtx());
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hideCtx(); });
+
 // ── Keyboard ──────────────────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
-    const active = document.activeElement;
-    const inInput = active === labelIn || active === sidebarInp || active.tagName === 'INPUT';
+    const active  = document.activeElement;
+    const inInput = active === labelIn || active === sidebarInp
+        || active.tagName === 'INPUT' || active.tagName === 'TEXTAREA';
+
+    if (e.key === ' ' && !inInput) {
+        e.preventDefault();
+        spaceDown = true;
+        if (!panning) archSVG.classList.add('panning');
+        return;
+    }
+
     if (inInput) return;
 
     if (e.key === 'Escape') { setMode('select'); return; }
 
-    if ((e.key === 'Delete' || e.key === 'Backspace') && selected) {
-        e.preventDefault(); deleteSelected(); return;
+    if (e.ctrlKey || e.metaKey) {
+        switch (e.key.toLowerCase()) {
+            case 'z': e.preventDefault(); e.shiftKey ? redo() : undo(); return;
+            case 'y': e.preventDefault(); redo(); return;
+            case 'c': e.preventDefault(); copySelected(); return;
+            case 'v': e.preventDefault(); pasteClipboard(); return;
+            case 'a': e.preventDefault(); selectAll(); return;
+            case 'd': e.preventDefault(); duplicateSelected(); return;
+        }
     }
 
-    // Any printable character while a node is selected → redirect to sidebar input
-    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && selected?.kind === 'node') {
+    if (e.key === 'F2' && selKind === 'node' && selectedIds.size === 1) {
+        const node = nodes.find(n => n.id === [...selectedIds][0]);
+        if (node) { e.preventDefault(); startNodeEdit(node); }
+        return;
+    }
+
+    if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSelected(); return; }
+
+    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey
+        && selKind === 'node' && selectedIds.size === 1) {
         sidebarInp.focus();
-        // The character will land naturally in the now-focused input
+    }
+});
+
+document.addEventListener('keyup', e => {
+    if (e.key === ' ') {
+        spaceDown = false;
+        if (!panning) archSVG.classList.remove('panning');
     }
 });
 
 // ── Toolbar buttons ───────────────────────────────────────────────────────────
-document.querySelectorAll('#arch-app .shape-item').forEach(item => {
-    item.addEventListener('click', () => setMode('place:' + item.dataset.type));
-});
+document.querySelectorAll('#arch-app .shape-item').forEach(item =>
+    item.addEventListener('click', () => setMode('place:' + item.dataset.type)));
 
-document.getElementById('btn-connect').addEventListener('click', () => {
-    setMode(mode === 'connect' ? 'select' : 'connect');
-});
-
+document.getElementById('btn-connect').addEventListener('click', () =>
+    setMode(mode === 'connect' ? 'select' : 'connect'));
 document.getElementById('btn-delete').addEventListener('click', deleteSelected);
+document.getElementById('btn-undo').addEventListener('click', undo);
+document.getElementById('btn-redo').addEventListener('click', redo);
+document.getElementById('btn-clear').addEventListener('click', clearAll);
+document.getElementById('btn-fit').addEventListener('click', fitView);
 
-function deleteSelected() {
-    if (!selected) { statusEl.textContent = 'Nothing selected to delete.'; return; }
-    snapshot();
-    if (selected.kind === 'node') {
-        const id = selected.id;
-        nodes = nodes.filter(n => n.id !== id);
-        edges = edges.filter(e => e.src !== id && e.dst !== id);
-    } else {
-        edges = edges.filter(e => e.id !== selected.id);
-    }
-    selected = null;
-    render();
-}
-
-document.getElementById('btn-undo').addEventListener('click', () => {
-    if (!_history.length) { statusEl.textContent = 'Nothing to undo.'; return; }
-    const prev = _history.pop();
-    nodes = prev.nodes; edges = prev.edges;
-    selected = null; render();
+// ── Style swatches ────────────────────────────────────────────────────────────
+document.querySelectorAll('#sidebar-fill-swatches .swatch').forEach(sw => {
+    sw.addEventListener('click', () => {
+        if (selKind !== 'node') return;
+        snapshot();
+        [...selectedIds].forEach(id => {
+            const n = nodes.find(n => n.id === id);
+            if (n) n.fill = sw.dataset.color;
+        });
+        render();
+    });
 });
 
-document.getElementById('btn-clear').addEventListener('click', () => {
-    if (!nodes.length && !edges.length) return;
-    snapshot(); nodes = []; edges = []; selected = null; render();
-    statusEl.textContent = 'Canvas cleared.';
+document.querySelectorAll('#sidebar-stroke-swatches .swatch').forEach(sw => {
+    sw.addEventListener('click', () => {
+        if (selKind !== 'node') return;
+        snapshot();
+        [...selectedIds].forEach(id => {
+            const n = nodes.find(n => n.id === id);
+            if (n) n.stroke = sw.dataset.color;
+        });
+        render();
+    });
 });
 
 // ── Export ────────────────────────────────────────────────────────────────────
 function exportSVG() {
     const clone = archSVG.cloneNode(true);
     clone.setAttribute('xmlns', SVG_NS);
-    // embed font hint
+    clone.setAttribute('viewBox', `0 0 ${VB_W} ${VB_H}`);
     const style = svgE('style');
     style.textContent = 'text{font-family:"Courier New",monospace;}';
     clone.insertBefore(style, clone.firstChild);
     const data = new XMLSerializer().serializeToString(clone);
     const blob = new Blob([data], {type:'image/svg+xml'});
     const url  = URL.createObjectURL(blob);
-    const a    = Object.assign(document.createElement('a'), {download:'diagram.svg', href:url});
-    a.click();
+    Object.assign(document.createElement('a'), {download:'diagram.svg', href:url}).click();
     URL.revokeObjectURL(url);
 }
 
 function exportPNG() {
+    const saved = [vbX, vbY, vbW, vbH];
+    vbX = 0; vbY = 0; vbW = VB_W; vbH = VB_H; applyVb();
+    render();
     const clone = archSVG.cloneNode(true);
     clone.setAttribute('xmlns', SVG_NS);
-    // add background fill for PNG
     const bg = clone.querySelector('#arch-bg');
     if (bg) bg.setAttribute('fill', '#09090f');
-    // remove dot pattern for clean export
     const pat = clone.querySelector('#arch-dots');
     if (pat) pat.parentNode.removeChild(pat);
+    [vbX, vbY, vbW, vbH] = saved; applyVb(); render();
 
     const data = new XMLSerializer().serializeToString(clone);
     const blob = new Blob([data], {type:'image/svg+xml;charset=utf-8'});
@@ -474,20 +906,17 @@ function exportPNG() {
     const img  = new Image();
     img.onload = () => {
         const canvas = document.createElement('canvas');
-        canvas.width  = VB_W * 2; canvas.height = VB_H * 2;
+        canvas.width = VB_W * 2; canvas.height = VB_H * 2;
         const ctx = canvas.getContext('2d');
         ctx.fillStyle = '#09090f';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         URL.revokeObjectURL(url);
-        const a = Object.assign(document.createElement('a'), {download:'diagram.png', href:canvas.toDataURL('image/png')});
-        a.click();
+        Object.assign(document.createElement('a'), {download:'diagram.png', href:canvas.toDataURL('image/png')}).click();
     };
     img.onerror = () => {
-        // fallback to SVG if PNG fails (cross-origin font restriction)
-        URL.revokeObjectURL(url);
-        exportSVG();
-        statusEl.textContent = 'PNG export not available in this browser — downloaded SVG instead.';
+        URL.revokeObjectURL(url); exportSVG();
+        statusEl.textContent = 'PNG export failed — downloaded SVG instead.';
     };
     img.src = url;
 }
