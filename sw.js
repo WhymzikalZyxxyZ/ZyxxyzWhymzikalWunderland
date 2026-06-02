@@ -59,7 +59,11 @@ self.addEventListener('fetch', e => {
     if (request.headers.get('accept')?.includes('text/html')) {
         e.respondWith(
             fetch(request)
-                .then(res => { caches.open(CACHE_NAME).then(c => c.put(request, res.clone())); return res; })
+                .then(res => {
+                    const clone = res.clone();
+                    caches.open(CACHE_NAME).then(c => c.put(request, clone));
+                    return res;
+                })
                 .catch(() => caches.match(request))
         );
         return;
@@ -70,7 +74,10 @@ self.addEventListener('fetch', e => {
         caches.match(request).then(cached => {
             if (cached) return cached;
             return fetch(request).then(res => {
-                if (res.ok) caches.open(CACHE_NAME).then(c => c.put(request, res.clone()));
+                if (res.ok) {
+                    const clone = res.clone();
+                    caches.open(CACHE_NAME).then(c => c.put(request, clone));
+                }
                 return res;
             });
         })
