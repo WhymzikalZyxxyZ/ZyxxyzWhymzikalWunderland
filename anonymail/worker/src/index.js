@@ -8,6 +8,23 @@ import { randomHex }      from './crypto.js';
 
 export { MailboxDO, RegistryDO };
 
+// ── CORS ──────────────────────────────────────────────────────────────────────
+const CORS_ORIGINS = new Set([
+    'https://zyxwonderland.xyz',
+    'https://www.zyxwonderland.xyz',
+]);
+
+function corsHeaders(origin) {
+    if (!CORS_ORIGINS.has(origin)) return {};
+    return {
+        'Access-Control-Allow-Origin':  origin,
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+        'Access-Control-Max-Age':       '86400',
+        'Vary':                         'Origin',
+    };
+}
+
 // ── Security headers injected on every response ───────────────────────────────
 const SEC_HEADERS = {
     'X-Content-Type-Options':    'nosniff',
@@ -248,8 +265,14 @@ export default {
         const path      = url.pathname;
         const method    = request.method;
         const ip        = request.headers.get('CF-Connecting-IP') || '0.0.0.0';
+        const origin    = request.headers.get('Origin') || '';
 
         log('info', requestId, 'request.start', { method, path, ip: ip.slice(0, 8) + '…' });
+
+        // Handle CORS preflight
+        if (method === 'OPTIONS') {
+            return new Response(null, { status: 204, headers: corsHeaders(origin) });
+        }
 
         let response;
         try {
@@ -262,10 +285,11 @@ export default {
         const duration = Date.now() - start;
         log('info', requestId, 'request.end', { status: response.status, duration });
 
-        // Attach request ID and timing to every response for client-side debugging
+        // Attach request ID, timing, and CORS headers to every response
         const r = new Response(response.body, response);
         r.headers.set('X-Request-Id', requestId);
         r.headers.set('X-Response-Time', `${duration}ms`);
+        for (const [k, v] of Object.entries(corsHeaders(origin))) r.headers.set(k, v);
         return r;
     },
 

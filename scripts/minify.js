@@ -22,7 +22,7 @@ function walk(dir, ext, results = []) {
 let ok = 0, fail = 0;
 
 const jsScript  = [path.join(ROOT, 'js')];
-const jsModule  = [path.join(ROOT, 'anonymail', 'worker', 'public', 'js')];
+const jsModule  = [path.join(ROOT, 'anonymail', 'worker', 'public', 'js'), path.join(ROOT, 'mail', 'js')];
 const cssDirs   = [path.join(ROOT, 'css'), path.join(ROOT, 'anonymail', 'worker', 'public', 'css')];
 
 for (const f of jsScript.flatMap(d => walk(d, '.js'))) {

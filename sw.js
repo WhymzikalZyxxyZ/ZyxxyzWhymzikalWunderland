@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'wunderland-v3';
+const CACHE_NAME = 'wunderland-v4';
 
 // Static assets to pre-cache on install
 const PRECACHE = [
@@ -32,6 +32,11 @@ const PRECACHE = [
     '/js/engines/rps-engine.js',
     '/js/engines/puzzle-engine.js',
     '/js/gamer/puzzle.js',
+    '/mail/',
+    '/mail/css/app.css',
+    '/mail/js/app.js',
+    '/mail/js/api.js',
+    '/mail/js/compose.js',
 ];
 
 self.addEventListener('install', e => {
