@@ -42,18 +42,21 @@ const NODE_LABELS = {
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let nodes = [], edges = [], nextId = 1;
-let selectedIds = new Set();
-let selKind     = null;        // 'node' | 'edge' | null
-let mode        = 'select';
-let connSrc     = null;
-let dragging    = null;        // {starts:[{id,ox,oy}], smx, smy}
-let resizing    = null;        // {id,handle,ox,oy,ow,oh,smx,smy}
-let marquee     = null;        // {x1,y1,x2,y2} in SVG coords
-let panning     = null;        // {startClientX,startClientY,startVbX,startVbY}
-let spaceDown   = false;
-let clipboard   = null;        // {nodes, edges}
-let _history    = [];
-let _redo       = [];
+let selectedIds   = new Set();
+let selKind       = null;        // 'node' | 'edge' | null
+let mode          = 'select';
+let connSrc       = null;
+let dragging      = null;        // {starts:[{id,ox,oy}], smx, smy, moved}
+let resizing      = null;        // {id,handle,ox,oy,ow,oh,smx,smy}
+let drawing       = null;        // {type,sx,sy,ex,ey} – click-and-draw on canvas
+let sidebarDrag   = null;        // type string – drag-from-sidebar in progress
+let marquee       = null;        // {x1,y1,x2,y2} in SVG coords
+let panning       = null;        // {startClientX,startClientY,startVbX,startVbY}
+let spaceDown     = false;
+let lastPlacedId  = null;        // auto-connect: id of previously placed node
+let clipboard     = null;
+let _history      = [];
+let _redo         = [];
 
 // ViewBox (zoom + pan state)
 let vbX = 0, vbY = 0, vbW = VB_W, vbH = VB_H;
@@ -69,6 +72,7 @@ const stylePanel  = document.getElementById('sidebar-style-wrap');
 const styleHead   = document.getElementById('style-sec-head');
 const zoomLabel   = document.getElementById('zoom-label');
 const ctxMenu     = document.getElementById('ctx-menu');
+const shapeGhost  = document.getElementById('shape-ghost');
 
 // ── ViewBox / zoom / pan ──────────────────────────────────────────────────────
 function applyVb() {
@@ -98,6 +102,26 @@ function zoomAt(clientX, clientY, factor) {
 function fitView() {
     vbX = 0; vbY = 0; vbW = VB_W; vbH = VB_H;
     applyVb();
+}
+
+// ── Ghost (shape preview that follows cursor in place mode) ───────────────────
+function showGhost(clientX, clientY, type) {
+    const labels = {process:'▭',decision:'◇',terminal:'◯',database:'⌗',io:'▱',actor:'⚇',note:'⌐'};
+    shapeGhost.textContent = labels[type] || '◻';
+    shapeGhost.style.left    = clientX + 'px';
+    shapeGhost.style.top     = clientY + 'px';
+    shapeGhost.style.display = 'block';
+}
+
+function hideGhost() {
+    shapeGhost.style.display = 'none';
+}
+
+function moveGhost(clientX, clientY) {
+    if (shapeGhost.style.display !== 'none') {
+        shapeGhost.style.left = clientX + 'px';
+        shapeGhost.style.top  = clientY + 'px';
+    }
 }
 
 // ── SVG helpers ───────────────────────────────────────────────────────────────
@@ -134,8 +158,7 @@ function buildEdgePath(src, dst) {
     const dcx = dst.x + dst.w / 2, dcy = dst.y + dst.h / 2;
     const [x1, y1] = connPt(src, dcx, dcy);
     const [x2, y2] = connPt(dst, scx, scy);
-    const adx = Math.abs(x2 - x1), ady = Math.abs(y2 - y1);
-    if (adx < 8 || ady < 8) return `M${x1} ${y1} L${x2} ${y2}`;
+    if (Math.abs(x2-x1) < 8 || Math.abs(y2-y1) < 8) return `M${x1} ${y1} L${x2} ${y2}`;
     const mx = (x1 + x2) / 2;
     return `M${x1} ${y1} L${mx} ${y1} L${mx} ${y2} L${x2} ${y2}`;
 }
@@ -172,7 +195,7 @@ function buildNodeShapes(node, fill, stroke, sw) {
         const bt  = hcy + hr + 3;
         const bh  = (h - hr * 2 - 5) * 0.52;
         const bx  = cx;
-        els.push(svgE('circle', {cx:bx,  cy:hcy,     r:hr,       fill, stroke, 'stroke-width':sw}));
+        els.push(svgE('circle', {cx:bx, cy:hcy, r:hr, fill, stroke, 'stroke-width':sw}));
         els.push(svgE('rect',   {x:x+w*0.22, y:bt, width:w*0.56, height:bh, rx:3, fill, stroke, 'stroke-width':sw}));
         els.push(svgE('line',   {x1:x+3, y1:bt+4, x2:x+w-3, y2:bt+4, stroke, 'stroke-width':sw}));
         els.push(svgE('line',   {x1:bx, y1:bt+bh, x2:x+w*0.2, y2:y+h-2, stroke, 'stroke-width':sw}));
@@ -252,6 +275,19 @@ function render() {
         }));
     }
 
+    // Click-and-draw preview
+    if (drawing) {
+        const px = Math.min(drawing.sx, drawing.ex);
+        const py = Math.min(drawing.sy, drawing.ey);
+        const pw = Math.max(4, Math.abs(drawing.ex - drawing.sx));
+        const ph = Math.max(4, Math.abs(drawing.ey - drawing.sy));
+        const preview = {type:drawing.type, x:px, y:py, w:pw, h:ph};
+        buildNodeShapes(preview, 'rgba(37,99,235,0.12)', '#2563eb', '1.5').forEach(s => {
+            s.setAttribute('stroke-dasharray', '5 3');
+            archSVG.appendChild(s);
+        });
+    }
+
     // Edges
     edges.forEach(edge => {
         const src = nodes.find(n => n.id === edge.src);
@@ -292,9 +328,10 @@ function render() {
     nodes.forEach(node => {
         const isSel     = selectedIds.has(node.id);
         const isConnSrc = connSrc === node.id;
+        const isLast    = lastPlacedId === node.id;
         const fill   = node.fill   || '#1a1a26';
-        const stroke = isConnSrc ? '#10b981' : isSel ? '#f59e0b' : (node.stroke || '#2563eb');
-        const sw     = isSel || isConnSrc ? '2.5' : '1.8';
+        const stroke = isConnSrc ? '#10b981' : isSel ? '#f59e0b' : isLast ? '#a78bfa' : (node.stroke || '#2563eb');
+        const sw     = isSel || isConnSrc || isLast ? '2.5' : '1.8';
 
         const g = svgE('g', {style:'cursor:grab'});
         g.dataset.nodeId = node.id;
@@ -362,11 +399,15 @@ function render() {
 
 // ── Mode management ───────────────────────────────────────────────────────────
 function setMode(m) {
+    if (!m.startsWith('place:')) {
+        lastPlacedId = null;
+        hideGhost();
+    }
     mode = m; connSrc = null;
     document.querySelectorAll('#arch-app .shape-item, #arch-app .arch-btn').forEach(el => el.classList.remove('active'));
     if (m.startsWith('place:')) {
         document.querySelector(`[data-type="${m.slice(6)}"]`)?.classList.add('active');
-        statusEl.textContent = `Placing ${m.slice(6)} — click canvas. Esc to cancel.`;
+        statusEl.textContent = `Placing ${m.slice(6)} — drag canvas to draw, or click to place. Esc to finish.`;
     } else if (m === 'connect') {
         document.getElementById('btn-connect').classList.add('active');
         statusEl.textContent = 'Click source node, then destination node. Esc to cancel.';
@@ -388,7 +429,7 @@ function undo() {
     _redo.push({nodes: nodes.map(n => ({...n})), edges: edges.map(e => ({...e}))});
     const p = _history.pop();
     nodes = p.nodes; edges = p.edges;
-    selectedIds.clear(); selKind = null; render();
+    selectedIds.clear(); selKind = null; lastPlacedId = null; render();
 }
 
 function redo() {
@@ -399,22 +440,31 @@ function redo() {
     selectedIds.clear(); selKind = null; render();
 }
 
-// ── Place a node ──────────────────────────────────────────────────────────────
-function placeNode(e, type) {
-    const [px, py] = svgPt(e.clientX, e.clientY);
-    const {w, h}   = NODE_DIMS[type];
+// ── Finalize placement (shared by draw, click, and sidebar-drag) ──────────────
+function finalizePlace(type, x, y, w, h) {
     snapshot();
     const node = {
-        id: 'n' + (nextId++), type,
-        x: px - w / 2, y: py - h / 2, w, h,
+        id:'n'+(nextId++), type, x, y, w, h,
         label:  NODE_LABELS[type],
         fill:   '#1a1a26',
         stroke: '#2563eb',
     };
     nodes.push(node);
-    selectedIds = new Set([node.id]);
-    selKind = 'node';
-    setMode('select');
+
+    // Auto-connect to previous node in sequence
+    if (lastPlacedId && nodes.find(n => n.id === lastPlacedId)) {
+        edges.push({id:'e'+(nextId++), src:lastPlacedId, dst:node.id, label:''});
+    }
+
+    lastPlacedId = node.id;
+    selectedIds  = new Set([node.id]);
+    selKind      = 'node';
+
+    // Stay in place mode so the user can keep placing sequentially
+    mode = 'place:' + type;
+    document.querySelector(`[data-type="${type}"]`)?.classList.add('active');
+    statusEl.textContent = `${NODE_LABELS[type]} placed${lastPlacedId ? ' — auto-connected' : ''}. Drag or click to place next. Esc to finish.`;
+    render();
     sidebarInp.focus(); sidebarInp.select();
 }
 
@@ -475,7 +525,7 @@ function duplicateSelected() { copySelected(); pasteClipboard(); }
 function clearAll() {
     if (!nodes.length && !edges.length) return;
     snapshot(); nodes = []; edges = [];
-    selectedIds.clear(); selKind = null; render();
+    selectedIds.clear(); selKind = null; lastPlacedId = null; render();
     statusEl.textContent = 'Canvas cleared.';
 }
 
@@ -496,7 +546,18 @@ archSVG.addEventListener('wheel', e => {
     zoomAt(e.clientX, e.clientY, e.deltaY > 0 ? 1.12 : 1 / 1.12);
 }, {passive: false});
 
-// ── Mouse events ──────────────────────────────────────────────────────────────
+// ── Sidebar drag-to-canvas ────────────────────────────────────────────────────
+document.querySelectorAll('#arch-app .shape-item').forEach(item => {
+    item.addEventListener('mousedown', e => {
+        e.preventDefault();
+        const type = item.dataset.type;
+        setMode('place:' + type);
+        sidebarDrag = type;
+        showGhost(e.clientX, e.clientY, type);
+    });
+});
+
+// ── Canvas mouse events ───────────────────────────────────────────────────────
 archSVG.addEventListener('mousedown', e => {
     if (e.target === labelIn) return;
     commitLabel();
@@ -525,8 +586,7 @@ archSVG.addEventListener('mousedown', e => {
     }
 
     if (nodeEl) {
-        const id       = nodeEl.dataset.nodeId;
-        const additive = e.shiftKey || e.ctrlKey || e.metaKey;
+        const id = nodeEl.dataset.nodeId;
 
         if (mode === 'connect') {
             if (!connSrc) {
@@ -542,7 +602,8 @@ archSVG.addEventListener('mousedown', e => {
                 statusEl.textContent = 'Connected. Click another source node, or Esc.';
                 render();
             }
-        } else {
+        } else if (!mode.startsWith('place:')) {
+            const additive = e.shiftKey || e.ctrlKey || e.metaKey;
             if (!additive && !selectedIds.has(id)) {
                 selectedIds = new Set([id]); selKind = 'node';
             } else if (additive) {
@@ -562,28 +623,38 @@ archSVG.addEventListener('mousedown', e => {
             dragging = {starts, smx, smy, moved:false};
             render();
         }
-        e.stopPropagation(); return;
+        // In place mode, clicking on an existing node still starts a draw (fall through)
+        if (!mode.startsWith('place:')) { e.stopPropagation(); return; }
     }
 
-    if (edgeEl) {
+    if (edgeEl && !mode.startsWith('place:')) {
         selectedIds = new Set([edgeEl.dataset.edgeId]);
         selKind = 'edge';
         render();
         e.stopPropagation(); return;
     }
 
-    // Background
+    // Place mode: start click-and-draw
     if (mode.startsWith('place:')) {
-        placeNode(e, mode.slice(6));
-    } else {
-        if (!e.shiftKey) { selectedIds.clear(); selKind = null; }
+        sidebarDrag = null;
+        hideGhost();
         const [sx, sy] = svgPt(e.clientX, e.clientY);
-        marquee = {x1:sx, y1:sy, x2:sx, y2:sy};
-        render();
+        drawing = {type:mode.slice(6), sx, sy, ex:sx, ey:sy};
+        return;
     }
+
+    // Background in select mode: marquee
+    if (!e.shiftKey) { selectedIds.clear(); selKind = null; }
+    const [sx, sy] = svgPt(e.clientX, e.clientY);
+    marquee = {x1:sx, y1:sy, x2:sx, y2:sy};
+    render();
 });
 
+// ── Document-level mouse events ───────────────────────────────────────────────
 document.addEventListener('mousemove', e => {
+    // Move ghost if in place mode
+    if (mode.startsWith('place:')) moveGhost(e.clientX, e.clientY);
+
     if (panning) {
         const r = archSVG.getBoundingClientRect();
         vbX = panning.startVbX - (e.clientX - panning.startClientX) * (vbW / r.width);
@@ -606,6 +677,12 @@ document.addEventListener('mousemove', e => {
         render(); return;
     }
 
+    if (drawing) {
+        const [mx, my] = svgPt(e.clientX, e.clientY);
+        drawing.ex = mx; drawing.ey = my;
+        render(); return;
+    }
+
     if (dragging) {
         const [mx, my] = svgPt(e.clientX, e.clientY);
         const ddx = mx - dragging.smx, ddy = my - dragging.smy;
@@ -625,12 +702,50 @@ document.addEventListener('mousemove', e => {
 });
 
 document.addEventListener('mouseup', e => {
+    // Sidebar drag: dropped somewhere — place on canvas if cursor is over it
+    if (sidebarDrag) {
+        hideGhost();
+        const r = archSVG.getBoundingClientRect();
+        const overCanvas = e.clientX >= r.left && e.clientX <= r.right
+                        && e.clientY >= r.top  && e.clientY <= r.bottom;
+        if (overCanvas) {
+            const type = sidebarDrag;
+            sidebarDrag = null;
+            const [sx, sy] = svgPt(e.clientX, e.clientY);
+            const {w, h}   = NODE_DIMS[type];
+            finalizePlace(type, sx - w/2, sy - h/2, w, h);
+            showGhost(e.clientX, e.clientY, type); // re-show for next sequential drop
+        } else {
+            sidebarDrag = null;
+            // Stay in place mode — user just released over sidebar/elsewhere
+        }
+        return;
+    }
+
     if (panning) { panning = null; render(); return; }
 
     if (resizing) { resizing = null; render(); return; }
 
+    if (drawing) {
+        const {type, sx, sy, ex, ey} = drawing;
+        drawing = null;
+        const dx = Math.abs(ex - sx), dy = Math.abs(ey - sy);
+        if (dx < 6 && dy < 6) {
+            // Click (no drag): place at default size centered on click
+            const {w, h} = NODE_DIMS[type];
+            finalizePlace(type, sx - w/2, sy - h/2, w, h);
+        } else {
+            // Drawn to size
+            finalizePlace(type, Math.min(sx,ex), Math.min(sy,ey),
+                          Math.max(MIN_W, dx), Math.max(MIN_H, dy));
+        }
+        // Re-show ghost for next placement
+        showGhost(e.clientX, e.clientY, type);
+        return;
+    }
+
     if (dragging) {
-        if (!dragging.moved) _history.pop(); // revert snapshot if nothing moved
+        if (!dragging.moved) _history.pop();
         dragging = null; render(); return;
     }
 
@@ -660,8 +775,8 @@ archSVG.addEventListener('dblclick', e => {
 
 function startNodeEdit(node) {
     const r  = archSVG.getBoundingClientRect();
-    const sx = r.left + (node.x + node.w / 2 - vbX) / vbW * r.width;
-    const sy = r.top  + (node.y + node.h / 2 - vbY) / vbH * r.height;
+    const sx = r.left + (node.x + node.w/2 - vbX) / vbW * r.width;
+    const sy = r.top  + (node.y + node.h/2 - vbY) / vbH * r.height;
     labelIn.dataset.nodeId = node.id;
     labelIn.dataset.edgeId = '';
     labelIn.value = node.label;
@@ -679,7 +794,7 @@ function startEdgeEdit(edge) {
     const [x1, y1] = connPt(src, dst.x+dst.w/2, dst.y+dst.h/2);
     const [x2, y2] = connPt(dst, src.x+src.w/2, src.y+src.h/2);
     const r  = archSVG.getBoundingClientRect();
-    const lx = (x1 + x2) / 2, ly = (y1 + y2) / 2;
+    const lx = (x1+x2)/2, ly = (y1+y2)/2;
     const sx = r.left + (lx - vbX) / vbW * r.width;
     const sy = r.top  + (ly - vbY) / vbH * r.height;
     labelIn.dataset.nodeId = '';
@@ -733,9 +848,9 @@ function showCtx(x, y, items) {
             return;
         }
         const el = Object.assign(document.createElement('div'), {
-            className: 'ctx-item', textContent: item.label,
+            className:'ctx-item', textContent:item.label,
         });
-        el.addEventListener('mousedown', ev => { ev.stopPropagation(); });
+        el.addEventListener('mousedown', ev => ev.stopPropagation());
         el.addEventListener('click', () => { hideCtx(); item.action(); });
         ctxMenu.appendChild(el);
     });
@@ -748,8 +863,7 @@ function hideCtx() { ctxMenu.style.display = 'none'; }
 
 archSVG.addEventListener('contextmenu', e => {
     e.preventDefault();
-    const resizeEl = e.target.closest('[data-resize-handle]');
-    if (resizeEl) return;
+    if (e.target.closest('[data-resize-handle]')) return;
     const nodeEl = e.target.closest('[data-node-id]');
     const edgeEl = !nodeEl && e.target.closest('[data-edge-id]');
 
@@ -837,9 +951,6 @@ document.addEventListener('keyup', e => {
 });
 
 // ── Toolbar buttons ───────────────────────────────────────────────────────────
-document.querySelectorAll('#arch-app .shape-item').forEach(item =>
-    item.addEventListener('click', () => setMode('place:' + item.dataset.type)));
-
 document.getElementById('btn-connect').addEventListener('click', () =>
     setMode(mode === 'connect' ? 'select' : 'connect'));
 document.getElementById('btn-delete').addEventListener('click', deleteSelected);
