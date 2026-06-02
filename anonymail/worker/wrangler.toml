@@ -18,6 +18,10 @@ class_name = "RegistryDO"
 tag                 = "v1"
 new_sqlite_classes  = ["MailboxDO", "RegistryDO"]
 
+[[routes]]
+pattern  = "mail.zyxwonderland.xyz/*"
+zone_name = "zyxwonderland.xyz"
+
 [vars]
 DOMAIN          = "mail.zyxwonderland.xyz"
 TTL_MS          = "3600000"

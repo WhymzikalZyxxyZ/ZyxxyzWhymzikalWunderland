@@ -1,9 +1,7 @@
 'use strict';
 
 // ── Worker endpoint ───────────────────────────────────────────────────────────
-// Replace with your Cloudflare Worker URL after deploying.
-// Find it in the Cloudflare dashboard under Workers & Pages → anonymail → Settings.
-export const API_BASE = 'https://anonymail.zyxxyz.workers.dev';
+export const API_BASE = 'https://mail.zyxwonderland.xyz';
 
 // ── Multi-session storage ─────────────────────────────────────────────────────
 // All active sessions live in sessionStorage as a JSON array.
