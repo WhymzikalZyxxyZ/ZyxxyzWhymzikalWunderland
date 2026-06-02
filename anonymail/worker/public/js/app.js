@@ -3,6 +3,14 @@
 import * as API     from './api.js';
 import * as Compose from './compose.js';
 
+// Unregister any service workers and clear caches left over from when this
+// domain temporarily pointed at GitHub Pages instead of the Cloudflare Worker.
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations()
+        .then(regs => regs.forEach(r => r.unregister()));
+    caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+}
+
 // ── Loading phrases ───────────────────────────────────────────────────────────
 const PHRASES = [
     // Silly
