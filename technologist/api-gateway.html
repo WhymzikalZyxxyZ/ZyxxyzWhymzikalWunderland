@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Gateway — Technologist</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <style>
+        #app { max-width: 1000px; margin: 0 auto; padding: 0 16px 80px; }
+        .subtitle { text-align:center; font-family:'Courier New',monospace; font-size:11px; letter-spacing:4px; text-transform:uppercase; color:#555; margin:0 0 28px; }
+
+        .tab-bar { display:flex; gap:4px; background:rgba(0,0,0,0.5); border:1px solid rgba(100,180,255,0.15); border-radius:10px; padding:5px; margin-bottom:26px; flex-wrap:wrap; }
+        .tab { flex:1; min-width:130px; padding:10px 12px; border:1px solid transparent; border-radius:7px; background:transparent; color:#666; font-family:'Courier New',monospace; font-size:13px; cursor:pointer; transition:background 0.16s,color 0.16s; text-align:center; }
+        .tab:hover  { color:#64b4ff; background:rgba(100,180,255,0.07); }
+        .tab.active { background:rgba(100,180,255,0.14); color:#64b4ff; border-color:rgba(100,180,255,0.28); }
+        .panel { display:none; } .panel.active { display:block; }
+
+        .sec { font-family:'Courier New',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:#64b4ff; border-bottom:1px solid rgba(100,180,255,0.18); padding-bottom:6px; margin:28px 0 16px; }
+
+        /* Stats */
+        .stats-row { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
+        .stat-box  { flex:1; min-width:160px; background:rgba(0,0,0,0.5); border:1px solid #1a2a3a; border-radius:10px; padding:18px 20px; text-align:center; }
+        .stat-num  { font-family:'Courier New',monospace; font-size:28px; font-weight:bold; color:#64b4ff; }
+        .stat-lbl  { font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#555; margin-top:4px; }
+        .stat-box.err .stat-num  { color:#ef5350; }
+        .stat-box.ok  .stat-num  { color:#4caf50; }
+        .stat-box.warn .stat-num { color:#f59e0b; }
+
+        /* Chart */
+        .chart-wrap { background:rgba(0,0,0,0.5); border:1px solid #1a2a3a; border-radius:10px; padding:16px 20px; margin-bottom:24px; }
+        .chart-title { font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#555; margin-bottom:12px; }
+        canvas { display:block; width:100%; }
+
+        /* Tables */
+        .two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+        @media (max-width:680px) { .two-col { grid-template-columns:1fr; } }
+        .table-box { background:rgba(0,0,0,0.5); border:1px solid #1a2a3a; border-radius:10px; padding:14px; overflow:hidden; }
+        .table-box h4 { font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#555; margin:0 0 10px; }
+        table { width:100%; border-collapse:collapse; font-family:'Courier New',monospace; font-size:11px; }
+        th { color:#64b4ff; font-weight:normal; letter-spacing:1px; text-transform:uppercase; padding:4px 6px; text-align:left; border-bottom:1px solid #1a2a3a; }
+        td { padding:5px 6px; color:#94a3b8; border-bottom:1px solid rgba(26,42,58,0.6); vertical-align:middle; }
+        tr:last-child td { border-bottom:none; }
+        .badge { display:inline-block; padding:1px 7px; border-radius:4px; font-size:10px; }
+        .badge-ok  { background:rgba(76,175,80,0.15); color:#4caf50; }
+        .badge-err { background:rgba(239,83,80,0.15);  color:#ef5350; }
+        .badge-4xx { background:rgba(245,158,11,0.15); color:#f59e0b; }
+        .badge-key { background:rgba(100,180,255,0.12); color:#64b4ff; }
+        .badge-anon { background:rgba(107,114,128,0.15); color:#6b7280; }
+
+        /* Test console */
+        .test-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+        @media (max-width:700px) { .test-grid { grid-template-columns:1fr; } }
+        .test-form { background:rgba(0,0,0,0.5); border:1px solid #1a2a3a; border-radius:10px; padding:18px; }
+        .form-row  { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+        .form-row label { font-family:'Courier New',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#555; display:block; margin-bottom:5px; }
+        .form-row .field { flex:1; min-width:100px; }
+        select, input[type=text], textarea {
+            width:100%; background:rgba(255,255,255,0.04); border:1px solid #1a2a3a;
+            border-radius:6px; padding:8px 10px; color:#c8e0ff;
+            font-family:'Courier New',monospace; font-size:12px; outline:none; box-sizing:border-box;
+        }
+        select:focus, input[type=text]:focus, textarea:focus { border-color:#64b4ff; }
+        textarea { resize:vertical; min-height:60px; }
+        .fire-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; }
+        .btn { padding:9px 18px; border-radius:7px; border:1px solid rgba(100,180,255,0.35); background:rgba(100,180,255,0.1); color:#64b4ff; font-family:'Courier New',monospace; font-size:13px; cursor:pointer; transition:background 0.15s; white-space:nowrap; }
+        .btn:hover { background:rgba(100,180,255,0.22); }
+        .btn.danger { border-color:rgba(239,83,80,0.35); background:rgba(239,83,80,0.1); color:#ef5350; }
+        .btn.danger:hover { background:rgba(239,83,80,0.22); }
+        .btn.sm { padding:5px 12px; font-size:11px; }
+
+        .response-box { background:rgba(0,0,0,0.6); border:1px solid #1a2a3a; border-radius:10px; padding:14px; font-family:'Courier New',monospace; font-size:11px; }
+        .res-meta { display:flex; gap:12px; margin-bottom:8px; flex-wrap:wrap; }
+        .res-meta span { color:#555; }
+        .res-meta .status-ok  { color:#4caf50; }
+        .res-meta .status-err { color:#ef5350; }
+        .res-meta .status-4xx { color:#f59e0b; }
+        .res-body { color:#94a3b8; white-space:pre-wrap; max-height:200px; overflow-y:auto; line-height:1.55; }
+        .res-body::-webkit-scrollbar { width:4px; }
+        .res-body::-webkit-scrollbar-thumb { background:#333; border-radius:2px; }
+
+        .test-log { background:rgba(0,0,0,0.6); border:1px solid #1a2a3a; border-radius:10px; padding:12px; height:260px; overflow-y:auto; font-family:'Courier New',monospace; font-size:11px; line-height:1.7; }
+        .test-log::-webkit-scrollbar { width:4px; }
+        .test-log::-webkit-scrollbar-thumb { background:#333; border-radius:2px; }
+        .log-ok   { color:#4caf50; }
+        .log-err  { color:#ef5350; }
+        .log-warn { color:#f59e0b; }
+        .log-dim  { color:#555; }
+
+        /* How it works */
+        .explain { background:rgba(100,180,255,0.05); border:1px solid rgba(100,180,255,0.15); border-radius:9px; padding:16px 20px; font-family:'Courier New',monospace; font-size:12px; color:#888; line-height:1.8; margin-bottom:16px; }
+        .explain strong { color:#c8e0ff; }
+        .explain code   { background:rgba(100,180,255,0.1); border-radius:3px; padding:1px 5px; color:#64b4ff; }
+        .diagram { background:rgba(0,0,0,0.5); border:1px solid #1a2a3a; border-radius:9px; padding:20px; font-family:'Courier New',monospace; font-size:12px; color:#555; line-height:1.9; margin-bottom:16px; white-space:pre; overflow-x:auto; }
+        .diagram .hl { color:#64b4ff; }
+        .diagram .ok { color:#4caf50; }
+        .diagram .ng { color:#ef5350; }
+
+        .routes-table { width:100%; border-collapse:collapse; font-family:'Courier New',monospace; font-size:12px; margin-bottom:16px; }
+        .routes-table th { color:#64b4ff; font-weight:normal; letter-spacing:1px; text-transform:uppercase; padding:7px 10px; text-align:left; border-bottom:1px solid #1a2a3a; }
+        .routes-table td { padding:7px 10px; color:#94a3b8; border-bottom:1px solid rgba(26,42,58,0.5); }
+        .routes-table tr:last-child td { border:none; }
+        .method { font-weight:bold; }
+        .m-get  { color:#4caf50; } .m-post { color:#64b4ff; }
+        .m-any  { color:#a78bfa; }
+
+        .refresh-note { font-family:'Courier New',monospace; font-size:10px; color:#333; text-align:right; margin-bottom:6px; }
+    </style>
+</head>
+<body class="wunderBody">
+    <h2>API Gateway</h2>
+    <div class="navbar"></div>
+    <div class="banner"></div>
+    <div id="app">
+        <p class="subtitle">API Gateway · Rate Limiting · Analytics · Cloudflare Workers</p>
+
+        <div class="tab-bar">
+            <button class="tab active" data-tab="dashboard">Dashboard</button>
+            <button class="tab"        data-tab="console">Test Console</button>
+            <button class="tab"        data-tab="howto">How It Works</button>
+        </div>
+
+        <!-- ═══ DASHBOARD ═══ -->
+        <div class="panel active" id="tab-dashboard">
+            <p class="refresh-note" id="refresh-note">Auto-refreshes every 30s</p>
+            <div class="stats-row">
+                <div class="stat-box"><div class="stat-num" id="s-total">—</div><div class="stat-lbl">Requests (24h)</div></div>
+                <div class="stat-box err"><div class="stat-num" id="s-errrate">—</div><div class="stat-lbl">Error Rate</div></div>
+                <div class="stat-box warn"><div class="stat-num" id="s-latency">—</div><div class="stat-lbl">Avg Latency</div></div>
+                <div class="stat-box ok"><div class="stat-num" id="s-keys">—</div><div class="stat-lbl">Active Keys (24h)</div></div>
+            </div>
+
+            <div class="chart-wrap">
+                <div class="chart-title">Requests per hour — last 24h &nbsp;<span id="chart-legend" style="color:#ef5350;font-size:9px;">■ errors</span></div>
+                <canvas id="chart" height="90"></canvas>
+            </div>
+
+            <div class="two-col">
+                <div class="table-box">
+                    <h4>Top Endpoints</h4>
+                    <table>
+                        <thead><tr><th>Path</th><th>Hits</th></tr></thead>
+                        <tbody id="tbl-paths"></tbody>
+                    </table>
+                </div>
+                <div class="table-box">
+                    <h4>Recent Requests</h4>
+                    <table>
+                        <thead><tr><th>Method</th><th>Path</th><th>Status</th><th>ms</th></tr></thead>
+                        <tbody id="tbl-recent"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ TEST CONSOLE ═══ -->
+        <div class="panel" id="tab-console">
+            <div class="test-grid">
+                <div>
+                    <div class="test-form">
+                        <div class="sec" style="margin-top:0">Request</div>
+                        <div class="form-row">
+                            <div class="field" style="max-width:90px;">
+                                <label>Method</label>
+                                <select id="c-method">
+                                    <option>GET</option>
+                                    <option>POST</option>
+                                    <option>PUT</option>
+                                    <option>DELETE</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>Path</label>
+                                <input type="text" id="c-path" value="/api/hello">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="field">
+                                <label>X-API-Key <span style="color:#555">(optional)</span></label>
+                                <input type="text" id="c-key" placeholder="demo-key-alpha">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="field">
+                                <label>Body <span style="color:#555">(JSON, POST/PUT only)</span></label>
+                                <textarea id="c-body" placeholder="{&quot;key&quot;: &quot;value&quot;}"></textarea>
+                            </div>
+                        </div>
+                        <div class="fire-row">
+                            <button class="btn" id="btn-fire">▶ Send</button>
+                            <button class="btn sm" data-preset="/api/hello">hello</button>
+                            <button class="btn sm" data-preset="/api/time">time</button>
+                            <button class="btn sm" data-preset="/api/echo?msg=test">echo</button>
+                            <button class="btn sm" data-preset="/api/slow">slow</button>
+                            <button class="btn sm danger" data-preset="/api/fail">fail</button>
+                        </div>
+                    </div>
+
+                    <div class="sec">Response</div>
+                    <div class="response-box">
+                        <div class="res-meta" id="res-meta"><span style="color:#333">Fire a request to see the response.</span></div>
+                        <div class="res-body" id="res-body"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="sec" style="margin-top:0">Request Log</div>
+                    <div class="test-log" id="test-log">
+                        <span class="log-dim">Waiting for requests…</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ HOW IT WORKS ═══ -->
+        <div class="panel" id="tab-howto">
+            <div class="explain">
+                An <strong>API Gateway</strong> is a single entry point that sits in front of your backend services.
+                Every client request flows through it — the gateway handles cross-cutting concerns
+                (<strong>authentication</strong>, <strong>rate limiting</strong>, <strong>logging</strong>, <strong>routing</strong>)
+                so individual services don't have to. This one runs entirely on
+                <strong>Cloudflare Workers</strong> at the edge — no origin server, sub-millisecond cold starts.
+            </div>
+
+            <div class="sec" style="margin-top:16px">Request Flow</div>
+            <div class="diagram"><span class="hl">Client</span>
+  │  X-API-Key: demo-key-alpha
+  ▼
+<span class="hl">Gateway Worker</span>  (api.zyxwonderland.xyz)
+  ├─ <span class="ok">1. Auth check</span>      — valid key → keyed tier  |  no key → anon tier  |  bad key → <span class="ng">401</span>
+  ├─ <span class="ok">2. Rate limit</span>     — keyed: 120 req/min  |  anon: 20 req/min  |  over limit → <span class="ng">429</span>
+  ├─ <span class="ok">3. Route match</span>    — /api/hello, /api/time, /api/echo, /api/slow, /api/fail
+  ├─ <span class="ok">4. Handler</span>        — generate response, measure latency
+  └─ <span class="ok">5. Log to DO</span>     — method, path, status, latency, key_id, timestamp
+       │
+       ▼
+  <span class="hl">AnalyticsDO</span>  (Durable Object — SQLite)
+       └─ /analytics/summary, /analytics/timeseries, /analytics/recent</div>
+
+            <div class="sec">API Routes</div>
+            <table class="routes-table">
+                <thead><tr><th>Method</th><th>Path</th><th>Auth</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td><span class="method m-get">GET</span></td><td>/api/hello</td><td>Optional</td><td>Returns a greeting and timestamp</td></tr>
+                    <tr><td><span class="method m-get">GET</span></td><td>/api/time</td><td>Optional</td><td>Returns current UTC time (ISO + Unix)</td></tr>
+                    <tr><td><span class="method m-any">ANY</span></td><td>/api/echo</td><td>Optional</td><td>Reflects method, path, query params, and body</td></tr>
+                    <tr><td><span class="method m-get">GET</span></td><td>/api/slow</td><td>Optional</td><td>Simulates 200–800ms upstream latency</td></tr>
+                    <tr><td><span class="method m-get">GET</span></td><td>/api/fail</td><td>Optional</td><td>Always returns 500 (for testing error logging)</td></tr>
+                    <tr><td><span class="method m-get">GET</span></td><td>/analytics/summary</td><td>None</td><td>Aggregated metrics for the last 24h</td></tr>
+                    <tr><td><span class="method m-get">GET</span></td><td>/analytics/timeseries</td><td>None</td><td>Hourly request counts (last 24h)</td></tr>
+                    <tr><td><span class="method m-get">GET</span></td><td>/analytics/recent</td><td>None</td><td>Last 20 logged requests</td></tr>
+                </tbody>
+            </table>
+
+            <div class="sec">Rate Limit Headers</div>
+            <div class="explain">
+                Every API response includes <code>X-RateLimit-Limit</code> and <code>X-RateLimit-Remaining</code>.
+                Limits reset every 60 seconds. Authenticated requests (<code>X-API-Key</code>) get
+                <strong>120 req/min</strong>; anonymous requests get <strong>20 req/min</strong>.
+                Exceeding the limit returns <code>429 Too Many Requests</code>.
+            </div>
+
+            <div class="sec">Demo API Keys</div>
+            <div class="explain">
+                Two demo keys are configured: <code>demo-key-alpha</code> and <code>demo-key-beta</code>.
+                Use either in the <code>X-API-Key</code> header or in the Test Console above.
+                All requests — keyed or anonymous — are logged to the dashboard.
+            </div>
+
+            <div class="sec">Data Model — AnalyticsDO SQLite Schema</div>
+            <div class="diagram"><span class="hl">Table: requests</span>
+  id          INTEGER  PRIMARY KEY AUTOINCREMENT
+  method      TEXT     NOT NULL           -- GET, POST, PUT, DELETE
+  path        TEXT     NOT NULL           -- /api/hello, /api/echo, …
+  status      INTEGER  NOT NULL           -- 200, 400, 429, 500, …
+  latency_ms  INTEGER  NOT NULL           -- wall-clock handler time
+  key_id      TEXT     NOT NULL DEFAULT '' -- empty string = anonymous
+  ts          INTEGER  NOT NULL           -- Unix ms
+
+<span class="hl">Indexes:</span>  (ts)  ·  (path, ts)  ·  (status, ts)
+
+<span class="hl">Rate-limit counters</span>  (DO KV storage, not SQLite)
+  Key:   rl:{identity}:{minute-slot}
+  Value: request count in that minute window
+  Slot:  Math.floor(Date.now() / 60000)
+  TTL:   previous slot deleted on each write</div>
+
+            <div class="sec">Design Decisions</div>
+            <div class="explain">
+                <strong>Why Durable Objects instead of Workers KV for analytics?</strong><br>
+                KV is eventually consistent and optimised for reads at the edge. Writing per-request metrics
+                to KV would be expensive and could return stale counts. A Durable Object serialises all
+                writes through a single instance with a SQLite database — reads and writes are always
+                consistent, and SQL aggregations (GROUP BY, COUNT, AVG) are fast.
+            </div>
+            <div class="explain">
+                <strong>Why per-minute rate limiting with DO storage?</strong><br>
+                Each rate-limit check is a single DO storage read + write. Using the current minute as a
+                slot key means counters reset automatically — no background cleanup job needed. The previous
+                slot is pruned on each write to keep storage bounded. The DO's single-instance guarantee
+                means two concurrent requests cannot both read "count = 0" and both increment to 1;
+                writes are serialised.
+            </div>
+            <div class="explain">
+                <strong>Fire-and-forget logging.</strong><br>
+                The gateway logs each request with <code>stub.fetch(…)</code> without awaiting the result.
+                This keeps response latency unaffected by the write path — the Worker returns the response
+                to the client immediately. The Cloudflare runtime keeps the Worker alive long enough to
+                complete the background fetch before the isolate is terminated.
+            </div>
+        </div>
+
+    </div>
+    <script src="/js/technologist/api-gateway.js" defer></script>
+</body>
+</html>

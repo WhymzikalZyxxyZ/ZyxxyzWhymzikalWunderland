@@ -291,6 +291,75 @@
         }
         #arch-app .gl-a.open { display: block; }
         #arch-app .gl-a code { background: var(--surface2); padding: 1px 5px; border-radius: 3px; color: var(--amber); font-size: 11px; }
+
+        /* ── Collaboration ── */
+        #collab-indicator {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 6px;
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 6px;
+            background: rgba(16,185,129,0.07);
+            font-size: 10px;
+            color: #10b981;
+            margin-top: 2px;
+        }
+        #collab-indicator .cdot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: #10b981;
+            animation: cpulse 2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+        @keyframes cpulse {
+            0%,100% { opacity: 1; }
+            50%      { opacity: 0.35; }
+        }
+        #collab-modal-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.65);
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+        }
+        #collab-modal-overlay.open { display: flex; }
+        #collab-modal-box {
+            background: #111118;
+            border: 1px solid #252532;
+            border-radius: 12px;
+            padding: 28px 32px;
+            min-width: 340px;
+            max-width: 480px;
+            font-family: 'Courier New', monospace;
+        }
+        #collab-modal-box h3 {
+            font-size: 15px; color: #60a5fa; margin: 0 0 6px;
+        }
+        #collab-modal-box p {
+            font-size: 11px; color: #6b7280; margin: 0 0 14px;
+        }
+        .collab-url-row {
+            display: flex; gap: 6px; margin-bottom: 14px;
+        }
+        #collab-url-inp {
+            flex: 1; background: #09090f; border: 1px solid #252532;
+            border-radius: 6px; color: #94a3b8;
+            font-family: 'Courier New', monospace; font-size: 11px;
+            padding: 7px 9px; outline: none;
+        }
+        #collab-copy-btn, #collab-modal-close {
+            padding: 7px 12px; border-radius: 6px; font-size: 11px;
+            font-family: 'Courier New', monospace; cursor: pointer;
+            border: 1px solid #252532; background: #18181f; color: #94a3b8;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+        #collab-copy-btn:hover  { border-color: #2563eb; color: #60a5fa; }
+        #collab-modal-close     { margin-top: 6px; width: 100%; text-align: center; }
+        #collab-modal-close:hover { border-color: #6b7280; color: #e2e8f0; }
+        #collab-modal-peers {
+            font-size: 11px; color: #10b981; margin-bottom: 4px;
+        }
     </style>
 </head>
 <body class="wunderBody">
@@ -308,6 +377,7 @@
     <div class="arch-tabs">
         <div class="arch-tab active" data-tab="diagram">Diagram</div>
         <div class="arch-tab" data-tab="glossary">Glossary</div>
+        <div class="arch-tab" data-tab="architecture">Architecture</div>
     </div>
 
     <!-- ═══════ DIAGRAM ═══════ -->
@@ -429,6 +499,13 @@
                 <button class="arch-btn" id="btn-fit">⊡ Fit View</button>
                 <button class="arch-btn danger" id="btn-clear">⊘ Clear All</button>
 
+                <div class="sidebar-label">Collaborate</div>
+                <button class="arch-btn" id="btn-share">⟳ Share Session</button>
+                <div id="collab-indicator">
+                    <span class="cdot"></span>
+                    <span id="collab-peer-label">1 connected</span>
+                </div>
+
                 <div class="sidebar-label">Export</div>
                 <button class="arch-btn" id="btn-export-svg">↓ SVG</button>
                 <button class="arch-btn" id="btn-export-png">↓ PNG</button>
@@ -468,6 +545,7 @@
                         </pattern>
                     </defs>
                     <rect id="arch-bg" width="960" height="600" fill="url(#arch-dots)"/>
+                    <g id="peer-cursors-layer"></g>
                 </svg>
                 <input type="text" id="label-input" maxlength="32" autocomplete="off">
             </div>
@@ -544,10 +622,93 @@
         </div>
     </div>
 
+    <!-- ═══════ ARCHITECTURE ═══════ -->
+    <div class="arch-panel" id="tab-architecture">
+        <div class="gl-outer">
+
+            <div class="gl-section">
+                <div class="gl-section-title">Collaborative Architect — System Design</div>
+                <div class="gl-a" style="display:block;padding:14px 16px;">
+                    The collaborative mode is powered by a <strong>Cloudflare Worker</strong> and a
+                    <strong>Durable Object</strong> (DO) at <code>collab.zyxwonderland.xyz</code>.
+                    Each collaboration session gets its own DO instance, identified by a random 8-character
+                    session ID. The DO maintains the full set of open WebSocket connections and persists
+                    the current diagram state to DO storage so late joiners receive the correct canvas
+                    immediately.
+                </div>
+            </div>
+
+            <div class="gl-section">
+                <div class="gl-section-title">Session Lifecycle</div>
+                <div style="background:rgba(0,0,0,0.5);border:1px solid var(--border);border-radius:9px;padding:18px 22px;font-family:'Courier New',monospace;font-size:12px;color:#555;line-height:1.9;white-space:pre;overflow-x:auto;">
+<span style="color:var(--blue-light)">User A clicks "Share Session"</span>
+  │
+  ├─ POST collab.zyxwonderland.xyz/api/session
+  │    └─ Returns { id: "ab3f92c1" }
+  │
+  ├─ URL updated:  architect?session=ab3f92c1
+  ├─ Modal shows copyable link
+  │
+  └─ WebSocket opened:  wss://collab.zyxwonderland.xyz/ws?session=ab3f92c1
+       │
+       ▼
+<span style="color:var(--blue-light)">SessionDO</span>  (Durable Object — one instance per session ID)
+  ├─ Sends { type: "init", peerId, color, nodes, edges, nextId }
+  └─ Broadcasts { type: "peers", count: 1 }
+
+<span style="color:var(--teal-light)">User B opens shared link</span>
+  └─ WebSocket opened with same session ID
+       ├─ Receives current diagram state via "init"
+       ├─ A receives { type: "peers", count: 2 }
+       └─ Both peers now see each other's cursors and changes</div>
+            </div>
+
+            <div class="gl-section">
+                <div class="gl-section-title">Real-Time Sync Protocol</div>
+                <div class="gl-a" style="display:block;padding:0;">
+                    <table style="width:100%;border-collapse:collapse;font-family:'Courier New',monospace;font-size:12px;">
+                        <thead><tr>
+                            <th style="color:var(--blue-light);font-weight:normal;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);">Message Type</th>
+                            <th style="color:var(--blue-light);font-weight:normal;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);">Direction</th>
+                            <th style="color:var(--blue-light);font-weight:normal;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);">Purpose</th>
+                        </tr></thead>
+                        <tbody>
+                            <tr><td style="padding:7px 10px;color:var(--amber);border-bottom:1px solid rgba(37,53,50,0.5);">init</td><td style="padding:7px 10px;color:var(--text-dim);border-bottom:1px solid rgba(37,53,50,0.5);">Server → Client</td><td style="padding:7px 10px;color:var(--text-dim);border-bottom:1px solid rgba(37,53,50,0.5);">Full diagram state + assigned peer ID and colour on join</td></tr>
+                            <tr><td style="padding:7px 10px;color:var(--amber);border-bottom:1px solid rgba(37,53,50,0.5);">state</td><td style="padding:7px 10px;color:var(--text-dim);border-bottom:1px solid rgba(37,53,50,0.5);">Client → Server → Others</td><td style="padding:7px 10px;color:var(--text-dim);border-bottom:1px solid rgba(37,53,50,0.5);">Full diagram after any change (120ms debounce). DO persists and broadcasts</td></tr>
+                            <tr><td style="padding:7px 10px;color:var(--amber);border-bottom:1px solid rgba(37,53,50,0.5);">cursor</td><td style="padding:7px 10px;color:var(--text-dim);border-bottom:1px solid rgba(37,53,50,0.5);">Client → Server → Others</td><td style="padding:7px 10px;color:var(--text-dim);border-bottom:1px solid rgba(37,53,50,0.5);">SVG-space coordinates at ~20fps. Rendered as coloured crosshairs</td></tr>
+                            <tr><td style="padding:7px 10px;color:var(--amber);">peers</td><td style="padding:7px 10px;color:var(--text-dim);">Server → All</td><td style="padding:7px 10px;color:var(--text-dim);">Connected peer count, broadcast on every join or leave</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="gl-section">
+                <div class="gl-section-title">Design Decisions</div>
+                <div class="gl-term"><div class="gl-q">Full-state sync vs operational transforms <span class="gl-arr">▶</span></div><div class="gl-a">The gateway broadcasts the <em>full</em> diagram on every change rather than sending incremental patches. This keeps the protocol simple and conflict-free — the last writer always wins. For a diagram tool where concurrent edits are infrequent and the state is small (tens of nodes), full-state sync is reliable and far simpler to implement than OT or CRDTs.</div></div>
+                <div class="gl-term"><div class="gl-q">Why one Durable Object per session? <span class="gl-arr">▶</span></div><div class="gl-a">Cloudflare Durable Objects guarantee that all requests for a given ID are handled by a single instance. Keying each session by its ID means all WebSocket connections for that session reach the <em>same</em> DO instance — no need for external pub/sub to fan out messages. Sessions are isolated by construction.</div></div>
+                <div class="gl-term"><div class="gl-q">Cursor coordinates in SVG-space <span class="gl-arr">▶</span></div><div class="gl-a">Cursor positions are sent as SVG viewBox coordinates, not screen pixels. This means peers at different zoom levels or window sizes see the cursor in exactly the right position relative to the diagram elements — the SVG transform handles the mapping automatically. Screen pixels would require each peer to know the other's viewport geometry.</div></div>
+                <div class="gl-term"><div class="gl-q">Auto-reconnect on disconnect <span class="gl-arr">▶</span></div><div class="gl-a">If the WebSocket closes unexpectedly the client waits 3 seconds and reconnects using the same session ID. The DO instance is still alive (Cloudflare keeps it active while connections exist), so reconnecting peers receive the latest persisted state and rejoin seamlessly. Peer cursors are cleared on disconnect to avoid stale ghost cursors.</div></div>
+            </div>
+
+        </div>
+    </div>
+
 </div>
 <div id="shape-ghost"></div>
 <div id="shape-picker"></div>
 <div id="ctx-menu"></div>
+<div id="collab-modal-overlay">
+    <div id="collab-modal-box">
+        <h3>Live Collaboration</h3>
+        <p>Share this link — anyone who opens it joins your diagram in real time.</p>
+        <div class="collab-url-row">
+            <input id="collab-url-inp" readonly type="text">
+            <button id="collab-copy-btn">Copy</button>
+        </div>
+        <div id="collab-modal-peers">Connecting…</div>
+        <button id="collab-modal-close">Close</button>
+    </div>
+</div>
 <script src="/js/technologist/architect.js" defer></script>
 </body>
 </html>
