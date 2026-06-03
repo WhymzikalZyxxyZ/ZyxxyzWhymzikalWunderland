@@ -1,0 +1,22 @@
+name               = "zyxwonderland-status"
+main               = "src/index.js"
+compatibility_date = "2024-11-01"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[[durable_objects.bindings]]
+name       = "STATUS_DO"
+class_name = "StatusDO"
+
+[[migrations]]
+tag                = "v1"
+new_sqlite_classes = ["StatusDO"]
+
+[[routes]]
+pattern   = "status.zyxwonderland.xyz/*"
+zone_name = "zyxwonderland.xyz"
+
+[vars]
+SERVICES = '[{"id":"main","label":"zyxwonderland.xyz","url":"https://zyxwonderland.xyz"},{"id":"mail","label":"mail.zyxwonderland.xyz","url":"https://mail.zyxwonderland.xyz"}]'
+RETENTION_DAYS = "90"
