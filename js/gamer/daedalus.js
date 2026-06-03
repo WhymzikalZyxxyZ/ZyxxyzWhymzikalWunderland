@@ -1239,8 +1239,9 @@ function runCutscene() {
 }
 
 // ── Level 1 intro cutscene ─────────────────────────────────────────────────────
-// First-person: slow walk into the dark labyrinth entrance → stop → fade to black
-// → "The labyrinth of Daedalus. Ten levels. No way back."
+// Act 1 — Exterior: pre-dawn Crete, stars, columns, coastline → "Crete."
+// Act 2 — Story text on black: "The island of the labyrinth. You walked in."
+// Act 3 — First-person corridor walk → stop → fade to black → title text
 function runLevel1Cutscene(cb) {
     timerPause();
     const icOvl = document.getElementById('icOverlay');
@@ -1254,60 +1255,199 @@ function runLevel1Cutscene(cb) {
     const T0 = performance.now();
     let rafId1 = null;
 
-    const PH_WALK  = 3.2;   // slow walk forward into darkness
-    const PH_PAUSE = 4.6;   // stop, stare ahead
-    const PH_FADE  = 5.4;   // fade to black
-    const PH_TEXT  = 5.8;   // text types out
-    const PH_END   = 9.2;   // cutscene ends → gameplay
+    // ── Phase timestamps (seconds) ────────────────────────────────────────────
+    const PH_EXT_IN    = 0.9;   // exterior fade-in complete
+    const PH_EXT_END   = 6.0;   // exterior scene starts fading out
+    const PH_EXT_OUT   = 7.0;   // exterior fully black
+    const PH_S1        = 7.5;   // story line 1 starts typing
+    const PH_S2        = 10.5;  // story line 2 starts typing
+    const PH_S_HOLD    = 13.8;  // story text holds → starts fading
+    const PH_WALK      = 15.0;  // corridor walk begins (fade-in done)
+    const PH_PAUSE     = 19.0;  // walk ends, breathing pause
+    const PH_CFADE     = 21.0;  // corridor fades to black
+    const PH_CTEXT     = 21.6;  // title text starts
+    const PH_END       = 25.5;  // cutscene ends → gameplay
+
+    const RATE = 0.060;
+    const SL1  = 'Crete. The island of the labyrinth.';
+    const SL2  = 'Daedalus built the maze. You walked in.';
+    const TL1  = 'The labyrinth of Daedalus.';
+    const TL2  = 'Ten levels. No way back.';
 
     const drawCorridor = (d, dp, t) => _drawCorridor(cx, cW, cH, d, dp, t);
     const drawVignette = (i, r, g, b) => _drawVignette(cx, cW, cH, i, r, g, b);
+
+    // ── Act 1: Aegean pre-dawn exterior ──────────────────────────────────────
+    function drawExterior(t) {
+        // Sky
+        const skyG = cx.createLinearGradient(0, 0, 0, cH * 0.68);
+        skyG.addColorStop(0,    '#01000b');
+        skyG.addColorStop(0.55, '#06021c');
+        skyG.addColorStop(0.82, '#22082e');
+        skyG.addColorStop(1,    '#4a1a08');
+        cx.fillStyle = skyG; cx.fillRect(0, 0, cW, cH * 0.68);
+
+        // Sunrise glow at right horizon
+        const hg = cx.createRadialGradient(cW*0.64, cH*0.68, 0, cW*0.64, cH*0.68, cW*0.56);
+        hg.addColorStop(0,   'rgba(215,95,0,0.58)');
+        hg.addColorStop(0.3, 'rgba(160,45,0,0.26)');
+        hg.addColorStop(1,   'rgba(0,0,0,0)');
+        cx.fillStyle = hg; cx.fillRect(0, 0, cW, cH);
+
+        // Sea
+        const seaG = cx.createLinearGradient(0, cH*0.67, 0, cH);
+        seaG.addColorStop(0, '#050412');
+        seaG.addColorStop(1, '#020208');
+        cx.fillStyle = seaG; cx.fillRect(0, cH*0.67, cW, cH*0.33);
+
+        // Sea shimmer from glow
+        const shimG = cx.createLinearGradient(cW*0.4, cH*0.68, cW*0.75, cH*0.68);
+        shimG.addColorStop(0,   'rgba(0,0,0,0)');
+        shimG.addColorStop(0.5, 'rgba(210,80,0,0.10)');
+        shimG.addColorStop(1,   'rgba(0,0,0,0)');
+        cx.fillStyle = shimG; cx.fillRect(cW*0.3, cH*0.68, cW*0.5, cH*0.10);
+
+        // Stars
+        for (let i = 0; i < 95; i++) {
+            const sx = Math.abs(Math.sin(i * 127.1 + 0.3)) * cW;
+            const sy = Math.abs(Math.sin(i * 93.7  + 1.1)) * cH * 0.58;
+            const sr = 0.4 + (i % 3) * 0.35;
+            const tw = 0.45 + 0.55 * Math.sin(t * (1.1 + (i % 7) * 0.26) + i * 0.7);
+            cx.fillStyle = `rgba(235,235,215,${0.52 * tw})`;
+            cx.beginPath(); cx.arc(sx, sy, sr, 0, Math.PI * 2); cx.fill();
+        }
+
+        // Moon (waning crescent, upper right)
+        const mR = Math.min(cW, cH) * 0.027;
+        cx.fillStyle = '#c4b478';
+        cx.beginPath(); cx.arc(cW*0.80, cH*0.13, mR, 0, Math.PI*2); cx.fill();
+        cx.fillStyle = '#050214';
+        cx.beginPath(); cx.arc(cW*0.80 - mR*0.38, cH*0.13, mR*0.86, 0, Math.PI*2); cx.fill();
+
+        // Distant coastline silhouette
+        cx.fillStyle = '#05030a';
+        cx.beginPath();
+        cx.moveTo(0, cH*0.67);
+        cx.lineTo(0, cH*0.60);
+        cx.quadraticCurveTo(cW*0.08, cH*0.53, cW*0.18, cH*0.60);
+        cx.quadraticCurveTo(cW*0.28, cH*0.64, cW*0.39, cH*0.56);
+        cx.quadraticCurveTo(cW*0.52, cH*0.49, cW*0.64, cH*0.58);
+        cx.quadraticCurveTo(cW*0.75, cH*0.63, cW*0.85, cH*0.59);
+        cx.quadraticCurveTo(cW*0.94, cH*0.55, cW,      cH*0.61);
+        cx.lineTo(cW, cH*0.67);
+        cx.closePath(); cx.fill();
+
+        // Greek columns — left foreground
+        const colBase = cH * 0.63;
+        const colH    = cH * 0.31;
+        [cW*0.09, cW*0.125, cW*0.16].forEach(colX => {
+            cx.fillStyle = '#0d0b12';
+            cx.fillRect(colX - cW*0.009, colBase - colH, cW*0.018, colH);
+            cx.fillRect(colX - cW*0.018, colBase - colH - cH*0.013, cW*0.036, cH*0.013);
+            cx.fillRect(colX - cW*0.020, colBase - cH*0.009, cW*0.040, cH*0.009);
+        });
+        // Lintel across columns
+        cx.fillStyle = '#0d0b12';
+        cx.fillRect(cW*0.068, colBase - colH - cH*0.013, cW*0.115, cH*0.020);
+
+        // "Crete." subtitle — fades in then out
+        const subDelay  = PH_EXT_IN + 0.6;
+        const subFadeIn = Math.min(1, Math.max(0, (t - subDelay) / 0.9));
+        const subFadeOut = t > PH_EXT_END ? Math.max(0, 1 - (t - PH_EXT_END) / 0.7) : 1;
+        if (subFadeIn > 0) {
+            const fs = Math.min(cW / 24, 22);
+            cx.font = `700 ${fs}px monospace`;
+            cx.textAlign = 'center';
+            cx.shadowColor = '#b8a060'; cx.shadowBlur = 14;
+            cx.fillStyle = `rgba(180,155,80,${subFadeIn * subFadeOut})`;
+            cx.fillText('Crete.', cW / 2, cH * 0.88);
+            cx.shadowBlur = 0;
+        }
+    }
 
     function tick1(ts) {
         const t = (ts - T0) / 1000;
         cx.fillStyle = '#020104'; cx.fillRect(0, 0, cW, cH);
 
-        if (t < PH_WALK) {
-            // Slow walk forward from the entrance
-            const p     = t / PH_WALK;
+        // ── Act 1: Exterior ───────────────────────────────────────────────────
+        if (t < PH_EXT_OUT) {
+            drawExterior(t);
+            if (t < PH_EXT_IN) {
+                const fa = 1 - t / PH_EXT_IN;
+                cx.fillStyle = `rgba(0,0,0,${fa})`; cx.fillRect(0, 0, cW, cH);
+            }
+            if (t > PH_EXT_END) {
+                const fa = Math.min(1, (t - PH_EXT_END) / (PH_EXT_OUT - PH_EXT_END));
+                cx.fillStyle = `rgba(0,0,0,${fa})`; cx.fillRect(0, 0, cW, cH);
+            }
+
+        // ── Act 2: Story text on black ────────────────────────────────────────
+        } else if (t < PH_WALK) {
+            cx.fillStyle = '#000'; cx.fillRect(0, 0, cW, cH);
+            const fs = Math.min(cW / 17, 26);
+            cx.font = `700 ${fs}px monospace`;
+            cx.textAlign = 'center';
+
+            const textFadeOut = t > PH_S_HOLD
+                ? Math.max(0, 1 - (t - PH_S_HOLD) / (PH_WALK - PH_S_HOLD))
+                : 1;
+
+            if (t >= PH_S1) {
+                const shown1 = SL1.slice(0, Math.min(Math.floor((t - PH_S1) / RATE), SL1.length));
+                if (shown1.length) {
+                    cx.shadowColor = '#b8a060'; cx.shadowBlur = 20;
+                    cx.fillStyle   = `rgba(212,168,83,${textFadeOut})`;
+                    cx.fillText(shown1, cW / 2, cH / 2 - fs * 1.0);
+                    cx.shadowBlur  = 0;
+                }
+            }
+            if (t >= PH_S2) {
+                const shown2 = SL2.slice(0, Math.min(Math.floor((t - PH_S2) / RATE), SL2.length));
+                if (shown2.length) {
+                    cx.shadowColor = '#555'; cx.shadowBlur = 10;
+                    cx.fillStyle   = `rgba(150,150,150,${textFadeOut})`;
+                    cx.fillText(shown2, cW / 2, cH / 2 + fs * 0.9);
+                    cx.shadowBlur  = 0;
+                }
+            }
+
+        // ── Act 3: Corridor walk ──────────────────────────────────────────────
+        } else if (t < PH_PAUSE) {
+            const tRel  = t - PH_WALK;
+            const dur   = PH_PAUSE - PH_WALK;
+            const p     = tRel / dur;
             const depth = 0.01 + p * 0.058;
-            const wobble = 0.45 * Math.min(1, t / 0.9);
-            const bobY  = Math.sin(t * 3.2) * 9 * wobble;
-            const bobX  = Math.sin(t * 1.6) * 4 * wobble;
+            const wobble = 0.45 * Math.min(1, tRel / 0.9);
+            const bobY  = Math.sin(tRel * 3.2) * 9 * wobble;
+            const bobX  = Math.sin(tRel * 1.6) * 4 * wobble;
             cx.save();
             cx.translate(cW / 2 + bobX, cH / 2 + bobY);
             cx.translate(-cW / 2, -cH / 2);
             drawCorridor('fwd', depth, t);
             cx.restore();
-            const fadeIn = Math.min(1, t / 0.75);
+            const fadeIn = Math.min(1, tRel / 0.85);
             if (fadeIn < 1) { cx.fillStyle = `rgba(0,0,0,${1 - fadeIn})`; cx.fillRect(0, 0, cW, cH); }
             drawVignette(0.55 - p * 0.08, 0, 0, 0);
 
-        } else if (t < PH_PAUSE) {
-            // Stop — breathing bob, staring down the corridor
+        } else if (t < PH_CFADE) {
+            // Breathing pause at corridor depth
             const breathY = Math.sin(t * 1.4) * 3;
             cx.save(); cx.translate(0, breathY); drawCorridor('fwd', 0.068, t); cx.restore();
             drawVignette(0.48, 0, 0, 0);
 
-        } else if (t < PH_FADE) {
+        } else if (t < PH_CTEXT) {
             // Fade to black
-            const fadeA = Math.min(1, (t - PH_PAUSE) / (PH_FADE - PH_PAUSE));
+            const fadeA = Math.min(1, (t - PH_CFADE) / (PH_CTEXT - PH_CFADE));
             drawCorridor('fwd', 0.068, t);
             cx.fillStyle = `rgba(0,0,0,${fadeA})`; cx.fillRect(0, 0, cW, cH);
 
-        } else if (t < PH_TEXT) {
-            cx.fillStyle = '#000'; cx.fillRect(0, 0, cW, cH);
-
         } else {
-            // Gold + grey text types out
+            // Title text on black
             cx.fillStyle = '#000'; cx.fillRect(0, 0, cW, cH);
-            const line1 = 'The labyrinth of Daedalus.';
-            const line2 = 'Ten levels. No way back.';
-            const rate  = 0.065;
-            const shown1 = line1.slice(0, Math.min(Math.floor((t - PH_TEXT) / rate), line1.length));
-            const delay2 = PH_TEXT + line1.length * rate + 0.45;
+            const shown1 = TL1.slice(0, Math.min(Math.floor((t - PH_CTEXT) / RATE), TL1.length));
+            const delay2 = PH_CTEXT + TL1.length * RATE + 0.45;
             const shown2 = t >= delay2
-                ? line2.slice(0, Math.min(Math.floor((t - delay2) / rate), line2.length))
+                ? TL2.slice(0, Math.min(Math.floor((t - delay2) / RATE), TL2.length))
                 : '';
             const fs = Math.min(cW / 17, 28);
             cx.font = `900 ${fs}px monospace`;
