@@ -1,0 +1,59 @@
+@page "/"
+@using ZyxxyzBlazor.Services
+@using ZyxxyzShared.Chess
+@inject ChessStateService Chess
+@implements IDisposable
+
+<div class="chess-page">
+    <h1>Chess</h1>
+    <p class="status @(Chess.Game.Status == ChessStatus.Checkmate || Chess.Game.Status == ChessStatus.Stalemate ? "end" : "")">
+        @Chess.StatusText
+    </p>
+
+    <div class="board">
+        @for (var r = 0; r < 8; r++)
+        {
+            @for (var c = 0; c < 8; c++)
+            {
+                var row = r; var col = c;
+                var isLight = (r + c) % 2 == 0;
+                var isSelected = Chess.SelectedRow == r && Chess.SelectedCol == c;
+                var isTarget = Chess.SelectedRow.HasValue &&
+                               Chess.MovesFrom(Chess.SelectedRow.Value, Chess.SelectedCol!.Value)
+                                    .Any(m => m.Tr == r && m.Tc == c);
+
+                var cls = "square " + (isSelected ? "selected" : isTarget ? "target" : isLight ? "light" : "dark");
+                var piece = Chess.Game.Board[r][c];
+
+                <div class="@cls" @onclick="() => HandleTap(row, col)">
+                    @PieceGlyph(piece)
+                </div>
+            }
+        }
+    </div>
+
+    <div class="controls">
+        <button @onclick="Chess.NewGame">New Game</button>
+        @if (Chess.IsAiThinking)
+        {
+            <span class="thinking">…</span>
+        }
+    </div>
+</div>
+
+@code {
+    protected override void OnInitialized() => Chess.StateChanged += OnStateChanged;
+
+    public void Dispose() => Chess.StateChanged -= OnStateChanged;
+
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    private async Task HandleTap(int r, int c) => await Chess.TapSquareAsync(r, c);
+
+    private static string PieceGlyph(int piece) => piece switch
+    {
+         1 => "♙",  2 => "♘",  3 => "♗",  4 => "♖",  5 => "♕",  6 => "♔",
+        -1 => "♟", -2 => "♞", -3 => "♝", -4 => "♜", -5 => "♛", -6 => "♚",
+        _  => ""
+    };
+}
