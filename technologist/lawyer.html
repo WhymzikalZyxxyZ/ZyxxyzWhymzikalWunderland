@@ -29,7 +29,7 @@
         }
         .subject-card:hover, .subject-card.active-subject { border-color: var(--acc); }
         .subject-card h4 { margin: 0 0 6px; font-size: 0.95rem; }
-        .subject-card p { margin: 0; color: #666; font-size: 0.78rem; line-height: 1.4; }
+        .subject-card p { margin: 0; color: #d0d0d0; font-size: 0.78rem; line-height: 1.4; }
         .subject-num { font-size: 0.7rem; color: #444; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
 
         .lesson-list { display: flex; flex-direction: column; gap: 8px; }
@@ -45,19 +45,19 @@
         .lesson-item.open .lesson-chevron { transform: rotate(90deg); }
         .lesson-body { display: none; padding: 0 16px 16px; }
         .lesson-item.open .lesson-body { display: block; }
-        .lesson-body p { color: #999; font-size: 0.85rem; line-height: 1.7; margin: 0 0 10px; }
+        .lesson-body p { color: #e0e0e0; font-size: 0.85rem; line-height: 1.7; margin: 0 0 10px; }
         .lesson-body .practical {
             background: var(--acc-dim); border-left: 3px solid var(--acc);
             padding: 10px 14px; border-radius: 0 6px 6px 0; margin: 12px 0;
         }
         .lesson-body .practical strong { color: var(--acc); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
-        .lesson-body .practical p { margin: 0; color: #bfaa88; font-size: 0.84rem; }
+        .lesson-body .practical p { margin: 0; color: #e8e8e8; font-size: 0.84rem; }
         .example-box {
             background: rgba(255,255,255,0.03); border: 1px solid #2a2a2a; border-radius: 6px;
             padding: 12px 14px; margin: 10px 0;
         }
         .example-box .ex-label { font-size: 0.72rem; color: var(--acc); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
-        .example-box p { color: #ccc; font-size: 0.83rem; line-height: 1.6; margin: 0; font-style: italic; }
+        .example-box p { color: #e8e8e8; font-size: 0.83rem; line-height: 1.6; margin: 0; font-style: italic; }
         .formula-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
         .formula-chip {
             background: #111; border: 1px solid #2a2a2a; border-radius: 6px;
@@ -98,11 +98,11 @@
             border: 1px solid #2a2a2a; color: #888; background: #111;
         }
         .q-tag.type { border-color: var(--acc2); color: var(--acc); }
-        .q-stem { color: #ccc; font-size: 0.9rem; line-height: 1.75; margin-bottom: 20px; }
+        .q-stem { color: #e8e8e8; font-size: 0.9rem; line-height: 1.75; margin-bottom: 20px; }
         .q-stimulus {
             background: rgba(255,255,255,0.03); border: 1px solid #252525;
             border-radius: 6px; padding: 14px 16px; margin-bottom: 16px;
-            color: #bbb; font-size: 0.87rem; line-height: 1.7; font-style: italic;
+            color: #e0e0e0; font-size: 0.87rem; line-height: 1.7; font-style: italic;
         }
         .q-choices { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
         .q-choice {
@@ -122,14 +122,14 @@
         .q-choice.selected .choice-letter { background: var(--acc); color: #000; border-color: var(--acc); }
         .q-choice.correct .choice-letter { background: #4caf50; color: #000; border-color: #4caf50; }
         .q-choice.wrong .choice-letter { background: #ef5350; color: #fff; border-color: #ef5350; }
-        .choice-text { color: #bbb; font-size: 0.85rem; line-height: 1.6; flex: 1; }
+        .choice-text { color: #e0e0e0; font-size: 0.85rem; line-height: 1.6; flex: 1; }
         .q-explanation {
             display: none; background: rgba(200,169,110,0.06); border: 1px solid var(--acc2);
             border-radius: 8px; padding: 14px 16px; margin-top: 12px;
         }
         .q-explanation.visible { display: block; }
         .q-explanation .exp-label { font-size: 0.72rem; color: var(--acc); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
-        .q-explanation p { color: #bfaa88; font-size: 0.85rem; line-height: 1.65; margin: 0; }
+        .q-explanation p { color: #e8e8e8; font-size: 0.85rem; line-height: 1.65; margin: 0; }
         .prac-score-bar {
             display: flex; gap: 16px; align-items: center; padding: 12px 16px;
             background: #0a0a0a; border: 1px solid #1e1e1e; border-radius: 8px;
@@ -144,15 +144,15 @@
             padding: 18px 20px;
         }
         .strat-card h4 { color: var(--acc); font-size: 0.95rem; margin: 0 0 8px; }
-        .strat-card p { color: #888; font-size: 0.83rem; line-height: 1.6; margin: 0 0 10px; }
-        .strat-card ul { margin: 0; padding-left: 16px; color: #888; font-size: 0.83rem; line-height: 1.8; }
-        .strat-card li { color: #999; }
+        .strat-card p { color: #e0e0e0; font-size: 0.83rem; line-height: 1.6; margin: 0 0 10px; }
+        .strat-card ul { margin: 0; padding-left: 16px; color: #e0e0e0; font-size: 0.83rem; line-height: 1.8; }
+        .strat-card li { color: #e8e8e8; }
         .timing-row {
             display: flex; justify-content: space-between; align-items: center;
             padding: 8px 0; border-bottom: 1px solid #1a1a1a; font-size: 0.83rem;
         }
         .timing-row:last-child { border-bottom: none; }
-        .timing-row .section-name { color: #ccc; }
+        .timing-row .section-name { color: #e8e8e8; }
         .timing-row .timing-val { color: var(--acc); font-weight: 600; font-family: monospace; }
 
         /* GLOSSARY TAB */
@@ -164,7 +164,7 @@
         .gloss-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 8px; padding: 14px; }
         .gloss-term { font-weight: 700; color: var(--acc); font-size: 0.9rem; margin-bottom: 4px; }
         .gloss-cat { font-size: 0.7rem; color: #444; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-        .gloss-def { color: #888; font-size: 0.82rem; line-height: 1.55; }
+        .gloss-def { color: #e0e0e0; font-size: 0.82rem; line-height: 1.55; }
         .gloss-card.hidden { display: none; }
     </style>
 </head>
@@ -172,7 +172,7 @@
 <div class="navbar"></div>
 <div class="law-wrap">
     <h2 style="margin-bottom:4px;">The Lawyer</h2>
-    <p style="color:#888;margin-top:0;">A complete LSAT prep curriculum spanning 4 sections — Logical Reasoning, Analytical Reasoning, Reading Comprehension, and Test Strategy — with real-world legal applications, worked examples, and a practice question bank.</p>
+    <p style="color:#e0e0e0;margin-top:0;">A complete LSAT prep curriculum spanning 4 sections — Logical Reasoning, Analytical Reasoning, Reading Comprehension, and Test Strategy — with real-world legal applications, worked examples, and a practice question bank.</p>
 
     <div class="law-tabs">
         <button class="law-tab active" onclick="switchMain('curriculum')">Curriculum</button>
