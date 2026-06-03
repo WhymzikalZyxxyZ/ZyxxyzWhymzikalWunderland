@@ -32,10 +32,44 @@ jobs:
       - name: Run tests with coverage
         run: npm test
 
+  # ── Lint Kotlin ──────────────────────────────────────────────────────────────
+  lint-kotlin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download ktlint
+        run: |
+          curl -sSLO https://github.com/pinterest/ktlint/releases/download/1.3.1/ktlint
+          chmod +x ktlint
+
+      - name: Lint Kotlin
+        run: ./ktlint --relative 'kotlin/**/*.kt'
+
+  # ── Lint Go ───────────────────────────────────────────────────────────────────
+  lint-go:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: editor-service/go.mod
+          cache-dependency-path: editor-service/go.sum
+
+      - name: Lint Go
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.64.8
+          working-directory: editor-service
+
   # ── Deploy Cloudflare Worker (Anonymail) ─────────────────────────────────────
   deploy-worker:
     runs-on: ubuntu-latest
-    needs: lint-and-test
+    needs: [lint-and-test, lint-kotlin, lint-go]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -50,7 +84,7 @@ jobs:
   # ── Deploy ───────────────────────────────────────────────────────────────────
   deploy:
     runs-on: ubuntu-latest
-    needs: lint-and-test
+    needs: [lint-and-test, lint-kotlin, lint-go]
     permissions:
       pages: write
       id-token: write

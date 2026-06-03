@@ -72,3 +72,10 @@ Use GitHub's API to read/write issues as forum posts.
 - Community modules: `js/community/forum.js`, `js/community/guestbook.js`, `js/community/wellness.js`
 - See `docs/caching-strategy.md` for how Firebase reads are cached
 - See `js/circuit-breaker.js` for resilience patterns applied to Firebase calls
+
+## Identity model
+
+Although usernames are stored inside Firebase message and score records, there is **no Firebase "users" node**. Usernames are session-scoped display labels generated client-side — they exist only as fields within the records they attribute, not as standalone identities. A new username is generated each browser session, deliberately preventing cross-session tracking.
+
+- See `docs/privacy-architecture.md` for the full identity model
+- See `docs/adr/005-session-scoped-identity.md` for the identity decision record

@@ -6,6 +6,8 @@
     "lint:js": "eslint \"js/**/*.js\" \"tests/**/*.js\" \"anonymail/worker/public/js/**/*.js\"",
     "lint:css": "stylelint \"css/*.css\" \"anonymail/worker/public/css/*.css\"",
     "lint:html": "htmlhint \"**/*.html\" --ignore \"node_modules/**,coverage/**\"",
+    "lint:kotlin": "ktlint --relative 'kotlin/**/*.kt'",
+    "lint:go": "cd editor-service && golangci-lint run ./...",
     "lint": "npm run lint:js && npm run lint:css && npm run lint:html",
     "test": "jest --coverage",
     "test:features": "node --experimental-vm-modules node_modules/.bin/jest --config jest.features.config.cjs --coverage",

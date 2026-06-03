@@ -63,5 +63,7 @@ React-based SSR site on Vercel free tier.
 
 - See `ADR-002` for the Anonymail storage decision
 - See `ADR-003` for the Firebase community features decision
+- See `ADR-005` for the session-scoped identity decision
 - CI/CD pipeline: `.github/workflows/deploy.yml`
 - DESIGN.md documents the full infrastructure topology
+- `docs/privacy-architecture.md` documents what data is and is not stored on the site

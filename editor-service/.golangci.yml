@@ -1,0 +1,12 @@
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - bodyclose
+
+issues:
+  exclude-rules:
+    # w.Write() errors in HTTP handlers are unrecoverable (client disconnected)
+    - linters: [errcheck]
+      text: "Error return value of `.*\\.Write` is not checked"
