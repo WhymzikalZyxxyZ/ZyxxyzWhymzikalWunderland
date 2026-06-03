@@ -266,6 +266,48 @@
                 Use either in the <code>X-API-Key</code> header or in the Test Console above.
                 All requests — keyed or anonymous — are logged to the dashboard.
             </div>
+
+            <div class="sec">Data Model — AnalyticsDO SQLite Schema</div>
+            <div class="diagram"><span class="hl">Table: requests</span>
+  id          INTEGER  PRIMARY KEY AUTOINCREMENT
+  method      TEXT     NOT NULL           -- GET, POST, PUT, DELETE
+  path        TEXT     NOT NULL           -- /api/hello, /api/echo, …
+  status      INTEGER  NOT NULL           -- 200, 400, 429, 500, …
+  latency_ms  INTEGER  NOT NULL           -- wall-clock handler time
+  key_id      TEXT     NOT NULL DEFAULT '' -- empty string = anonymous
+  ts          INTEGER  NOT NULL           -- Unix ms
+
+<span class="hl">Indexes:</span>  (ts)  ·  (path, ts)  ·  (status, ts)
+
+<span class="hl">Rate-limit counters</span>  (DO KV storage, not SQLite)
+  Key:   rl:{identity}:{minute-slot}
+  Value: request count in that minute window
+  Slot:  Math.floor(Date.now() / 60000)
+  TTL:   previous slot deleted on each write</div>
+
+            <div class="sec">Design Decisions</div>
+            <div class="explain">
+                <strong>Why Durable Objects instead of Workers KV for analytics?</strong><br>
+                KV is eventually consistent and optimised for reads at the edge. Writing per-request metrics
+                to KV would be expensive and could return stale counts. A Durable Object serialises all
+                writes through a single instance with a SQLite database — reads and writes are always
+                consistent, and SQL aggregations (GROUP BY, COUNT, AVG) are fast.
+            </div>
+            <div class="explain">
+                <strong>Why per-minute rate limiting with DO storage?</strong><br>
+                Each rate-limit check is a single DO storage read + write. Using the current minute as a
+                slot key means counters reset automatically — no background cleanup job needed. The previous
+                slot is pruned on each write to keep storage bounded. The DO's single-instance guarantee
+                means two concurrent requests cannot both read "count = 0" and both increment to 1;
+                writes are serialised.
+            </div>
+            <div class="explain">
+                <strong>Fire-and-forget logging.</strong><br>
+                The gateway logs each request with <code>stub.fetch(…)</code> without awaiting the result.
+                This keeps response latency unaffected by the write path — the Worker returns the response
+                to the client immediately. The Cloudflare runtime keeps the Worker alive long enough to
+                complete the background fetch before the isolate is terminated.
+            </div>
         </div>
 
     </div>
