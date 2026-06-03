@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ZyxxyzMaui.App">
+    <Application.Resources>
+        <ResourceDictionary>
+            <Color x:Key="BackgroundDark">#1a1a2e</Color>
+            <Color x:Key="SurfaceDark">#16213e</Color>
+            <Color x:Key="Primary">#e94560</Color>
+            <Color x:Key="TextPrimary">#e8e8e8</Color>
+            <Color x:Key="TextMuted">#888888</Color>
+            <Color x:Key="BoardLight">#f0d9b5</Color>
+            <Color x:Key="BoardDark">#b58863</Color>
+            <Color x:Key="SelectedSquare">#7fc97f</Color>
+
+            <Style TargetType="Page" ApplyToDerivedTypes="True">
+                <Setter Property="BackgroundColor" Value="{StaticResource BackgroundDark}" />
+            </Style>
+            <Style TargetType="Label">
+                <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+            </Style>
+            <Style TargetType="Button">
+                <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+                <Setter Property="CornerRadius" Value="6" />
+                <Setter Property="Padding" Value="16,10" />
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

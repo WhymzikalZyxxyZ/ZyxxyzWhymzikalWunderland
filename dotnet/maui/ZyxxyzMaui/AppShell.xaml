@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:pages="clr-namespace:ZyxxyzMaui.Pages"
+       x:Class="ZyxxyzMaui.AppShell"
+       Shell.NavBarIsVisible="False">
+
+    <Shell.Resources>
+        <Style TargetType="TabBar">
+            <Setter Property="Shell.TabBarBackgroundColor" Value="#16213e" />
+            <Setter Property="Shell.TabBarForegroundColor" Value="#e94560" />
+            <Setter Property="Shell.TabBarUnselectedColor" Value="#888888" />
+            <Setter Property="Shell.TabBarTitleColor" Value="#e94560" />
+        </Style>
+    </Shell.Resources>
+
+    <TabBar>
+        <ShellContent Title="Chess"
+                      Icon="chess_icon.png"
+                      ContentTemplate="{DataTemplate pages:ChessPage}"
+                      Route="chess" />
+        <ShellContent Title="Status"
+                      Icon="status_icon.png"
+                      ContentTemplate="{DataTemplate pages:StatusPage}"
+                      Route="status" />
+    </TabBar>
+</Shell>
