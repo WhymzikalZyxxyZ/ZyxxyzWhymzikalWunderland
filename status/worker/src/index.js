@@ -60,8 +60,15 @@ export default {
         }
 
         if (path === '/api/sparkline') {
-            const svc = url.searchParams.get('svc') || '';
-            const n   = url.searchParams.get('n')   || '90';
+            const services   = JSON.parse(env.SERVICES);
+            const validIds   = new Set(services.map(s => s.id));
+            const svc        = url.searchParams.get('svc') || '';
+            if (!validIds.has(svc)) {
+                return new Response(JSON.stringify({ error: 'Unknown service id' }), {
+                    status: 400, headers: { ...CORS, 'Content-Type': 'application/json' },
+                });
+            }
+            const n   = Math.max(1, Math.min(360, parseInt(url.searchParams.get('n') || '90', 10)));
             const res = await stub.fetch(new Request(`https://do/sparkline?svc=${encodeURIComponent(svc)}&n=${n}`));
             return cors(res);
         }

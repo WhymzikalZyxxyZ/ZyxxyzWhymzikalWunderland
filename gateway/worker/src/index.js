@@ -32,14 +32,28 @@ function handleTime() {
     return json({ iso: now.toISOString(), unix: Math.floor(now / 1000), tz: 'UTC' });
 }
 
+const SENSITIVE_HEADERS = new Set(['x-api-key', 'authorization', 'cookie', 'set-cookie']);
+const MAX_BODY_BYTES = 65_536;
+
 async function handleEcho(request) {
     const url    = new URL(request.url);
     const params = Object.fromEntries(url.searchParams);
+    const safeHeaders = Object.fromEntries(
+        [...request.headers].filter(([k]) => !SENSITIVE_HEADERS.has(k.toLowerCase()))
+    );
     let body = null;
     if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
-        try { body = await request.json(); } catch { body = await request.text(); }
+        const cl = parseInt(request.headers.get('content-length') || '0', 10);
+        if (cl > MAX_BODY_BYTES) {
+            return json({ error: 'Request body too large', code: 'PAYLOAD_TOO_LARGE' }, 413);
+        }
+        const raw = await request.text();
+        if (raw.length > MAX_BODY_BYTES) {
+            return json({ error: 'Request body too large', code: 'PAYLOAD_TOO_LARGE' }, 413);
+        }
+        try { body = JSON.parse(raw); } catch { body = raw; }
     }
-    return json({ method: request.method, path: url.pathname, params, body, headers: Object.fromEntries(request.headers) });
+    return json({ method: request.method, path: url.pathname, params, body, headers: safeHeaders });
 }
 
 async function handleSlow() {
@@ -139,10 +153,12 @@ export default {
         for (const [k, v] of Object.entries({ ...CORS, ...rlHeaders })) response.headers.set(k, v);
 
         // ── Log ───────────────────────────────────────────────────────────────
-        const retention = parseInt(env.RETENTION_DAYS ?? '7', 10);
+        const retention  = parseInt(env.RETENTION_DAYS ?? '7', 10);
+        const safeKeyId  = keyId ? `${keyId.slice(0, 8)}…` : '';
+        const safePath   = path.slice(0, 256);
         stub.fetch(new Request(`https://do/record?retention=${retention}`, {
             method: 'POST',
-            body: JSON.stringify({ method, path, status: response.status, latency_ms: latency, key_id: keyId, ts: Date.now() }),
+            body: JSON.stringify({ method, path: safePath, status: response.status, latency_ms: latency, key_id: safeKeyId, ts: Date.now() }),
             headers: { 'Content-Type': 'application/json' },
         }));
 

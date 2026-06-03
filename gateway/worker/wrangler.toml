@@ -15,6 +15,7 @@ pattern   = "api.zyxwonderland.xyz/*"
 zone_name = "zyxwonderland.xyz"
 
 [vars]
+# Demo keys only — in production set API_KEYS via: wrangler secret put API_KEYS
 API_KEYS       = "demo-key-alpha,demo-key-beta"
 ANON_LIMIT     = "20"
 KEY_LIMIT      = "120"

@@ -31,8 +31,9 @@ export class AnalyticsDO {
 
     // ── Rate limiting ─────────────────────────────────────────────────────────
     async #checkRate(identity, limit) {
+        const safeIdentity = String(identity).slice(0, 128);
         const slot = Math.floor(Date.now() / 60000);
-        const key  = `rl:${identity}:${slot}`;
+        const key  = `rl:${safeIdentity}:${slot}`;
         const prev = (await this.state.storage.get(key)) ?? 0;
         if (prev >= limit) return { allowed: false, count: prev, limit };
         await this.state.storage.put(key, prev + 1);
@@ -46,18 +47,26 @@ export class AnalyticsDO {
         const path = url.pathname;
 
         if (path === '/rate-check' && request.method === 'POST') {
-            const { identity, limit } = await request.json();
-            const result = await this.#checkRate(identity, limit);
+            const body = await request.json();
+            const identity = String(body.identity ?? '').slice(0, 128);
+            const limit    = Math.max(1, Math.min(10000, parseInt(body.limit, 10) || 20));
+            const result   = await this.#checkRate(identity, limit);
             return Response.json(result);
         }
 
         if (path === '/record' && request.method === 'POST') {
-            const row = await request.json();
-            const retention = parseInt(url.searchParams.get('retention') || '7', 10);
+            const row       = await request.json();
+            const retention = Math.max(1, Math.min(90, parseInt(url.searchParams.get('retention') || '7', 10)));
+            const method    = String(row.method  ?? 'GET').slice(0, 10).toUpperCase();
+            const rowPath   = String(row.path    ?? '/').slice(0, 256);
+            const status    = Math.max(100, Math.min(599, parseInt(row.status, 10) || 200));
+            const latency   = Math.max(0, Math.min(60000, parseInt(row.latency_ms, 10) || 0));
+            const keyId     = String(row.key_id  ?? '').slice(0, 32);
+            const ts        = typeof row.ts === 'number' ? row.ts : Date.now();
             this.sql.exec(
                 `INSERT INTO requests (method, path, status, latency_ms, key_id, ts)
                  VALUES (?, ?, ?, ?, ?, ?)`,
-                row.method, row.path, row.status, row.latency_ms, row.key_id ?? '', row.ts
+                method, rowPath, status, latency, keyId, ts
             );
             this.#purge(retention);
             return new Response('ok');
