@@ -52,31 +52,21 @@ public partial class ChessPage : ContentPage
                     else                bg = isLight ? Color.FromArgb("#f0d9b5") : Color.FromArgb("#b58863");
 
                     var piece = game.Board[r][c];
-                    var glyph = piece == 0 ? "" : (piece > 0 ? PieceGlyph[piece] : PieceGlyph[-piece].ToLower()
-                        .Replace("♙", "♟").Replace("♘", "♞").Replace("♗", "♝")
-                        .Replace("♖", "♜").Replace("♕", "♛").Replace("♔", "♚"));
-
-                    // Use black unicode pieces for black
-                    var displayGlyph = piece switch
+                    var glyph = piece switch
                     {
-                        > 0 => PieceGlyph[piece],
-                        < 0 => piece switch
-                        {
-                            -1 => "♟", -2 => "♞", -3 => "♝",
-                            -4 => "♜", -5 => "♛", -6 => "♚",
-                            _  => ""
-                        },
-                        _ => ""
+                         1 => "♙",  2 => "♘",  3 => "♗",  4 => "♖",  5 => "♕",  6 => "♔",
+                        -1 => "♟", -2 => "♞", -3 => "♝", -4 => "♜", -5 => "♛", -6 => "♚",
+                        _  => ""
                     };
 
                     var label = new Label
                     {
-                        Text = displayGlyph,
+                        Text = glyph,
                         FontSize = 28,
                         HorizontalTextAlignment = TextAlignment.Center,
                         VerticalTextAlignment = TextAlignment.Center,
                         BackgroundColor = bg,
-                        TextColor = piece > 0 ? Colors.White : Colors.Black,
+                        TextColor = Colors.Black,
                         WidthRequest = SquareSize,
                         HeightRequest = SquareSize
                     };
