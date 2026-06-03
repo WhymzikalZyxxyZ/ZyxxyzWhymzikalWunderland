@@ -345,6 +345,65 @@
             .lang-profile-hero { flex-direction: column; }
             .lang-sl-grid { grid-template-columns: 1fr; }
         }
+
+        /* ══════════════════════════════════════════════════════
+           TOOLTIP
+        ══════════════════════════════════════════════════════ */
+        .lc-tooltip {
+            position: fixed;
+            max-width: 340px;
+            min-width: 180px;
+            background: #0b0b18;
+            border: 1px solid rgba(255,255,255,0.13);
+            border-radius: 10px;
+            padding: 13px 16px 14px;
+            font-size: 0.83em;
+            color: #bbbbd0;
+            line-height: 1.65;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(4px);
+            transition: opacity .18s ease, transform .18s ease;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
+        }
+        .lc-tooltip.tt-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .tt-label {
+            font-family: 'Courier New', monospace;
+            font-size: 0.72em;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+            color: #555568;
+            margin-bottom: 7px;
+        }
+
+        /* Dot cursor hint on hoverable items */
+        .has-tip {
+            cursor: help;
+            position: relative;
+        }
+        .has-tip::after {
+            content: '›';
+            position: absolute;
+            right: -2px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8em;
+            color: rgba(255,255,255,0.18);
+            transition: color .2s, right .2s;
+            pointer-events: none;
+        }
+        .has-tip:hover::after {
+            color: rgba(255,255,255,0.5);
+            right: -6px;
+        }
+
+        /* Metric cards are also hoverable */
+        .lang-metric-card.has-tip { cursor: help; }
+        .lang-metric-card.has-tip::after { display: none; }
     </style>
 </head>
 <body class="wunderBody">
