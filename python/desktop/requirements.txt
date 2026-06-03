@@ -1,0 +1,2 @@
+# tkinter ships with CPython — no pip install needed
+# python >= 3.11 required
