@@ -16,6 +16,7 @@
     "testEnvironment": "node",
     "coverageProvider": "v8",
     "testTimeout": 30000,
+    "testPathIgnorePatterns": ["/node_modules/", "\\.mjs$"],
     "collectCoverageFrom": [
       "js/engines/tetris-engine.js",
       "js/engines/snake-engine.js",
