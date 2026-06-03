@@ -76,6 +76,10 @@ coverage/
 # Firebase config (real credentials — generated at deploy time from secrets)
 js/config/firebase-config.js
 
+# .NET build artifacts
+dotnet/**/obj/
+dotnet/**/bin/
+
 # IDE files
 .vscode/
 .idea/
