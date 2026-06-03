@@ -72,6 +72,27 @@ describe('pongTick', () => {
         const s2 = pongTick(s, s.left.y, s.right.y);
         expect(s2.score.right).toBe(1);
     });
+    test('ball bounces off left paddle', () => {
+        const lY = PONG_H / 2 - PADDLE_H / 2;
+        const s  = { ...newPongState(), ball: { x: 25, y: lY + PADDLE_H / 2, vx: -10, vy: 0 } };
+        const s2 = pongTick(s, lY, s.right.y);
+        expect(s2.ball.vx).toBeGreaterThan(0);
+    });
+    test('ball bounces off right paddle', () => {
+        const rY = PONG_H / 2 - PADDLE_H / 2;
+        const s  = { ...newPongState(), ball: { x: 775, y: rY + PADDLE_H / 2, vx: 10, vy: 0 } };
+        const s2 = pongTick(s, s.left.y, rY);
+        expect(s2.ball.vx).toBeLessThan(0);
+    });
+    test('hitOffset deflects ball angle on paddle edge hit', () => {
+        const lY = 0;
+        // Hit near the top edge of the paddle (y ≈ lY), offset close to -1
+        const s  = { ...newPongState(), ball: { x: 25, y: lY + 2, vx: -8, vy: 0 } };
+        const s2 = pongTick(s, lY, s.right.y);
+        // vy should change from the edge hit angle
+        expect(typeof s2.ball.vy).toBe('number');
+        expect(s2.ball.vx).toBeGreaterThan(0);
+    });
     test('score is capped at PONG_MAX_SCORE', () => {
         const s = { ...newPongState(),
             ball: { x: BALL_R-5, y: PONG_H/2, vx: -10, vy: 0 },

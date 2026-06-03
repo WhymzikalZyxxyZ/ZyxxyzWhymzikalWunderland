@@ -105,6 +105,22 @@ describe('fcdAction', () => {
         expect(r.actedThisRound).toHaveLength(1);
         expect(r.actedThisRound[0]).toBe(pidx);
     });
+    test('bet2: all actions done → showdown', () => {
+        let s = startFCDHand(newFCDState(NAMES));
+        // Set up a bet2 state with currentBet=0 so both players can check
+        s = {
+            ...s,
+            phase: 'bet2',
+            currentBet: 0,
+            actedThisRound: [],
+            activePlayerIdx: 0,
+            players: s.players.map(p => ({ ...p, bet: 0, drawn: true })),
+        };
+        s = fcdAction(s, 'check');
+        s = fcdAction(s, 'check');
+        expect(s.phase).toBe('showdown');
+        expect(s.winner).toBeDefined();
+    });
     test('check leaves pot unchanged', () => {
         // Set up state where currentBet == player bet (can check)
         const s = { ...state, currentBet: state.players[state.activePlayerIdx].bet };

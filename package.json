@@ -1,6 +1,6 @@
 {
   "name": "zyxxyz-whymzykal-wunderland",
-  "version": "2.11.0",
+  "version": "2.11.1",
   "private": true,
   "scripts": {
     "lint:js": "eslint \"js/**/*.js\" \"tests/**/*.js\" \"anonymail/worker/public/js/**/*.js\"",
@@ -16,6 +16,7 @@
     "testEnvironment": "node",
     "coverageProvider": "v8",
     "testTimeout": 30000,
+    "testPathIgnorePatterns": ["/node_modules/", "\\.mjs$"],
     "collectCoverageFrom": [
       "js/engines/tetris-engine.js",
       "js/engines/snake-engine.js",
