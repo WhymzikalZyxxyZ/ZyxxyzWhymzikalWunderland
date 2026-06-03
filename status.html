@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <style>
+        .status-wrap {
+            max-width: 680px;
+            margin: 0 auto;
+        }
+        .status-meta {
+            font-family: 'Courier New', monospace;
+            font-size: 0.82em;
+            color: #666;
+            margin-bottom: 28px;
+        }
+        .status-card {
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(244,162,97,0.2);
+            border-radius: 12px;
+            padding: 22px 28px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .status-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            background: #444;
+            box-shadow: 0 0 0 0 transparent;
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+        .status-dot.up   { background: #4caf50; box-shadow: 0 0 8px #4caf5066; }
+        .status-dot.down { background: #f44336; box-shadow: 0 0 8px #f4433666; }
+        .status-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .status-label {
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            color: #eee;
+            margin-bottom: 4px;
+        }
+        .status-sub {
+            font-family: 'Courier New', monospace;
+            font-size: 0.78em;
+            color: #666;
+        }
+        .status-right {
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .status-badge {
+            font-family: 'Courier New', monospace;
+            font-size: 0.78em;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-bottom: 6px;
+            display: inline-block;
+            background: #1a1a1a;
+            color: #666;
+        }
+        .status-badge.up   { background: rgba(76,175,80,0.15); color: #4caf50; }
+        .status-badge.down { background: rgba(244,67,54,0.15);  color: #f44336; }
+        .status-uptime {
+            font-family: 'Courier New', monospace;
+            font-size: 0.75em;
+            color: #555;
+        }
+        .sparkline-wrap {
+            margin-top: 12px;
+        }
+        .sparkline-wrap canvas {
+            display: block;
+            border-radius: 4px;
+        }
+        .sparkline-legend {
+            font-family: 'Courier New', monospace;
+            font-size: 0.70em;
+            color: #444;
+            margin-top: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .status-overall {
+            font-family: 'Courier New', monospace;
+            font-size: 1.05em;
+            padding: 14px 22px;
+            border-radius: 10px;
+            margin-bottom: 28px;
+            text-align: center;
+            border: 1px solid rgba(244,162,97,0.12);
+            background: rgba(0,0,0,0.4);
+            color: #666;
+        }
+        .status-overall.all-up   { color: #4caf50; border-color: rgba(76,175,80,0.3); }
+        .status-overall.some-down { color: #f44336; border-color: rgba(244,67,54,0.3); }
+        .status-loading { color: #555; font-family: 'Courier New', monospace; font-size: 0.9em; }
+    </style>
+</head>
+<body class="wunderBody">
+
+    <div class="content-row">
+        <h2>System Status</h2>
+    </div>
+
+    <div class="content-row">
+        <div class="navbar">
+            <a href="/">Home</a>
+            <a href="/about.html">About</a>
+        </div>
+    </div>
+
+    <div class="content-row">
+        <div class="status-wrap">
+            <div id="overall" class="status-overall">Checking services…</div>
+            <div id="cards"></div>
+            <p class="status-meta">Checked every 5 minutes. Sparkline shows last 90 checks (~7.5 hours).
+                Last updated: <span id="last-updated">—</span></p>
+        </div>
+    </div>
+
+    <script src="/js/status.js" defer></script>
+</body>
+</html>
