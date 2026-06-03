@@ -10,25 +10,10 @@
             return `${adj}${noun}_${Math.floor(Math.random() * 900 + 100)}`;
         }
 
-        function claimUsername(username) {
-            const ref = firebase.database().ref(`forum/presence/${username}`);
-            ref.onDisconnect().remove();
-            return new Promise(resolve => {
-                ref.transaction(
-                    current => current === null ? { ts: Date.now() } : undefined,
-                    (err, committed) => {
-                        if (!committed) ref.onDisconnect().cancel();
-                        resolve(!err && committed);
-                    }
-                );
-            });
-        }
-
-        async function initUsername() {
+        function initUsername() {
             const stored = sessionStorage.getItem('forumUsername');
-            if (stored && await claimUsername(stored)) return stored;
-            let name;
-            do { name = genUsername(); } while (!await claimUsername(name));
+            if (stored) return stored;
+            const name = genUsername();
             sessionStorage.setItem('forumUsername', name);
             return name;
         }
@@ -169,7 +154,8 @@
 
             if (loadOlderBtn) loadOlderBtn.addEventListener('click', loadOlderMessages);
 
-            initUsername().then(username => {
+            const username = initUsername();
+            {
                 myUsername = username;
                 document.getElementById('chat-username').textContent = username;
                 chatInput.disabled    = false;
@@ -190,7 +176,7 @@
                         addMessageEl(msg.username, msg.text, msg.ts, isMine, snapshot.key, isMine || msg.uid === myUid);
                     }
                 });
-            });
+            }
 
         } else {
             statusDot.textContent = '● not configured';
