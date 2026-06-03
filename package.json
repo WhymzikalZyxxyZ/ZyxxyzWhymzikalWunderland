@@ -8,6 +8,7 @@
     "lint:html": "htmlhint \"**/*.html\" --ignore \"node_modules/**,coverage/**\"",
     "lint": "npm run lint:js && npm run lint:css && npm run lint:html",
     "test": "jest --coverage",
+    "test:features": "node --experimental-vm-modules node_modules/.bin/jest --config jest.features.config.cjs --coverage",
     "minify": "node scripts/minify.js",
     "bump": "node scripts/bump-version.js"
   },
