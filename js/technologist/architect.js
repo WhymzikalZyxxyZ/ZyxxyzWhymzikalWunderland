@@ -430,10 +430,8 @@ function render() {
         }
     }
 
-    // Connection anchors — show on hovered node (select mode) or all nodes (connect mode)
-    const anchorTargets = mode === 'connect'
-        ? nodes
-        : (hoveredNodeId ? [nodes.find(n => n.id === hoveredNodeId)].filter(Boolean) : []);
+    // Connection anchors — only shown in connect mode
+    const anchorTargets = mode === 'connect' ? nodes : [];
 
     anchorTargets.forEach(node => {
         getAnchors(node).forEach(a => {
@@ -453,6 +451,7 @@ function render() {
     archSVG.className = mode.startsWith('place') ? 'placing'
         : mode === 'connect' ? 'connecting'
         : connectDrag ? 'connecting'
+        : dragging ? 'dragging'
         : (spaceDown || panning) ? 'panning' : '';
     syncSidebar();
 }
@@ -469,7 +468,7 @@ function setMode(m) {
         document.getElementById('btn-connect').classList.add('active');
         statusEl.textContent = 'Click or drag from an anchor point to connect nodes. Esc to cancel.';
     } else {
-        statusEl.textContent = 'Select & drag · Hover node for anchors · Drag anchor to connect · Scroll to zoom · Ctrl+C/V/D';
+        statusEl.textContent = 'Click & drag to move · Shift+click multi-select · Scroll to zoom · Use Connect mode to draw edges · Ctrl+C/V/D';
     }
     render();
 }
@@ -578,9 +577,10 @@ archSVG.addEventListener('wheel', e => {
     zoomAt(e.clientX, e.clientY, e.deltaY > 0 ? 1.12 : 1/1.12);
 }, {passive:false});
 
-// ── Hover tracking for anchor display ────────────────────────────────────────
+// ── Hover tracking for anchor display (connect mode only) ─────────────────────
 archSVG.addEventListener('mousemove', e => {
-    if (connectDrag || drawing || dragging || resizing || panning || mode.startsWith('place:')) return;
+    if (mode !== 'connect') return;
+    if (connectDrag || drawing || dragging || resizing || panning) return;
     const nodeEl = e.target.closest('[data-node-id]');
     const newHover = nodeEl?.dataset.nodeId || null;
     if (newHover !== hoveredNodeId) { hoveredNodeId = newHover; render(); }
@@ -613,8 +613,8 @@ archSVG.addEventListener('mousedown', e => {
     }
     if (e.button !== 0) return;
 
-    // Anchor click/drag → start connect drag
-    if (e.target.dataset.anchorNode) {
+    // Anchor click/drag → start connect drag (connect mode only)
+    if (e.target.dataset.anchorNode && mode === 'connect') {
         const srcId = e.target.dataset.anchorNode;
         const [x1, y1] = svgPt(e.clientX, e.clientY);
         connectDrag = {srcId, x1, y1, ex:x1, ey:y1};
