@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:conv="clr-namespace:ZyxxyzMaui.Converters"
+             x:Class="ZyxxyzMaui.Pages.StatusPage"
+             Title="Status">
+
+    <ContentPage.Resources>
+        <conv:StatusColorConverter x:Key="StatusColorConverter" />
+        <conv:NotNullConverter x:Key="NotNullConverter" />
+    </ContentPage.Resources>
+
+    <RefreshView Command="{Binding RefreshCommand}"
+                 IsRefreshing="{Binding IsLoading}"
+                 RefreshColor="{StaticResource Primary}">
+
+        <ScrollView>
+            <VerticalStackLayout Padding="16" Spacing="12">
+
+                <!-- Error banner -->
+                <Frame IsVisible="{Binding Error, Converter={StaticResource NotNullConverter}}"
+                       BackgroundColor="#3a1a1a"
+                       BorderColor="{StaticResource Primary}"
+                       CornerRadius="8"
+                       Padding="12">
+                    <Label Text="{Binding Error}"
+                           TextColor="{StaticResource Primary}" />
+                </Frame>
+
+                <!-- Services list -->
+                <CollectionView ItemsSource="{Binding Services}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame BackgroundColor="{StaticResource SurfaceDark}"
+                                   BorderColor="Transparent"
+                                   CornerRadius="8"
+                                   Padding="14"
+                                   Margin="0,4">
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                    <!-- Status dot -->
+                                    <Ellipse Grid.Column="0"
+                                             WidthRequest="10"
+                                             HeightRequest="10"
+                                             VerticalOptions="Center"
+                                             Margin="0,0,10,0"
+                                             Fill="{Binding Ok, Converter={StaticResource StatusColorConverter}}" />
+                                    <!-- Label + latency -->
+                                    <VerticalStackLayout Grid.Column="1">
+                                        <Label Text="{Binding Label}" FontAttributes="Bold" />
+                                        <Label Text="{Binding Latency, StringFormat='{0} ms'}"
+                                               TextColor="{StaticResource TextMuted}"
+                                               FontSize="12"
+                                               IsVisible="{Binding Latency, Converter={StaticResource NotNullConverter}}" />
+                                    </VerticalStackLayout>
+                                    <!-- Uptime -->
+                                    <Label Grid.Column="2"
+                                           Text="{Binding Uptime, StringFormat='{0:P0}'}"
+                                           TextColor="{StaticResource TextMuted}"
+                                           FontSize="12"
+                                           VerticalOptions="Center"
+                                           IsVisible="{Binding Uptime, Converter={StaticResource NotNullConverter}}" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Last updated -->
+                <Label Text="{Binding LastUpdated, StringFormat='Updated {0:HH:mm:ss}'}"
+                       TextColor="{StaticResource TextMuted}"
+                       FontSize="12"
+                       HorizontalTextAlignment="Center"
+                       IsVisible="{Binding LastUpdated, Converter={StaticResource NotNullConverter}}" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </RefreshView>
+</ContentPage>
