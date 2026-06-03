@@ -1,15 +1,15 @@
 {
   "name": "zyxxyz-whymzykal-wunderland",
-  "version": "2.10.19",
+  "version": "2.11.0",
   "private": true,
   "scripts": {
-    "lint:js":   "eslint \"js/**/*.js\" \"tests/**/*.js\" \"anonymail/worker/public/js/**/*.js\"",
-    "lint:css":  "stylelint \"css/*.css\" \"anonymail/worker/public/css/*.css\"",
+    "lint:js": "eslint \"js/**/*.js\" \"tests/**/*.js\" \"anonymail/worker/public/js/**/*.js\"",
+    "lint:css": "stylelint \"css/*.css\" \"anonymail/worker/public/css/*.css\"",
     "lint:html": "htmlhint \"**/*.html\" --ignore \"node_modules/**,coverage/**\"",
-    "lint":      "npm run lint:js && npm run lint:css && npm run lint:html",
-    "test":      "jest --coverage",
-    "minify":    "node scripts/minify.js",
-    "bump":      "node scripts/bump-version.js"
+    "lint": "npm run lint:js && npm run lint:css && npm run lint:html",
+    "test": "jest --coverage",
+    "minify": "node scripts/minify.js",
+    "bump": "node scripts/bump-version.js"
   },
   "jest": {
     "testEnvironment": "node",
@@ -33,24 +33,24 @@
     ],
     "coverageThreshold": {
       "global": {
-        "lines":      90,
-        "functions":  90,
-        "branches":   90,
+        "lines": 90,
+        "functions": 90,
+        "branches": 90,
         "statements": 90
       }
     }
   },
   "dependencies": {
     "postal-mime": "^2.3.7",
-    "qrcode":      "^1.5.4"
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
-    "clean-css-cli":             "^5.6.3",
-    "eslint":                    "^8.57.0",
-    "htmlhint":                  "^1.1.4",
-    "jest":                      "^30.4.2",
-    "stylelint":                 "^17.0.0",
+    "clean-css-cli": "^5.6.3",
+    "eslint": "^8.57.0",
+    "htmlhint": "^1.1.4",
+    "jest": "^30.4.2",
+    "stylelint": "^17.0.0",
     "stylelint-config-standard": "^40.0.0",
-    "terser":                    "^5.31.0"
+    "terser": "^5.31.0"
   }
 }
