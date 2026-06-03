@@ -47,6 +47,7 @@ let selKind       = null;        // 'node' | 'edge' | null
 let mode          = 'select';
 let connSrc       = null;
 let dragging      = null;        // {starts:[{id,ox,oy}], smx, smy, moved}
+let labelDragging = null;        // {nodeId, smx, smy, startDx, startDy}
 let resizing      = null;        // {id,handle,ox,oy,ow,oh,smx,smy}
 let drawing       = null;        // {type,sx,sy,ex,ey}
 let sidebarDrag   = null;        // type string
@@ -72,11 +73,14 @@ const sidebarWrap   = document.getElementById('sidebar-label-wrap');
 const sidebarHead   = document.getElementById('lbl-sec-head');
 const stylePanel    = document.getElementById('sidebar-style-wrap');
 const styleHead     = document.getElementById('style-sec-head');
-const edgeStyleHead = document.getElementById('edge-style-head');
-const edgeStyleWrap = document.getElementById('sidebar-edge-wrap');
+const edgeStyleHead  = document.getElementById('edge-style-head');
+const edgeStyleWrap  = document.getElementById('sidebar-edge-wrap');
+const fillColorIn    = document.getElementById('sidebar-fill-color');
+const strokeColorIn  = document.getElementById('sidebar-stroke-color');
 const zoomLabel     = document.getElementById('zoom-label');
-const ctxMenu       = document.getElementById('ctx-menu');
-const shapeGhost    = document.getElementById('shape-ghost');
+const ctxMenu         = document.getElementById('ctx-menu');
+const shapeGhost      = document.getElementById('shape-ghost');
+const shapePickerEl   = document.getElementById('shape-picker');
 
 // ── ViewBox / zoom / pan ──────────────────────────────────────────────────────
 function applyVb() {
@@ -276,6 +280,8 @@ function syncSidebar() {
             sw.classList.toggle('active', sw.dataset.color === nf));
         document.querySelectorAll('#sidebar-stroke-swatches .swatch').forEach(sw =>
             sw.classList.toggle('active', sw.dataset.color === ns));
+        if (document.activeElement !== fillColorIn)   fillColorIn.value   = nf;
+        if (document.activeElement !== strokeColorIn) strokeColorIn.value = ns;
     } else if (singleEdge) {
         sidebarWrap.style.display   = 'none';
         sidebarHead.style.display   = 'none';
@@ -401,13 +407,17 @@ function render() {
         }
         buildNodeShapes(node, fill, stroke, sw).forEach(s => g.appendChild(s));
 
-        const lblY = node.type === 'actor' ? node.y+node.h+10 : node.y+node.h/2;
+        const lblBaseX = node.x+node.w/2;
+        const lblBaseY = node.type === 'actor' ? node.y+node.h+10 : node.y+node.h/2;
+        const lblX = lblBaseX + (node.labelDx||0);
+        const lblY = lblBaseY + (node.labelDy||0);
         const t = svgE('text',{
-            x:node.x+node.w/2, y:lblY,
+            x:lblX, y:lblY,
             'text-anchor':'middle','dominant-baseline':'central',
             'font-family':'Courier New,monospace','font-size':'12',fill:'#e2e8f0',
-            style:'pointer-events:none;user-select:none;',
+            style: isSel ? 'cursor:move;user-select:none;' : 'pointer-events:none;user-select:none;',
         });
+        t.dataset.labelNode = node.id;
         t.textContent = node.label;
         g.appendChild(t);
         archSVG.appendChild(g);
@@ -571,6 +581,56 @@ function sendBackward(id) {
     if (i > 0) { snapshot(); [nodes[i-1],nodes[i]]=[nodes[i],nodes[i-1]]; render(); }
 }
 
+// ── Shape picker ──────────────────────────────────────────────────────────────
+let shapePickerPos = null;
+
+(function buildPicker() {
+    const lbl = document.createElement('span');
+    lbl.className = 'sp-label';
+    lbl.textContent = 'Insert shape';
+    shapePickerEl.appendChild(lbl);
+    const grid = document.createElement('div');
+    grid.className = 'sp-grid';
+    [
+        {type:'process',  icon:'▭', label:'Process'},
+        {type:'decision', icon:'◇', label:'Decision'},
+        {type:'terminal', icon:'◯', label:'Terminal'},
+        {type:'database', icon:'⌗', label:'Database'},
+        {type:'io',       icon:'▱', label:'I / O'},
+        {type:'actor',    icon:'⚇', label:'Actor'},
+        {type:'note',     icon:'⌐', label:'Note'},
+    ].forEach(({type, icon, label}) => {
+        const btn = document.createElement('button');
+        btn.className = 'sp-btn';
+        btn.innerHTML = `<span class="sp-icon">${icon}</span><span>${label}</span>`;
+        btn.addEventListener('mousedown', ev => ev.stopPropagation());
+        btn.addEventListener('click', () => {
+            if (!shapePickerPos) return;
+            const {svgX, svgY} = shapePickerPos;
+            hideShapePicker();
+            const {w, h} = NODE_DIMS[type];
+            finalizePlace(type, svgX - w/2, svgY - h/2, w, h);
+        });
+        grid.appendChild(btn);
+    });
+    shapePickerEl.appendChild(grid);
+})();
+
+function showShapePicker(clientX, clientY, svgX, svgY) {
+    shapePickerPos = {svgX, svgY};
+    // Offset so picker doesn't sit under cursor
+    const px = Math.min(clientX + 8, window.innerWidth  - 220);
+    const py = Math.min(clientY + 8, window.innerHeight - 180);
+    shapePickerEl.style.left    = px + 'px';
+    shapePickerEl.style.top     = py + 'px';
+    shapePickerEl.style.display = 'block';
+}
+
+function hideShapePicker() {
+    shapePickerEl.style.display = 'none';
+    shapePickerPos = null;
+}
+
 // ── Zoom wheel ────────────────────────────────────────────────────────────────
 archSVG.addEventListener('wheel', e => {
     e.preventDefault();
@@ -612,6 +672,18 @@ archSVG.addEventListener('mousedown', e => {
         return;
     }
     if (e.button !== 0) return;
+
+    // Label drag — drag a node's text independently
+    if (e.target.dataset.labelNode && selKind === 'node' && !mode.startsWith('place:')) {
+        const nodeId = e.target.dataset.labelNode;
+        const node = nodes.find(n => n.id === nodeId);
+        if (node && selectedIds.has(nodeId)) {
+            const [smx, smy] = svgPt(e.clientX, e.clientY);
+            snapshot();
+            labelDragging = {nodeId, smx, smy, startDx:node.labelDx||0, startDy:node.labelDy||0};
+            e.stopPropagation(); return;
+        }
+    }
 
     // Anchor click/drag → start connect drag (connect mode only)
     if (e.target.dataset.anchorNode && mode === 'connect') {
@@ -685,6 +757,16 @@ archSVG.addEventListener('mousedown', e => {
 document.addEventListener('mousemove', e => {
     if (mode.startsWith('place:')) moveGhost(e.clientX, e.clientY);
 
+    if (labelDragging) {
+        const [mx, my] = svgPt(e.clientX, e.clientY);
+        const node = nodes.find(n => n.id === labelDragging.nodeId);
+        if (node) {
+            node.labelDx = labelDragging.startDx + (mx - labelDragging.smx);
+            node.labelDy = labelDragging.startDy + (my - labelDragging.smy);
+        }
+        render(); return;
+    }
+
     if (connectDrag) {
         const [mx,my] = svgPt(e.clientX, e.clientY);
         connectDrag.ex=mx; connectDrag.ey=my;
@@ -741,6 +823,8 @@ document.addEventListener('mousemove', e => {
 
 // ── Document mouseup ──────────────────────────────────────────────────────────
 document.addEventListener('mouseup', e => {
+    if (labelDragging) { labelDragging = null; render(); return; }
+
     // Finalize a drag-to-connect
     if (connectDrag) {
         const [ex,ey] = svgPt(e.clientX, e.clientY);
@@ -797,8 +881,14 @@ document.addEventListener('mouseup', e => {
         if (mx2-mx1>4||my2-my1>4) {
             nodes.filter(n=>n.x<mx2&&n.x+n.w>mx1&&n.y<my2&&n.y+n.h>my1)
                 .forEach(n=>{selectedIds.add(n.id); selKind='node';});
+            marquee=null; render();
+        } else {
+            // Point click on empty canvas — show shape picker
+            const {x1: svgX, y1: svgY} = marquee;
+            marquee=null; render();
+            if (!e.shiftKey && mode === 'select') showShapePicker(e.clientX, e.clientY, svgX, svgY);
         }
-        marquee=null; render();
+        return;
     }
 });
 
@@ -935,7 +1025,7 @@ archSVG.addEventListener('contextmenu', e => {
         ]);
     }
 });
-document.addEventListener('click',()=>hideCtx());
+document.addEventListener('click', () => { hideCtx(); hideShapePicker(); });
 
 // ── Keyboard ──────────────────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
@@ -943,7 +1033,7 @@ document.addEventListener('keydown', e => {
     const inInput=active===labelIn||active===sidebarInp||active.tagName==='INPUT'||active.tagName==='TEXTAREA';
     if (e.key===' '&&!inInput) { e.preventDefault(); spaceDown=true; if(!panning)archSVG.classList.add('panning'); return; }
     if (inInput) return;
-    if (e.key==='Escape') { setMode('select'); return; }
+    if (e.key==='Escape') { hideShapePicker(); setMode('select'); return; }
     if (e.ctrlKey||e.metaKey) {
         switch(e.key.toLowerCase()) {
             case 'z': e.preventDefault(); e.shiftKey?redo():undo(); return;
@@ -986,6 +1076,20 @@ document.querySelectorAll('#sidebar-stroke-swatches .swatch').forEach(sw => {
         [...selectedIds].forEach(id=>{const n=nodes.find(n=>n.id===id);if(n)n.stroke=sw.dataset.color;}); render();
     });
 });
+
+fillColorIn.addEventListener('input', () => {
+    if (selKind!=='node') return;
+    [...selectedIds].forEach(id=>{const n=nodes.find(n=>n.id===id);if(n)n.fill=fillColorIn.value;});
+    render();
+});
+fillColorIn.addEventListener('change', () => { snapshot(); });
+
+strokeColorIn.addEventListener('input', () => {
+    if (selKind!=='node') return;
+    [...selectedIds].forEach(id=>{const n=nodes.find(n=>n.id===id);if(n)n.stroke=strokeColorIn.value;});
+    render();
+});
+strokeColorIn.addEventListener('change', () => { snapshot(); });
 
 // ── Export ────────────────────────────────────────────────────────────────────
 function exportSVG() {
