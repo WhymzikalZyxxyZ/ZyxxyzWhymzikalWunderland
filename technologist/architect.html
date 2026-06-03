@@ -174,6 +174,17 @@
         #arch-app .swatch:hover { transform: scale(1.2); }
         #arch-app .swatch.active { border-color: #f59e0b; }
 
+        /* ── Edge style buttons ── */
+        #arch-app .edge-style-row { display: flex; flex-wrap: wrap; gap: 3px; padding: 2px 0 5px; }
+        #arch-app .edge-btn {
+            padding: 3px 7px; background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 4px; color: var(--text-dim); font-family: 'Courier New', monospace;
+            font-size: 12px; cursor: pointer;
+            transition: background 0.12s, border-color 0.12s, color 0.12s;
+        }
+        #arch-app .edge-btn:hover { background: var(--surface); border-color: var(--blue); color: var(--blue-light); }
+        #arch-app .edge-btn.active { background: rgba(37,99,235,0.15); border-color: var(--blue); color: var(--blue-light); }
+
         /* ── Shape ghost (cursor preview in place mode) ── */
         #shape-ghost {
             position: fixed;
@@ -348,6 +359,25 @@
                     </div>
                 </div>
 
+                <div class="sidebar-label" id="edge-style-head" style="display:none;">Edge Style</div>
+                <div id="sidebar-edge-wrap" style="display:none;">
+                    <div class="style-row-label">Line</div>
+                    <div class="edge-style-row">
+                        <button class="edge-btn" data-line="solid"  title="Solid">—</button>
+                        <button class="edge-btn" data-line="dashed" title="Dashed">╌</button>
+                        <button class="edge-btn" data-line="dotted" title="Dotted">···</button>
+                    </div>
+                    <div class="style-row-label">Arrow</div>
+                    <div class="edge-style-row">
+                        <button class="edge-btn" data-arrow="forward" title="Forward">→</button>
+                        <button class="edge-btn" data-arrow="back"    title="Back">←</button>
+                        <button class="edge-btn" data-arrow="both"    title="Both">↔</button>
+                        <button class="edge-btn" data-arrow="none"    title="None">—</button>
+                        <button class="edge-btn" data-arrow="diamond" title="Diamond">◆</button>
+                        <button class="edge-btn" data-arrow="circle"  title="Circle">●</button>
+                    </div>
+                </div>
+
                 <div class="sidebar-label">Actions</div>
                 <button class="arch-btn" id="btn-connect">⟶ Connect</button>
                 <button class="arch-btn danger" id="btn-delete">✕ Delete</button>
@@ -371,6 +401,24 @@
                         </marker>
                         <marker id="arch-arrow-sel" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
                             <polygon points="0 0, 9 3.5, 0 7" fill="#f59e0b"/>
+                        </marker>
+                        <marker id="arch-arrow-rev" markerWidth="9" markerHeight="7" refX="1" refY="3.5" orient="auto">
+                            <polygon points="9 0, 0 3.5, 9 7" fill="#60a5fa"/>
+                        </marker>
+                        <marker id="arch-arrow-rev-sel" markerWidth="9" markerHeight="7" refX="1" refY="3.5" orient="auto">
+                            <polygon points="9 0, 0 3.5, 9 7" fill="#f59e0b"/>
+                        </marker>
+                        <marker id="arch-diamond" markerWidth="12" markerHeight="8" refX="11" refY="4" orient="auto">
+                            <polygon points="0 4, 5 0, 10 4, 5 8" fill="#60a5fa"/>
+                        </marker>
+                        <marker id="arch-diamond-sel" markerWidth="12" markerHeight="8" refX="11" refY="4" orient="auto">
+                            <polygon points="0 4, 5 0, 10 4, 5 8" fill="#f59e0b"/>
+                        </marker>
+                        <marker id="arch-circle" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                            <circle cx="4" cy="4" r="3" fill="#60a5fa"/>
+                        </marker>
+                        <marker id="arch-circle-sel" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                            <circle cx="4" cy="4" r="3" fill="#f59e0b"/>
                         </marker>
                         <pattern id="arch-dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
                             <circle cx="12" cy="12" r="0.9" fill="#1e1e2e"/>
