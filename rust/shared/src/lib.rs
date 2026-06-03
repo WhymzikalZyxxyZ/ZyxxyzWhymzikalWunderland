@@ -377,3 +377,250 @@ pub fn get_ai_move(g: &ChessGame) -> Option<ChessMove> {
     }
     Some(best_move)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn empty_board() -> Board { [[0i8; 8]; 8] }
+
+    // ── Board setup ──────────────────────────────────────────────────────────
+
+    #[test]
+    fn initial_board_corners_are_rooks() {
+        let g = new_game();
+        assert_eq!(g.board[0][0], -R);
+        assert_eq!(g.board[0][7], -R);
+        assert_eq!(g.board[7][0],  R);
+        assert_eq!(g.board[7][7],  R);
+    }
+
+    #[test]
+    fn initial_board_kings() {
+        let g = new_game();
+        assert_eq!(g.board[0][4], -K);
+        assert_eq!(g.board[7][4],  K);
+    }
+
+    #[test]
+    fn initial_board_queens() {
+        let g = new_game();
+        assert_eq!(g.board[0][3], -Q);
+        assert_eq!(g.board[7][3],  Q);
+    }
+
+    #[test]
+    fn initial_board_pawns() {
+        let g = new_game();
+        for c in 0..8usize {
+            assert_eq!(g.board[1][c], -P);
+            assert_eq!(g.board[6][c],  P);
+        }
+    }
+
+    #[test]
+    fn initial_middle_rows_empty() {
+        let g = new_game();
+        for r in 2..6usize {
+            for c in 0..8usize { assert_eq!(g.board[r][c], 0); }
+        }
+    }
+
+    #[test]
+    fn initial_turn_is_white() { assert_eq!(new_game().turn, 1); }
+
+    #[test]
+    fn initial_status_active() {
+        assert_eq!(new_game().status, ChessStatus::Active);
+    }
+
+    #[test]
+    fn initial_castling_rights_all_true() {
+        let g = new_game();
+        assert!(g.w_k && g.w_q && g.b_k && g.b_q);
+    }
+
+    #[test]
+    fn initial_legal_move_count_20() {
+        assert_eq!(new_game().legal_moves.len(), 20);
+    }
+
+    // ── Apply move ───────────────────────────────────────────────────────────
+
+    #[test]
+    fn e4_places_pawn_and_clears_source() {
+        let g = new_game();
+        let m = *g.legal_moves.iter().find(|m| m.r==6 && m.c==4 && m.tr==4).unwrap();
+        let g2 = apply_move(&g, &m);
+        assert_eq!(g2.board[4][4], P);
+        assert_eq!(g2.board[6][4], 0);
+    }
+
+    #[test]
+    fn e4_sets_en_passant_square() {
+        let g = new_game();
+        let m = *g.legal_moves.iter().find(|m| m.r==6 && m.c==4 && m.tr==4).unwrap();
+        let g2 = apply_move(&g, &m);
+        assert_eq!(g2.ep_r, 5);
+        assert_eq!(g2.ep_c, 4);
+    }
+
+    #[test]
+    fn single_push_no_en_passant() {
+        let g = new_game();
+        let m = *g.legal_moves.iter().find(|m| m.r==6 && m.c==4 && m.tr==5).unwrap();
+        let g2 = apply_move(&g, &m);
+        assert_eq!(g2.ep_r, -1);
+    }
+
+    #[test]
+    fn turn_flips_after_move() {
+        let g = new_game();
+        let m = g.legal_moves[0];
+        assert_eq!(apply_move(&g, &m).turn, -1);
+    }
+
+    #[test]
+    fn full_move_increments_after_black() {
+        let g = new_game();
+        let m1 = *g.legal_moves.iter().find(|m| m.r==6&&m.c==4&&m.tr==4).unwrap();
+        let g2 = apply_move(&g, &m1);
+        let m2 = *g2.legal_moves.iter().find(|m| m.r==1&&m.c==4&&m.tr==3).unwrap();
+        let g3 = apply_move(&g2, &m2);
+        assert_eq!(g3.full_move, 2);
+    }
+
+    // ── Castling ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn white_kingside_castle_moves_king_and_rook() {
+        let mut b = empty_board();
+        b[7][4]=K; b[7][7]=R; b[0][4]=-K;
+        let lm = get_legal_moves(&b, 1, true, false, false, false, -1, -1);
+        let castle = *lm.iter().find(|m| m.castle==Some(b'K')).unwrap();
+        let g = ChessGame { board: b, turn: 1, w_k: true, w_q: false, b_k: false, b_q: false,
+            ep_r: -1, ep_c: -1, half_move: 0, full_move: 1,
+            status: ChessStatus::Active, legal_moves: lm };
+        let g2 = apply_move(&g, &castle);
+        assert_eq!(g2.board[7][6], K);
+        assert_eq!(g2.board[7][5], R);
+        assert_eq!(g2.board[7][7], 0);
+    }
+
+    #[test]
+    fn white_queenside_castle_moves_king_and_rook() {
+        let mut b = empty_board();
+        b[7][4]=K; b[7][0]=R; b[0][4]=-K;
+        let lm = get_legal_moves(&b, 1, false, true, false, false, -1, -1);
+        let castle = *lm.iter().find(|m| m.castle==Some(b'Q')).unwrap();
+        let g = ChessGame { board: b, turn: 1, w_k: false, w_q: true, b_k: false, b_q: false,
+            ep_r: -1, ep_c: -1, half_move: 0, full_move: 1,
+            status: ChessStatus::Active, legal_moves: lm };
+        let g2 = apply_move(&g, &castle);
+        assert_eq!(g2.board[7][2], K);
+        assert_eq!(g2.board[7][3], R);
+    }
+
+    // ── Promotion ────────────────────────────────────────────────────────────
+
+    #[test]
+    fn pawn_promotion_produces_queen_option() {
+        let mut b = empty_board();
+        b[1][0]=P; b[7][4]=K; b[0][4]=-K;
+        let lm = get_legal_moves(&b, 1, false, false, false, false, -1, -1);
+        let promos: std::collections::HashSet<i8> =
+            lm.iter().filter_map(|m| m.promo).collect();
+        assert!(promos.contains(&Q));
+        assert!(promos.contains(&R));
+        assert!(promos.contains(&B));
+        assert!(promos.contains(&N));
+    }
+
+    #[test]
+    fn promotion_to_queen_places_queen() {
+        let mut b = empty_board();
+        b[1][0]=P; b[7][4]=K; b[0][4]=-K;
+        let lm = get_legal_moves(&b, 1, false, false, false, false, -1, -1);
+        let promo = *lm.iter().find(|m| m.promo==Some(Q)).unwrap();
+        let g = ChessGame { board: b, turn: 1, w_k: false, w_q: false, b_k: false, b_q: false,
+            ep_r: -1, ep_c: -1, half_move: 0, full_move: 1,
+            status: ChessStatus::Active, legal_moves: lm };
+        let g2 = apply_move(&g, &promo);
+        assert_eq!(g2.board[0][0], Q);
+    }
+
+    // ── Checkmate ────────────────────────────────────────────────────────────
+
+    #[test]
+    fn scholars_mate_is_checkmate() {
+        let mut g = new_game();
+        let moves = [(6,4,4,4),(1,4,3,4),(7,5,4,2),(0,1,2,2),
+                     (7,3,3,7),(0,6,2,5),(3,7,1,5u8)];
+        for (r,c,tr,tc) in moves {
+            let m = *g.legal_moves.iter()
+                .find(|m| m.r==r&&m.c==c&&m.tr==tr&&m.tc==tc).unwrap();
+            g = apply_move(&g, &m);
+        }
+        assert_eq!(g.status, ChessStatus::Checkmate);
+        assert!(g.legal_moves.is_empty());
+    }
+
+    // ── Stalemate ────────────────────────────────────────────────────────────
+
+    #[test]
+    fn stalemate_position() {
+        let mut b = empty_board();
+        b[0][0]=-K; b[2][1]=Q; b[1][2]=K;
+        let lm = get_legal_moves(&b, -1, false, false, false, false, -1, -1);
+        let g = ChessGame { board: b, turn: -1, w_k: false, w_q: false, b_k: false, b_q: false,
+            ep_r: -1, ep_c: -1, half_move: 0, full_move: 1,
+            status: ChessStatus::Stalemate, legal_moves: lm };
+        assert_eq!(g.status, ChessStatus::Stalemate);
+        assert!(g.legal_moves.is_empty());
+    }
+
+    // ── AI ───────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn ai_returns_legal_move_from_start() {
+        let g = new_game();
+        let m = get_ai_move(&g).unwrap();
+        assert!(g.legal_moves.contains(&m));
+    }
+
+    #[test]
+    fn ai_returns_none_when_no_moves() {
+        let mut b = empty_board();
+        b[0][0]=-K; b[2][1]=Q; b[1][2]=K;
+        let lm = get_legal_moves(&b, -1, false, false, false, false, -1, -1);
+        let g = ChessGame { board: b, turn: -1, w_k: false, w_q: false, b_k: false, b_q: false,
+            ep_r: -1, ep_c: -1, half_move: 0, full_move: 1,
+            status: ChessStatus::Stalemate, legal_moves: lm };
+        assert!(get_ai_move(&g).is_none());
+    }
+
+    // ── En passant ───────────────────────────────────────────────────────────
+
+    #[test]
+    fn en_passant_move_exists_when_eligible() {
+        let mut b = empty_board();
+        b[3][4]=P; b[3][5]=-P; b[7][4]=K; b[0][4]=-K;
+        let lm = get_legal_moves(&b, 1, false, false, false, false, 2, 5);
+        let ep = lm.iter().find(|m| m.ep);
+        assert!(ep.is_some());
+    }
+
+    #[test]
+    fn en_passant_capture_removes_captured_pawn() {
+        let mut b = empty_board();
+        b[3][4]=P; b[3][5]=-P; b[7][4]=K; b[0][4]=-K;
+        let lm = get_legal_moves(&b, 1, false, false, false, false, 2, 5);
+        let ep = *lm.iter().find(|m| m.ep).unwrap();
+        let g = ChessGame { board: b, turn: 1, w_k: false, w_q: false, b_k: false, b_q: false,
+            ep_r: 2, ep_c: 5, half_move: 0, full_move: 1,
+            status: ChessStatus::Active, legal_moves: lm };
+        let g2 = apply_move(&g, &ep);
+        assert_eq!(g2.board[2][5], P);
+        assert_eq!(g2.board[3][5], 0);
+    }
+}

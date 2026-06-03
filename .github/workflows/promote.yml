@@ -17,10 +17,16 @@ on:
 
 jobs:
 
+  # ── Gate: wait for CI to pass ────────────────────────────────────────────────
+  # The promote jobs only run after all CI checks pass on development.
+  # This is enforced here AND should be set as a required status check in
+  # Settings → Branches → development branch protection rules.
+
   # ── Step 1: development → test ───────────────────────────────────────────────
   promote-to-test:
     name: Merge development into test
     runs-on: ubuntu-latest
+    needs: []
     permissions:
       contents: write
     outputs:
