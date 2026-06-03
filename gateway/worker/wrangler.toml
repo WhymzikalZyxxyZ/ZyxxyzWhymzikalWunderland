@@ -1,0 +1,21 @@
+name               = "zyxwonderland-gateway"
+main               = "src/index.js"
+compatibility_date = "2024-11-01"
+
+[[durable_objects.bindings]]
+name       = "ANALYTICS"
+class_name = "AnalyticsDO"
+
+[[migrations]]
+tag                = "v1"
+new_sqlite_classes = ["AnalyticsDO"]
+
+[[routes]]
+pattern   = "api.zyxwonderland.xyz/*"
+zone_name = "zyxwonderland.xyz"
+
+[vars]
+API_KEYS       = "demo-key-alpha,demo-key-beta"
+ANON_LIMIT     = "20"
+KEY_LIMIT      = "120"
+RETENTION_DAYS = "7"
