@@ -308,7 +308,7 @@ function syncSidebar() {
 // ── Render ────────────────────────────────────────────────────────────────────
 function render() {
     Array.from(archSVG.children).forEach(c => {
-        if (c.tagName !== 'defs' && c.id !== 'arch-bg') archSVG.removeChild(c);
+        if (c.tagName !== 'defs' && c.id !== 'arch-bg' && c.id !== 'peer-cursors-layer') archSVG.removeChild(c);
     });
 
     // Marquee
@@ -464,6 +464,12 @@ function render() {
         : dragging ? 'dragging'
         : (spaceDown || panning) ? 'panning' : '';
     syncSidebar();
+
+    // Keep peer-cursors-layer on top
+    const pcl = document.getElementById('peer-cursors-layer');
+    if (pcl) archSVG.appendChild(pcl);
+
+    sendStateSoon();
 }
 
 // ── Mode management ───────────────────────────────────────────────────────────
@@ -1026,6 +1032,151 @@ archSVG.addEventListener('contextmenu', e => {
     }
 });
 document.addEventListener('click', () => { hideCtx(); hideShapePicker(); });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  COLLABORATION
+// ═══════════════════════════════════════════════════════════════════════════════
+const COLLAB_API = 'https://collab.zyxwonderland.xyz';
+
+let collabWs      = null;
+let collabSession = null;
+let collabPeerId  = null;
+let collabPeers   = {};   // peerId → { x, y, color }
+let collabCount   = 0;
+let _stateTimer   = null;
+
+const btnShare          = document.getElementById('btn-share');
+const collabOverlay     = document.getElementById('collab-modal-overlay');
+const collabUrlInp      = document.getElementById('collab-url-inp');
+const collabCopyBtn     = document.getElementById('collab-copy-btn');
+const collabModalClose  = document.getElementById('collab-modal-close');
+const collabIndicator   = document.getElementById('collab-indicator');
+const collabPeerLabel   = document.getElementById('collab-peer-label');
+const collabModalPeers  = document.getElementById('collab-modal-peers');
+const peerCursorsLayer  = document.getElementById('peer-cursors-layer');
+
+function collabSessionUrl(id) {
+    const u = new URL(location.href);
+    u.searchParams.set('session', id);
+    return u.toString();
+}
+
+function updateCollabUI() {
+    const live = collabWs && collabWs.readyState === WebSocket.OPEN;
+    collabIndicator.style.display = (collabSession && live) ? 'flex' : 'none';
+    const label = collabCount === 1 ? '1 connected' : `${collabCount} connected`;
+    if (collabPeerLabel) collabPeerLabel.textContent = label;
+    if (collabModalPeers) collabModalPeers.textContent = live ? label : 'Connecting…';
+}
+
+function renderPeerCursors() {
+    if (!peerCursorsLayer) return;
+    peerCursorsLayer.innerHTML = '';
+    for (const [id, p] of Object.entries(collabPeers)) {
+        if (id === collabPeerId) continue;
+        const g = svgE('g', { transform: `translate(${p.x},${p.y})`, style: 'pointer-events:none' });
+        g.appendChild(svgE('line', { x1: 0, y1: -10, x2: 0, y2: 10, stroke: p.color, 'stroke-width': 1.5, opacity: 0.75 }));
+        g.appendChild(svgE('line', { x1: -10, y1: 0, x2: 10, y2: 0, stroke: p.color, 'stroke-width': 1.5, opacity: 0.75 }));
+        g.appendChild(svgE('circle', { r: 4, fill: p.color, opacity: 0.9 }));
+        peerCursorsLayer.appendChild(g);
+    }
+}
+
+function sendStateSoon() {
+    clearTimeout(_stateTimer);
+    _stateTimer = setTimeout(() => {
+        if (collabWs?.readyState === WebSocket.OPEN) {
+            collabWs.send(JSON.stringify({ type: 'state', nodes, edges, nextId }));
+        }
+    }, 120);
+}
+
+function collabConnect(sessionId) {
+    if (collabWs) { collabWs.onclose = null; collabWs.close(); }
+    collabSession = sessionId;
+    const ws = new WebSocket(`wss://collab.zyxwonderland.xyz/ws?session=${encodeURIComponent(sessionId)}`);
+    collabWs = ws;
+
+    ws.addEventListener('open', updateCollabUI);
+
+    ws.addEventListener('message', e => {
+        let msg;
+        try { msg = JSON.parse(e.data); } catch { return; }
+
+        if (msg.type === 'init') {
+            collabPeerId = msg.peerId;
+            if (nodes.length === 0 && msg.nodes?.length) {
+                nodes = msg.nodes; edges = msg.edges ?? []; nextId = msg.nextId ?? nextId;
+                render();
+            }
+        } else if (msg.type === 'state') {
+            if (!dragging && !resizing && !drawing && !connectDrag) {
+                nodes = msg.nodes ?? []; edges = msg.edges ?? []; nextId = msg.nextId ?? nextId;
+                render();
+            }
+        } else if (msg.type === 'cursor') {
+            collabPeers[msg.peerId] = { x: msg.x, y: msg.y, color: msg.color };
+            renderPeerCursors();
+        } else if (msg.type === 'peers') {
+            collabCount = msg.count;
+            updateCollabUI();
+        }
+    });
+
+    ws.addEventListener('close', () => {
+        collabPeers = {}; renderPeerCursors(); updateCollabUI();
+        setTimeout(() => { if (collabSession) collabConnect(collabSession); }, 3000);
+    });
+
+    ws.addEventListener('error', () => ws.close());
+}
+
+btnShare?.addEventListener('click', async () => {
+    if (collabSession) {
+        collabUrlInp.value = collabSessionUrl(collabSession);
+        collabOverlay.classList.add('open');
+        return;
+    }
+    try {
+        const res = await fetch(`${COLLAB_API}/api/session`, { method: 'POST' });
+        const { id } = await res.json();
+        const u = new URL(location.href);
+        u.searchParams.set('session', id);
+        history.replaceState(null, '', u.toString());
+        collabUrlInp.value = u.toString();
+        collabOverlay.classList.add('open');
+        collabConnect(id);
+    } catch {
+        alert('Could not create session. Is the collab worker deployed?');
+    }
+});
+
+collabCopyBtn?.addEventListener('click', () => {
+    navigator.clipboard.writeText(collabUrlInp.value).then(() => {
+        collabCopyBtn.textContent = 'Copied!';
+        setTimeout(() => { collabCopyBtn.textContent = 'Copy'; }, 1500);
+    });
+});
+
+collabModalClose?.addEventListener('click', () => collabOverlay.classList.remove('open'));
+collabOverlay?.addEventListener('click', e => { if (e.target === collabOverlay) collabOverlay.classList.remove('open'); });
+
+// Auto-join from URL
+(() => {
+    const id = new URLSearchParams(location.search).get('session');
+    if (id) collabConnect(id);
+})();
+
+// Throttled cursor broadcast
+let _cursorTs = 0;
+archSVG.addEventListener('mousemove', e => {
+    if (!collabWs || collabWs.readyState !== WebSocket.OPEN) return;
+    const now = Date.now();
+    if (now - _cursorTs < 50) return;
+    _cursorTs = now;
+    const [x, y] = svgPt(e.clientX, e.clientY);
+    collabWs.send(JSON.stringify({ type: 'cursor', x, y }));
+});
 
 // ── Keyboard ──────────────────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
