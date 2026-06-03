@@ -13,9 +13,9 @@ public class AuthService(AppDbContext db, IConfiguration config) : IAuthService
 {
     private readonly string _key = config["Jwt:Key"] ?? "dev-secret-key-32-chars-minimum!!";
 
-    public async Task<AuthResponse?> RegisterAsync(RegisterRequest req)
+    public async Task<AuthResponse?> RegisterAsync(RegisterRequest req, CancellationToken ct = default)
     {
-        if (await db.Users.AnyAsync(u => u.Username == req.Username))
+        if (await db.Users.AnyAsync(u => u.Username == req.Username, ct))
             return null;
 
         var user = new UserEntity
@@ -24,14 +24,14 @@ public class AuthService(AppDbContext db, IConfiguration config) : IAuthService
             PasswordHash = Hash(req.Password)
         };
         db.Users.Add(user);
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(ct);
 
         return new AuthResponse(IssueToken(user.Username), user.Username);
     }
 
-    public async Task<AuthResponse?> LoginAsync(LoginRequest req)
+    public async Task<AuthResponse?> LoginAsync(LoginRequest req, CancellationToken ct = default)
     {
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Username == req.Username);
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Username == req.Username, ct);
         if (user is null || user.PasswordHash != Hash(req.Password))
             return null;
 

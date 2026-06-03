@@ -4,6 +4,6 @@ namespace ZyxxyzApi.Repositories;
 
 public interface IScoreRepository
 {
-    Task<List<ScoreEntity>> GetTopAsync(string game, int limit);
-    Task<ScoreEntity> AddAsync(ScoreEntity score);
+    Task<List<ScoreEntity>> GetTopAsync(string game, int limit, CancellationToken ct = default);
+    Task<ScoreEntity> AddAsync(ScoreEntity score, CancellationToken ct = default);
 }
