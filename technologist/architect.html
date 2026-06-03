@@ -291,6 +291,75 @@
         }
         #arch-app .gl-a.open { display: block; }
         #arch-app .gl-a code { background: var(--surface2); padding: 1px 5px; border-radius: 3px; color: var(--amber); font-size: 11px; }
+
+        /* ── Collaboration ── */
+        #collab-indicator {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 6px;
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 6px;
+            background: rgba(16,185,129,0.07);
+            font-size: 10px;
+            color: #10b981;
+            margin-top: 2px;
+        }
+        #collab-indicator .cdot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: #10b981;
+            animation: cpulse 2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+        @keyframes cpulse {
+            0%,100% { opacity: 1; }
+            50%      { opacity: 0.35; }
+        }
+        #collab-modal-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.65);
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+        }
+        #collab-modal-overlay.open { display: flex; }
+        #collab-modal-box {
+            background: #111118;
+            border: 1px solid #252532;
+            border-radius: 12px;
+            padding: 28px 32px;
+            min-width: 340px;
+            max-width: 480px;
+            font-family: 'Courier New', monospace;
+        }
+        #collab-modal-box h3 {
+            font-size: 15px; color: #60a5fa; margin: 0 0 6px;
+        }
+        #collab-modal-box p {
+            font-size: 11px; color: #6b7280; margin: 0 0 14px;
+        }
+        .collab-url-row {
+            display: flex; gap: 6px; margin-bottom: 14px;
+        }
+        #collab-url-inp {
+            flex: 1; background: #09090f; border: 1px solid #252532;
+            border-radius: 6px; color: #94a3b8;
+            font-family: 'Courier New', monospace; font-size: 11px;
+            padding: 7px 9px; outline: none;
+        }
+        #collab-copy-btn, #collab-modal-close {
+            padding: 7px 12px; border-radius: 6px; font-size: 11px;
+            font-family: 'Courier New', monospace; cursor: pointer;
+            border: 1px solid #252532; background: #18181f; color: #94a3b8;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+        #collab-copy-btn:hover  { border-color: #2563eb; color: #60a5fa; }
+        #collab-modal-close     { margin-top: 6px; width: 100%; text-align: center; }
+        #collab-modal-close:hover { border-color: #6b7280; color: #e2e8f0; }
+        #collab-modal-peers {
+            font-size: 11px; color: #10b981; margin-bottom: 4px;
+        }
     </style>
 </head>
 <body class="wunderBody">
@@ -429,6 +498,13 @@
                 <button class="arch-btn" id="btn-fit">⊡ Fit View</button>
                 <button class="arch-btn danger" id="btn-clear">⊘ Clear All</button>
 
+                <div class="sidebar-label">Collaborate</div>
+                <button class="arch-btn" id="btn-share">⟳ Share Session</button>
+                <div id="collab-indicator">
+                    <span class="cdot"></span>
+                    <span id="collab-peer-label">1 connected</span>
+                </div>
+
                 <div class="sidebar-label">Export</div>
                 <button class="arch-btn" id="btn-export-svg">↓ SVG</button>
                 <button class="arch-btn" id="btn-export-png">↓ PNG</button>
@@ -468,6 +544,7 @@
                         </pattern>
                     </defs>
                     <rect id="arch-bg" width="960" height="600" fill="url(#arch-dots)"/>
+                    <g id="peer-cursors-layer"></g>
                 </svg>
                 <input type="text" id="label-input" maxlength="32" autocomplete="off">
             </div>
@@ -548,6 +625,18 @@
 <div id="shape-ghost"></div>
 <div id="shape-picker"></div>
 <div id="ctx-menu"></div>
+<div id="collab-modal-overlay">
+    <div id="collab-modal-box">
+        <h3>Live Collaboration</h3>
+        <p>Share this link — anyone who opens it joins your diagram in real time.</p>
+        <div class="collab-url-row">
+            <input id="collab-url-inp" readonly type="text">
+            <button id="collab-copy-btn">Copy</button>
+        </div>
+        <div id="collab-modal-peers">Connecting…</div>
+        <button id="collab-modal-close">Close</button>
+    </div>
+</div>
 <script src="/js/technologist/architect.js" defer></script>
 </body>
 </html>
