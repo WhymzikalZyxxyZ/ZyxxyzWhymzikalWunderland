@@ -2,16 +2,34 @@
 
 // RegistryDO — singleton Durable Object that maps bearer token → address.
 // Lives at env.REGISTRY.idFromName('registry').
-// State is in-memory only; tokens expire naturally with their mailbox.
+// Persists token→{address,expiresAt} to durable storage so sessions survive
+// isolate eviction (previously in-memory only, causing unexpected 401s).
 // Also enforces the global mailbox capacity limit (MAX_MAILBOXES).
 
 const DEFAULT_MAX = 500;
 
 export class RegistryDO {
-    constructor(_state, env) {
+    constructor(state, env) {
+        this.state   = state;
         // token → { address, expiresAt }
         this._tokens = new Map();
         this._max    = parseInt((env || {}).MAX_MAILBOXES) || DEFAULT_MAX;
+
+        // Restore all persisted tokens before handling any request.
+        // blockConcurrencyWhile queues incoming fetches until init finishes.
+        this.state.blockConcurrencyWhile(async () => {
+            const now     = Date.now();
+            const entries = await this.state.storage.list();
+            const expired = [];
+            for (const [token, entry] of entries) {
+                if (now <= entry.expiresAt) {
+                    this._tokens.set(token, entry);
+                } else {
+                    expired.push(token);
+                }
+            }
+            if (expired.length) await this.state.storage.delete(expired);
+        });
     }
 
     fetch(request) {
@@ -36,42 +54,50 @@ export class RegistryDO {
 
     async _register(request) {
         const { token, address, expiresAt } = await request.json();
-        this._purge();
+        await this._purge();
 
         // Hard capacity check — enforced atomically in this singleton DO
         if (this._max > 0 && this._tokens.size >= this._max) {
             return _json({ error: 'Mailbox capacity reached — try again later' }, 503);
         }
 
-        this._tokens.set(token, { address, expiresAt });
+        const entry = { address, expiresAt };
+        this._tokens.set(token, entry);
+        await this.state.storage.put(token, entry);
         return _json({ ok: true, active: this._tokens.size });
     }
 
-    _stats() {
-        this._purge();
+    async _stats() {
+        await this._purge();
         return _json({ active: this._tokens.size, max: this._max });
     }
 
-    _lookup(token) {
-        this._purge();
+    async _lookup(token) {
         const entry = this._tokens.get(token);
         if (!entry || Date.now() > entry.expiresAt) {
             this._tokens.delete(token);
+            await this.state.storage.delete(token);
             return _json({ address: null });
         }
         return _json({ address: entry.address });
     }
 
-    _revoke(token) {
+    async _revoke(token) {
         this._tokens.delete(token);
+        await this.state.storage.delete(token);
         return _json({ ok: true });
     }
 
-    _purge() {
-        const now = Date.now();
+    async _purge() {
+        const now     = Date.now();
+        const expired = [];
         for (const [t, v] of this._tokens) {
-            if (now > v.expiresAt) this._tokens.delete(t);
+            if (now > v.expiresAt) {
+                this._tokens.delete(t);
+                expired.push(t);
+            }
         }
+        if (expired.length) await this.state.storage.delete(expired);
     }
 }
 
