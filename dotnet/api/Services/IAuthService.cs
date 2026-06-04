@@ -4,6 +4,6 @@ namespace ZyxxyzApi.Services;
 
 public interface IAuthService
 {
-    Task<AuthResponse?> RegisterAsync(RegisterRequest req);
-    Task<AuthResponse?> LoginAsync(LoginRequest req);
+    Task<AuthResponse?> RegisterAsync(RegisterRequest req, CancellationToken ct = default);
+    Task<AuthResponse?> LoginAsync(LoginRequest req, CancellationToken ct = default);
 }

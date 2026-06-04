@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Dashboard — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <style>
+        :root {
+            --js:  #f7df1e;
+            --go:  #00acd7;
+            --kt:  #a07fff;
+            --cs:  #c07fe0;
+            --py:  #4b8bbe;
+            --jv:  #e76f00;
+
+            --text:    #c8c8d8;
+            --text-md: #8888a0;
+            --text-sm: #606070;
+            --bg-card: rgba(0,0,0,0.42);
+            --border:  rgba(255,255,255,0.07);
+        }
+
+        .lc-page { max-width: 1180px; margin: 0 auto; padding: 0 24px 96px; }
+
+        /* ── Hero ── */
+        .lc-hero { text-align: center; padding: 52px 24px 40px; }
+        .lc-hero h1 {
+            font-family: Jokerman, fantasy;
+            font-size: clamp(2em, 5vw, 3.2em);
+            color: #f4a261;
+            text-shadow: 0 0 40px rgba(244,162,97,0.4), 0 0 80px rgba(244,162,97,0.15);
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+        .lc-hero p { color: var(--text-md); font-size: 1em; max-width: 520px; margin: 0 auto; }
+
+        /* ══════════════════════════════════════════════════════
+           TABS
+        ══════════════════════════════════════════════════════ */
+        .lc-tab-bar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 48px;
+            padding-bottom: 0;
+            flex-wrap: wrap;
+        }
+        .lc-tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-sm);
+            font-family: 'Courier New', monospace;
+            font-size: 0.76em;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: color .2s, border-color .2s;
+            margin-bottom: -1px;
+            white-space: nowrap;
+        }
+        .lc-tab:hover { color: var(--text-md); }
+        .lc-tab.active { color: #f4a261; border-bottom-color: #f4a261; }
+
+        .lc-tab.lang-tab { color: var(--text-sm); }
+        .lc-tab.lang-tab:hover { color: var(--c); }
+        .lc-tab.lang-tab.active { color: var(--c); border-bottom-color: var(--c); }
+
+        .lc-tab-sep {
+            width: 1px; height: 20px;
+            background: var(--border);
+            margin: 0 8px;
+            flex-shrink: 0;
+        }
+
+        .lc-panel { display: none; }
+        .lc-panel.active { display: block; }
+
+        /* ══════════════════════════════════════════════════════
+           LANGUAGE SELECTOR — sultry spotlight
+        ══════════════════════════════════════════════════════ */
+        .selector-stage {
+            display: flex; flex-direction: column; align-items: center; gap: 0; margin-bottom: 64px;
+        }
+        .selector-label {
+            font-family: 'Courier New', monospace; font-size: 0.7em;
+            letter-spacing: 3px; text-transform: uppercase; color: var(--text-sm); margin-bottom: 28px;
+        }
+        .selector-list { display: flex; flex-direction: column; width: 100%; max-width: 720px; gap: 2px; }
+
+        .sel-item {
+            position: relative; display: flex; align-items: center;
+            padding: 18px 32px; cursor: pointer; overflow: hidden; border-radius: 4px;
+            transition: padding-left .35s cubic-bezier(.4,0,.2,1); user-select: none;
+        }
+        .sel-item::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, var(--c) 0%, transparent 70%);
+            opacity: 0; transition: opacity .4s ease;
+        }
+        .sel-item::after {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+            background: var(--c); transform: scaleY(0); transform-origin: center;
+            transition: transform .3s cubic-bezier(.4,0,.2,1); box-shadow: 0 0 12px var(--c);
+        }
+        .sel-item:hover::before  { opacity: 0.07; }
+        .sel-item:hover::after   { transform: scaleY(1); }
+        .sel-item:hover          { padding-left: 40px; }
+        .sel-item.active::before { opacity: 0.13; }
+        .sel-item.active::after  { transform: scaleY(1); box-shadow: 0 0 20px var(--c), 0 0 40px var(--c); }
+        .sel-item.active         { padding-left: 44px; }
+        .sel-item.dimmed         { opacity: 0.2; }
+        .sel-item.dimmed:hover   { opacity: 0.5; }
+
+        .sel-key {
+            font-family: 'Courier New', monospace; font-size: 0.72em; letter-spacing: 2px;
+            text-transform: uppercase; color: var(--c); width: 100px; flex-shrink: 0;
+            transition: letter-spacing .3s;
+        }
+        .sel-item.active .sel-key { letter-spacing: 4px; }
+        .sel-name {
+            font-size: 1.6em; font-weight: 300; color: #d8d8e8; letter-spacing: -0.5px; flex: 1;
+            transition: color .25s, transform .3s cubic-bezier(.4,0,.2,1);
+        }
+        .sel-item:hover .sel-name  { color: #fff; transform: translateX(4px); }
+        .sel-item.active .sel-name { color: #fff; transform: translateX(8px); font-weight: 400; }
+        .sel-role {
+            font-family: 'Courier New', monospace; font-size: 0.72em; color: var(--text-sm);
+            text-align: right; flex-shrink: 0; transition: color .25s; max-width: 200px;
+        }
+        .sel-item:hover .sel-role  { color: var(--text-md); }
+        .sel-item.active .sel-role { color: var(--c); opacity: 0.75; }
+
+        @keyframes langPulse {
+            0%, 100% { text-shadow: 0 0 8px var(--c); }
+            50%       { text-shadow: 0 0 24px var(--c), 0 0 40px var(--c); }
+        }
+        .sel-item.active .sel-name {
+            animation: langPulse 3s ease-in-out infinite;
+        }
+        .sel-divider {
+            width: 100%; max-width: 720px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border) 30%, var(--border) 70%, transparent);
+        }
+        .sel-clear {
+            margin-top: 20px; font-family: 'Courier New', monospace; font-size: 0.72em;
+            letter-spacing: 2px; text-transform: uppercase; color: var(--text-sm);
+            background: none; border: none; cursor: pointer; transition: color .2s; padding: 6px 12px;
+        }
+        .sel-clear:hover { color: var(--text-md); }
+        .sel-clear.visible { color: #555; }
+
+        /* ── Section headings ── */
+        .section-heading {
+            font-family: Papyrus, fantasy; font-size: 0.9em; font-weight: 700;
+            color: #c8b0d8; letter-spacing: 2.5px; text-transform: uppercase;
+            padding: 0 0 10px; border-bottom: 1px solid rgba(200,176,216,0.18); margin: 0 0 12px;
+        }
+        .section-sub {
+            color: var(--text-sm); font-size: 0.84em; font-style: italic;
+            margin: 0 0 32px; letter-spacing: 0.3px;
+        }
+
+        /* ── Radar + bars ── */
+        .viz-row { display: flex; gap: 40px; flex-wrap: wrap; margin-bottom: 60px; align-items: flex-start; }
+        .radar-wrap { flex: 0 0 320px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+        .radar-legend { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+        .radar-legend-item { display: flex; align-items: center; gap: 7px; font-size: 0.76em; color: var(--text-sm); font-family: 'Courier New', monospace; transition: color .2s; }
+        .radar-legend-item.active { color: var(--text-md); }
+        .radar-legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+        .metrics-wrap { flex: 1 1 340px; }
+        .metric-row { margin-bottom: 22px; }
+        .metric-label { font-size: 0.82em; color: var(--text-md); font-family: 'Courier New', monospace; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .metric-bars { display: flex; flex-direction: column; gap: 6px; }
+        .metric-bar-row { display: flex; align-items: center; gap: 12px; transition: opacity .3s; }
+        .metric-lang-label { width: 30px; font-size: 0.68em; color: var(--text-sm); font-family: 'Courier New', monospace; text-align: right; flex-shrink: 0; }
+        .metric-bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+        .metric-bar-fill { height: 100%; border-radius: 3px; transition: width 0.9s cubic-bezier(.4,0,.2,1), opacity .3s; width: 0; }
+        .metric-bar-fill.js { background: linear-gradient(90deg, #f7df1e44, var(--js)); }
+        .metric-bar-fill.go { background: linear-gradient(90deg, #00acd744, var(--go)); }
+        .metric-bar-fill.kt { background: linear-gradient(90deg, #7f52ff44, var(--kt)); }
+        .metric-bar-fill.cs { background: linear-gradient(90deg, #9b4dca44, var(--cs)); }
+        .metric-bar-fill.py { background: linear-gradient(90deg, #4b8bbe44, var(--py)); }
+        .metric-bar-fill.jv { background: linear-gradient(90deg, #e76f0044, var(--jv)); }
+        .metric-score { width: 32px; font-size: 0.68em; color: var(--text-sm); font-family: 'Courier New', monospace; text-align: right; flex-shrink: 0; }
+
+        /* ── Comparison table ── */
+        .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+        .filter-btn {
+            padding: 5px 16px; border-radius: 20px; border: 1px solid var(--border);
+            background: transparent; color: var(--text-sm); font-family: 'Courier New', monospace;
+            font-size: 0.76em; cursor: pointer; transition: all .2s; letter-spacing: 0.5px;
+        }
+        .filter-btn:hover { border-color: rgba(255,255,255,0.25); color: var(--text-md); }
+        .filter-btn.active { background: rgba(244,162,97,0.12); border-color: rgba(244,162,97,0.5); color: #f4a261; }
+
+        .table-wrap { overflow-x: auto; margin-bottom: 60px; }
+        .compare-table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+        .compare-table th {
+            font-family: 'Courier New', monospace; font-size: 0.75em; letter-spacing: 1.5px;
+            text-transform: uppercase; color: var(--text-sm);
+            padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); text-align: left;
+        }
+        .compare-table th.lh { text-align: center; }
+        .compare-table td {
+            padding: 11px 14px; border-bottom: 1px solid rgba(255,255,255,0.04);
+            color: var(--text); vertical-align: middle; transition: opacity .3s;
+        }
+        .compare-table tr:hover td { background: rgba(255,255,255,0.025); }
+        .compare-table td.row-label { color: var(--text-md); font-family: 'Courier New', monospace; font-size: 0.8em; white-space: nowrap; }
+        .compare-table td.lh { text-align: center; }
+        .pill { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75em; font-family: 'Courier New', monospace; white-space: nowrap; }
+        .pill-green  { background: rgba(76,175,80,0.14);  color: #6fcf72; }
+        .pill-yellow { background: rgba(247,223,30,0.1);  color: #d4c020; }
+        .pill-orange { background: rgba(244,162,97,0.14); color: #f4a261; }
+        .pill-red    { background: rgba(244,67,54,0.14);  color: #f06260; }
+        .pill-blue   { background: rgba(0,172,215,0.12);  color: #4bc8e8; }
+        .pill-purple { background: rgba(127,82,255,0.14); color: #b090ff; }
+
+        /* ── Use-case grid ── */
+        .usecase-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 72px; }
+        .usecase-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 20px 18px; transition: opacity .3s;
+        }
+        .usecase-card.dimmed { opacity: 0.15; }
+        .usecase-card h4 { font-size: 0.88em; color: var(--text); margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+        .usecase-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .usecase-card ul { margin: 0; padding: 0 0 0 14px; }
+        .usecase-card li { font-size: 0.78em; color: var(--text-md); font-family: 'Courier New', monospace; margin-bottom: 5px; line-height: 1.4; }
+
+        /* ══════════════════════════════════════════════════════
+           DECISION MATRIX
+        ══════════════════════════════════════════════════════ */
+        .matrix-badge {
+            display: inline-block; padding: 2px 10px; border-radius: 10px;
+            font-family: 'Courier New', monospace; font-size: 0.75em;
+            font-weight: 600; letter-spacing: 0.5px; white-space: nowrap; margin: 2px;
+        }
+        #matrixBody tr.mat-highlight td { background: rgba(255,255,255,0.025); }
+        #matrixBody tr.mat-dim { opacity: 0.15; }
+
+        /* ══════════════════════════════════════════════════════
+           SUMMARY STRIP
+        ══════════════════════════════════════════════════════ */
+        .summary-grid { display: flex; flex-direction: column; gap: 2px; margin-bottom: 72px; }
+        .summary-item {
+            display: flex; align-items: baseline;
+            padding: 20px 28px; position: relative; border-radius: 4px;
+            overflow: hidden; transition: opacity .3s;
+        }
+        .summary-item::after {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+            background: var(--c); box-shadow: 0 0 14px var(--c);
+        }
+        .summary-item::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, var(--c) 0%, transparent 45%); opacity: 0.045;
+        }
+        .summary-item.dimmed { opacity: 0.12; }
+        .summary-lang { width: 130px; flex-shrink: 0; font-size: 1.05em; font-weight: 300; color: var(--c); }
+        .summary-dash { color: #282838; font-family: 'Courier New', monospace; font-size: 0.9em; margin: 0 18px 0 0; flex-shrink: 0; }
+        .summary-text { font-size: 0.88em; color: var(--text-md); font-style: italic; line-height: 1.55; }
+        .summary-text em { color: var(--text); font-style: normal; }
+
+        /* ══════════════════════════════════════════════════════
+           LANGUAGE PROFILE PAGE (individual tabs)
+        ══════════════════════════════════════════════════════ */
+        .lang-profile { padding: 0 0 72px; }
+
+        .lang-profile-hero {
+            display: flex; align-items: flex-start; gap: 40px;
+            padding: 36px 0 48px; border-bottom: 1px solid var(--border); margin-bottom: 48px;
+            flex-wrap: wrap;
+        }
+        .lang-profile-title-block { flex: 1 1 320px; }
+        .lang-profile-name {
+            font-size: clamp(2.4em, 5vw, 3.6em); font-weight: 200;
+            color: var(--c); letter-spacing: -1px; line-height: 1;
+            text-shadow: 0 0 60px color-mix(in srgb, var(--c) 30%, transparent);
+            margin-bottom: 10px;
+        }
+        .lang-profile-tagline {
+            font-style: italic; font-size: 1.05em;
+            color: var(--text); opacity: 0.85; margin-bottom: 20px; line-height: 1.5;
+        }
+        .lang-profile-desc {
+            font-size: 0.92em; color: var(--text-md);
+            line-height: 1.8; max-width: 620px;
+        }
+        .lang-profile-role {
+            font-family: 'Courier New', monospace; font-size: 0.72em;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--c); opacity: 0.7; margin-bottom: 6px;
+        }
+
+        /* Metrics solo radar */
+        .lang-profile-radar { flex: 0 0 260px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+        /* Strength / limit lists */
+        .lang-sl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 48px; }
+        .lang-sl-col { }
+        .lang-sl-title {
+            font-family: 'Courier New', monospace; font-size: 0.7em; letter-spacing: 2.5px;
+            text-transform: uppercase; margin-bottom: 16px; padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+        .lang-sl-title.str { color: #6fcf72; border-bottom-color: rgba(76,175,80,0.2); }
+        .lang-sl-title.lim { color: #f06260; border-bottom-color: rgba(244,67,54,0.2); }
+        .lang-sl-col ul { margin: 0; padding: 0; list-style: none; }
+        .lang-sl-col ul li {
+            font-size: 0.87em; color: var(--text); font-family: 'Courier New', monospace;
+            margin-bottom: 10px; line-height: 1.45; padding-left: 16px; position: relative;
+        }
+        .lang-sl-col ul li::before { content: '›'; position: absolute; left: 0; }
+        .lang-sl-col.str-col ul li::before { color: rgba(76,175,80,0.8); }
+        .lang-sl-col.lim-col ul li::before { color: rgba(244,67,54,0.7); }
+
+        /* Metric bars solo */
+        .lang-metrics-section { margin-bottom: 48px; }
+        .lang-metrics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .lang-metric-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 10px; padding: 18px 20px;
+        }
+        .lang-metric-name { font-family: 'Courier New', monospace; font-size: 0.76em; color: var(--text-md); letter-spacing: 1px; margin-bottom: 10px; }
+        .lang-metric-bar-bg { height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
+        .lang-metric-bar-fill { height: 100%; border-radius: 4px; transition: width 1s cubic-bezier(.4,0,.2,1); width: 0; }
+        .lang-metric-score { font-size: 1.6em; font-weight: 200; color: var(--c); line-height: 1; }
+        .lang-metric-score span { font-size: 0.45em; color: var(--text-sm); font-family: 'Courier New', monospace; }
+
+        /* Matrix relevance rows */
+        .lang-matrix-section { margin-bottom: 48px; }
+        .lang-matrix-section .compare-table td.mat-best  { color: var(--c); font-weight: 600; }
+        .lang-matrix-section .compare-table td.mat-run   { color: var(--text-md); }
+        .lang-matrix-section .compare-table td.mat-avoid { color: #f06260; }
+        .lang-matrix-section .compare-table td.mat-none  { color: var(--text-sm); }
+
+        @media (max-width: 600px) {
+            .lang-profile-hero { flex-direction: column; }
+            .lang-sl-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ══════════════════════════════════════════════════════
+           TOOLTIP
+        ══════════════════════════════════════════════════════ */
+        .lc-tooltip {
+            position: fixed;
+            max-width: 340px;
+            min-width: 180px;
+            background: #0b0b18;
+            border: 1px solid rgba(255,255,255,0.13);
+            border-radius: 10px;
+            padding: 13px 16px 14px;
+            font-size: 0.83em;
+            color: #bbbbd0;
+            line-height: 1.65;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(4px);
+            transition: opacity .18s ease, transform .18s ease;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
+        }
+        .lc-tooltip.tt-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .tt-label {
+            font-family: 'Courier New', monospace;
+            font-size: 0.72em;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+            color: #555568;
+            margin-bottom: 7px;
+        }
+
+        /* Dot cursor hint on hoverable items */
+        .has-tip {
+            cursor: help;
+            position: relative;
+        }
+        .has-tip::after {
+            content: '›';
+            position: absolute;
+            right: -2px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8em;
+            color: rgba(255,255,255,0.18);
+            transition: color .2s, right .2s;
+            pointer-events: none;
+        }
+        .has-tip:hover::after {
+            color: rgba(255,255,255,0.5);
+            right: -6px;
+        }
+
+        /* Metric cards are also hoverable */
+        .lang-metric-card.has-tip { cursor: help; }
+        .lang-metric-card.has-tip::after { display: none; }
+    </style>
+</head>
+<body class="wunderBody">
+<div class="navbar"></div>
+
+<div class="lc-page">
+
+    <div class="lc-hero">
+        <h1>Language Dashboard</h1>
+        <p>Six languages. One project. Every tool has a domain it owns.</p>
+    </div>
+
+    <!-- ══ TAB BAR ══ -->
+    <div class="lc-tab-bar" id="lcTabBar">
+        <button class="lc-tab active" data-tab="overview">Overview</button>
+        <button class="lc-tab" data-tab="guide">Decision Guide</button>
+        <div class="lc-tab-sep"></div>
+        <!-- language tabs injected by JS -->
+    </div>
+
+    <!-- ══ OVERVIEW PANEL ══ -->
+    <div class="lc-panel active" id="panel-overview">
+
+        <div class="selector-stage">
+            <div class="selector-label">— filter languages —</div>
+            <div class="selector-list" id="selectorList"></div>
+            <div class="sel-divider" style="margin-top:2px"></div>
+            <button class="sel-clear" id="selClear">clear selection</button>
+        </div>
+
+        <h2 class="section-heading">Performance Profile</h2>
+        <p class="section-sub">Relative scores across six dimensions. Select a language to isolate.</p>
+        <div class="viz-row">
+            <div class="radar-wrap">
+                <canvas id="radarChart" width="300" height="300"></canvas>
+                <div class="radar-legend" id="radarLegend"></div>
+            </div>
+            <div class="metrics-wrap" id="metricBars"></div>
+        </div>
+
+        <h2 class="section-heading">Feature Comparison</h2>
+        <p class="section-sub">Side-by-side across paradigm, concurrency, performance, and ecosystem.</p>
+        <div class="filter-bar" id="filterBar"></div>
+        <div class="table-wrap">
+            <table class="compare-table" id="compareTable">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th class="lh">JS</th>
+                        <th class="lh">Go</th>
+                        <th class="lh">Kotlin</th>
+                        <th class="lh">C#</th>
+                        <th class="lh">Python</th>
+                        <th class="lh">Java</th>
+                        <th class="lh">TS</th>
+                        <th class="lh">Rust</th>
+                        <th class="lh">Swift</th>
+                        <th class="lh">Dart</th>
+                        <th class="lh">C++</th>
+                    </tr>
+                </thead>
+                <tbody id="compareBody"></tbody>
+            </table>
+        </div>
+
+        <h2 class="section-heading">Used In This Project</h2>
+        <p class="section-sub">What each language actually does here — and what it's adjacent to.</p>
+        <div class="usecase-grid" id="usecaseGrid"></div>
+
+    </div>
+
+    <!-- ══ DECISION GUIDE PANEL ══ -->
+    <div class="lc-panel" id="panel-guide">
+
+        <h2 class="section-heading">Decision Matrix</h2>
+        <p class="section-sub">The right tool for the problem — not the one you already know.</p>
+        <div class="table-wrap">
+            <table class="compare-table" id="matrixTable">
+                <thead>
+                    <tr>
+                        <th>Problem</th>
+                        <th class="lh">Best Fit</th>
+                        <th class="lh">Runner-Up</th>
+                        <th class="lh">Avoid</th>
+                    </tr>
+                </thead>
+                <tbody id="matrixBody"></tbody>
+            </table>
+        </div>
+
+        <h2 class="section-heading" style="margin-top:64px">In Plain Terms</h2>
+        <p class="section-sub">Strip away the frameworks. This is what each language is.</p>
+        <div class="summary-grid" id="summaryGrid"></div>
+
+    </div>
+
+    <!-- ══ LANGUAGE PANELS — injected by JS ══ -->
+    <div id="langPanels"></div>
+
+</div>
+
+<script src="/js/technologist/lang-compare.js"></script>
+</body>
+</html>

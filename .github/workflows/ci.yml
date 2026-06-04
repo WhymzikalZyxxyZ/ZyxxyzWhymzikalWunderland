@@ -1,0 +1,297 @@
+name: CI — lint + test all languages
+
+# Runs on every push to a version/* or feature/* branch, and on PRs into development.
+# The promote workflow waits for this to pass before merging to test/main.
+
+on:
+  push:
+    branches:
+      - 'version/**'
+      - 'feature/**'
+      - development
+  pull_request:
+    branches:
+      - development
+
+jobs:
+
+  # ── Web: JS / CSS / HTML ──────────────────────────────────────────────────────
+  lint-web:
+    name: Lint JS · CSS · HTML
+    runs-on: ubuntu-latest
+    container: node:20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint JavaScript
+        run: npm run lint:js
+      - name: Lint CSS
+        run: npm run lint:css
+      - name: Lint HTML
+        run: npm run lint:html
+
+  # ── Web: Jest tests ───────────────────────────────────────────────────────────
+  test-js:
+    name: Test JavaScript (Jest)
+    runs-on: ubuntu-latest
+    container: node:20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests with coverage
+        run: npm test
+
+  # ── TypeScript ────────────────────────────────────────────────────────────────
+  lint-typescript:
+    name: Lint + type-check TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: typescript/api/package.json
+      - name: Install API dependencies
+        working-directory: typescript/api
+        run: npm install
+      - name: Type-check shared engine
+        working-directory: typescript/shared
+        run: npx tsc --noEmit
+      - name: Type-check API
+        working-directory: typescript/api
+        run: npx tsc --noEmit
+      - name: ESLint shared engine
+        working-directory: typescript/shared
+        run: |
+          npx eslint --no-eslintrc \
+            --parser-options="ecmaVersion:2022,sourceType:module" \
+            --rule "no-unused-vars: warn" \
+            chess_engine.ts || true
+      - name: ESLint API
+        working-directory: typescript/api
+        run: |
+          npx eslint --no-eslintrc \
+            --parser-options="ecmaVersion:2022,sourceType:module" \
+            --rule "no-unused-vars: warn" \
+            server.ts || true
+
+  # ── Go ────────────────────────────────────────────────────────────────────────
+  lint-go:
+    name: Lint Go (editor-service)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: editor-service/go.mod
+          cache-dependency-path: editor-service/go.sum
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.64.8
+          working-directory: editor-service
+
+  # ── Kotlin ────────────────────────────────────────────────────────────────────
+  lint-kotlin:
+    name: Lint Kotlin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download ktlint
+        run: |
+          curl -sSLO https://github.com/pinterest/ktlint/releases/download/1.3.1/ktlint
+          chmod +x ktlint
+      - name: Lint Kotlin sources
+        run: ./ktlint --relative 'kotlin/**/*.kt'
+
+  # ── .NET / C# ─────────────────────────────────────────────────────────────────
+  lint-dotnet:
+    name: Build + Roslyn analysis (.NET)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - name: Restore + build shared (Roslyn warnings-as-errors)
+        run: dotnet build dotnet/shared/ZyxxyzShared.csproj -c Release /warnaserror
+      - name: Restore + build API
+        run: dotnet build dotnet/api/ZyxxyzApi.csproj --no-restore -c Release /warnaserror
+      - name: Restore + build Blazor
+        run: dotnet build dotnet/blazor/ZyxxyzBlazor.csproj --no-restore -c Release /warnaserror
+      - name: Restore + build SignalR
+        run: dotnet build dotnet/realtime/ZyxxyzRealtime.csproj -c Release /warnaserror
+
+  # ── Python ────────────────────────────────────────────────────────────────────
+  lint-python:
+    name: Lint Python (Ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Ruff
+        run: pip install ruff
+      - name: Lint shared engine
+        run: ruff check python/shared/chess_engine.py
+      - name: Lint desktop app
+        run: ruff check python/desktop/app.py
+      - name: Lint API
+        run: ruff check python/api/app.py
+
+  test-python:
+    name: Test Python (pytest + coverage)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test dependencies
+        run: pip install pytest pytest-cov
+      - name: Run tests with coverage (≥90% required)
+        run: |
+          pytest python/tests/ -v \
+            --cov=python/shared \
+            --cov-report=term-missing \
+            --cov-fail-under=90
+
+  # ── Rust ─────────────────────────────────────────────────────────────────────
+  lint-rust:
+    name: Lint Rust (clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-${{ hashFiles('rust/*/Cargo.toml') }}
+          restore-keys: ${{ runner.os }}-cargo-
+      - name: Clippy — shared lib
+        working-directory: rust/shared
+        run: cargo clippy -- -D warnings
+      - name: Clippy — API
+        working-directory: rust/api
+        run: cargo clippy -- -D warnings
+      - name: Clippy — desktop
+        working-directory: rust/desktop
+        run: cargo clippy -- -D warnings
+
+  test-rust:
+    name: Test Rust (cargo test + tarpaulin coverage)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-test-${{ hashFiles('rust/*/Cargo.toml') }}
+          restore-keys: ${{ runner.os }}-cargo-test-
+      - name: Install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin
+      - name: Test + coverage (≥90% required)
+        working-directory: rust/shared
+        run: cargo tarpaulin --out Stdout --fail-under 90
+
+  # ── Swift ─────────────────────────────────────────────────────────────────────
+  lint-swift:
+    name: Lint Swift (SwiftLint)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SwiftLint
+        run: brew install swiftlint
+      - name: SwiftLint
+        run: swiftlint lint --path swift/ --strict
+
+  test-swift:
+    name: Build Swift package
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build ChessEngine module
+        working-directory: swift
+        run: swift build -c release
+
+  # ── Dart ──────────────────────────────────────────────────────────────────────
+  lint-dart:
+    name: Lint Dart (dart analyze)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - name: Get dependencies — shared
+        working-directory: dart/shared
+        run: dart pub get
+      - name: Analyze shared engine
+        working-directory: dart/shared
+        run: dart analyze --fatal-infos
+
+  test-dart:
+    name: Test Dart (dart test + coverage)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - name: Get dependencies
+        working-directory: dart/shared
+        run: dart pub get
+      - name: Run tests with coverage
+        working-directory: dart/shared
+        run: dart test --coverage=coverage
+      - name: Generate LCOV report
+        working-directory: dart/shared
+        run: dart pub global activate coverage && dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
+      - name: Check coverage threshold (≥90%)
+        working-directory: dart/shared
+        run: |
+          pip install lcov_cobertura 2>/dev/null || true
+          COVERED=$(grep -c "DA:[0-9]*,1" coverage/lcov.info || echo 0)
+          TOTAL=$(grep -c "DA:" coverage/lcov.info || echo 1)
+          PCT=$(( COVERED * 100 / TOTAL ))
+          echo "Coverage: ${PCT}% (${COVERED}/${TOTAL} lines)"
+          if [ "$PCT" -lt 90 ]; then echo "Coverage below 90%"; exit 1; fi
+
+  # ── C++ ───────────────────────────────────────────────────────────────────────
+  lint-cpp:
+    name: Lint C++ (clang-tidy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install clang-tidy
+        run: sudo apt-get install -y clang-tidy
+      - name: Run clang-tidy on shared engine
+        run: |
+          clang-tidy cpp/shared/chess_engine.cpp \
+            --checks='-*,clang-analyzer-*,modernize-*,bugprone-*,readability-*' \
+            -- -std=c++17 -I cpp/shared
+
+  build-cpp:
+    name: Build C++ (CMake)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools
+        run: sudo apt-get install -y cmake build-essential
+      - name: Configure
+        run: cmake -S cpp -B cpp/build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build cpp/build
