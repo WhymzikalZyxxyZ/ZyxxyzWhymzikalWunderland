@@ -6,8 +6,13 @@ namespace ZyxxyzRealtime.Hubs;
 
 public class ChatHub(RoomService rooms) : Hub
 {
+    private static readonly System.Text.RegularExpressions.Regex ValidName =
+        new(@"^[A-Za-z0-9_\- ]{1,32}$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
     public async Task JoinRoom(string room, string username)
     {
+        if (!ValidName.IsMatch(room) || !ValidName.IsMatch(username)) return;
+
         await Groups.AddToGroupAsync(Context.ConnectionId, room);
         rooms.Join(room, Context.ConnectionId, username);
 
@@ -28,6 +33,7 @@ public class ChatHub(RoomService rooms) : Hub
     public async Task SendMessage(string room, string username, string text)
     {
         if (string.IsNullOrWhiteSpace(text) || text.Length > 500) return;
+        if (!ValidName.IsMatch(room) || !ValidName.IsMatch(username)) return;
 
         var msg = new ChatMessage(room, username, text.Trim(), DateTime.UtcNow);
         rooms.AddMessage(room, msg);
