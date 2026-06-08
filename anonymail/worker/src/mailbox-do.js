@@ -518,14 +518,21 @@ function _hex(bytes) {
     return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Compiled once at module load — _sanitize is called for every inbound HTML email.
+const _RE_SCRIPT  = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
+const _RE_STYLE   = /<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi;
+const _RE_HANDLER = /\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi;
+const _RE_JS_HREF = /\bhref\s*=\s*["']?\s*javascript:[^"'\s>]*/gi;
+const _RE_JS_SRC  = /\bsrc\s*=\s*["']?\s*javascript:[^"'\s>]*/gi;
+
 // Strip the most dangerous HTML patterns — iframe sandbox is the primary defence
 function _sanitize(html) {
     return html
-        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-        .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-        .replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, '')
-        .replace(/\bhref\s*=\s*["']?\s*javascript:[^"'\s>]*/gi, 'href="#"')
-        .replace(/\bsrc\s*=\s*["']?\s*javascript:[^"'\s>]*/gi, 'src=""');
+        .replace(_RE_SCRIPT,  '')
+        .replace(_RE_STYLE,   '')
+        .replace(_RE_HANDLER, '')
+        .replace(_RE_JS_HREF, 'href="#"')
+        .replace(_RE_JS_SRC,  'src=""');
 }
 
 // Build a minimal MIME message for outbound sending
@@ -556,7 +563,13 @@ function _buildMime({ from, to, cc, subject, body, attachments = [] }) {
     );
 
     for (const f of attachments) {
-        const b64 = btoa(String.fromCharCode(...(f.data instanceof Uint8Array ? f.data : new Uint8Array(f.data))));
+        const bytes = f.data instanceof Uint8Array ? f.data : new Uint8Array(f.data);
+        // Spread a large Uint8Array in one shot overflows the call stack (~25 MB limit).
+        // Process in 8 KB chunks instead.
+        let b64 = '';
+        for (let i = 0; i < bytes.length; i += 8192) {
+            b64 += btoa(String.fromCharCode(...bytes.subarray(i, i + 8192)));
+        }
         lines.push(
             `--${boundary}`,
             `Content-Type: ${f.contentType}`,
