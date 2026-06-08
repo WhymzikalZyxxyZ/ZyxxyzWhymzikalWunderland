@@ -89,5 +89,8 @@ dotnet/**/bin/
 # Claude Code local config
 .claude/
 
+# Wrangler local dev cache
+.wrangler/
+
 # Untracked local images (not part of the site build)
 images/zyx.jpg

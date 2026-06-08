@@ -9,18 +9,18 @@ namespace ZyxxyzApi.Controllers;
 public class AuthController(IAuthService svc) : ControllerBase
 {
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterRequest req)
+    public async Task<IActionResult> Register([FromBody] RegisterRequest req, CancellationToken ct = default)
     {
-        var result = await svc.RegisterAsync(req);
+        var result = await svc.RegisterAsync(req, ct);
         if (result is null)
             return Conflict(new { error = "Username already taken" });
         return Ok(result);
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest req)
+    public async Task<IActionResult> Login([FromBody] LoginRequest req, CancellationToken ct = default)
     {
-        var result = await svc.LoginAsync(req);
+        var result = await svc.LoginAsync(req, ct);
         if (result is null)
             return Unauthorized(new { error = "Invalid credentials" });
         return Ok(result);

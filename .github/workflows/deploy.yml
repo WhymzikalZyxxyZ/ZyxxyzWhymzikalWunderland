@@ -81,6 +81,27 @@ jobs:
           accountId:        ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: anonymail/worker
 
+  # ── Deploy Cloudflare Worker (The Locator) ────────────────────────────────────
+  deploy-locator-worker:
+    runs-on: ubuntu-latest
+    needs: [lint-and-test, lint-kotlin, lint-go]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy The Locator Worker to Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken:         ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId:        ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: the-locator/worker
+          secrets:          |
+            MAPBOX_TOKEN
+            CENSUS_API_KEY
+        env:
+          MAPBOX_TOKEN:      ${{ secrets.LOCATOR_MAPBOX_TOKEN }}
+          CENSUS_API_KEY:    ${{ secrets.LOCATOR_CENSUS_API_KEY }}
+
   # ── Deploy ───────────────────────────────────────────────────────────────────
   deploy:
     runs-on: ubuntu-latest
