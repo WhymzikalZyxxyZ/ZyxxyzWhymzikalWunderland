@@ -4,7 +4,7 @@ compatibility_date = "2024-11-01"
 
 [[kv_namespaces]]
 binding = "LOCATOR_CACHE"
-id      = "REPLACE_WITH_KV_NAMESPACE_ID"
+id      = "f66140dfbcec4118a44591cc9467cf8e"
 
 [[routes]]
 pattern   = "locator.zyxwonderland.xyz/*"
