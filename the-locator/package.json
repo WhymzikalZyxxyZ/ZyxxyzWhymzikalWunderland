@@ -1,0 +1,11 @@
+{
+    "name": "the-locator",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "dev": "concurrently -n client,worker -c cyan,yellow \"npm run dev --prefix client\" \"npm run dev --prefix worker\""
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.0"
+    }
+}
