@@ -150,6 +150,7 @@ const NAV_STRUCTURE = [
         ],
     },
     { label: 'The Lawyer', href: '/technologist/lawyer' },
+    { label: 'The Locator', href: 'https://locator.zyxwonderland.xyz', target: '_blank' },
     { label: 'Anonymail', href: 'https://mail.zyxwonderland.xyz', target: '_blank' },
     {
         label: 'Community', href: '/community/forum',
