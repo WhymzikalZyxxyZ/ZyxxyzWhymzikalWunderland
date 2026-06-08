@@ -42,7 +42,13 @@ const _ipLimits = new Map();
 function ipAllow(ip, max, windowMs = 60_000) {
     const now = Date.now();
     const e   = _ipLimits.get(ip);
-    if (!e || now > e.reset) { _ipLimits.set(ip, { count: 1, reset: now + windowMs }); return true; }
+    if (!e || now > e.reset) {
+        // Prune all expired entries whenever we create a new slot, keeping
+        // the Map bounded to the number of currently-active unique IPs.
+        for (const [k, v] of _ipLimits) { if (now > v.reset) _ipLimits.delete(k); }
+        _ipLimits.set(ip, { count: 1, reset: now + windowMs });
+        return true;
+    }
     if (e.count >= max) return false;
     e.count++;
     return true;
@@ -120,10 +126,11 @@ async function geocodeNominatim(q) {
     if (!r.ok) return null;
     const data = await r.json();
     const features = data
-        .filter(p => withinUS([parseFloat(p.lon), parseFloat(p.lat)]))
-        .map(p => ({
+        .map(p => ({ p, lon: parseFloat(p.lon), lat: parseFloat(p.lat) }))
+        .filter(({ lon, lat }) => withinUS([lon, lat]))
+        .map(({ p, lon, lat }) => ({
             place_name: p.display_name,
-            center:     [parseFloat(p.lon), parseFloat(p.lat)],
+            center:     [lon, lat],
             bbox:       p.boundingbox
                 ? [parseFloat(p.boundingbox[2]), parseFloat(p.boundingbox[0]),
                    parseFloat(p.boundingbox[3]), parseFloat(p.boundingbox[1])]
