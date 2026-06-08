@@ -89,7 +89,11 @@ export class RegistryDO {
     }
 
     async _purge() {
-        const now     = Date.now();
+        // Throttle: at most once per minute — avoids O(n) scan on every register/stats call.
+        const now = Date.now();
+        if (this._lastPurge && now - this._lastPurge < 60_000) return;
+        this._lastPurge = now;
+
         const expired = [];
         for (const [t, v] of this._tokens) {
             if (now > v.expiresAt) {
