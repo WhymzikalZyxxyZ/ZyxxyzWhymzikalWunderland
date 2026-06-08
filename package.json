@@ -11,6 +11,8 @@
     "lint": "npm run lint:js && npm run lint:css && npm run lint:html",
     "test": "jest --coverage",
     "test:features": "node --experimental-vm-modules node_modules/.bin/jest --config jest.features.config.cjs --coverage",
+    "check": "node scripts/check.js",
+    "install:all": "node scripts/install-all.js",
     "minify": "node scripts/minify.js",
     "bump": "node scripts/bump-version.js"
   },
