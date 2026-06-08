@@ -77,8 +77,7 @@ function parseBbox(raw) {
     return parts;
 }
 
-function withinUS(coord) {
-    const [lng, lat] = Array.isArray(coord) ? coord : [coord.longitude, coord.latitude];
+function withinUS([lng, lat]) {
     return lng >= US_BOUNDS.minLng && lng <= US_BOUNDS.maxLng
         && lat >= US_BOUNDS.minLat && lat <= US_BOUNDS.maxLat;
 }
