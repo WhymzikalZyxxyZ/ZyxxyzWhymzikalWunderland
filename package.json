@@ -20,7 +20,9 @@
     "testTimeout": 30000,
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "\\.mjs$"
+      "\\.mjs$",
+      "<rootDir>/anonymail/",
+      "<rootDir>/the-locator/"
     ],
     "collectCoverageFrom": [
       "js/engines/tetris-engine.js",
