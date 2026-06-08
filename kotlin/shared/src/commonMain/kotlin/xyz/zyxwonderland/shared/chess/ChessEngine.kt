@@ -10,93 +10,93 @@ private val MATERIAL = intArrayOf(0, 100, 320, 330, 500, 900, 20000)
 // Piece-square tables (white's perspective, row 0 = rank 8, row 7 = rank 1)
 private val PST: Map<Int, Array<IntArray>> = mapOf(
     CH_PAWN to arrayOf(
-        intArrayOf(  0,  0,  0,  0,  0,  0,  0,  0),
-        intArrayOf( 50, 50, 50, 50, 50, 50, 50, 50),
-        intArrayOf( 10, 10, 20, 30, 30, 20, 10, 10),
-        intArrayOf(  5,  5, 10, 25, 25, 10,  5,  5),
-        intArrayOf(  0,  0,  0, 20, 20,  0,  0,  0),
-        intArrayOf(  5, -5,-10,  0,  0,-10, -5,  5),
-        intArrayOf(  5, 10, 10,-20,-20, 10, 10,  5),
-        intArrayOf(  0,  0,  0,  0,  0,  0,  0,  0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(50, 50, 50, 50, 50, 50, 50, 50),
+        intArrayOf(10, 10, 20, 30, 30, 20, 10, 10),
+        intArrayOf(5, 5, 10, 25, 25, 10, 5, 5),
+        intArrayOf(0, 0, 0, 20, 20, 0, 0, 0),
+        intArrayOf(5, -5, -10, 0, 0, -10, -5, 5),
+        intArrayOf(5, 10, 10, -20, -20, 10, 10, 5),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0),
     ),
     CH_KNIGHT to arrayOf(
-        intArrayOf(-50,-40,-30,-30,-30,-30,-40,-50),
-        intArrayOf(-40,-20,  0,  0,  0,  0,-20,-40),
-        intArrayOf(-30,  0, 10, 15, 15, 10,  0,-30),
-        intArrayOf(-30,  5, 15, 20, 20, 15,  5,-30),
-        intArrayOf(-30,  0, 15, 20, 20, 15,  0,-30),
-        intArrayOf(-30,  5, 10, 15, 15, 10,  5,-30),
-        intArrayOf(-40,-20,  0,  5,  5,  0,-20,-40),
-        intArrayOf(-50,-40,-30,-30,-30,-30,-40,-50),
+        intArrayOf(-50, -40, -30, -30, -30, -30, -40, -50),
+        intArrayOf(-40, -20, 0, 0, 0, 0, -20, -40),
+        intArrayOf(-30, 0, 10, 15, 15, 10, 0, -30),
+        intArrayOf(-30, 5, 15, 20, 20, 15, 5, -30),
+        intArrayOf(-30, 0, 15, 20, 20, 15, 0, -30),
+        intArrayOf(-30, 5, 10, 15, 15, 10, 5, -30),
+        intArrayOf(-40, -20, 0, 5, 5, 0, -20, -40),
+        intArrayOf(-50, -40, -30, -30, -30, -30, -40, -50),
     ),
     CH_BISHOP to arrayOf(
-        intArrayOf(-20,-10,-10,-10,-10,-10,-10,-20),
-        intArrayOf(-10,  0,  0,  0,  0,  0,  0,-10),
-        intArrayOf(-10,  0,  5, 10, 10,  5,  0,-10),
-        intArrayOf(-10,  5,  5, 10, 10,  5,  5,-10),
-        intArrayOf(-10,  0, 10, 10, 10, 10,  0,-10),
-        intArrayOf(-10, 10, 10, 10, 10, 10, 10,-10),
-        intArrayOf(-10,  5,  0,  0,  0,  0,  5,-10),
-        intArrayOf(-20,-10,-10,-10,-10,-10,-10,-20),
+        intArrayOf(-20, -10, -10, -10, -10, -10, -10, -20),
+        intArrayOf(-10, 0, 0, 0, 0, 0, 0, -10),
+        intArrayOf(-10, 0, 5, 10, 10, 5, 0, -10),
+        intArrayOf(-10, 5, 5, 10, 10, 5, 5, -10),
+        intArrayOf(-10, 0, 10, 10, 10, 10, 0, -10),
+        intArrayOf(-10, 10, 10, 10, 10, 10, 10, -10),
+        intArrayOf(-10, 5, 0, 0, 0, 0, 5, -10),
+        intArrayOf(-20, -10, -10, -10, -10, -10, -10, -20),
     ),
     CH_ROOK to arrayOf(
-        intArrayOf(  0,  0,  0,  0,  0,  0,  0,  0),
-        intArrayOf(  5, 10, 10, 10, 10, 10, 10,  5),
-        intArrayOf( -5,  0,  0,  0,  0,  0,  0, -5),
-        intArrayOf( -5,  0,  0,  0,  0,  0,  0, -5),
-        intArrayOf( -5,  0,  0,  0,  0,  0,  0, -5),
-        intArrayOf( -5,  0,  0,  0,  0,  0,  0, -5),
-        intArrayOf( -5,  0,  0,  0,  0,  0,  0, -5),
-        intArrayOf(  0,  0,  0,  5,  5,  0,  0,  0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(5, 10, 10, 10, 10, 10, 10, 5),
+        intArrayOf(-5, 0, 0, 0, 0, 0, 0, -5),
+        intArrayOf(-5, 0, 0, 0, 0, 0, 0, -5),
+        intArrayOf(-5, 0, 0, 0, 0, 0, 0, -5),
+        intArrayOf(-5, 0, 0, 0, 0, 0, 0, -5),
+        intArrayOf(-5, 0, 0, 0, 0, 0, 0, -5),
+        intArrayOf(0, 0, 0, 5, 5, 0, 0, 0),
     ),
     CH_QUEEN to arrayOf(
-        intArrayOf(-20,-10,-10, -5, -5,-10,-10,-20),
-        intArrayOf(-10,  0,  0,  0,  0,  0,  0,-10),
-        intArrayOf(-10,  0,  5,  5,  5,  5,  0,-10),
-        intArrayOf( -5,  0,  5,  5,  5,  5,  0, -5),
-        intArrayOf(  0,  0,  5,  5,  5,  5,  0, -5),
-        intArrayOf(-10,  5,  5,  5,  5,  5,  0,-10),
-        intArrayOf(-10,  0,  5,  0,  0,  0,  0,-10),
-        intArrayOf(-20,-10,-10, -5, -5,-10,-10,-20),
+        intArrayOf(-20, -10, -10, -5, -5, -10, -10, -20),
+        intArrayOf(-10, 0, 0, 0, 0, 0, 0, -10),
+        intArrayOf(-10, 0, 5, 5, 5, 5, 0, -10),
+        intArrayOf(-5, 0, 5, 5, 5, 5, 0, -5),
+        intArrayOf(0, 0, 5, 5, 5, 5, 0, -5),
+        intArrayOf(-10, 5, 5, 5, 5, 5, 0, -10),
+        intArrayOf(-10, 0, 5, 0, 0, 0, 0, -10),
+        intArrayOf(-20, -10, -10, -5, -5, -10, -10, -20),
     ),
     CH_KING to arrayOf(
-        intArrayOf(-30,-40,-40,-50,-50,-40,-40,-30),
-        intArrayOf(-30,-40,-40,-50,-50,-40,-40,-30),
-        intArrayOf(-30,-40,-40,-50,-50,-40,-40,-30),
-        intArrayOf(-30,-40,-40,-50,-50,-40,-40,-30),
-        intArrayOf(-20,-30,-30,-40,-40,-30,-30,-20),
-        intArrayOf(-10,-20,-20,-20,-20,-20,-20,-10),
-        intArrayOf( 20, 20,  0,  0,  0,  0, 20, 20),
-        intArrayOf( 20, 30, 10,  0,  0, 10, 30, 20),
+        intArrayOf(-30, -40, -40, -50, -50, -40, -40, -30),
+        intArrayOf(-30, -40, -40, -50, -50, -40, -40, -30),
+        intArrayOf(-30, -40, -40, -50, -50, -40, -40, -30),
+        intArrayOf(-30, -40, -40, -50, -50, -40, -40, -30),
+        intArrayOf(-20, -30, -30, -40, -40, -30, -30, -20),
+        intArrayOf(-10, -20, -20, -20, -20, -20, -20, -10),
+        intArrayOf(20, 20, 0, 0, 0, 0, 20, 20),
+        intArrayOf(20, 30, 10, 0, 0, 10, 30, 20),
     ),
 )
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 private fun inBounds(r: Int, c: Int) = r in 0..7 && c in 0..7
-private fun colorOf(p: Int)          = if (p > 0) CH_WHITE else CH_BLACK
+private fun colorOf(p: Int) = if (p > 0) CH_WHITE else CH_BLACK
 private fun owns(p: Int, color: Int) = p != 0 && colorOf(p) == color
-private fun enemy(p: Int, color: Int)= p != 0 && colorOf(p) != color
+private fun enemy(p: Int, color: Int) = p != 0 && colorOf(p) != color
 
 fun newChessGame(): ChessGame {
     val board = arrayOf(
         intArrayOf(-4, -2, -3, -5, -6, -3, -2, -4),
         intArrayOf(-1, -1, -1, -1, -1, -1, -1, -1),
-        intArrayOf( 0,  0,  0,  0,  0,  0,  0,  0),
-        intArrayOf( 0,  0,  0,  0,  0,  0,  0,  0),
-        intArrayOf( 0,  0,  0,  0,  0,  0,  0,  0),
-        intArrayOf( 0,  0,  0,  0,  0,  0,  0,  0),
-        intArrayOf( 1,  1,  1,  1,  1,  1,  1,  1),
-        intArrayOf( 4,  2,  3,  5,  6,  3,  2,  4),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(0, 0, 0, 0, 0, 0, 0, 0),
+        intArrayOf(1, 1, 1, 1, 1, 1, 1, 1),
+        intArrayOf(4, 2, 3, 5, 6, 3, 2, 4),
     )
     return ChessGame(
-        board      = board,
-        turn       = CH_WHITE,
-        castling   = CastlingRights(),
-        enPassant  = null,
-        halfMove   = 0,
-        fullMove   = 1,
-        status     = ChessStatus.ACTIVE,
+        board = board,
+        turn = CH_WHITE,
+        castling = CastlingRights(),
+        enPassant = null,
+        halfMove = 0,
+        fullMove = 1,
+        status = ChessStatus.ACTIVE,
     )
 }
 
@@ -111,7 +111,7 @@ fun rawMoves(
     val piece = board[r][c]
     if (piece == 0) return emptyList()
     val color = colorOf(piece)
-    val type  = abs(piece)
+    val type = abs(piece)
     val moves = mutableListOf<ChessMove>()
 
     fun push(tr: Int, tc: Int, extra: ChessMove.() -> ChessMove = { this }) {
@@ -131,9 +131,9 @@ fun rawMoves(
 
     when (type) {
         CH_PAWN -> {
-            val dir      = if (color == CH_WHITE) -1 else 1
-            val startRow = if (color == CH_WHITE)  6 else 1
-            val promRow  = if (color == CH_WHITE)  0 else 7
+            val dir = if (color == CH_WHITE) -1 else 1
+            val startRow = if (color == CH_WHITE) 6 else 1
+            val promRow = if (color == CH_WHITE) 0 else 7
             val nr = r + dir
             if (inBounds(nr, c) && board[nr][c] == 0) {
                 if (nr == promRow) {
@@ -162,17 +162,17 @@ fun rawMoves(
         }
         CH_KNIGHT -> {
             for ((dr, dc) in listOf(-2 to -1, -2 to 1, -1 to -2, -1 to 2,
-                                     1 to -2,  1 to  2,  2 to -1,  2 to 1))
+                                     1 to -2, 1 to 2, 2 to -1, 2 to 1))
                 if (inBounds(r + dr, c + dc) && !owns(board[r + dr][c + dc], color))
                     push(r + dr, c + dc)
         }
         CH_BISHOP -> for ((dr, dc) in listOf(-1 to -1, -1 to 1, 1 to -1, 1 to 1)) slide(dr, dc)
-        CH_ROOK   -> for ((dr, dc) in listOf(-1 to 0, 1 to 0, 0 to -1, 0 to 1))   slide(dr, dc)
-        CH_QUEEN  -> for ((dr, dc) in listOf(-1 to -1, -1 to 0, -1 to 1, 0 to -1,
-                                              0 to  1,  1 to -1,  1 to 0,  1 to  1)) slide(dr, dc)
+        CH_ROOK -> for ((dr, dc) in listOf(-1 to 0, 1 to 0, 0 to -1, 0 to 1)) slide(dr, dc)
+        CH_QUEEN -> for ((dr, dc) in listOf(-1 to -1, -1 to 0, -1 to 1, 0 to -1,
+                                             0 to 1, 1 to -1, 1 to 0, 1 to 1)) slide(dr, dc)
         CH_KING -> {
             for ((dr, dc) in listOf(-1 to -1, -1 to 0, -1 to 1, 0 to -1,
-                                     0 to  1,  1 to -1,  1 to 0,  1 to  1))
+                                     0 to 1, 1 to -1, 1 to 0, 1 to 1))
                 if (inBounds(r + dr, c + dc) && !owns(board[r + dr][c + dc], color))
                     push(r + dr, c + dc)
             val row = if (color == CH_WHITE) 7 else 0
@@ -198,7 +198,7 @@ fun isSquareAttacked(board: Array<IntArray>, r: Int, c: Int, byColor: Int): Bool
         if (inBounds(pr, pc) && board[pr][pc] == CH_PAWN * byColor) return true
     }
     for ((dr, dc) in listOf(-2 to -1, -2 to 1, -1 to -2, -1 to 2,
-                              1 to -2,  1 to  2,  2 to -1,  2 to  1)) {
+                              1 to -2, 1 to 2, 2 to -1, 2 to 1)) {
         val nr = r + dr; val nc = c + dc
         if (inBounds(nr, nc) && board[nr][nc] == CH_KNIGHT * byColor) return true
     }
@@ -229,7 +229,7 @@ fun isSquareAttacked(board: Array<IntArray>, r: Int, c: Int, byColor: Int): Bool
         }
     }
     for ((dr, dc) in listOf(-1 to -1, -1 to 0, -1 to 1, 0 to -1,
-                              0 to  1,  1 to -1,  1 to 0,  1 to  1)) {
+                              0 to 1, 1 to -1, 1 to 0, 1 to 1)) {
         val nr = r + dr; val nc = c + dc
         if (inBounds(nr, nc) && board[nr][nc] == CH_KING * byColor) return true
     }
@@ -258,11 +258,11 @@ fun applyMove(state: ChessGame, move: ChessMove): ChessGame {
     if (move.castle != null) {
         val row = r
         if (move.castle == 'K') { board[row][5] = board[row][7]; board[row][7] = 0 }
-        else                    { board[row][3] = board[row][0]; board[row][0] = 0 }
+        else { board[row][3] = board[row][0]; board[row][0] = 0 }
     }
 
     board[tr][tc] = move.promo ?: board[r][c]
-    board[r][c]   = 0
+    board[r][c] = 0
 
     val castling = state.castling.let {
         var wK = it.wK; var wQ = it.wQ; var bK = it.bK; var bQ = it.bQ
@@ -297,9 +297,9 @@ fun getLegalMoves(state: ChessGame): List<ChessMove> {
         val next = applyMove(state, m)
         if (isInCheck(next.board, state.turn)) return@filter false
         if (m.castle != null) {
-            val row     = m.r
-            val passTc  = if (m.castle == 'K') 5 else 3
-            val tmp     = state.copyBoard()
+            val row = m.r
+            val passTc = if (m.castle == 'K') 5 else 3
+            val tmp = state.copyBoard()
             tmp[row][passTc] = tmp[row][4]; tmp[row][4] = 0
             if (isInCheck(tmp, state.turn)) return@filter false
             if (isInCheck(state.board, state.turn)) return@filter false
@@ -312,11 +312,11 @@ fun updateStatus(state: ChessGame): ChessGame {
     val moves = getLegalMoves(state)
     return when {
         moves.isNotEmpty() -> state.copy(
-            status     = if (isInCheck(state.board, state.turn)) ChessStatus.CHECK else ChessStatus.ACTIVE,
+            status = if (isInCheck(state.board, state.turn)) ChessStatus.CHECK else ChessStatus.ACTIVE,
             legalMoves = moves,
         )
         isInCheck(state.board, state.turn) -> state.copy(status = ChessStatus.CHECKMATE, legalMoves = emptyList())
-        else                               -> state.copy(status = ChessStatus.STALEMATE,  legalMoves = emptyList())
+        else -> state.copy(status = ChessStatus.STALEMATE, legalMoves = emptyList())
     }
 }
 
@@ -328,9 +328,9 @@ fun evaluateBoard(board: Array<IntArray>): Int {
         val p = board[r][c]
         if (p == 0) continue
         val color = colorOf(p)
-        val type  = abs(p)
+        val type = abs(p)
         val table = PST[type]
-        val pst   = if (table != null) {
+        val pst = if (table != null) {
             val row = if (color == CH_WHITE) r else 7 - r
             color * table[row][c]
         } else 0
@@ -371,7 +371,7 @@ private fun minimax(
         var best = Int.MIN_VALUE
         for (m in ordered) {
             best = max(best, minimax(applyMove(state, m), depth - 1, a, b, false))
-            a    = max(a, best)
+            a = max(a, best)
             if (b <= a) break
         }
         best
@@ -379,7 +379,7 @@ private fun minimax(
         var best = Int.MAX_VALUE
         for (m in ordered) {
             best = min(best, minimax(applyMove(state, m), depth - 1, a, b, true))
-            b    = min(b, best)
+            b = min(b, best)
             if (b <= a) break
         }
         best
@@ -394,10 +394,10 @@ fun getChessAIMove(state: ChessGame, difficulty: Int): ChessMove? {
     val depth = DEPTH_MAP[difficulty.coerceIn(0, 9)]
     if (depth == 0) return moves.random()
 
-    val ordered     = orderMoves(state.board, moves)
-    val maximizing  = state.turn == CH_WHITE
-    var bestScore   = if (maximizing) Int.MIN_VALUE else Int.MAX_VALUE
-    var bestMove    = ordered.first()
+    val ordered = orderMoves(state.board, moves)
+    val maximizing = state.turn == CH_WHITE
+    var bestScore = if (maximizing) Int.MIN_VALUE else Int.MAX_VALUE
+    var bestMove = ordered.first()
 
     for (m in ordered) {
         val s = minimax(applyMove(state, m), depth - 1, Int.MIN_VALUE, Int.MAX_VALUE, !maximizing)

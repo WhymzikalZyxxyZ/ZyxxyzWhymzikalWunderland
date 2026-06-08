@@ -19,7 +19,7 @@ class ChessEngineTest {
         val board = newChessGame().board
         var whitePawns = 0; var blackPawns = 0
         for (r in 0..7) for (c in 0..7) {
-            if (board[r][c] == CH_PAWN)  whitePawns++
+            if (board[r][c] == CH_PAWN) whitePawns++
             if (board[r][c] == -CH_PAWN) blackPawns++
         }
         assertEquals(8, whitePawns)
@@ -47,12 +47,12 @@ class ChessEngineTest {
 
     @Test fun `pawn can advance two squares from starting row`() {
         val moves = getLegalMoves(newChessGame())
-        val e2e4  = moves.any { it.r == 6 && it.c == 4 && it.tr == 4 && it.tc == 4 }
+        val e2e4 = moves.any { it.r == 6 && it.c == 4 && it.tr == 4 && it.tc == 4 }
         assertTrue(e2e4)
     }
 
     @Test fun `knight moves are correct from starting position`() {
-        val moves    = getLegalMoves(newChessGame())
+        val moves = getLegalMoves(newChessGame())
         val knightMoves = moves.filter { it.r == 7 && it.c == 1 } // Nb1
         assertEquals(2, knightMoves.size)
     }
@@ -61,8 +61,8 @@ class ChessEngineTest {
 
     @Test fun `applyMove e2-e4 sets en passant`() {
         val state = newChessGame()
-        val move  = getLegalMoves(state).first { it.r == 6 && it.c == 4 && it.tr == 4 }
-        val next  = applyMove(state, move)
+        val move = getLegalMoves(state).first { it.r == 6 && it.c == 4 && it.tr == 4 }
+        val next = applyMove(state, move)
         assertNotNull(next.enPassant)
         assertEquals(5, next.enPassant!!.r)
         assertEquals(4, next.enPassant!!.c)
@@ -70,16 +70,16 @@ class ChessEngineTest {
 
     @Test fun `applyMove flips turn`() {
         val state = newChessGame()
-        val move  = getLegalMoves(state).first()
+        val move = getLegalMoves(state).first()
         assertEquals(CH_BLACK, applyMove(state, move).turn)
     }
 
     @Test fun `applyMove piece is moved on board`() {
         val state = newChessGame()
-        val move  = getLegalMoves(state).first { it.r == 6 && it.c == 4 && it.tr == 4 }
-        val next  = applyMove(state, move)
-        assertEquals(0,        next.board[6][4])
-        assertEquals(CH_PAWN,  next.board[4][4])
+        val move = getLegalMoves(state).first { it.r == 6 && it.c == 4 && it.tr == 4 }
+        val next = applyMove(state, move)
+        assertEquals(0, next.board[6][4])
+        assertEquals(CH_PAWN, next.board[4][4])
     }
 
     // ── isInCheck / isSquareAttacked ──────────────────────────────────────────
@@ -137,19 +137,19 @@ class ChessEngineTest {
         // Set up a board position that is checkmate for black (Scholar's mate)
         var state = newChessGame()
         // e4
-        state = applyMove(state, getLegalMoves(state).first { it.r==6 && it.c==4 && it.tr==4 })
+        state = applyMove(state, getLegalMoves(state).first { it.r == 6 && it.c == 4 && it.tr == 4 })
         // e5
-        state = applyMove(state, getLegalMoves(state).first { it.r==1 && it.c==4 && it.tr==3 })
+        state = applyMove(state, getLegalMoves(state).first { it.r == 1 && it.c == 4 && it.tr == 3 })
         // Bc4
-        state = applyMove(state, getLegalMoves(state).first { it.r==7 && it.c==5 && it.tr==4 && it.tc==2 })
+        state = applyMove(state, getLegalMoves(state).first { it.r == 7 && it.c == 5 && it.tr == 4 && it.tc == 2 })
         // Nc6
-        state = applyMove(state, getLegalMoves(state).first { it.r==0 && it.c==1 && it.tr==2 && it.tc==2 })
+        state = applyMove(state, getLegalMoves(state).first { it.r == 0 && it.c == 1 && it.tr == 2 && it.tc == 2 })
         // Qh5
-        state = applyMove(state, getLegalMoves(state).first { it.r==7 && it.c==3 && it.tr==3 && it.tc==7 })
+        state = applyMove(state, getLegalMoves(state).first { it.r == 7 && it.c == 3 && it.tr == 3 && it.tc == 7 })
         // Nf6?? (blunder)
-        state = applyMove(state, getLegalMoves(state).first { it.r==0 && it.c==6 && it.tr==2 && it.tc==5 })
+        state = applyMove(state, getLegalMoves(state).first { it.r == 0 && it.c == 6 && it.tr == 2 && it.tc == 5 })
         // Qxf7#
-        state = applyMove(state, getLegalMoves(state).first { it.r==3 && it.c==7 && it.tr==1 && it.tc==5 })
+        state = applyMove(state, getLegalMoves(state).first { it.r == 3 && it.c == 7 && it.tr == 1 && it.tc == 5 })
         val final = updateStatus(state)
         assertEquals(ChessStatus.CHECKMATE, final.status)
     }
@@ -163,7 +163,7 @@ class ChessEngineTest {
     // ── getChessAIMove ────────────────────────────────────────────────────────
 
     @Test fun `getChessAIMove returns a legal move`() {
-        val state  = updateStatus(newChessGame())
+        val state = updateStatus(newChessGame())
         val aiMove = getChessAIMove(state, difficulty = 2)
         assertNotNull(aiMove)
         assertTrue(state.legalMoves.contains(aiMove))
