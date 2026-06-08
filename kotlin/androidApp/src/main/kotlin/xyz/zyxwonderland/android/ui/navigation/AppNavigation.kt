@@ -22,7 +22,7 @@ import xyz.zyxwonderland.android.ui.chess.ChessScreen
 import xyz.zyxwonderland.android.ui.status.StatusScreen
 
 private sealed class Screen(val route: String, val label: String) {
-    data object Chess  : Screen("chess",  "Chess")
+    data object Chess : Screen("chess", "Chess")
     data object Status : Screen("status", "Status")
 }
 
@@ -42,19 +42,19 @@ fun AppNavigation() {
                         icon = {
                             Icon(
                                 imageVector = when (screen) {
-                                    Screen.Chess  -> Icons.Filled.Star
+                                    Screen.Chess -> Icons.Filled.Star
                                     Screen.Status -> Icons.Filled.CheckCircle
                                 },
                                 contentDescription = screen.label,
                             )
                         },
-                        label    = { Text(screen.label) },
+                        label = { Text(screen.label) },
                         selected = currentDest?.hierarchy?.any { it.route == screen.route } == true,
-                        onClick  = {
+                        onClick = {
                             navController.navigate(screen.route) {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
-                                restoreState    = true
+                                restoreState = true
                             }
                         },
                     )
@@ -63,11 +63,11 @@ fun AppNavigation() {
         },
     ) { inner ->
         NavHost(
-            navController    = navController,
+            navController = navController,
             startDestination = Screen.Chess.route,
-            modifier         = Modifier.padding(inner),
+            modifier = Modifier.padding(inner),
         ) {
-            composable(Screen.Chess.route)  { ChessScreen() }
+            composable(Screen.Chess.route) { ChessScreen() }
             composable(Screen.Status.route) { StatusScreen() }
         }
     }

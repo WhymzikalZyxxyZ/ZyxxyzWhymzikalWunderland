@@ -57,7 +57,7 @@ class ChessViewModel : ViewModel() {
         if (movesFromHere.isNotEmpty()) {
             _ui.update {
                 it.copy(
-                    selected   = r to c,
+                    selected = r to c,
                     highlights = movesFromHere.map { m -> m.tr to m.tc }.toSet(),
                 )
             }
@@ -79,8 +79,8 @@ class ChessViewModel : ViewModel() {
     private fun scheduleAiMove() {
         _ui.update { it.copy(isAiThinking = true) }
         viewModelScope.launch(Dispatchers.Default) {
-            val state    = _ui.value
-            val aiMove   = getChessAIMove(state.game, state.aiDifficulty)
+            val state = _ui.value
+            val aiMove = getChessAIMove(state.game, state.aiDifficulty)
             if (aiMove != null) {
                 val nextGame = updateStatus(applyMove(state.game, aiMove))
                 _ui.update { it.copy(game = nextGame, isAiThinking = false, message = statusMessage(nextGame)) }
@@ -101,7 +101,7 @@ class ChessViewModel : ViewModel() {
     private fun statusMessage(game: ChessGame) = when (game.status) {
         ChessStatus.CHECKMATE -> if (game.turn == CH_BLACK) "Checkmate — you win!" else "Checkmate — AI wins!"
         ChessStatus.STALEMATE -> "Stalemate — draw!"
-        ChessStatus.CHECK     -> "Check!"
-        else                  -> ""
+        ChessStatus.CHECK -> "Check!"
+        else -> ""
     }
 }
