@@ -95,18 +95,42 @@ async function handleSearch(request, env, ip) {
     const cached   = await getCache(env, cacheKey);
     if (cached) return json(cached);
 
-    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json`
-        + `?types=place,postcode&country=us&access_token=${env.MAPBOX_TOKEN}`;
+    // Use Mapbox in production; fall back to Nominatim (free, no token) for local dev
+    const result = env.MAPBOX_TOKEN
+        ? await geocodeMapbox(q, env.MAPBOX_TOKEN)
+        : await geocodeNominatim(q);
 
-    const upstream = await fetch(url);
-    if (!upstream.ok) return err('Geocoding service unavailable', 502);
-
-    const data     = await upstream.json();
-    const features = (data.features || []).filter(f => withinUS(f.center));
-    const result   = { features };
-
+    if (!result) return err('Geocoding service unavailable', 502);
     await setCache(env, cacheKey, result, 3_600);
     return json(result);
+}
+
+async function geocodeMapbox(q, token) {
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json`
+        + `?types=place,postcode&country=us&access_token=${token}`;
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const data = await r.json();
+    return { features: (data.features || []).filter(f => withinUS(f.center)) };
+}
+
+async function geocodeNominatim(q) {
+    const url = `https://nominatim.openstreetmap.org/search`
+        + `?q=${encodeURIComponent(q)}&format=json&countrycodes=us&limit=5&addressdetails=1`;
+    const r = await fetch(url, { headers: { 'User-Agent': 'TheLocator/1.0 (dev)' } });
+    if (!r.ok) return null;
+    const data = await r.json();
+    const features = data
+        .filter(p => withinUS([parseFloat(p.lon), parseFloat(p.lat)]))
+        .map(p => ({
+            place_name: p.display_name,
+            center:     [parseFloat(p.lon), parseFloat(p.lat)],
+            bbox:       p.boundingbox
+                ? [parseFloat(p.boundingbox[2]), parseFloat(p.boundingbox[0]),
+                   parseFloat(p.boundingbox[3]), parseFloat(p.boundingbox[1])]
+                : null,
+        }));
+    return { features };
 }
 
 const VALID_LAYERS = new Set(['neighborhoods', 'schools', 'superfund']);
