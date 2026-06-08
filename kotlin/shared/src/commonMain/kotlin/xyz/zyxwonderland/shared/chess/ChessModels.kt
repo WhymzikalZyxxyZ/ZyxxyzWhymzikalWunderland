@@ -1,15 +1,15 @@
 package xyz.zyxwonderland.shared.chess
 
 // Piece constants — positive = white, negative = black
-const val CH_EMPTY  = 0
-const val CH_PAWN   = 1
+const val CH_EMPTY = 0
+const val CH_PAWN = 1
 const val CH_KNIGHT = 2
 const val CH_BISHOP = 3
-const val CH_ROOK   = 4
-const val CH_QUEEN  = 5
-const val CH_KING   = 6
-const val CH_WHITE  = 1
-const val CH_BLACK  = -1
+const val CH_ROOK = 4
+const val CH_QUEEN = 5
+const val CH_KING = 6
+const val CH_WHITE = 1
+const val CH_BLACK = -1
 const val CH_MAX_SCORE = 9999
 
 enum class ChessStatus { ACTIVE, CHECK, CHECKMATE, STALEMATE, DRAW }
@@ -28,9 +28,9 @@ data class ChessMove(
     val c: Int,
     val tr: Int,
     val tc: Int,
-    val promo: Int?  = null,
-    val castle: Char? = null,   // 'K' or 'Q'
-    val ep: Boolean  = false,
+    val promo: Int? = null,
+    val castle: Char? = null, // 'K' or 'Q'
+    val ep: Boolean = false,
     val double: Boolean = false,
 )
 
