@@ -1,0 +1,15 @@
+name              = "the-locator"
+main              = "src/index.js"
+compatibility_date = "2024-11-01"
+
+[[kv_namespaces]]
+binding = "LOCATOR_CACHE"
+id      = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[[routes]]
+pattern   = "locator.zyxwonderland.xyz/*"
+zone_name = "zyxwonderland.xyz"
+
+[vars]
+ACS_YEAR    = "2022"
+SITE_ORIGIN = "https://zyxwonderland.xyz"

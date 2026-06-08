@@ -4,21 +4,45 @@ An embeddable, interactive map tool for real-estate professionals. Lets users se
 
 ---
 
+## Deployment
+
+The Locator is deployed as two separate artifacts that mirror the rest of the project:
+
+| Artifact | What it is | Where it goes | How it deploys |
+|---|---|---|---|
+| Frontend | React build output (static HTML/CSS/JS) | GitHub Pages (`zyxwonderland.xyz/locator`) | GitHub Actions → `actions/deploy-pages` |
+| API backend | Cloudflare Worker | `locator.zyxwonderland.xyz` | GitHub Actions → `wrangler-action` |
+
+No separate server to provision, no firewall to configure, no Redis instance to manage. Cloudflare's edge handles TLS, DDoS protection, and global distribution. The same `CLOUDFLARE_API_TOKEN` used for Anonymail deploys the Locator worker.
+
+Two GitHub repository secrets are required before the first deploy:
+- `LOCATOR_MAPBOX_TOKEN` — Mapbox API token (restrict by domain in Mapbox dashboard)
+- `LOCATOR_CENSUS_API_KEY` — Census API key (free at api.census.gov, no billing risk)
+
+To create the KV namespace for caching, run once before first deploy:
+```bash
+cd the-locator/worker
+wrangler kv:namespace create LOCATOR_CACHE
+# copy the returned id into wrangler.toml → kv_namespaces[0].id
+```
+
+---
+
 ## Stack
 
 | Layer | Technology | Reason |
 |---|---|---|
 | Frontend | React 18 + TypeScript | Component model suits the layer-panel/map split; TS gives type safety over GeoJSON structures |
 | Map engine | Mapbox GL JS | WebGL rendering — smooth zoom/pan at any scale; native GeoJSON + vector tile layer support |
-| Backend | Node.js + Express | Lightweight proxy layer; protects API keys, enforces allowlist, caches external calls |
-| Cache | Redis (TTL-based) | Census/EPA data changes infrequently; aggressive caching avoids quota burn |
+| API backend | Cloudflare Worker | Same platform as Anonymail — no extra infrastructure; secrets via `wrangler secret put` |
+| Cache | Cloudflare KV | Replaces Redis — TTL-based, globally distributed, zero infrastructure |
 | Data: geocoding | Mapbox Geocoding API | Returns bounding box per city — used to fly the map and scope layer queries |
 | Data: boundaries | US Census TIGER/Line | Authoritative shapefiles for unified school districts and neighborhood-level boundaries |
 | Data: population | Census ACS 5-year estimates | Tract-level population counts and density — most reliable sub-city population source |
 | Data: Superfund | EPA CERCLIS REST API | Public endpoint returning all NPL/Superfund sites with coordinates and status |
-| Embed delivery | Self-contained `embed.js` | Mounts an iframe into any host `<div>`; wires postMessage bridge; checks domain allowlist |
+| Embed delivery | iframe + postMessage | Host sites embed via `<iframe src="locator.zyxwonderland.xyz/embed?city=...">` |
 
-The app is written entirely in **TypeScript** (compiled to JavaScript) on both the frontend and backend. No Python, Go, or other runtime is needed — Node.js handles the data-proxy layer. Optional offline pre-processing of TIGER/Line shapefiles (converting to GeoJSON / MBTiles) can use a one-time Python + `tippecanoe` pipeline, but this produces static files and is not part of the running app.
+The app is written entirely in **JavaScript / TypeScript** throughout — the Worker uses vanilla JS (no npm runtime dependencies, matching the Anonymail pattern), and the React frontend compiles to static JS.
 
 ---
 
@@ -48,21 +72,11 @@ the-locator/
 │   └── public/
 │       └── embed-frame.html  Stripped shell used when loaded inside iframe
 │
-├── server/                   Node.js + Express backend
-│   ├── routes/
-│   │   ├── search.js         GET /api/search?q=  → Mapbox Geocoding proxy
-│   │   ├── layers.js         GET /api/layers/:name?bbox=  → Census / EPA proxy
-│   │   ├── population.js     GET /api/population?bbox=  → Census ACS proxy
-│   │   └── embed.js          GET /embed.js  → serves bundle with domain check
-│   ├── middleware/
-│   │   ├── allowlist.js      Validates Origin / Referer against registered domains
-│   │   ├── rateLimit.js      Per-IP limits (stricter on /api/search)
-│   │   └── cache.js          Redis wrapper with per-route TTL config
-│   └── config/
-│       ├── domains.js        Registered embed domains
-│       └── ttl.js            Cache TTLs per data source
-│
-└── docs/                     (this file lives in /docs/architecture/)
+└── worker/                   Cloudflare Worker (API backend)
+    ├── src/
+    │   └── index.js          Single fetch handler — all routes, cache, rate limit, CORS
+    ├── wrangler.toml          Worker name, KV binding, route (locator.zyxwonderland.xyz/*)
+    └── package.json          wrangler + vitest dev dependencies only (no runtime deps)
 ```
 
 ---
