@@ -56,6 +56,9 @@ export default function SearchBar({ onSelect }: Props) {
         onSelect({ name: s.name, center: s.center, bbox: s.bbox });
     };
 
+    // Cancel any pending debounce when the component unmounts.
+    useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
+
     // Close on outside click
     const wrapRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
@@ -83,8 +86,8 @@ export default function SearchBar({ onSelect }: Props) {
             </div>
             {open && suggestions.length > 0 && (
                 <ul className="suggestions">
-                    {suggestions.map((s, i) => (
-                        <li key={i} className="suggestion-item" onMouseDown={() => handleSelect(s)}>
+                    {suggestions.map((s) => (
+                        <li key={`${s.center[0]},${s.center[1]}`} className="suggestion-item" onMouseDown={() => handleSelect(s)}>
                             <span className="suggestion-icon">📍</span>
                             <span>{s.name}</span>
                         </li>

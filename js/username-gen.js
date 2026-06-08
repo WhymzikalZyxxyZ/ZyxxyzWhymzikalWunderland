@@ -33,10 +33,10 @@ function genUsername() {
 
 function getOrCreateUsername() {
     try {
-        const stored = sessionStorage.getItem(USERNAME_KEY);
+        const stored = localStorage.getItem(USERNAME_KEY);
         if (stored && USERNAME_RE.test(stored)) return stored;
         const fresh = genUsername();
-        sessionStorage.setItem(USERNAME_KEY, fresh);
+        localStorage.setItem(USERNAME_KEY, fresh);
         return fresh;
     } catch (_) {
         return genUsername();
@@ -45,7 +45,7 @@ function getOrCreateUsername() {
 
 function setUsername(name) {
     if (!USERNAME_RE.test(name)) throw new Error('Invalid username format');
-    try { sessionStorage.setItem(USERNAME_KEY, name); } catch (_) { /* ignore */ }
+    try { localStorage.setItem(USERNAME_KEY, name); } catch (_) { /* ignore */ }
 }
 
 if (typeof module !== 'undefined' && module.exports) {
