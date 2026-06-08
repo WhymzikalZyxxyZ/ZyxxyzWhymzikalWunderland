@@ -343,7 +343,10 @@ func handleCompress(w http.ResponseWriter, r *http.Request) {
 		apiErr(w, "compress failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	gz.Close()
+	if err := gz.Close(); err != nil {
+		apiErr(w, "compress failed: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 	sendDownload(w, out.Bytes(), name+".gz", "application/gzip")
 }
 
