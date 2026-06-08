@@ -1,0 +1,71 @@
+name: .NET Build
+
+on:
+  push:
+    paths:
+      - 'dotnet/**'
+      - '.github/workflows/dotnet.yml'
+  pull_request:
+    paths:
+      - 'dotnet/**'
+      - '.github/workflows/dotnet.yml'
+
+jobs:
+  build-shared:
+    name: Shared library
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - run: dotnet restore dotnet/shared/ZyxxyzShared.csproj
+      - run: dotnet build dotnet/shared/ZyxxyzShared.csproj --no-restore -c Release
+
+  build-api:
+    name: Web API
+    runs-on: ubuntu-latest
+    needs: build-shared
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - run: dotnet restore dotnet/api/ZyxxyzApi.csproj
+      - run: dotnet build dotnet/api/ZyxxyzApi.csproj --no-restore -c Release
+
+  build-realtime:
+    name: SignalR server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - run: dotnet restore dotnet/realtime/ZyxxyzRealtime.csproj
+      - run: dotnet build dotnet/realtime/ZyxxyzRealtime.csproj --no-restore -c Release
+
+  build-blazor:
+    name: Blazor WASM
+    runs-on: ubuntu-latest
+    needs: build-shared
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - run: dotnet restore dotnet/blazor/ZyxxyzBlazor.csproj
+      - run: dotnet build dotnet/blazor/ZyxxyzBlazor.csproj --no-restore -c Release
+
+  build-maui:
+    name: MAUI (Android framework only)
+    runs-on: ubuntu-latest
+    needs: build-shared
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - run: dotnet workload install maui-android --skip-sign-check
+      - run: dotnet restore dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj
+      - run: dotnet build dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj --no-restore -c Release -f net9.0-android

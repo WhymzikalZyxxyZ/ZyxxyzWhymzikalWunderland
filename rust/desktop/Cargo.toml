@@ -1,0 +1,12 @@
+[package]
+name    = "zyxxyz-desktop"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "desktop"
+
+[dependencies]
+zyxxyz-chess = { path = "../shared" }
+eframe       = "0.28"
+egui         = "0.28"
