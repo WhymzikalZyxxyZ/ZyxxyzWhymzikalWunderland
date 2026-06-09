@@ -104,7 +104,8 @@ fun newChessGame(): ChessGame {
 
 fun rawMoves(
     board: Array<IntArray>,
-    r: Int, c: Int,
+    r: Int,
+    c: Int,
     ep: ChessPos?,
     castling: CastlingRights,
 ): List<ChessMove> {
@@ -121,7 +122,8 @@ fun rawMoves(
     fun slide(dr: Int, dc: Int) {
         var s = 1
         while (s < 8) {
-            val nr = r + dr * s; val nc = c + dc * s
+            val nr = r + dr * s
+            val nc = c + dc * s
             if (!inBounds(nr, nc) || owns(board[nr][nc], color)) break
             moves.add(ChessMove(r, c, nr, nc))
             if (board[nr][nc] != 0) break
@@ -161,27 +163,26 @@ fun rawMoves(
             }
         }
         CH_KNIGHT -> {
-            for ((dr, dc) in listOf(-2 to -1, -2 to 1, -1 to -2, -1 to 2,
-                                     1 to -2, 1 to 2, 2 to -1, 2 to 1))
+            for ((dr, dc) in listOf(-2 to -1, -2 to 1, -1 to -2, -1 to 2, 1 to -2, 1 to 2, 2 to -1, 2 to 1)) {
                 if (inBounds(r + dr, c + dc) && !owns(board[r + dr][c + dc], color))
                     push(r + dr, c + dc)
+            }
         }
         CH_BISHOP -> for ((dr, dc) in listOf(-1 to -1, -1 to 1, 1 to -1, 1 to 1)) slide(dr, dc)
         CH_ROOK -> for ((dr, dc) in listOf(-1 to 0, 1 to 0, 0 to -1, 0 to 1)) slide(dr, dc)
-        CH_QUEEN -> for ((dr, dc) in listOf(-1 to -1, -1 to 0, -1 to 1, 0 to -1,
-                                             0 to 1, 1 to -1, 1 to 0, 1 to 1)) slide(dr, dc)
+        CH_QUEEN -> for ((dr, dc) in listOf(-1 to -1, -1 to 0, -1 to 1, 0 to -1, 0 to 1, 1 to -1, 1 to 0, 1 to 1)) slide(dr, dc)
         CH_KING -> {
-            for ((dr, dc) in listOf(-1 to -1, -1 to 0, -1 to 1, 0 to -1,
-                                     0 to 1, 1 to -1, 1 to 0, 1 to 1))
+            for ((dr, dc) in listOf(-1 to -1, -1 to 0, -1 to 1, 0 to -1, 0 to 1, 1 to -1, 1 to 0, 1 to 1)) {
                 if (inBounds(r + dr, c + dc) && !owns(board[r + dr][c + dc], color))
                     push(r + dr, c + dc)
+            }
             val row = if (color == CH_WHITE) 7 else 0
             if (r == row && c == 4) {
-                if ((if (color == CH_WHITE) castling.wK else castling.bK) &&
-                        board[row][5] == 0 && board[row][6] == 0)
+                val canCastleK = if (color == CH_WHITE) castling.wK else castling.bK
+                val canCastleQ = if (color == CH_WHITE) castling.wQ else castling.bQ
+                if (canCastleK && board[row][5] == 0 && board[row][6] == 0)
                     moves.add(ChessMove(r, c, row, 6, castle = 'K'))
-                if ((if (color == CH_WHITE) castling.wQ else castling.bQ) &&
-                        board[row][3] == 0 && board[row][2] == 0 && board[row][1] == 0)
+                if (canCastleQ && board[row][3] == 0 && board[row][2] == 0 && board[row][1] == 0)
                     moves.add(ChessMove(r, c, row, 2, castle = 'Q'))
             }
         }
@@ -194,18 +195,20 @@ fun rawMoves(
 fun isSquareAttacked(board: Array<IntArray>, r: Int, c: Int, byColor: Int): Boolean {
     val pDir = if (byColor == CH_WHITE) 1 else -1
     for (dc in listOf(-1, 1)) {
-        val pr = r + pDir; val pc = c + dc
+        val pr = r + pDir
+        val pc = c + dc
         if (inBounds(pr, pc) && board[pr][pc] == CH_PAWN * byColor) return true
     }
-    for ((dr, dc) in listOf(-2 to -1, -2 to 1, -1 to -2, -1 to 2,
-                              1 to -2, 1 to 2, 2 to -1, 2 to 1)) {
-        val nr = r + dr; val nc = c + dc
+    for ((dr, dc) in listOf(-2 to -1, -2 to 1, -1 to -2, -1 to 2, 1 to -2, 1 to 2, 2 to -1, 2 to 1)) {
+        val nr = r + dr
+        val nc = c + dc
         if (inBounds(nr, nc) && board[nr][nc] == CH_KNIGHT * byColor) return true
     }
     for ((dr, dc) in listOf(-1 to -1, -1 to 1, 1 to -1, 1 to 1)) {
         var s = 1
         while (s < 8) {
-            val nr = r + dr * s; val nc = c + dc * s
+            val nr = r + dr * s
+            val nc = c + dc * s
             if (!inBounds(nr, nc)) break
             val p = board[nr][nc]
             if (p != 0) {
@@ -218,7 +221,8 @@ fun isSquareAttacked(board: Array<IntArray>, r: Int, c: Int, byColor: Int): Bool
     for ((dr, dc) in listOf(-1 to 0, 1 to 0, 0 to -1, 0 to 1)) {
         var s = 1
         while (s < 8) {
-            val nr = r + dr * s; val nc = c + dc * s
+            val nr = r + dr * s
+            val nc = c + dc * s
             if (!inBounds(nr, nc)) break
             val p = board[nr][nc]
             if (p != 0) {
@@ -228,9 +232,9 @@ fun isSquareAttacked(board: Array<IntArray>, r: Int, c: Int, byColor: Int): Bool
             s++
         }
     }
-    for ((dr, dc) in listOf(-1 to -1, -1 to 0, -1 to 1, 0 to -1,
-                              0 to 1, 1 to -1, 1 to 0, 1 to 1)) {
-        val nr = r + dr; val nc = c + dc
+    for ((dr, dc) in listOf(-1 to -1, -1 to 0, -1 to 1, 0 to -1, 0 to 1, 1 to -1, 1 to 0, 1 to 1)) {
+        val nr = r + dr
+        val nc = c + dc
         if (inBounds(nr, nc) && board[nr][nc] == CH_KING * byColor) return true
     }
     return false
@@ -257,17 +261,31 @@ fun applyMove(state: ChessGame, move: ChessMove): ChessGame {
 
     if (move.castle != null) {
         val row = r
-        if (move.castle == 'K') { board[row][5] = board[row][7]; board[row][7] = 0 }
-        else { board[row][3] = board[row][0]; board[row][0] = 0 }
+        if (move.castle == 'K') {
+            board[row][5] = board[row][7]
+            board[row][7] = 0
+        } else {
+            board[row][3] = board[row][0]
+            board[row][0] = 0
+        }
     }
 
     board[tr][tc] = move.promo ?: board[r][c]
     board[r][c] = 0
 
     val castling = state.castling.let {
-        var wK = it.wK; var wQ = it.wQ; var bK = it.bK; var bQ = it.bQ
-        if (r == 7 && c == 4) { wK = false; wQ = false }
-        if (r == 0 && c == 4) { bK = false; bQ = false }
+        var wK = it.wK
+        var wQ = it.wQ
+        var bK = it.bK
+        var bQ = it.bQ
+        if (r == 7 && c == 4) {
+            wK = false
+            wQ = false
+        }
+        if (r == 0 && c == 4) {
+            bK = false
+            bQ = false
+        }
         if (r == 7 && c == 0) wQ = false
         if (r == 7 && c == 7) wK = false
         if (r == 0 && c == 0) bQ = false
@@ -275,8 +293,8 @@ fun applyMove(state: ChessGame, move: ChessMove): ChessGame {
         CastlingRights(wK, wQ, bK, bQ)
     }
 
-    val enPassant = if (move.double)
-        ChessPos(r + if (state.turn == CH_WHITE) -1 else 1, tc) else null
+    val dir = if (state.turn == CH_WHITE) -1 else 1
+    val enPassant = if (move.double) ChessPos(r + dir, tc) else null
 
     val nextTurn = -state.turn
     val halfMove = if (abs(board[r][c]) == CH_PAWN || state.board[tr][tc] != 0) 0 else state.halfMove + 1
@@ -289,9 +307,13 @@ fun applyMove(state: ChessGame, move: ChessMove): ChessGame {
 
 fun getLegalMoves(state: ChessGame): List<ChessMove> {
     val pseudo = mutableListOf<ChessMove>()
-    for (r in 0..7) for (c in 0..7)
-        if (owns(state.board[r][c], state.turn))
-            pseudo.addAll(rawMoves(state.board, r, c, state.enPassant, state.castling))
+    for (r in 0..7) {
+        for (c in 0..7) {
+            if (owns(state.board[r][c], state.turn)) {
+                pseudo.addAll(rawMoves(state.board, r, c, state.enPassant, state.castling))
+            }
+        }
+    }
 
     return pseudo.filter { m ->
         val next = applyMove(state, m)
@@ -300,7 +322,8 @@ fun getLegalMoves(state: ChessGame): List<ChessMove> {
             val row = m.r
             val passTc = if (m.castle == 'K') 5 else 3
             val tmp = state.copyBoard()
-            tmp[row][passTc] = tmp[row][4]; tmp[row][4] = 0
+            tmp[row][passTc] = tmp[row][4]
+            tmp[row][4] = 0
             if (isInCheck(tmp, state.turn)) return@filter false
             if (isInCheck(state.board, state.turn)) return@filter false
         }
@@ -324,17 +347,19 @@ fun updateStatus(state: ChessGame): ChessGame {
 
 fun evaluateBoard(board: Array<IntArray>): Int {
     var score = 0
-    for (r in 0..7) for (c in 0..7) {
-        val p = board[r][c]
-        if (p == 0) continue
-        val color = colorOf(p)
-        val type = abs(p)
-        val table = PST[type]
-        val pst = if (table != null) {
-            val row = if (color == CH_WHITE) r else 7 - r
-            color * table[row][c]
-        } else 0
-        score += color * MATERIAL[type] + pst
+    for (r in 0..7) {
+        for (c in 0..7) {
+            val p = board[r][c]
+            if (p == 0) continue
+            val color = colorOf(p)
+            val type = abs(p)
+            val table = PST[type]
+            val pst = if (table != null) {
+                val row = if (color == CH_WHITE) r else 7 - r
+                color * table[row][c]
+            } else 0
+            score += color * MATERIAL[type] + pst
+        }
     }
     return score
 }
@@ -366,7 +391,8 @@ private fun minimax(
         return evaluateBoard(state.board)
     }
     val ordered = orderMoves(state.board, legalMoves)
-    var a = alpha; var b = beta
+    var a = alpha
+    var b = beta
     return if (maximizing) {
         var best = Int.MIN_VALUE
         for (m in ordered) {
@@ -401,8 +427,10 @@ fun getChessAIMove(state: ChessGame, difficulty: Int): ChessMove? {
 
     for (m in ordered) {
         val s = minimax(applyMove(state, m), depth - 1, Int.MIN_VALUE, Int.MAX_VALUE, !maximizing)
-        if (if (maximizing) s > bestScore else s < bestScore) {
-            bestScore = s; bestMove = m
+        val improved = if (maximizing) s > bestScore else s < bestScore
+        if (improved) {
+            bestScore = s
+            bestMove = m
         }
     }
     return bestMove

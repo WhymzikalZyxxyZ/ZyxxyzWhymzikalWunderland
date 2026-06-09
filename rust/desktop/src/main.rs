@@ -19,10 +19,10 @@ fn glyph(p: i8) -> &'static str {
 }
 
 struct App {
-    game: chess::Game,
+    game: chess::ChessGame,
     sel: Option<(usize, usize)>,
     thinking: bool,
-    ai_result: Arc<Mutex<Option<chess::Move>>>,
+    ai_result: Arc<Mutex<Option<chess::ChessMove>>>,
 }
 
 impl Default for App {

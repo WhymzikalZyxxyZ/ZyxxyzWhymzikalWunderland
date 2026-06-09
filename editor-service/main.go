@@ -17,8 +17,10 @@ import (
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 )
 
-const maxFileSize  = 50 << 20  // 50 MB per file
-const maxTotalSize = 150 << 20 // 150 MB multipart total
+const (
+	maxFileSize  = 50 << 20  // 50 MB per file
+	maxTotalSize = 150 << 20 // 150 MB total multipart
+)
 
 func main() {
 	port := os.Getenv("PORT")
@@ -27,14 +29,16 @@ func main() {
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
-		w.Write([]byte("ok"))
+		if _, err := w.Write([]byte("ok")); err != nil {
+			log.Printf("health: write: %v", err)
+		}
 	})
-	mux.HandleFunc("/api/pdf/merge",   withCORS(handleMerge))
+	mux.HandleFunc("/api/pdf/merge", withCORS(handleMerge))
 	mux.HandleFunc("/api/pdf/extract", withCORS(handleExtract))
-	mux.HandleFunc("/api/pdf/remove",  withCORS(handleRemove))
-	mux.HandleFunc("/api/pdf/rotate",  withCORS(handleRotate))
-	mux.HandleFunc("/api/compress",    withCORS(handleCompress))
-	mux.HandleFunc("/api/zip",         withCORS(handleZip))
+	mux.HandleFunc("/api/pdf/remove", withCORS(handleRemove))
+	mux.HandleFunc("/api/pdf/rotate", withCORS(handleRotate))
+	mux.HandleFunc("/api/compress", withCORS(handleCompress))
+	mux.HandleFunc("/api/zip", withCORS(handleZip))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		setCORS(w)
 		if r.Method == http.MethodOptions {
@@ -337,7 +341,11 @@ func handleCompress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var out bytes.Buffer
-	gz, _ := gzip.NewWriterLevel(&out, gzip.BestCompression)
+	gz, err := gzip.NewWriterLevel(&out, gzip.BestCompression)
+	if err != nil {
+		apiErr(w, "compress failed: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 	gz.Name = name
 	if _, err := gz.Write(data); err != nil {
 		apiErr(w, "compress failed: "+err.Error(), http.StatusInternalServerError)

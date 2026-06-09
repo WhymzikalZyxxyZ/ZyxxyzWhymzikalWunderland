@@ -47,7 +47,7 @@ class StatusViewModel(
             val sparklines = ids.associateWith { id ->
                 when (val r = repository.getSparkline(id)) {
                     is ApiResult.Success -> r.data
-                    is ApiResult.Error   -> emptyList()
+                    is ApiResult.Error -> emptyList()
                 }
             }
             _ui.update { it.copy(sparklines = sparklines) }
