@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'wunderland-v4';
+const CACHE_NAME = 'wunderland-v5';
 
 // Static assets to pre-cache on install
 const PRECACHE = [
@@ -60,13 +60,15 @@ self.addEventListener('fetch', e => {
     const url = new URL(request.url);
     if (url.origin !== self.location.origin) return;
 
-    // HTML: network-first (always fresh navigation)
+    // HTML: network-first (always fresh navigation); only cache 2xx responses
     if (request.headers.get('accept')?.includes('text/html')) {
         e.respondWith(
             fetch(request)
                 .then(res => {
-                    const clone = res.clone();
-                    caches.open(CACHE_NAME).then(c => c.put(request, clone));
+                    if (res.ok) {
+                        const clone = res.clone();
+                        caches.open(CACHE_NAME).then(c => c.put(request, clone));
+                    }
                     return res;
                 })
                 .catch(() => caches.match(request))

@@ -4,6 +4,7 @@
 const ALLOWED_ORIGINS = new Set([
     'https://zyxwonderland.xyz',
     'https://www.zyxwonderland.xyz',
+    'https://locator.zyxwonderland.xyz',
 ]);
 
 function corsHeaders(origin) {
@@ -289,7 +290,13 @@ export default {
         } else if (path === '/api/population') {
             response = await handlePopulation(request, env, ip);
         } else {
-            response = err('Not found', 404);
+            // Serve the built React SPA for all other routes
+            response = await env.ASSETS.fetch(request);
+            // Strip X-Frame-Options so the app can be embedded via iframe
+            const r = new Response(response.body, response);
+            r.headers.delete('X-Frame-Options');
+            r.headers.set('Content-Security-Policy', "frame-ancestors 'self' https://zyxwonderland.xyz https://*.zyxwonderland.xyz");
+            return r;
         }
 
         // Attach CORS headers to every response

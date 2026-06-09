@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Locator — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <style>
+        .locator-page {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - var(--navbar-height, 56px));
+        }
+
+        .locator-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 20px;
+            background: var(--surface, #1e1e2e);
+            border-bottom: 1px solid rgba(244,162,97,0.15);
+            flex-shrink: 0;
+            gap: 12px;
+        }
+
+        .locator-bar-title {
+            font-family: Papyrus, fantasy;
+            font-size: 0.95em;
+            font-weight: 700;
+            color: #f4a261;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .locator-bar-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .locator-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.82em;
+            font-family: 'Courier New', monospace;
+            text-decoration: none;
+            transition: background 0.15s, border-color 0.15s;
+            white-space: nowrap;
+        }
+
+        .locator-btn-outline {
+            border: 1px solid rgba(244,162,97,0.4);
+            color: #f4a261;
+            background: transparent;
+        }
+        .locator-btn-outline:hover { background: rgba(244,162,97,0.1); border-color: #f4a261; }
+
+        .locator-btn-fill {
+            background: #f4a261;
+            color: #111;
+            border: 1px solid #f4a261;
+            font-weight: bold;
+        }
+        .locator-btn-fill:hover { background: #e76f51; border-color: #e76f51; }
+
+        .embed-snippet {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            z-index: 200;
+            background: var(--surface, #1e1e2e);
+            border: 1px solid rgba(244,162,97,0.3);
+            border-radius: 8px;
+            padding: 14px 16px;
+            width: 380px;
+            max-width: 90vw;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+        .embed-snippet.open { display: block; }
+        .embed-snippet p {
+            font-size: 0.8em;
+            color: #8fa8d0;
+            margin-bottom: 8px;
+        }
+        .embed-snippet code {
+            display: block;
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
+            padding: 10px 12px;
+            font-size: 0.78em;
+            color: #c9d1d9;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-bottom: 10px;
+            cursor: text;
+            user-select: all;
+        }
+        .embed-copy-btn {
+            padding: 5px 12px;
+            background: rgba(244,162,97,0.15);
+            border: 1px solid rgba(244,162,97,0.4);
+            border-radius: 5px;
+            color: #f4a261;
+            font-size: 0.8em;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .embed-copy-btn:hover { background: rgba(244,162,97,0.25); }
+
+        .embed-wrap { position: relative; }
+
+        .locator-frame {
+            flex: 1;
+            width: 100%;
+            border: none;
+            display: block;
+            background: #0d1117;
+        }
+
+        .locator-offline {
+            display: none;
+            flex: 1;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+            padding: 40px;
+            text-align: center;
+        }
+        .locator-offline.visible { display: flex; }
+        .locator-offline p { color: #8fa8d0; font-size: 0.9em; max-width: 420px; }
+        .locator-offline a { color: #f4a261; }
+    </style>
+</head>
+<body class="wunderBody">
+<div class="navbar"></div>
+
+<div class="locator-page" id="locator-page">
+
+    <div class="locator-bar">
+        <span class="locator-bar-title">📍 The Locator</span>
+        <div class="locator-bar-actions">
+            <div class="embed-wrap">
+                <button class="locator-btn locator-btn-outline" id="embed-toggle-btn" type="button">&lt;/&gt; Embed</button>
+                <div class="embed-snippet" id="embed-snippet">
+                    <p>Paste this snippet to embed The Locator on any webpage:</p>
+                    <code id="embed-code">&lt;iframe
+  src="https://locator.zyxwonderland.xyz?embed=1"
+  width="100%"
+  height="600"
+  style="border:none;border-radius:8px;"
+  title="The Locator"
+  loading="lazy"
+  allow="geolocation"&gt;
+&lt;/iframe&gt;</code>
+                    <button class="embed-copy-btn" id="copy-snippet-btn" type="button">Copy snippet</button>
+                </div>
+            </div>
+            <a href="https://locator.zyxwonderland.xyz" target="_blank" rel="noopener noreferrer" class="locator-btn locator-btn-fill">Open full app ↗</a>
+        </div>
+    </div>
+
+    <iframe
+        id="locator-frame"
+        class="locator-frame"
+        src="https://locator.zyxwonderland.xyz?embed=1"
+        title="The Locator — interactive geospatial explorer"
+        allow="geolocation"
+        loading="lazy">
+    </iframe>
+
+    <div class="locator-offline" id="locator-offline">
+        <p>The Locator app could not be loaded.<br>
+           You can open it directly at <a href="https://locator.zyxwonderland.xyz" target="_blank" rel="noopener noreferrer">locator.zyxwonderland.xyz</a>.</p>
+        <a href="https://locator.zyxwonderland.xyz" target="_blank" rel="noopener noreferrer" class="locator-btn locator-btn-fill">Open The Locator ↗</a>
+    </div>
+
+</div>
+
+<script>
+(function () {
+    const frame   = document.getElementById('locator-frame');
+    const offline = document.getElementById('locator-offline');
+    const toggleBtn  = document.getElementById('embed-toggle-btn');
+    const snippet    = document.getElementById('embed-snippet');
+    const copyBtn    = document.getElementById('copy-snippet-btn');
+    const embedCode  = document.getElementById('embed-code');
+
+    // Show fallback if iframe fails to load within 12s
+    let loadTimer = setTimeout(() => {
+        frame.style.display = 'none';
+        offline.classList.add('visible');
+    }, 12000);
+
+    frame.addEventListener('load', () => clearTimeout(loadTimer));
+
+    // Embed snippet toggle
+    toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        snippet.classList.toggle('open');
+    });
+    document.addEventListener('click', (e) => {
+        if (!snippet.contains(e.target) && e.target !== toggleBtn) {
+            snippet.classList.remove('open');
+        }
+    });
+
+    // Copy snippet
+    copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(embedCode.textContent.trim()).then(() => {
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => { copyBtn.textContent = 'Copy snippet'; }, 2000);
+        }).catch(() => {
+            embedCode.focus();
+            document.execCommand('selectAll');
+        });
+    });
+})();
+</script>
+</body>
+</html>
