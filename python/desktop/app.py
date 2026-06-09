@@ -12,7 +12,7 @@ from tkinter import messagebox, ttk
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
 
 from chess_engine import (  # noqa: E402
-    ChessGame, ChessMove, ChessStatus,
+    ChessGame, ChessStatus,
     new_game, apply_move, get_ai_move,
 )
 
@@ -167,7 +167,8 @@ class StatusPanel(tk.Frame):
                 data = json.loads(r.read())
             self.after(0, lambda: self._update(data, ok=True))
         except Exception as e:
-            self.after(0, lambda: self.status_var.set(f"Unreachable: {e}"))
+            msg = str(e)
+            self.after(0, lambda: self.status_var.set(f"Unreachable: {msg}"))
 
     def _update(self, data, ok):
         self.tree.delete(*self.tree.get_children())

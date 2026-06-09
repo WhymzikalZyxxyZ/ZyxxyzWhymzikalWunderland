@@ -114,7 +114,7 @@ def _in(r, c):
 # ── Move generation ──────────────────────────────────────────────────────────
 
 def _pawn_moves(board, r, c, turn, ep_r, ep_c):
-    moves, d = [], -turn
+    d = -turn
     start, promo = (6, 0) if turn == 1 else (1, 7)
     if _in(r+d, c) and board[r+d][c] == 0:
         if r+d == promo:
