@@ -50,12 +50,12 @@ data class ChessGame(
         if (this === other) return true
         if (other !is ChessGame) return false
         return turn == other.turn &&
-               castling == other.castling &&
-               enPassant == other.enPassant &&
-               halfMove == other.halfMove &&
-               fullMove == other.fullMove &&
-               status == other.status &&
-               board.indices.all { r -> board[r].contentEquals(other.board[r]) }
+            castling == other.castling &&
+            enPassant == other.enPassant &&
+            halfMove == other.halfMove &&
+            fullMove == other.fullMove &&
+            status == other.status &&
+            board.indices.all { r -> board[r].contentEquals(other.board[r]) }
     }
 
     override fun hashCode(): Int {

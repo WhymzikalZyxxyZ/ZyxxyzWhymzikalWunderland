@@ -67,7 +67,7 @@ public class ChessStateService
         StatusText = "AI thinking…";
         Notify();
 
-        var aiMove = await Task.Run(() => ChessEngine.GetAIMove(Game));
+        var aiMove = await Task.Run(() => ChessEngine.GetAIMove(Game, 5));
         if (aiMove is not null)
             Game = ChessEngine.ApplyMove(Game, aiMove);
 

@@ -51,8 +51,8 @@ private let PST_K = [-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40
   -30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,
   -20,-30,-30,-40,-40,-30,-30,-20,-10,-20,-20,-20,-20,-20,-20,-10,
    20,20,0,0,0,0,20,20, 20,30,10,0,0,10,30,20 ]
-private let PST: [Int:[Int]] = [P:PST_P,N:PST_N,B:PST_B,R:PST_R,Q:PST_Q,K:PST_K]
-private let VAL: [Int:Int] = [P:100,N:320,B:330,R:500,Q:900,K:20000]
+private let PST: [Int: [Int]] = [P: PST_P, N: PST_N, B: PST_B, R: PST_R, Q: PST_Q, K: PST_K]
+private let VAL: [Int: Int] = [P: 100, N: 320, B: 330, R: 500, Q: 900, K: 20000]
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 private func inb(_ r: Int,_ c: Int) -> Bool { r >= 0 && r < 8 && c >= 0 && c < 8 }
@@ -60,11 +60,11 @@ private func inb(_ r: Int,_ c: Int) -> Bool { r >= 0 && r < 8 && c >= 0 && c < 8
 private func attacked(_ b: [[Int]],_ r: Int,_ c: Int, by: Int) -> Bool {
     for (dr,dc) in [(1,0),(-1,0),(0,1),(0,-1)] {
         var (tr,tc)=(r+dr,c+dc)
-        while inb(tr,tc) { let p=b[tr][tc]; if p==0{tr+=dr;tc+=dc;continue}; if p==R*by||p==Q*by{return true}; break }
+        while inb(tr,tc) { let p=b[tr][tc]; if p==0 {tr+=dr;tc+=dc;continue}; if p==R*by||p==Q*by {return true}; break }
     }
     for (dr,dc) in [(1,1),(1,-1),(-1,1),(-1,-1)] {
         var (tr,tc)=(r+dr,c+dc)
-        while inb(tr,tc) { let p=b[tr][tc]; if p==0{tr+=dr;tc+=dc;continue}; if p==B*by||p==Q*by{return true}; break }
+        while inb(tr,tc) { let p=b[tr][tc]; if p==0 {tr+=dr;tc+=dc;continue}; if p==B*by||p==Q*by {return true}; break }
     }
     for (dr,dc) in [(-2,-1),(-2,1),(-1,-2),(-1,2),(1,-2),(1,2),(2,-1),(2,1)] {
         if inb(r+dr,c+dc)&&b[r+dr][c+dc]==N*by { return true }

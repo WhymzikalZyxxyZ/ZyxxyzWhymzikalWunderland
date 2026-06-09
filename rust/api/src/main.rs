@@ -1,5 +1,5 @@
 // Rust REST API — Axum. Mirrors Python Flask and dotnet/api.
-use axum::{extract::Query, routing::{get, post}, Json, Router, Extension, middleware};
+use axum::{extract::Query, routing::{get, post}, Json, Router, Extension};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::{Arc, Mutex}, time::{SystemTime, UNIX_EPOCH}};
 use tokio::net::TcpListener;
