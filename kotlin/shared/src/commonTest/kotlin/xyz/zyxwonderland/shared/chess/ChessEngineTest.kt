@@ -17,7 +17,8 @@ class ChessEngineTest {
 
     @Test fun `newChessGame board has correct piece counts`() {
         val board = newChessGame().board
-        var whitePawns = 0; var blackPawns = 0
+        var whitePawns = 0
+        var blackPawns = 0
         for (r in 0..7) for (c in 0..7) {
             if (board[r][c] == CH_PAWN) whitePawns++
             if (board[r][c] == -CH_PAWN) blackPawns++
@@ -28,7 +29,10 @@ class ChessEngineTest {
 
     @Test fun `newChessGame all castling rights set`() {
         val c = newChessGame().castling
-        assertTrue(c.wK); assertTrue(c.wQ); assertTrue(c.bK); assertTrue(c.bQ)
+        assertTrue(c.wK)
+        assertTrue(c.wQ)
+        assertTrue(c.bK)
+        assertTrue(c.bQ)
     }
 
     @Test fun `newChessGame has no en passant`() {
@@ -116,13 +120,15 @@ class ChessEngineTest {
     @Test fun `findKing locates white king at e1`() {
         val k = findKing(newChessGame().board, CH_WHITE)
         assertNotNull(k)
-        assertEquals(7, k.r); assertEquals(4, k.c)
+        assertEquals(7, k.r)
+        assertEquals(4, k.c)
     }
 
     @Test fun `findKing locates black king at e8`() {
         val k = findKing(newChessGame().board, CH_BLACK)
         assertNotNull(k)
-        assertEquals(0, k.r); assertEquals(4, k.c)
+        assertEquals(0, k.r)
+        assertEquals(4, k.c)
     }
 
     // ── updateStatus ──────────────────────────────────────────────────────────
@@ -181,7 +187,8 @@ class ChessEngineTest {
         val state = newChessGame()
         // Manually clear squares so king can move
         val board = state.copyBoard()
-        board[7][5] = 0; board[7][6] = 0  // clear f1 and g1
+        board[7][5] = 0
+        board[7][6] = 0 // clear f1 and g1
         val s2 = state.copy(board = board)
         val kMove = getLegalMoves(s2).firstOrNull { it.r == 7 && it.c == 4 }
         assertNotNull(kMove)

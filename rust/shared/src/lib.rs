@@ -319,7 +319,7 @@ pub fn apply_move(g: &ChessGame, m: &ChessMove) -> ChessGame {
         if m.r==7&&m.c==7 { w_k=false; } if m.r==7&&m.c==0 { w_q=false; }
         if m.r==0&&m.c==7 { b_k=false; } if m.r==0&&m.c==0 { b_q=false; }
     }
-    if m.double_push { ep_r = ((m.r as i8 + m.tr as i8) / 2); ep_c = m.c as i8; }
+    if m.double_push { ep_r = (m.r as i8 + m.tr as i8) / 2; ep_c = m.c as i8; }
     let next_turn = -g.turn;
     let legal_moves = get_legal_moves(&board, next_turn, w_k, w_q, b_k, b_q, ep_r, ep_c);
     let status = update_status(&board, next_turn, &legal_moves);

@@ -1,12 +1,18 @@
 """Python desktop app — Tkinter chess + status monitor."""
 from __future__ import annotations
-import sys, os, threading, time, urllib.request, json
+import json
+import os
+import sys
+import threading
+import time
+import tkinter as tk
+import urllib.request
+from tkinter import messagebox, ttk
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
 
-import tkinter as tk
-from tkinter import ttk, messagebox
-from chess_engine import (
-    ChessGame, ChessMove, ChessStatus,
+from chess_engine import (  # noqa: E402
+    ChessGame, ChessStatus,
     new_game, apply_move, get_ai_move,
 )
 
@@ -39,7 +45,6 @@ class ChessBoard(tk.Canvas):
 
     def _draw(self):
         self.delete("all")
-        lm_set = {(m.r, m.c, m.tr, m.tc) for m in self.game.legal_moves}
         highlights = set()
         if self.sel:
             for m in self.game.legal_moves:
@@ -162,7 +167,8 @@ class StatusPanel(tk.Frame):
                 data = json.loads(r.read())
             self.after(0, lambda: self._update(data, ok=True))
         except Exception as e:
-            self.after(0, lambda: self.status_var.set(f"Unreachable: {e}"))
+            msg = str(e)
+            self.after(0, lambda: self.status_var.set(f"Unreachable: {msg}"))
 
     def _update(self, data, ok):
         self.tree.delete(*self.tree.get_children())
