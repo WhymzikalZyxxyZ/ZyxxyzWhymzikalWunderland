@@ -34,6 +34,7 @@
         '/virtuoso/virtuoso':                  { desc: 'Art, animations, comics, doodles, crafts, and stories — made by hand and pixel.' },
         '/virtuoso/drawings/doodles':          { desc: 'Browser-based drawing app inspired by Paint.NET — layers, tools, and history.' },
         '/technologist/apps':                  { desc: 'Apps, tools, and deep dives into computers, software, and the way things work.' },
+        '/technologist/locator':               { desc: 'Interactive geospatial explorer — search any U.S. city and overlay neighborhoods, schools, and more.' },
         '/community/forum':                    { desc: 'Drop in, say hello, leave a suggestion, or just lurk. All welcome.' },
         '/community/guestbook':                { desc: 'Sign the guestbook and leave your mark on ZYXXYZ\'s Whymzykal Wunderland.' },
         '/blog':                               { desc: 'Updates and behind-the-scenes from ZYXXYZ\'s Whymzykal Wunderland.' },
@@ -150,7 +151,7 @@ const NAV_STRUCTURE = [
         ],
     },
     { label: 'The Lawyer', href: '/technologist/lawyer' },
-    { label: 'The Locator', href: 'https://locator.zyxwonderland.xyz', target: '_blank' },
+    { label: 'The Locator', href: '/technologist/locator' },
     { label: 'Anonymail', href: 'https://mail.zyxwonderland.xyz', target: '_blank' },
     {
         label: 'Community', href: '/community/forum',

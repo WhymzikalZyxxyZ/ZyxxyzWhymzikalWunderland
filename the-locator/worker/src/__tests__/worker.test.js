@@ -24,6 +24,12 @@ function makeEnv({ cacheGet = null, cacheSet = vi.fn(), mapboxToken = '', census
             get: vi.fn(async () => cacheGet !== null ? JSON.stringify(cacheGet) : null),
             put: cacheSet,
         },
+        ASSETS: {
+            fetch: vi.fn(async () => new Response('<html><body>app</body></html>', {
+                status:  200,
+                headers: { 'Content-Type': 'text/html' },
+            })),
+        },
         MAPBOX_TOKEN:    mapboxToken,
         CENSUS_API_KEY:  censusKey,
         ACS_YEAR:        '2022',
@@ -90,12 +96,33 @@ describe('Security headers', () => {
     });
 });
 
-// ── 404 ───────────────────────────────────────────────────────────────────────
+// ── Non-API routes → SPA assets ───────────────────────────────────────────────
 
-describe('Unknown routes', () => {
-    it('returns 404 for unknown path', async () => {
-        const res = await worker.fetch(req('/api/unknown'), makeEnv());
-        expect(res.status).toBe(404);
+describe('Non-API routes', () => {
+    it('delegates to ASSETS for root path', async () => {
+        const env = makeEnv();
+        const res = await worker.fetch(req('/'), env);
+        expect(env.ASSETS.fetch).toHaveBeenCalled();
+        expect(res.status).toBe(200);
+    });
+
+    it('delegates to ASSETS for unknown /api/ sub-path', async () => {
+        const env = makeEnv();
+        const res = await worker.fetch(req('/api/unknown'), env);
+        expect(env.ASSETS.fetch).toHaveBeenCalled();
+        expect(res.status).toBe(200);
+    });
+
+    it('strips X-Frame-Options from SPA response to allow embedding', async () => {
+        const env = makeEnv();
+        const res = await worker.fetch(req('/'), env);
+        expect(res.headers.get('X-Frame-Options')).toBeNull();
+    });
+
+    it('sets frame-ancestors CSP on SPA response', async () => {
+        const env = makeEnv();
+        const res = await worker.fetch(req('/'), env);
+        expect(res.headers.get('Content-Security-Policy')).toContain('frame-ancestors');
     });
 });
 
