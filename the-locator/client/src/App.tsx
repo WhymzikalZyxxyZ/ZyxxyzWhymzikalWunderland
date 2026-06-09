@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import Map        from './components/Map';
 import SearchBar  from './components/SearchBar';
 import LayerPanel from './components/LayerPanel';
@@ -21,6 +21,11 @@ export default function App() {
     const [activeLayers,  setActiveLayers]  = useState<Set<LayerName>>(new Set());
     const [activeFeature, setActiveFeature] = useState<ActiveFeature | null>(null);
 
+    const isEmbed = useMemo(
+        () => new URLSearchParams(window.location.search).get('embed') === '1',
+        []
+    );
+
     const toggleLayer = useCallback((layer: LayerName) => {
         setActiveLayers(prev => {
             const next = new Set(prev);
@@ -31,13 +36,15 @@ export default function App() {
     }, []);
 
     return (
-        <div className="app">
+        <div className={`app${isEmbed ? ' app--embed' : ''}`}>
             <aside className="sidebar">
-                <div className="sidebar-header">
-                    <span className="logo-pin">📍</span>
-                    <h1>The Locator</h1>
-                    <p className="tagline">Real estate district explorer</p>
-                </div>
+                {!isEmbed && (
+                    <div className="sidebar-header">
+                        <span className="logo-pin">📍</span>
+                        <h1>The Locator</h1>
+                        <p className="tagline">Real estate district explorer</p>
+                    </div>
+                )}
                 <SearchBar onSelect={setCity} />
                 <LayerPanel activeLayers={activeLayers} onToggle={toggleLayer} />
                 {activeFeature && (

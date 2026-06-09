@@ -10,6 +10,10 @@ id      = "f66140dfbcec4118a44591cc9467cf8e"
 pattern   = "locator.zyxwonderland.xyz/*"
 zone_name = "zyxwonderland.xyz"
 
+[assets]
+directory          = "../client/dist"
+not_found_handling = "single-page-application"
+
 [vars]
 ACS_YEAR    = "2022"
 SITE_ORIGIN = "https://zyxwonderland.xyz"
