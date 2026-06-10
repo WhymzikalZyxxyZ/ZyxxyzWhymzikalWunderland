@@ -71,7 +71,7 @@ const US_BOUNDS = { minLng: -180, minLat: 18, maxLng: -66, maxLat: 72 };
 
 function sanitizeQuery(raw) {
     if (typeof raw !== 'string') return null;
-    return raw.trim().slice(0, 100).replace(/[^a-zA-Z0-9 ,.\-]/g, '') || null;
+    return raw.trim().slice(0, 100).replace(/[^a-zA-Z0-9 ,.-]/g, '') || null;
 }
 
 function parseBbox(raw) {
@@ -187,11 +187,17 @@ async function handlePopulation(request, env, ip) {
 
 // ── External data fetchers ────────────────────────────────────────────────────
 
+const CENSUS_LAYER_URLS = {
+    neighborhoods: 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/0/query',
+    schools:       'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/School_Districts/MapServer/0/query',
+};
+
 async function fetchCensusLayer(name, [minLng, minLat, maxLng, maxLat]) {
-    const url = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/0/query'
+    const base = CENSUS_LAYER_URLS[name] || CENSUS_LAYER_URLS.neighborhoods;
+    const url  = base
         + `?geometry=${minLng},${minLat},${maxLng},${maxLat}`
         + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
-        + '&outFields=GEOID,NAME,STUSAB&f=geojson';
+        + '&outFields=*&resultRecordCount=500&f=geojson';
     const r = await fetch(url);
     if (!r.ok) throw new Error('Census error');
     return r.json();
@@ -226,23 +232,39 @@ async function fetchPopulation([minLng, minLat, maxLng, maxLat], env) {
     const year   = env.ACS_YEAR || '2022';
     const apiKey = env.CENSUS_API_KEY || '';
 
-    const acsUrl = `https://api.census.gov/data/${year}/acs/acs5`
-        + `?get=B01003_001E,NAME&for=tract:*&in=state:*&key=${apiKey}`;
+    // Fetch census tracts in the bbox first
     const geoUrl = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Tracts_Blocks/MapServer/0/query'
         + `?geometry=${minLng},${minLat},${maxLng},${maxLat}`
         + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
-        + '&outFields=GEOID,AREALAND&returnGeometry=true&f=geojson';
+        + '&outFields=GEOID,AREALAND&returnGeometry=true&resultRecordCount=500&f=geojson';
 
-    const [acsRes, geoRes] = await Promise.all([fetch(acsUrl), fetch(geoUrl)]);
-    if (!acsRes.ok || !geoRes.ok) throw new Error('Census fetch failed');
+    const geoRes = await fetch(geoUrl);
+    if (!geoRes.ok) throw new Error('Census geo fetch failed');
+    const geoData = await geoRes.json();
 
-    const [acsData, geoData] = await Promise.all([acsRes.json(), geoRes.json()]);
-    const [, ...rows] = acsData;
+    if (!geoData.features?.length) return { type: 'FeatureCollection', features: [] };
 
-    const popByGeoid = new Map(rows.map(row => {
-        const state  = row[2].padStart(2, '0');
-        const county = row[3].padStart(3, '0');
-        const tract  = row[4].padStart(6, '0');
+    // Extract unique state FIPS codes from tract GEOIDs (first 2 chars)
+    const states = [...new Set(
+        geoData.features
+            .map(f => f.properties?.GEOID?.slice(0, 2))
+            .filter(Boolean)
+    )];
+
+    // ACS requires a specific state when querying tracts — fetch each state in parallel
+    const acsRows = (await Promise.all(
+        states.map(state =>
+            fetch(`https://api.census.gov/data/${year}/acs/acs5?get=B01003_001E&for=tract:*&in=state:${state}&key=${apiKey}`)
+                .then(r => r.ok ? r.json() : [])
+                .then(data => (Array.isArray(data) ? data.slice(1) : []))  // drop header row
+                .catch(() => [])
+        )
+    )).flat();
+
+    const popByGeoid = new Map(acsRows.map(row => {
+        const state  = String(row[1]).padStart(2, '0');
+        const county = String(row[2]).padStart(3, '0');
+        const tract  = String(row[3]).padStart(6, '0');
         return [`${state}${county}${tract}`, parseInt(row[0], 10)];
     }));
 
