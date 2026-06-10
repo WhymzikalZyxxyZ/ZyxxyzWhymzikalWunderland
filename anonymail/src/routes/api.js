@@ -12,6 +12,14 @@ const router = express.Router();
 const BOXES    = new Set(['inbox', 'drafts', 'sent']);
 const MAX_FILE = 25 * 1024 * 1024; // 25 MB per attachment
 
+// ── Email validation ──────────────────────────────────────────────────────────
+const EMAIL_RE = /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]{2,}$/;
+
+function validRecipients(str) {
+    if (!str) return true;
+    return str.split(/[,;]/).map(s => s.trim()).filter(Boolean).every(e => EMAIL_RE.test(e));
+}
+
 // MIME types that are never allowed as attachments regardless of claimed type
 const BLOCKED_MIMES = new Set([
     'application/x-msdownload', 'application/x-msdos-program',
@@ -239,6 +247,9 @@ router.post('/send', auth, writeLimit, async (req, res) => {
         const body    = (fields.body    || '').trim();
 
         if (!to) return res.status(400).json({ error: 'Recipient (To) is required' });
+        if (!validRecipients(to) || !validRecipients(cc)) {
+            return res.status(400).json({ error: 'Invalid email address in To or Cc' });
+        }
 
         await sender.sendEmail({ from: req.mb.address, to, cc, subject, body, attachments: validated });
         store.pushToSent(req.mb, { to, cc, subject, body, attachments: validated });

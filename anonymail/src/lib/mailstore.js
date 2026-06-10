@@ -1,6 +1,7 @@
 'use strict';
 
-const sanitizeHtml = require('sanitize-html');
+const { randomInt }  = require('node:crypto');
+const sanitizeHtml   = require('sanitize-html');
 const { encrypt, encryptBuf, decrypt, decryptBuf, randomHex } = require('./crypto');
 
 // ── HTML sanitisation config ───────────────────────────────────────────────────
@@ -80,8 +81,8 @@ function _expire(address, token) {
 
 // ── Address generation ────────────────────────────────────────────────────────
 function generateAddress(domain) {
-    const adj  = ADJS[Math.floor(Math.random() * ADJS.length)];
-    const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
+    const adj  = ADJS[randomInt(ADJS.length)];
+    const noun = NOUNS[randomInt(NOUNS.length)];
     return `${adj}.${noun}.${randomHex(6)}@${domain}`;
 }
 
