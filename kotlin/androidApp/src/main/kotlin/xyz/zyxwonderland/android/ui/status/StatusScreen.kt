@@ -86,24 +86,30 @@ fun StatusScreen(vm: StatusViewModel = viewModel()) {
 }
 
 @Composable
-private fun ServiceCard(svc: ServiceStatus, sparkline: List<SparklinePoint>) {
-    val statusColor = when (svc.ok) {
-        true -> ColorUp
-        false -> ColorDown
-        null -> ColorUnknown
-    }
-    val statusLabel = when (svc.ok) {
-        true -> "Online"
-        false -> "Offline"
-        null -> "Unknown"
-    }
+private fun ServiceCard(
+    svc: ServiceStatus,
+    sparkline: List<SparklinePoint>,
+) {
+    val statusColor =
+        when (svc.ok) {
+            true -> ColorUp
+            false -> ColorDown
+            null -> ColorUnknown
+        }
+    val statusLabel =
+        when (svc.ok) {
+            true -> "Online"
+            false -> "Offline"
+            null -> "Unknown"
+        }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+            ),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -133,7 +139,7 @@ private fun ServiceCard(svc: ServiceStatus, sparkline: List<SparklinePoint>) {
                     Text("${it}ms", color = MaterialTheme.colorScheme.onSurface.copy(0.7f), fontSize = 12.sp)
                 }
                 svc.uptime?.let {
-                    Text("${it}% uptime", color = MaterialTheme.colorScheme.onSurface.copy(0.7f), fontSize = 12.sp)
+                    Text("$it% uptime", color = MaterialTheme.colorScheme.onSurface.copy(0.7f), fontSize = 12.sp)
                 }
             }
 
@@ -149,7 +155,10 @@ private fun ServiceCard(svc: ServiceStatus, sparkline: List<SparklinePoint>) {
 }
 
 @Composable
-private fun SparklineChart(points: List<SparklinePoint>, modifier: Modifier = Modifier) {
+private fun SparklineChart(
+    points: List<SparklinePoint>,
+    modifier: Modifier = Modifier,
+) {
     val upColor = ColorUp
     val downColor = ColorDown
 

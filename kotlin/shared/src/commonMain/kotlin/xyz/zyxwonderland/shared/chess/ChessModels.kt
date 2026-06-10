@@ -21,7 +21,10 @@ data class CastlingRights(
     val bQ: Boolean = true,
 )
 
-data class ChessPos(val r: Int, val c: Int)
+data class ChessPos(
+    val r: Int,
+    val c: Int,
+)
 
 data class ChessMove(
     val r: Int,
