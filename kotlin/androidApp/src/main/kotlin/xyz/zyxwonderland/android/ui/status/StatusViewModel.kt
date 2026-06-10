@@ -21,11 +21,12 @@ data class StatusUiState(
 class StatusViewModel(
     private val repository: StatusRepository = StatusRepository(),
 ) : ViewModel() {
-
     private val _ui = MutableStateFlow(StatusUiState())
     val ui = _ui.asStateFlow()
 
-    init { refresh() }
+    init {
+        refresh()
+    }
 
     fun refresh() {
         viewModelScope.launch {
@@ -35,21 +36,23 @@ class StatusViewModel(
                     _ui.update { it.copy(services = result.data, isLoading = false) }
                     fetchSparklines(result.data.map { it.id })
                 }
-                is ApiResult.Error -> _ui.update {
-                    it.copy(isLoading = false, error = result.message)
-                }
+                is ApiResult.Error ->
+                    _ui.update {
+                        it.copy(isLoading = false, error = result.message)
+                    }
             }
         }
     }
 
     private fun fetchSparklines(ids: List<String>) {
         viewModelScope.launch {
-            val sparklines = ids.associateWith { id ->
-                when (val r = repository.getSparkline(id)) {
-                    is ApiResult.Success -> r.data
-                    is ApiResult.Error -> emptyList()
+            val sparklines =
+                ids.associateWith { id ->
+                    when (val r = repository.getSparkline(id)) {
+                        is ApiResult.Success -> r.data
+                        is ApiResult.Error -> emptyList()
+                    }
                 }
-            }
             _ui.update { it.copy(sparklines = sparklines) }
         }
     }
