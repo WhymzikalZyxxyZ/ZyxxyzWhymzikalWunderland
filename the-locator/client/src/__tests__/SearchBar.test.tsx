@@ -18,7 +18,7 @@ afterEach(() => {
 describe('SearchBar', () => {
     it('renders the search input', () => {
         render(<SearchBar onSelect={vi.fn()} />);
-        expect(screen.getByPlaceholderText('Search city or ZIP code…')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Search address, city or ZIP…')).toBeInTheDocument();
     });
 
     it('shows suggestions after debounce when results returned', async () => {
@@ -33,7 +33,7 @@ describe('SearchBar', () => {
     it('calls onSelect with city data when suggestion is clicked', async () => {
         const onSelect = vi.fn();
         mockFetchWith([
-            { place_name: 'Austin, TX', center: [-97.7, 30.3], bbox: [-97.9, 30.1, -97.5, 30.5] },
+            { place_name: 'Austin, TX', center: [-97.7, 30.3], bbox: [-97.9, 30.1, -97.5, 30.5], place_type: ['place'] },
         ]);
         render(<SearchBar onSelect={onSelect} />);
         fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Austin' } });
@@ -42,6 +42,7 @@ describe('SearchBar', () => {
             name:   'Austin, TX',
             center: [-97.7, 30.3],
             bbox:   [-97.9, 30.1, -97.5, 30.5],
+            zoom:   13,
         });
     }, 5000);
 
@@ -57,13 +58,55 @@ describe('SearchBar', () => {
 
     it('derives bbox from center when feature has no bbox', async () => {
         const onSelect = vi.fn();
-        mockFetchWith([{ place_name: 'Smalltown, KS', center: [-98.0, 38.5] }]);
+        mockFetchWith([{ place_name: 'Smalltown, KS', center: [-98.0, 38.5], place_type: ['place'] }]);
         render(<SearchBar onSelect={onSelect} />);
         fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Small' } });
         fireEvent.mouseDown(await screen.findByText('Smalltown, KS', {}, { timeout: 2000 }));
         expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({
             bbox: [-98.5, 38.0, -97.5, 39.0],
         }));
+    }, 5000);
+
+    it('zooms to street level for address results', async () => {
+        const onSelect = vi.fn();
+        mockFetchWith([{
+            place_name: '123 Main St, Denver, CO',
+            center:     [-104.9, 39.7],
+            place_type: ['address'],
+        }]);
+        render(<SearchBar onSelect={onSelect} />);
+        fireEvent.change(screen.getByRole('textbox'), { target: { value: '123 Main' } });
+        fireEvent.mouseDown(await screen.findByText('123 Main St, Denver, CO', {}, { timeout: 2000 }));
+        expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ zoom: 17 }));
+    }, 5000);
+
+    it('uses tight bbox for address results without a bbox', async () => {
+        const onSelect = vi.fn();
+        mockFetchWith([{
+            place_name: '456 Oak Ave, Austin, TX',
+            center:     [-97.7, 30.3],
+            place_type: ['address'],
+        }]);
+        render(<SearchBar onSelect={onSelect} />);
+        fireEvent.change(screen.getByRole('textbox'), { target: { value: '456 Oak' } });
+        fireEvent.mouseDown(await screen.findByText('456 Oak Ave, Austin, TX', {}, { timeout: 2000 }));
+        expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({
+            bbox: [-97.703, 30.297, -97.697, 30.303],
+        }));
+    }, 5000);
+
+    it('zooms to postcode level for postcode results', async () => {
+        const onSelect = vi.fn();
+        mockFetchWith([{
+            place_name: '80202, Denver, CO',
+            center:     [-104.9, 39.7],
+            bbox:       [-105.0, 39.6, -104.8, 39.8],
+            place_type: ['postcode'],
+        }]);
+        render(<SearchBar onSelect={onSelect} />);
+        fireEvent.change(screen.getByRole('textbox'), { target: { value: '80202' } });
+        fireEvent.mouseDown(await screen.findByText('80202, Denver, CO', {}, { timeout: 2000 }));
+        expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ zoom: 14 }));
     }, 5000);
 
     it('does not search when query is shorter than 2 chars', async () => {
