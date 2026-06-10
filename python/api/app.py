@@ -6,16 +6,21 @@ import hmac
 import json
 import os
 import re
+import secrets
 import time
 from functools import wraps
 from flask import Flask, request, jsonify, abort
 
 app = Flask(__name__)
-SECRET = os.environ.get("JWT_SECRET", "zyxxyz-dev-secret-change-in-prod")
+
+SECRET = os.environ.get("JWT_SECRET")
+if not SECRET:
+    raise RuntimeError("JWT_SECRET environment variable is required")
 
 # ── In-memory store ──────────────────────────────────────────────────────────
-_users:  dict[str, str]         = {}   # username → password_hash
+_users:  dict[str, str]         = {}   # username → scrypt hash
 _scores: list[dict]             = []   # {username, game, value, ts}
+_MAX_SCORES = 10_000
 
 # ── Minimal JWT (HS256, no external deps) ────────────────────────────────────
 
@@ -32,7 +37,10 @@ def _make_token(username: str) -> str:
 
 def _verify_token(token: str) -> str | None:
     try:
-        header, payload, sig = token.split(".")
+        parts = token.split(".")
+        if len(parts) != 3:
+            return None
+        header, payload, sig = parts
         expected = _b64url(hmac.new(SECRET.encode(),
                                      f"{header}.{payload}".encode(),
                                      hashlib.sha256).digest())
@@ -45,8 +53,20 @@ def _verify_token(token: str) -> str | None:
     except Exception:
         return None
 
+# ── Password hashing (scrypt) ────────────────────────────────────────────────
+
 def _hash_pw(pw: str) -> str:
-    return hashlib.sha256(pw.encode()).hexdigest()
+    salt = secrets.token_hex(16)
+    h = hashlib.scrypt(pw.encode(), salt=bytes.fromhex(salt), n=16384, r=8, p=1)
+    return f"{salt}:{h.hex()}"
+
+def _verify_pw(pw: str, stored: str) -> bool:
+    try:
+        salt, hash_hex = stored.split(":", 1)
+        candidate = hashlib.scrypt(pw.encode(), salt=bytes.fromhex(salt), n=16384, r=8, p=1)
+        return hmac.compare_digest(candidate.hex(), hash_hex)
+    except Exception:
+        return False
 
 def require_auth(f):
     @wraps(f)
@@ -90,7 +110,8 @@ def register():
 def login():
     body = request.get_json(silent=True) or {}
     u, p = body.get("username",""), body.get("password","")
-    if _users.get(u) != _hash_pw(p):
+    stored = _users.get(u)
+    if not stored or not _verify_pw(p, stored):
         return jsonify({"error": "Invalid credentials."}), 401
     return jsonify({"token": _make_token(u)})
 
@@ -114,6 +135,8 @@ def submit_score():
         return jsonify({"error": "game (string) and value (int ≥ 0) required."}), 400
     entry = {"username": request.username, "game": game,
              "value": value, "ts": int(time.time())}
+    if len(_scores) >= _MAX_SCORES:
+        _scores.pop(0)
     _scores.append(entry)
     return jsonify(entry), 201
 

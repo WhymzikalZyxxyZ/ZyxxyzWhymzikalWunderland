@@ -4,13 +4,17 @@ import crypto from 'node:crypto';
 
 const app  = express();
 const PORT = Number(process.env.PORT ?? 5060);
-const SECRET = process.env.JWT_SECRET ?? 'zyxxyz-ts-dev-secret';
+
+const _rawSecret = process.env.JWT_SECRET;
+if (!_rawSecret) throw new Error('JWT_SECRET environment variable is required');
+const SECRET: string = _rawSecret;
 
 app.use(express.json());
 
 // ── In-memory store ────────────────────────────────────────────────────────
-const users  = new Map<string, string>();   // username → sha256(password)
+const users  = new Map<string, string>();   // username → scrypt(password)
 const scores: {username:string; game:string; value:number; ts:number}[] = [];
+const MAX_SCORES = 10_000;
 const startTime = Date.now();
 
 // ── Minimal JWT (no deps) ──────────────────────────────────────────────────
@@ -25,16 +29,32 @@ function makeToken(username: string): string {
 
 function verifyToken(token: string): string | null {
     try {
-        const [header, payload, sig] = token.split('.');
+        const parts = token.split('.');
+        if (parts.length !== 3) return null;
+        const [header, payload, sig] = parts;
         const expected = b64url(crypto.createHmac('sha256', SECRET).update(`${header}.${payload}`).digest());
-        if (sig !== expected) return null;
+        if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;
         const data = JSON.parse(Buffer.from(payload, 'base64url').toString());
         if (data.exp < Math.floor(Date.now() / 1000)) return null;
         return data.sub as string;
     } catch { return null; }
 }
 
-function hashPw(pw: string) { return crypto.createHash('sha256').update(pw).digest('hex'); }
+// ── Password hashing (scrypt) ──────────────────────────────────────────────
+function hashPw(pw: string): string {
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = crypto.scryptSync(pw, salt, 64).toString('hex');
+    return `${salt}:${hash}`;
+}
+
+function verifyPw(pw: string, stored: string): boolean {
+    try {
+        const [salt, hash] = stored.split(':');
+        if (!salt || !hash) return false;
+        const candidate = crypto.scryptSync(pw, salt, 64).toString('hex');
+        return crypto.timingSafeEqual(Buffer.from(candidate, 'hex'), Buffer.from(hash, 'hex'));
+    } catch { return false; }
+}
 
 // ── Auth middleware ────────────────────────────────────────────────────────
 function requireAuth(req: Request, res: Response, next: NextFunction) {
@@ -58,7 +78,8 @@ app.post('/api/auth/register', (req, res) => {
 
 app.post('/api/auth/login', (req, res) => {
     const {username='', password=''} = req.body ?? {};
-    if (users.get(username) !== hashPw(password)) { res.status(401).json({error:'Invalid credentials.'}); return; }
+    const stored = users.get(username);
+    if (!stored || !verifyPw(password, stored)) { res.status(401).json({error:'Invalid credentials.'}); return; }
     res.json({token: makeToken(username)});
 });
 
@@ -77,6 +98,7 @@ app.post('/api/scores', requireAuth, (req, res) => {
     const {game='', value} = req.body ?? {};
     if (!game || typeof value !== 'number' || value < 0) { res.status(400).json({error:'game and value (≥0) required.'}); return; }
     const entry = {username: (req as Request & {username:string}).username, game: String(game).slice(0,64), value, ts: Date.now()};
+    if (scores.length >= MAX_SCORES) scores.shift();
     scores.push(entry);
     res.status(201).json(entry);
 });
