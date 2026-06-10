@@ -6,7 +6,7 @@ import SearchBar from '../components/SearchBar';
 // The 350 ms debounce fires for real; waitFor polls until the DOM updates.
 
 function mockFetchWith(features: unknown[]) {
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
         json: async () => ({ features }),
     });
 }
@@ -67,11 +67,11 @@ describe('SearchBar', () => {
     }, 5000);
 
     it('does not search when query is shorter than 2 chars', async () => {
-        global.fetch = vi.fn();
+        globalThis.fetch = vi.fn();
         render(<SearchBar onSelect={vi.fn()} />);
         fireEvent.change(screen.getByRole('textbox'), { target: { value: 'D' } });
         await waitFor(() => {}, { timeout: 700 });
-        expect(global.fetch).not.toHaveBeenCalled();
+        expect(globalThis.fetch).not.toHaveBeenCalled();
     }, 5000);
 
     it('closes suggestions on outside click', async () => {
@@ -96,21 +96,21 @@ describe('SearchBar', () => {
     }, 5000);
 
     it('clears suggestions on fetch error', async () => {
-        global.fetch = vi.fn().mockRejectedValue(new Error('network error'));
+        globalThis.fetch = vi.fn().mockRejectedValue(new Error('network error'));
         render(<SearchBar onSelect={vi.fn()} />);
         fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Denver' } });
         // Wait for debounce to fire so the timer is consumed within this test.
-        await waitFor(() => expect(global.fetch).toHaveBeenCalled(), { timeout: 2000 });
+        await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled(), { timeout: 2000 });
         expect(screen.queryByRole('list')).not.toBeInTheDocument();
     }, 5000);
 
     it('debounces rapid typing — only one fetch call', async () => {
-        global.fetch = vi.fn().mockResolvedValue({ json: async () => ({ features: [] }) });
+        globalThis.fetch = vi.fn().mockResolvedValue({ json: async () => ({ features: [] }) });
         render(<SearchBar onSelect={vi.fn()} />);
         const input = screen.getByRole('textbox');
         fireEvent.change(input, { target: { value: 'D' } });
         fireEvent.change(input, { target: { value: 'De' } });
         fireEvent.change(input, { target: { value: 'Den' } });
-        await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1), { timeout: 2000 });
+        await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledTimes(1), { timeout: 2000 });
     }, 5000);
 });
