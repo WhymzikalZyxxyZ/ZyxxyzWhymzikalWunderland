@@ -5,7 +5,7 @@
   "scripts": {
     "lint:js": "eslint \"js/**/*.js\" \"tests/**/*.js\" \"anonymail/worker/public/js/**/*.js\"",
     "lint:css": "stylelint \"css/*.css\" \"anonymail/worker/public/css/*.css\"",
-    "lint:html": "htmlhint \"**/*.html\" --ignore \"node_modules/**,coverage/**\"",
+    "lint:html": "htmlhint \"**/*.html\" --ignore \"node_modules/**,coverage/**,**/coverage/**\"",
     "lint:kotlin": "ktlint --relative 'kotlin/**/*.kt'",
     "lint:go": "cd editor-service && golangci-lint run ./...",
     "lint": "npm run lint:js && npm run lint:css && npm run lint:html",
