@@ -37,10 +37,12 @@ function populationColorExpression(features: GeoJSON.Feature[]): maplibregl.Expr
     ];
 }
 
+const ALL_LAYERS: LayerName[] = ['neighborhoods', 'schools', 'superfund', 'population'];
+
 export default function Map({ city, activeLayers, onFeatureClick }: Props) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef       = useRef<maplibregl.Map | null>(null);
-    const loadedRef    = useRef<Set<LayerName>>(new Set());
+    const pendingRef   = useRef<Set<LayerName>>(new Set());
 
     // Initialise map
     useEffect(() => {
@@ -66,19 +68,23 @@ export default function Map({ city, activeLayers, onFeatureClick }: Props) {
     // Fetch GeoJSON for a layer
     const fetchLayer = useCallback(async (layer: LayerName, map: maplibregl.Map) => {
         const bounds = map.getBounds();
-        const bbox   = [
-            bounds.getWest().toFixed(4),
-            bounds.getSouth().toFixed(4),
-            bounds.getEast().toFixed(4),
-            bounds.getNorth().toFixed(4),
+        // Clamp to valid range — wide viewports can push west past -180
+        const bbox = [
+            Math.max(bounds.getWest(),  -180).toFixed(4),
+            Math.max(bounds.getSouth(),  -90).toFixed(4),
+            Math.min(bounds.getEast(),   180).toFixed(4),
+            Math.min(bounds.getNorth(),   90).toFixed(4),
         ].join(',');
 
         const endpoint = layer === 'population'
             ? `/api/population?bbox=${bbox}`
             : `/api/layers/${layer}?bbox=${bbox}`;
 
-        const res  = await fetch(endpoint);
-        if (!res.ok) return null;
+        const res = await fetch(endpoint);
+        if (!res.ok) {
+            console.error(`[Locator] layer "${layer}" fetch failed: HTTP ${res.status}`);
+            return null;
+        }
         return res.json() as Promise<GeoJSON.FeatureCollection>;
     }, []);
 
@@ -131,19 +137,19 @@ export default function Map({ city, activeLayers, onFeatureClick }: Props) {
         if (!map) return;
 
         const sync = () => {
-            const current = loadedRef.current;
-            // Add newly activated layers
+            // Add newly activated layers (skip if fetch already in flight)
             for (const layer of activeLayers) {
-                if (!current.has(layer)) {
-                    addLayer(layer, map);
-                    current.add(layer);
+                if (!map.getLayer(`lyr-${layer}`) && !pendingRef.current.has(layer)) {
+                    pendingRef.current.add(layer);
+                    addLayer(layer, map)
+                        .catch(e => console.error(`[Locator] addLayer "${layer}" threw:`, e))
+                        .finally(() => pendingRef.current.delete(layer));
                 }
             }
             // Remove deactivated layers
-            for (const layer of current) {
-                if (!activeLayers.has(layer)) {
+            for (const layer of ALL_LAYERS) {
+                if (!activeLayers.has(layer) && map.getLayer(`lyr-${layer}`)) {
                     removeLayer(layer, map);
-                    current.delete(layer);
                 }
             }
         };

@@ -119,7 +119,45 @@ html, body, #root { height: 100%; }
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.city-btn:hover { background: var(--bg3); border-color: var(--accent); }
+.city-btn:hover            { background: var(--bg3); border-color: var(--accent); }
+.city-btn--custom          { grid-column: 1 / -1; text-align: center; color: var(--text-muted); border-style: dashed; }
+.city-btn--custom:hover    { color: var(--text); }
+.city-btn--active          { border-color: var(--accent); color: var(--text); }
+
+.custom-coords        { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.custom-coords-row    { display: flex; gap: 6px; }
+.custom-coord-input   {
+    flex: 1;
+    min-width: 0;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 12px;
+    padding: 7px 8px;
+    outline: none;
+}
+.custom-coord-input:focus { border-color: var(--accent); }
+.custom-coord-input::placeholder { color: var(--text-muted); }
+/* Hide the browser number-input spinners */
+.custom-coord-input::-webkit-outer-spin-button,
+.custom-coord-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.custom-coord-input[type=number] { -moz-appearance: textfield; }
+
+.custom-coord-go {
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius);
+    color: #fff;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 12px;
+    white-space: nowrap;
+    transition: background 0.1s;
+}
+.custom-coord-go:hover   { background: var(--accent-h); }
+.custom-coord-error      { font-size: 11px; color: #f87171; margin: 0; }
 
 /* ── Layer panel ──────────────────────────────────────────────────────────── */
 .layer-panel  { display: flex; flex-direction: column; gap: 6px; }
