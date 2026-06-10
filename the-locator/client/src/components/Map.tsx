@@ -59,9 +59,9 @@ function popupHtml(layer: LayerName, props: Record<string, unknown>): string {
             row('Tract GEOID',  props.GEOID);
     } else {
         body =
-            row('Name',  props.NAME)   +
-            row('GEOID', props.GEOID)  +
-            row('State', props.STUSAB);
+            row('Name',  props.NAME)                    +
+            row('GEOID', props.GEOID)                   +
+            row('State', props.STUSAB ?? props.STATE);
     }
 
     return `
