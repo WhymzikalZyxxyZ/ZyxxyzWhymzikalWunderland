@@ -184,20 +184,22 @@ async function handlePopulation(request, env, ip) {
 
 // ── External data fetchers ────────────────────────────────────────────────────
 
-// TIGERweb ArcGIS REST endpoints (2024 vintage via tigerWMS_ACS2023 feature service)
+// TIGERweb ArcGIS REST endpoints
 const CENSUS_LAYER_URLS = {
     // Census-Designated Places + County Subdivisions
     neighborhoods: 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/0/query',
-    // Unified School Districts — use the dedicated feature service which is more stable
-    schools:       'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/School_Districts/MapServer/2/query',
+    // Unified School Districts — TIGERweb/School service, layer 0; requires where=1=1
+    schools:       'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/School/MapServer/0/query',
 };
 
 async function fetchCensusLayer(name, [minLng, minLat, maxLng, maxLat]) {
     const base = CENSUS_LAYER_URLS[name] || CENSUS_LAYER_URLS.neighborhoods;
+    // Schools uses STATE (not STUSAB); include both so the popup can coalesce them client-side.
+    // where=1=1 is required by the School service; harmless for other layers.
     const url  = base
-        + `?geometry=${minLng},${minLat},${maxLng},${maxLat}`
+        + `?where=1%3D1&geometry=${minLng},${minLat},${maxLng},${maxLat}`
         + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
-        + '&outFields=NAME,GEOID,STUSAB&resultRecordCount=500&f=geojson';
+        + '&outFields=NAME,GEOID,STUSAB,STATE&resultRecordCount=500&f=geojson';
     const r = await fetch(url);
     if (!r.ok) throw new Error(`Census ${name} HTTP ${r.status}`);
     return r.json();
@@ -327,6 +329,8 @@ export default {
             }
         } else if (path === '/api/population') {
             response = await handlePopulation(request, env, ip);
+        } else if (path === '/favicon.ico') {
+            return new Response(null, { status: 204 });
         } else {
             // Serve the built React SPA for all other routes
             response = await env.ASSETS.fetch(request);
