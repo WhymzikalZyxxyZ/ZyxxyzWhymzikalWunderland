@@ -241,7 +241,7 @@ func handleExtract(w http.ResponseWriter, r *http.Request) {
 	}
 	descs := strings.Split(pageParam, ",")
 
-	total, err := api.PageCountRaw(bytes.NewReader(data), pdfConf())
+	total, err := api.PageCount(bytes.NewReader(data), pdfConf())
 	if err != nil {
 		apiErr(w, "could not read PDF: "+err.Error(), http.StatusBadRequest)
 		return
@@ -258,7 +258,7 @@ func handleExtract(w http.ResponseWriter, r *http.Request) {
 	if len(toRemove) == 0 {
 		// Keeping all pages — just pass through.
 		out.Write(data)
-	} else if err := api.RemovePagesRaw(bytes.NewReader(data), &out, toRemove, pdfConf()); err != nil {
+	} else if err := api.RemovePages(bytes.NewReader(data), &out, toRemove, pdfConf()); err != nil {
 		apiErr(w, "extract failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -286,7 +286,7 @@ func handleRemove(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var out bytes.Buffer
-	if err := api.RemovePagesRaw(bytes.NewReader(data), &out, descs, pdfConf()); err != nil {
+	if err := api.RemovePages(bytes.NewReader(data), &out, descs, pdfConf()); err != nil {
 		apiErr(w, "remove failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -323,7 +323,7 @@ func handleRotate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var out bytes.Buffer
-	if err := api.RotateRaw(bytes.NewReader(data), &out, degrees, pageDescs, pdfConf()); err != nil {
+	if err := api.Rotate(bytes.NewReader(data), &out, degrees, pageDescs, pdfConf()); err != nil {
 		apiErr(w, "rotate failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
