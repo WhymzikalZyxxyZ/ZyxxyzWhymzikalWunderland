@@ -190,32 +190,28 @@ export default function Map({ city, activeLayers, onFeatureClick }: Props) {
                 id: lineId, type: 'line', source: srcId,
                 paint: { 'line-color': 'rgba(0,0,0,0.15)', 'line-width': 0.5 },
             });
-            // Label: show density per km² at zoom ≥ 11, population count at zoom ≥ 13
+            // Label: density/km² at zoom 10-12, population count at zoom 13+
+            // zoom must be the direct input to 'step' — cannot be nested in 'case'
             map.addLayer({
                 id: labelId, type: 'symbol', source: srcId,
                 minzoom: 10,
                 layout: {
                     'text-field': [
-                        'case',
-                        ['>=', ['zoom'], 13],
-                        ['concat',
-                            ['number-format', ['get', 'population'], { 'locale': 'en-US' }],
-                            '\nppl'],
-                        ['concat',
-                            ['to-string', ['get', 'densityPerKm2']],
-                            '/km²'],
+                        'step', ['zoom'],
+                        ['concat', ['to-string', ['get', 'densityPerKm2']], '/km²'],
+                        13, ['concat', ['to-string', ['get', 'population']], ' ppl'],
                     ],
-                    'text-size':           11,
-                    'text-font':           ['Open Sans Regular'],
-                    'text-anchor':         'center',
-                    'text-allow-overlap':  false,
+                    'text-size':             11,
+                    'text-font':             ['Open Sans Regular'],
+                    'text-anchor':           'center',
+                    'text-allow-overlap':    false,
                     'text-ignore-placement': false,
-                    'text-max-width':      6,
+                    'text-max-width':        6,
                 },
                 paint: {
-                    'text-color':        '#0f172a',
-                    'text-halo-color':   'rgba(255,255,255,0.85)',
-                    'text-halo-width':   1.5,
+                    'text-color':      '#0f172a',
+                    'text-halo-color': 'rgba(255,255,255,0.85)',
+                    'text-halo-width': 1.5,
                 },
             });
         } else {
