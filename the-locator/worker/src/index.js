@@ -1,14 +1,11 @@
 'use strict';
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
-const ALLOWED_ORIGINS = new Set([
-    'https://zyxwonderland.xyz',
-    'https://www.zyxwonderland.xyz',
-    'https://locator.zyxwonderland.xyz',
-]);
+// Allows the apex domain and any direct subdomain (e.g. locator.zyxwonderland.xyz)
+const ALLOWED_ORIGIN_RE = /^https:\/\/([a-z0-9-]+\.)?zyxwonderland\.xyz$/;
 
 function corsHeaders(origin) {
-    if (!ALLOWED_ORIGINS.has(origin)) return {};
+    if (!ALLOWED_ORIGIN_RE.test(origin)) return {};
     return {
         'Access-Control-Allow-Origin':  origin,
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -308,7 +305,11 @@ export default {
             response = await handleSearch(request, env, ip);
         } else if (path.startsWith('/api/layers/')) {
             const layerName = path.slice('/api/layers/'.length);
-            response = await handleLayer(layerName, request, env, ip);
+            if (!/^[a-z]+$/.test(layerName)) {
+                response = err('Invalid layer name', 400, cors);
+            } else {
+                response = await handleLayer(layerName, request, env, ip);
+            }
         } else if (path === '/api/population') {
             response = await handlePopulation(request, env, ip);
         } else {
