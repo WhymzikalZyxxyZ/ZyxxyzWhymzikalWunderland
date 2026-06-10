@@ -8,7 +8,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ChessEngineTest {
-
     // ── Initial state ──────────────────────────────────────────────────────────
 
     @Test fun `newChessGame starts white to move`() {
@@ -19,9 +18,11 @@ class ChessEngineTest {
         val board = newChessGame().board
         var whitePawns = 0
         var blackPawns = 0
-        for (r in 0..7) for (c in 0..7) {
-            if (board[r][c] == CH_PAWN) whitePawns++
-            if (board[r][c] == -CH_PAWN) blackPawns++
+        for (r in 0..7) {
+            for (c in 0..7) {
+                if (board[r][c] == CH_PAWN) whitePawns++
+                if (board[r][c] == -CH_PAWN) blackPawns++
+            }
         }
         assertEquals(8, whitePawns)
         assertEquals(8, blackPawns)
@@ -98,8 +99,8 @@ class ChessEngineTest {
 
     @Test fun `isSquareAttacked detects rook attack`() {
         val board = Array(8) { IntArray(8) }
-        board[0][0] = CH_ROOK  // white rook at a8
-        assertTrue(isSquareAttacked(board, 0, 4, CH_WHITE))  // e8 attacked along rank
+        board[0][0] = CH_ROOK // white rook at a8
+        assertTrue(isSquareAttacked(board, 0, 4, CH_WHITE)) // e8 attacked along rank
     }
 
     @Test fun `isSquareAttacked detects knight attack`() {
@@ -110,7 +111,7 @@ class ChessEngineTest {
 
     @Test fun `isSquareAttacked detects pawn attack`() {
         val board = Array(8) { IntArray(8) }
-        board[5][4] = CH_PAWN  // white pawn at e3; attacks d2 and f2
+        board[5][4] = CH_PAWN // white pawn at e3; attacks d2 and f2
         assertTrue(isSquareAttacked(board, 4, 3, CH_WHITE))
         assertTrue(isSquareAttacked(board, 4, 5, CH_WHITE))
     }
@@ -176,10 +177,11 @@ class ChessEngineTest {
     }
 
     @Test fun `getChessAIMove returns null when no moves`() {
-        val state = newChessGame().copy(
-            board = Array(8) { IntArray(8) },
-            legalMoves = emptyList(),
-        )
+        val state =
+            newChessGame().copy(
+                board = Array(8) { IntArray(8) },
+                legalMoves = emptyList(),
+            )
         assertNull(getChessAIMove(state, 1))
     }
 

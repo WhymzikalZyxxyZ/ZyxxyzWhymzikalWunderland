@@ -13,21 +13,23 @@ private val Background = Color(0xFF0F0F14)
 private val Surface = Color(0xFF1A1A2E)
 private val OnSurface = Color(0xFFE2E8F0)
 
-private val DarkColors = darkColorScheme(
-    primary = Primary,
-    onPrimary = OnPrimary,
-    secondary = Secondary,
-    background = Background,
-    surface = Surface,
-    onSurface = OnSurface,
-    onBackground = OnSurface,
-)
+private val DarkColors =
+    darkColorScheme(
+        primary = Primary,
+        onPrimary = OnPrimary,
+        secondary = Secondary,
+        background = Background,
+        surface = Surface,
+        onSurface = OnSurface,
+        onBackground = OnSurface,
+    )
 
-private val LightColors = lightColorScheme(
-    primary = Primary,
-    onPrimary = OnPrimary,
-    secondary = Secondary,
-)
+private val LightColors =
+    lightColorScheme(
+        primary = Primary,
+        onPrimary = OnPrimary,
+        secondary = Secondary,
+    )
 
 @Composable
 fun WunderlandTheme(content: @Composable () -> Unit) {

@@ -115,18 +115,20 @@ private fun ChessBoard(
                     val isHighlight = (r to c) in ui.highlights
                     val isLight = (r + c) % 2 == 0
                     val baseColor = if (isLight) LIGHT_SQUARE else DARK_SQUARE
-                    val squareColor = when {
-                        isSelected -> SELECTED
-                        isHighlight -> HIGHLIGHT
-                        else -> baseColor
-                    }
+                    val squareColor =
+                        when {
+                            isSelected -> SELECTED
+                            isHighlight -> HIGHLIGHT
+                            else -> baseColor
+                        }
 
                     Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .aspectRatio(1f)
-                            .background(squareColor)
-                            .clickable { onSquare(r, c) },
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .aspectRatio(1f)
+                                .background(squareColor)
+                                .clickable { onSquare(r, c) },
                         contentAlignment = Alignment.Center,
                     ) {
                         val piece = board[r][c]
