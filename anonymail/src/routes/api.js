@@ -12,6 +12,14 @@ const router = express.Router();
 const BOXES    = new Set(['inbox', 'drafts', 'sent']);
 const MAX_FILE = 25 * 1024 * 1024; // 25 MB per attachment
 
+// ── Email validation ──────────────────────────────────────────────────────────
+const EMAIL_RE = /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]{2,}$/;
+
+function validRecipients(str) {
+    if (!str) return true;
+    return str.split(/[,;]/).map(s => s.trim()).filter(Boolean).every(e => EMAIL_RE.test(e));
+}
+
 // MIME types that are never allowed as attachments regardless of claimed type
 const BLOCKED_MIMES = new Set([
     'application/x-msdownload', 'application/x-msdos-program',
@@ -126,8 +134,8 @@ function validateBox(req, res) {
 // ── Mailbox ───────────────────────────────────────────────────────────────────
 router.post('/mailbox', (req, res) => {
     const domain = req.app.get('domain');
-    const max    = parseInt(process.env.MAX_MAILBOXES) || 0;
-    const ttl    = Math.min(parseInt(process.env.MAILBOX_TTL_MS) || 3_600_000, 86_400_000);
+    const max    = parseInt(process.env.MAX_MAILBOXES,   10) || 0;
+    const ttl    = Math.min(parseInt(process.env.MAILBOX_TTL_MS, 10) || 3_600_000, 86_400_000);
     try {
         res.json(store.createMailbox(domain, ttl, max));
     } catch (err) {
@@ -140,7 +148,7 @@ router.get('/mailbox', auth, (req, res) => {
 });
 
 router.post('/mailbox/extend', auth, writeLimit, (req, res) => {
-    const extra = Math.min(parseInt(req.body?.extra) || 3_600_000, 3_600_000);
+    const extra = Math.min(parseInt(req.body?.extra, 10) || 3_600_000, 3_600_000);
     const expiresAt = store.extendTtl(req.token, extra);
     if (!expiresAt) return res.status(404).json({ error: 'Session not found' });
     res.json({ expiresAt });
@@ -239,6 +247,9 @@ router.post('/send', auth, writeLimit, async (req, res) => {
         const body    = (fields.body    || '').trim();
 
         if (!to) return res.status(400).json({ error: 'Recipient (To) is required' });
+        if (!validRecipients(to) || !validRecipients(cc)) {
+            return res.status(400).json({ error: 'Invalid email address in To or Cc' });
+        }
 
         await sender.sendEmail({ from: req.mb.address, to, cc, subject, body, attachments: validated });
         store.pushToSent(req.mb, { to, cc, subject, body, attachments: validated });

@@ -1,6 +1,6 @@
 'use strict';
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import worker from '../index.js';
 
 // ── Fetch mock helpers ────────────────────────────────────────────────────────

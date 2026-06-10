@@ -96,6 +96,69 @@ html, body, #root { height: 100%; }
 .suggestion-item:hover { background: var(--bg3); }
 .suggestion-icon { font-size: 12px; flex-shrink: 0; }
 
+/* ── City picker ──────────────────────────────────────────────────────────── */
+.city-picker { display: flex; flex-direction: column; gap: 8px; }
+
+.city-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.city-btn {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 8px 10px;
+    text-align: left;
+    transition: background 0.1s, border-color 0.1s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.city-btn:hover            { background: var(--bg3); border-color: var(--accent); }
+.city-btn--custom          { grid-column: 1 / -1; text-align: center; color: var(--text-muted); border-style: dashed; }
+.city-btn--custom:hover    { color: var(--text); }
+.city-btn--active          { border-color: var(--accent); color: var(--text); }
+
+.custom-coords        { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.custom-coords-row    { display: flex; gap: 6px; }
+.custom-coord-input   {
+    flex: 1;
+    min-width: 0;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 12px;
+    padding: 7px 8px;
+    outline: none;
+}
+.custom-coord-input:focus { border-color: var(--accent); }
+.custom-coord-input::placeholder { color: var(--text-muted); }
+/* Hide the browser number-input spinners */
+.custom-coord-input::-webkit-outer-spin-button,
+.custom-coord-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.custom-coord-input[type=number] { -moz-appearance: textfield; }
+
+.custom-coord-go {
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius);
+    color: #fff;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 12px;
+    white-space: nowrap;
+    transition: background 0.1s;
+}
+.custom-coord-go:hover   { background: var(--accent-h); }
+.custom-coord-error      { font-size: 11px; color: #f87171; margin: 0; }
+
 /* ── Layer panel ──────────────────────────────────────────────────────────── */
 .layer-panel  { display: flex; flex-direction: column; gap: 6px; }
 .panel-title  { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 4px; }
@@ -180,3 +243,43 @@ html, body, #root { height: 100%; }
 /* ── Map ──────────────────────────────────────────────────────────────────── */
 .map-wrap { flex: 1; position: relative; }
 .map      { width: 100%; height: 100%; }
+
+/* ── MapLibre popup ───────────────────────────────────────────────────────── */
+.locator-popup .maplibregl-popup-content {
+    background:    var(--bg2);
+    border:        1px solid var(--border);
+    border-radius: var(--radius);
+    padding:       0;
+    box-shadow:    0 6px 32px rgba(0,0,0,0.5);
+    color:         var(--text);
+    min-width:     200px;
+}
+/* Tip triangle — match popup background */
+.locator-popup.maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color:    var(--bg2); }
+.locator-popup.maplibregl-popup-anchor-top    .maplibregl-popup-tip { border-bottom-color: var(--bg2); }
+.locator-popup.maplibregl-popup-anchor-left   .maplibregl-popup-tip { border-right-color:  var(--bg2); }
+.locator-popup.maplibregl-popup-anchor-right  .maplibregl-popup-tip { border-left-color:   var(--bg2); }
+
+.locator-popup .maplibregl-popup-close-button {
+    color:       var(--text-muted);
+    font-size:   18px;
+    line-height: 1;
+    padding:     6px 8px;
+    top:         0; right: 0;
+}
+.locator-popup .maplibregl-popup-close-button:hover { color: var(--text); background: none; }
+
+/* Popup inner layout */
+.lp-popup  { display: flex; flex-direction: column; }
+.lp-header {
+    font-size:     13px;
+    font-weight:   600;
+    padding:       10px 32px 10px 12px;
+    border-bottom: 1px solid var(--border);
+    padding-left:  16px;
+}
+.lp-body  { padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.lp-row   { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; }
+.lp-label { color: var(--text-muted); flex-shrink: 0; }
+.lp-value { color: var(--text); text-align: right; word-break: break-word; }
+.lp-empty { font-size: 12px; color: var(--text-muted); font-style: italic; }

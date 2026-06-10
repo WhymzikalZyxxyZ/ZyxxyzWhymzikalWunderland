@@ -1,14 +1,11 @@
 'use strict';
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
-const ALLOWED_ORIGINS = new Set([
-    'https://zyxwonderland.xyz',
-    'https://www.zyxwonderland.xyz',
-    'https://locator.zyxwonderland.xyz',
-]);
+// Allows the apex domain and any direct subdomain (e.g. locator.zyxwonderland.xyz)
+const ALLOWED_ORIGIN_RE = /^https:\/\/([a-z0-9-]+\.)?zyxwonderland\.xyz$/;
 
 function corsHeaders(origin) {
-    if (!ALLOWED_ORIGINS.has(origin)) return {};
+    if (!ALLOWED_ORIGIN_RE.test(origin)) return {};
     return {
         'Access-Control-Allow-Origin':  origin,
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -71,7 +68,7 @@ const US_BOUNDS = { minLng: -180, minLat: 18, maxLng: -66, maxLat: 72 };
 
 function sanitizeQuery(raw) {
     if (typeof raw !== 'string') return null;
-    return raw.trim().slice(0, 100).replace(/[^a-zA-Z0-9 ,.\-]/g, '') || null;
+    return raw.trim().slice(0, 100).replace(/[^a-zA-Z0-9 ,.-]/g, '') || null;
 }
 
 function parseBbox(raw) {
@@ -187,36 +184,46 @@ async function handlePopulation(request, env, ip) {
 
 // ── External data fetchers ────────────────────────────────────────────────────
 
+// TIGERweb ArcGIS REST endpoints (2024 vintage via tigerWMS_ACS2023 feature service)
+const CENSUS_LAYER_URLS = {
+    // Census-Designated Places + County Subdivisions
+    neighborhoods: 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/0/query',
+    // Unified School Districts — use the dedicated feature service which is more stable
+    schools:       'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/School_Districts/MapServer/2/query',
+};
+
 async function fetchCensusLayer(name, [minLng, minLat, maxLng, maxLat]) {
-    const url = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/0/query'
+    const base = CENSUS_LAYER_URLS[name] || CENSUS_LAYER_URLS.neighborhoods;
+    const url  = base
         + `?geometry=${minLng},${minLat},${maxLng},${maxLat}`
         + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
-        + '&outFields=GEOID,NAME,STUSAB&f=geojson';
+        + '&outFields=NAME,GEOID,STUSAB&resultRecordCount=500&f=geojson';
     const r = await fetch(url);
-    if (!r.ok) throw new Error('Census error');
+    if (!r.ok) throw new Error(`Census ${name} HTTP ${r.status}`);
     return r.json();
 }
 
 async function fetchSuperfund([minLng, minLat, maxLng, maxLat]) {
-    const url = 'https://ofmpub.epa.gov/frs_public2/frs_rest_services.get_facilities'
-        + `?latitude83=${minLat}&longitude83=${minLng}`
-        + `&latitude83_max=${maxLat}&longitude83_max=${maxLng}`
-        + '&program_acronym=CERCLIS&output=JSON';
+    // EPA geodata ArcGIS service — more reliable than the legacy ofmpub FRS endpoint
+    const url = 'https://geodata.epa.gov/arcgis/rest/services/OLEM/Superfund_National_Priorities_List/MapServer/0/query'
+        + `?geometry=${minLng},${minLat},${maxLng},${maxLat}`
+        + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
+        + '&outFields=SITE_NAME,NPL_STATUS,ADDRESS,CITY,STATE,EPA_ID&resultRecordCount=200&f=geojson';
     const r = await fetch(url);
-    if (!r.ok) throw new Error('EPA error');
+    if (!r.ok) throw new Error(`EPA superfund HTTP ${r.status}`);
     const data = await r.json();
-    const features = (data.Results?.FRSFacility || [])
-        .filter(f => f.LATITUDE83 && f.LONGITUDE83)
+    const features = (data.features || [])
+        .filter(f => f.geometry?.coordinates)
         .map(f => ({
             type:     'Feature',
-            geometry: { type: 'Point', coordinates: [parseFloat(f.LONGITUDE83), parseFloat(f.LATITUDE83)] },
+            geometry: f.geometry,
             properties: {
-                name:            f.PRIMARY_NAME,
-                nplStatus:       f.NPL_STATUS_IND || 'non-npl',
-                address:         f.LOCATION_ADDRESS,
-                city:            f.CITY_NAME,
-                state:           f.STATE_CODE,
-                programSystemId: f.PGM_SYS_ID,
+                name:      f.properties.SITE_NAME,
+                nplStatus: f.properties.NPL_STATUS || 'Unknown',
+                address:   f.properties.ADDRESS,
+                city:      f.properties.CITY,
+                state:     f.properties.STATE,
+                epaId:     f.properties.EPA_ID,
             },
         }));
     return { type: 'FeatureCollection', features };
@@ -226,23 +233,50 @@ async function fetchPopulation([minLng, minLat, maxLng, maxLat], env) {
     const year   = env.ACS_YEAR || '2022';
     const apiKey = env.CENSUS_API_KEY || '';
 
-    const acsUrl = `https://api.census.gov/data/${year}/acs/acs5`
-        + `?get=B01003_001E,NAME&for=tract:*&in=state:*&key=${apiKey}`;
+    // Fetch census tracts in the bbox first
     const geoUrl = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Tracts_Blocks/MapServer/0/query'
         + `?geometry=${minLng},${minLat},${maxLng},${maxLat}`
         + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
-        + '&outFields=GEOID,AREALAND&returnGeometry=true&f=geojson';
+        + '&outFields=GEOID,AREALAND&returnGeometry=true&resultRecordCount=500&f=geojson';
 
-    const [acsRes, geoRes] = await Promise.all([fetch(acsUrl), fetch(geoUrl)]);
-    if (!acsRes.ok || !geoRes.ok) throw new Error('Census fetch failed');
+    const geoRes = await fetch(geoUrl);
+    if (!geoRes.ok) throw new Error('Census geo fetch failed');
+    const geoData = await geoRes.json();
 
-    const [acsData, geoData] = await Promise.all([acsRes.json(), geoRes.json()]);
-    const [, ...rows] = acsData;
+    if (!geoData.features?.length) return { type: 'FeatureCollection', features: [] };
 
-    const popByGeoid = new Map(rows.map(row => {
-        const state  = row[2].padStart(2, '0');
-        const county = row[3].padStart(3, '0');
-        const tract  = row[4].padStart(6, '0');
+    // Extract unique state FIPS codes from tract GEOIDs (first 2 chars)
+    const states = [...new Set(
+        geoData.features
+            .map(f => f.properties?.GEOID?.slice(0, 2))
+            .filter(Boolean)
+    )];
+
+    // ACS requires a specific state + county:* when querying tracts.
+    // Omitting county:* causes the API to return an error instead of data.
+    const acsRows = (await Promise.all(
+        states.map(state => {
+            const url = `https://api.census.gov/data/${year}/acs/acs5`
+                + `?get=B01003_001E&for=tract:*&in=state:${state}+county:*`
+                + (apiKey ? `&key=${apiKey}` : '');
+            return fetch(url)
+                .then(r => {
+                    if (!r.ok) { console.error(`[population] ACS state ${state} HTTP ${r.status}`); return []; }
+                    return r.json();
+                })
+                .then(data => {
+                    if (!Array.isArray(data)) { console.error(`[population] ACS state ${state} unexpected response`, data); return []; }
+                    return data.slice(1); // drop header row
+                })
+                .catch(e => { console.error(`[population] ACS state ${state} fetch error`, e); return []; });
+        })
+    )).flat();
+
+    // ACS response columns: [B01003_001E, state, county, tract]
+    const popByGeoid = new Map(acsRows.map(row => {
+        const state  = String(row[1]).padStart(2, '0');
+        const county = String(row[2]).padStart(3, '0');
+        const tract  = String(row[3]).padStart(6, '0');
         return [`${state}${county}${tract}`, parseInt(row[0], 10)];
     }));
 
@@ -286,7 +320,11 @@ export default {
             response = await handleSearch(request, env, ip);
         } else if (path.startsWith('/api/layers/')) {
             const layerName = path.slice('/api/layers/'.length);
-            response = await handleLayer(layerName, request, env, ip);
+            if (!/^[a-z]+$/.test(layerName)) {
+                response = err('Invalid layer name', 400, cors);
+            } else {
+                response = await handleLayer(layerName, request, env, ip);
+            }
         } else if (path === '/api/population') {
             response = await handlePopulation(request, env, ip);
         } else {
