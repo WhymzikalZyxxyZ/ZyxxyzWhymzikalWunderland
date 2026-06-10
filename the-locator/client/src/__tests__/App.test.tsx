@@ -4,12 +4,24 @@ import App from '../App';
 
 // Map component is already mocked via setup.ts (maplibre-gl mock).
 // We further mock the Map component itself to simplify App integration tests.
+import type { LayerName } from '../types/geojson';
+
 vi.mock('../components/Map', () => ({
-    default: ({ onFeatureClick }: { onFeatureClick: (f: unknown) => void }) => (
-        <div
-            data-testid="mock-map"
-            onClick={() => onFeatureClick({ layer: 'superfund', properties: { name: 'Test Site', nplStatus: 'NPL', address: '1 Main', city: 'Denver', state: 'CO' } })}
-        />
+    default: ({
+        onFeatureClick,
+        onLayerError,
+    }: {
+        onFeatureClick: (f: unknown) => void;
+        onLayerError:   (layer: LayerName, error: string | null) => void;
+    }) => (
+        <div data-testid="mock-map">
+            <button
+                data-testid="trigger-feature"
+                onClick={() => onFeatureClick({ layer: 'superfund', properties: { name: 'Test Site', nplStatus: 'NPL', address: '1 Main', city: 'Denver', state: 'CO' } })}
+            />
+            <button data-testid="trigger-error"        onClick={() => onLayerError('population', 'Census API unavailable')} />
+            <button data-testid="trigger-error-clear"  onClick={() => onLayerError('population', null)} />
+        </div>
     ),
 }));
 
@@ -39,14 +51,14 @@ describe('App', () => {
 
     it('shows InfoPanel when map feature is clicked', () => {
         render(<App />);
-        fireEvent.click(screen.getByTestId('mock-map'));
+        fireEvent.click(screen.getByTestId('trigger-feature'));
         expect(screen.getByText('Superfund Site')).toBeInTheDocument();
         expect(screen.getByText('Test Site')).toBeInTheDocument();
     });
 
     it('closes InfoPanel when close button is clicked', () => {
         render(<App />);
-        fireEvent.click(screen.getByTestId('mock-map'));
+        fireEvent.click(screen.getByTestId('trigger-feature'));
         expect(screen.getByText('Superfund Site')).toBeInTheDocument();
         fireEvent.click(screen.getByLabelText('Close'));
         expect(screen.queryByText('Superfund Site')).not.toBeInTheDocument();
@@ -54,11 +66,31 @@ describe('App', () => {
 
     it('clears active feature when layer is toggled', () => {
         render(<App />);
-        // Show a feature
-        fireEvent.click(screen.getByTestId('mock-map'));
+        fireEvent.click(screen.getByTestId('trigger-feature'));
         expect(screen.getByText('Superfund Site')).toBeInTheDocument();
-        // Toggle any layer — should clear the feature panel
         fireEvent.click(screen.getByTitle('EPA CERCLIS contamination sites'));
         expect(screen.queryByText('Superfund Site')).not.toBeInTheDocument();
+    });
+
+    it('shows layer error when map reports one', () => {
+        render(<App />);
+        fireEvent.click(screen.getByTestId('trigger-error'));
+        expect(screen.getByText('⚠ Unavailable')).toBeInTheDocument();
+    });
+
+    it('clears layer error when map reports null', () => {
+        render(<App />);
+        fireEvent.click(screen.getByTestId('trigger-error'));
+        expect(screen.getByText('⚠ Unavailable')).toBeInTheDocument();
+        fireEvent.click(screen.getByTestId('trigger-error-clear'));
+        expect(screen.queryByText('⚠ Unavailable')).not.toBeInTheDocument();
+    });
+
+    it('clears layer error when layer is toggled', () => {
+        render(<App />);
+        fireEvent.click(screen.getByTestId('trigger-error'));
+        expect(screen.getByText('⚠ Unavailable')).toBeInTheDocument();
+        fireEvent.click(screen.getByTitle('Density per km² by census tract'));
+        expect(screen.queryByText('⚠ Unavailable')).not.toBeInTheDocument();
     });
 });

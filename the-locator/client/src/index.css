@@ -209,6 +209,13 @@ html, body, #root { height: 100%; }
 .layer-toggle.on                { background: var(--accent); }
 .layer-toggle.on::after         { transform: translateX(14px); background: #fff; }
 
+.layer-error {
+    margin: 2px 0 6px 12px;
+    font-size: 11px;
+    color: #f97316;
+    cursor: default;
+}
+
 /* ── Info panel ───────────────────────────────────────────────────────────── */
 .info-panel {
     background: var(--bg2);

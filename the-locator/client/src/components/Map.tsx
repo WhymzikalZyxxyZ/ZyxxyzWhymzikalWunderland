@@ -8,6 +8,7 @@ interface Props {
     city:           CityResult | null;
     activeLayers:   Set<LayerName>;
     onFeatureClick: (f: ActiveFeature) => void;
+    onLayerError?:  (layer: LayerName, error: string | null) => void;
 }
 
 // CARTO Voyager — free, no token required
@@ -96,7 +97,7 @@ function populationColorExpression(features: GeoJSON.Feature[]): maplibregl.Expr
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function Map({ city, activeLayers, onFeatureClick }: Props) {
+export default function Map({ city, activeLayers, onFeatureClick, onLayerError }: Props) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef       = useRef<maplibregl.Map | null>(null);
     const pendingRef   = useRef<Set<LayerName>>(new Set());
@@ -125,7 +126,7 @@ export default function Map({ city, activeLayers, onFeatureClick }: Props) {
     }, [city]);
 
     // ── Fetch GeoJSON for current viewport ────────────────────────────────────
-    const fetchLayer = useCallback(async (layer: LayerName, map: maplibregl.Map) => {
+    const fetchLayer = useCallback(async (layer: LayerName, map: maplibregl.Map): Promise<GeoJSON.FeatureCollection> => {
         const b = map.getBounds();
         const bbox = [
             Math.max(b.getWest(),  -180).toFixed(4),
@@ -140,16 +141,28 @@ export default function Map({ city, activeLayers, onFeatureClick }: Props) {
 
         const res = await fetch(url);
         if (!res.ok) {
-            console.error(`[Locator] "${layer}" fetch failed: HTTP ${res.status}`);
-            return null;
+            let message = 'Data unavailable';
+            try {
+                const body = await res.json() as { error?: string };
+                if (typeof body.error === 'string') message = body.error;
+            } catch { /* ignore */ }
+            throw new Error(message);
         }
         return res.json() as Promise<GeoJSON.FeatureCollection>;
     }, []);
 
     // ── Add a layer to the map for the first time ─────────────────────────────
     const addLayer = useCallback(async (layer: LayerName, map: maplibregl.Map) => {
-        const data = await fetchLayer(layer, map);
-        if (!data) return;
+        let data: GeoJSON.FeatureCollection;
+        try {
+            data = await fetchLayer(layer, map);
+        } catch (e) {
+            const msg = e instanceof Error ? e.message : 'Data unavailable';
+            console.error(`[Locator] "${layer}" fetch failed: ${msg}`);
+            onLayerError?.(layer, msg);
+            return;
+        }
+        onLayerError?.(layer, null);
 
         const srcId  = `src-${layer}`;
         const lyrId  = `lyr-${layer}`;
@@ -244,7 +257,7 @@ export default function Map({ city, activeLayers, onFeatureClick }: Props) {
 
             onFeatureClick({ layer, properties: props });
         });
-    }, [fetchLayer, onFeatureClick]);
+    }, [fetchLayer, onFeatureClick, onLayerError]);
 
     // ── Remove a layer ────────────────────────────────────────────────────────
     const removeLayer = useCallback((layer: LayerName, map: maplibregl.Map) => {
@@ -299,9 +312,9 @@ export default function Map({ city, activeLayers, onFeatureClick }: Props) {
                     pendingRef.current.add(layer);
                     fetchLayer(layer, map)
                         .then(data => {
-                            if (!data || !map.getSource(srcId)) return;
+                            if (!map.getSource(srcId)) return;
                             (map.getSource(srcId) as maplibregl.GeoJSONSource).setData(data);
-                            // Recalculate population colour ramp for new data
+                            onLayerError?.(layer, null);
                             if (layer === 'population' && map.getLayer('lyr-population')) {
                                 map.setPaintProperty(
                                     'lyr-population', 'fill-color',
@@ -309,7 +322,11 @@ export default function Map({ city, activeLayers, onFeatureClick }: Props) {
                                 );
                             }
                         })
-                        .catch(e => console.error(`[Locator] refresh "${layer}":`, e))
+                        .catch(e => {
+                            const msg = e instanceof Error ? e.message : 'Data unavailable';
+                            console.error(`[Locator] refresh "${layer}": ${msg}`);
+                            onLayerError?.(layer, msg);
+                        })
                         .finally(() => pendingRef.current.delete(layer));
                 }
             }, 400);
