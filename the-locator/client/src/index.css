@@ -159,6 +159,25 @@ html, body, #root { height: 100%; }
 .custom-coord-go:hover   { background: var(--accent-h); }
 .custom-coord-error      { font-size: 11px; color: #f87171; margin: 0; }
 
+/* ── Help panel ───────────────────────────────────────────────────────────── */
+.help-panel {
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+}
+.help-headline {
+    font-size: 13px;
+    font-weight: 600;
+    font-style: italic;
+    color: var(--text);
+    margin-bottom: 6px;
+    letter-spacing: -0.1px;
+}
+.help-body {
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+
 /* ── Layer panel ──────────────────────────────────────────────────────────── */
 .layer-panel  { display: flex; flex-direction: column; gap: 6px; }
 .panel-title  { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 4px; }

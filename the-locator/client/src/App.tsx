@@ -4,6 +4,7 @@ import SearchBar  from './components/SearchBar';
 import CityPicker from './components/CityPicker';
 import LayerPanel from './components/LayerPanel';
 import InfoPanel  from './components/InfoPanel';
+import HelpPanel  from './components/HelpPanel';
 import type { LayerName } from './types/geojson';
 
 export interface CityResult {
@@ -60,6 +61,7 @@ export default function App() {
                 )}
                 <SearchBar onSelect={setCity} />
                 <CityPicker onSelect={setCity} />
+                <HelpPanel />
                 <LayerPanel activeLayers={activeLayers} onToggle={toggleLayer} layerErrors={layerErrors} />
                 {activeFeature && (
                     <InfoPanel feature={activeFeature} onClose={() => setActiveFeature(null)} />
