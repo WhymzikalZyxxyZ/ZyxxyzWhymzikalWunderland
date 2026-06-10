@@ -165,6 +165,8 @@ export default function Map({ city, activeLayers, onFeatureClick }: Props) {
 
         if (map.getLayer(lyrId)) return; // already added
 
+        const labelId = `lyr-${layer}-label`;
+
         if (layer === 'superfund') {
             map.addLayer({
                 id: lyrId, type: 'circle', source: srcId,
@@ -187,6 +189,34 @@ export default function Map({ city, activeLayers, onFeatureClick }: Props) {
             map.addLayer({
                 id: lineId, type: 'line', source: srcId,
                 paint: { 'line-color': 'rgba(0,0,0,0.15)', 'line-width': 0.5 },
+            });
+            // Label: show density per km² at zoom ≥ 11, population count at zoom ≥ 13
+            map.addLayer({
+                id: labelId, type: 'symbol', source: srcId,
+                minzoom: 10,
+                layout: {
+                    'text-field': [
+                        'case',
+                        ['>=', ['zoom'], 13],
+                        ['concat',
+                            ['number-format', ['get', 'population'], { 'locale': 'en-US' }],
+                            '\nppl'],
+                        ['concat',
+                            ['to-string', ['get', 'densityPerKm2']],
+                            '/km²'],
+                    ],
+                    'text-size':           11,
+                    'text-font':           ['Open Sans Regular'],
+                    'text-anchor':         'center',
+                    'text-allow-overlap':  false,
+                    'text-ignore-placement': false,
+                    'text-max-width':      6,
+                },
+                paint: {
+                    'text-color':        '#0f172a',
+                    'text-halo-color':   'rgba(255,255,255,0.85)',
+                    'text-halo-width':   1.5,
+                },
             });
         } else {
             // neighborhoods / schools — semi-transparent fill + bold outline
@@ -222,12 +252,14 @@ export default function Map({ city, activeLayers, onFeatureClick }: Props) {
 
     // ── Remove a layer ────────────────────────────────────────────────────────
     const removeLayer = useCallback((layer: LayerName, map: maplibregl.Map) => {
-        const lineId = `lyr-${layer}-outline`;
-        const lyrId  = `lyr-${layer}`;
-        const srcId  = `src-${layer}`;
-        if (map.getLayer(lineId)) map.removeLayer(lineId);
-        if (map.getLayer(lyrId))  map.removeLayer(lyrId);
-        if (map.getSource(srcId)) map.removeSource(srcId);
+        const labelId = `lyr-${layer}-label`;
+        const lineId  = `lyr-${layer}-outline`;
+        const lyrId   = `lyr-${layer}`;
+        const srcId   = `src-${layer}`;
+        if (map.getLayer(labelId)) map.removeLayer(labelId);
+        if (map.getLayer(lineId))  map.removeLayer(lineId);
+        if (map.getLayer(lyrId))   map.removeLayer(lyrId);
+        if (map.getSource(srcId))  map.removeSource(srcId);
     }, []);
 
     // ── Sync layers when activeLayers changes ─────────────────────────────────
