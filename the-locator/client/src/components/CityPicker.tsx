@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { CityResult } from '../App';
 
 interface Props {
@@ -19,7 +20,35 @@ const CITIES: CityResult[] = [
     { name: 'Tucson, AZ',        center: [-110.926,  32.220], bbox: [-111.073,  32.059, -110.706,  32.372] },
 ];
 
+// Build a ~0.15° bbox around a point (roughly city-block to neighbourhood scale)
+function pointToBbox(lat: number, lng: number): [number, number, number, number] {
+    const d = 0.075;
+    return [lng - d, lat - d, lng + d, lat + d];
+}
+
 export default function CityPicker({ onSelect }: Props) {
+    const [open,   setOpen]   = useState(false);
+    const [latVal, setLatVal] = useState('');
+    const [lngVal, setLngVal] = useState('');
+    const [error,  setError]  = useState('');
+
+    function handleGo() {
+        const lat = parseFloat(latVal);
+        const lng = parseFloat(lngVal);
+        if (isNaN(lat) || lat < -90  || lat > 90)  { setError('Latitude must be −90 to 90');   return; }
+        if (isNaN(lng) || lng < -180 || lng > 180) { setError('Longitude must be −180 to 180'); return; }
+        onSelect({ name: `${lat.toFixed(4)}, ${lng.toFixed(4)}`, center: [lng, lat], bbox: pointToBbox(lat, lng) });
+        setOpen(false);
+        setLatVal('');
+        setLngVal('');
+        setError('');
+    }
+
+    function handleKeyDown(e: React.KeyboardEvent) {
+        if (e.key === 'Enter') handleGo();
+        if (e.key === 'Escape') { setOpen(false); setError(''); }
+    }
+
     return (
         <div className="city-picker">
             <p className="panel-title">Quick select</p>
@@ -33,7 +62,39 @@ export default function CityPicker({ onSelect }: Props) {
                         {city.name}
                     </button>
                 ))}
+                <button
+                    className={`city-btn city-btn--custom${open ? ' city-btn--active' : ''}`}
+                    onClick={() => { setOpen(o => !o); setError(''); }}
+                >
+                    + Custom
+                </button>
             </div>
+
+            {open && (
+                <div className="custom-coords">
+                    <div className="custom-coords-row">
+                        <input
+                            className="custom-coord-input"
+                            type="number"
+                            placeholder="Latitude"
+                            value={latVal}
+                            onChange={e => setLatVal(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            autoFocus
+                        />
+                        <input
+                            className="custom-coord-input"
+                            type="number"
+                            placeholder="Longitude"
+                            value={lngVal}
+                            onChange={e => setLngVal(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                        />
+                        <button className="custom-coord-go" onClick={handleGo}>Go</button>
+                    </div>
+                    {error && <p className="custom-coord-error">{error}</p>}
+                </div>
+            )}
         </div>
     );
 }
