@@ -248,16 +248,27 @@ async function fetchPopulation([minLng, minLat, maxLng, maxLat], env) {
             .filter(Boolean)
     )];
 
-    // ACS requires a specific state when querying tracts — fetch each state in parallel
+    // ACS requires a specific state + county:* when querying tracts.
+    // Omitting county:* causes the API to return an error instead of data.
     const acsRows = (await Promise.all(
-        states.map(state =>
-            fetch(`https://api.census.gov/data/${year}/acs/acs5?get=B01003_001E&for=tract:*&in=state:${state}&key=${apiKey}`)
-                .then(r => r.ok ? r.json() : [])
-                .then(data => (Array.isArray(data) ? data.slice(1) : []))  // drop header row
-                .catch(() => [])
-        )
+        states.map(state => {
+            const url = `https://api.census.gov/data/${year}/acs/acs5`
+                + `?get=B01003_001E&for=tract:*&in=state:${state}+county:*`
+                + (apiKey ? `&key=${apiKey}` : '');
+            return fetch(url)
+                .then(r => {
+                    if (!r.ok) { console.error(`[population] ACS state ${state} HTTP ${r.status}`); return []; }
+                    return r.json();
+                })
+                .then(data => {
+                    if (!Array.isArray(data)) { console.error(`[population] ACS state ${state} unexpected response`, data); return []; }
+                    return data.slice(1); // drop header row
+                })
+                .catch(e => { console.error(`[population] ACS state ${state} fetch error`, e); return []; });
+        })
     )).flat();
 
+    // ACS response columns: [B01003_001E, state, county, tract]
     const popByGeoid = new Map(acsRows.map(row => {
         const state  = String(row[1]).padStart(2, '0');
         const county = String(row[2]).padStart(3, '0');
