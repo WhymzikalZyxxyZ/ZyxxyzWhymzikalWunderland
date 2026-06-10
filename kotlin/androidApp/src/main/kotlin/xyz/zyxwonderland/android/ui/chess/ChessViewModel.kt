@@ -28,24 +28,30 @@ data class ChessUiState(
 )
 
 class ChessViewModel : ViewModel() {
-
     private val _ui = MutableStateFlow(ChessUiState())
     val ui = _ui.asStateFlow()
 
-    fun onSquareTapped(r: Int, c: Int) {
+    fun onSquareTapped(
+        r: Int,
+        c: Int,
+    ) {
         val state = _ui.value
         if (state.isAiThinking) return
         if (state.game.status == ChessStatus.CHECKMATE ||
-            state.game.status == ChessStatus.STALEMATE) return
+            state.game.status == ChessStatus.STALEMATE
+        ) {
+            return
+        }
 
         // It's not the player's turn
         if (state.game.turn != state.playerColor) return
 
         val sel = state.selected
         if (sel != null) {
-            val move = state.game.legalMoves.firstOrNull {
-                it.r == sel.first && it.c == sel.second && it.tr == r && it.tc == c
-            }
+            val move =
+                state.game.legalMoves.firstOrNull {
+                    it.r == sel.first && it.c == sel.second && it.tr == r && it.tc == c
+                }
             if (move != null) {
                 applyPlayerMove(move)
                 return
@@ -98,10 +104,11 @@ class ChessViewModel : ViewModel() {
         _ui.update { it.copy(aiDifficulty = d) }
     }
 
-    private fun statusMessage(game: ChessGame) = when (game.status) {
-        ChessStatus.CHECKMATE -> if (game.turn == CH_BLACK) "Checkmate — you win!" else "Checkmate — AI wins!"
-        ChessStatus.STALEMATE -> "Stalemate — draw!"
-        ChessStatus.CHECK -> "Check!"
-        else -> ""
-    }
+    private fun statusMessage(game: ChessGame) =
+        when (game.status) {
+            ChessStatus.CHECKMATE -> if (game.turn == CH_BLACK) "Checkmate — you win!" else "Checkmate — AI wins!"
+            ChessStatus.STALEMATE -> "Stalemate — draw!"
+            ChessStatus.CHECK -> "Check!"
+            else -> ""
+        }
 }

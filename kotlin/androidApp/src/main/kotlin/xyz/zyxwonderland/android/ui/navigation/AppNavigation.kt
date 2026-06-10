@@ -21,8 +21,12 @@ import androidx.navigation.compose.rememberNavController
 import xyz.zyxwonderland.android.ui.chess.ChessScreen
 import xyz.zyxwonderland.android.ui.status.StatusScreen
 
-private sealed class Screen(val route: String, val label: String) {
+private sealed class Screen(
+    val route: String,
+    val label: String,
+) {
     data object Chess : Screen("chess", "Chess")
+
     data object Status : Screen("status", "Status")
 }
 
@@ -41,10 +45,11 @@ fun AppNavigation() {
                     NavigationBarItem(
                         icon = {
                             Icon(
-                                imageVector = when (screen) {
-                                    Screen.Chess -> Icons.Filled.Star
-                                    Screen.Status -> Icons.Filled.CheckCircle
-                                },
+                                imageVector =
+                                    when (screen) {
+                                        Screen.Chess -> Icons.Filled.Star
+                                        Screen.Status -> Icons.Filled.CheckCircle
+                                    },
                                 contentDescription = screen.label,
                             )
                         },
