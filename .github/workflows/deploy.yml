@@ -58,7 +58,10 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: editor-service/go.mod
-          cache-dependency-path: editor-service/go.sum
+
+      - name: Download Go modules
+        run: go mod download
+        working-directory: editor-service
 
       - name: Lint Go
         uses: golangci/golangci-lint-action@v6
