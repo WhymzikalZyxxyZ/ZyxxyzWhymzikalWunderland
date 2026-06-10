@@ -184,9 +184,12 @@ async function handlePopulation(request, env, ip) {
 
 // ── External data fetchers ────────────────────────────────────────────────────
 
+// TIGERweb ArcGIS REST endpoints (2024 vintage via tigerWMS_ACS2023 feature service)
 const CENSUS_LAYER_URLS = {
+    // Census-Designated Places + County Subdivisions
     neighborhoods: 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/0/query',
-    schools:       'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/School_Districts/MapServer/0/query',
+    // Unified School Districts — use the dedicated feature service which is more stable
+    schools:       'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/School_Districts/MapServer/2/query',
 };
 
 async function fetchCensusLayer(name, [minLng, minLat, maxLng, maxLat]) {
@@ -194,32 +197,33 @@ async function fetchCensusLayer(name, [minLng, minLat, maxLng, maxLat]) {
     const url  = base
         + `?geometry=${minLng},${minLat},${maxLng},${maxLat}`
         + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
-        + '&outFields=*&resultRecordCount=500&f=geojson';
+        + '&outFields=NAME,GEOID,STUSAB&resultRecordCount=500&f=geojson';
     const r = await fetch(url);
-    if (!r.ok) throw new Error('Census error');
+    if (!r.ok) throw new Error(`Census ${name} HTTP ${r.status}`);
     return r.json();
 }
 
 async function fetchSuperfund([minLng, minLat, maxLng, maxLat]) {
-    const url = 'https://ofmpub.epa.gov/frs_public2/frs_rest_services.get_facilities'
-        + `?latitude83=${minLat}&longitude83=${minLng}`
-        + `&latitude83_max=${maxLat}&longitude83_max=${maxLng}`
-        + '&program_acronym=CERCLIS&output=JSON';
+    // EPA geodata ArcGIS service — more reliable than the legacy ofmpub FRS endpoint
+    const url = 'https://geodata.epa.gov/arcgis/rest/services/OLEM/Superfund_National_Priorities_List/MapServer/0/query'
+        + `?geometry=${minLng},${minLat},${maxLng},${maxLat}`
+        + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
+        + '&outFields=SITE_NAME,NPL_STATUS,ADDRESS,CITY,STATE,EPA_ID&resultRecordCount=200&f=geojson';
     const r = await fetch(url);
-    if (!r.ok) throw new Error('EPA error');
+    if (!r.ok) throw new Error(`EPA superfund HTTP ${r.status}`);
     const data = await r.json();
-    const features = (data.Results?.FRSFacility || [])
-        .filter(f => f.LATITUDE83 && f.LONGITUDE83)
+    const features = (data.features || [])
+        .filter(f => f.geometry?.coordinates)
         .map(f => ({
             type:     'Feature',
-            geometry: { type: 'Point', coordinates: [parseFloat(f.LONGITUDE83), parseFloat(f.LATITUDE83)] },
+            geometry: f.geometry,
             properties: {
-                name:            f.PRIMARY_NAME,
-                nplStatus:       f.NPL_STATUS_IND || 'non-npl',
-                address:         f.LOCATION_ADDRESS,
-                city:            f.CITY_NAME,
-                state:           f.STATE_CODE,
-                programSystemId: f.PGM_SYS_ID,
+                name:      f.properties.SITE_NAME,
+                nplStatus: f.properties.NPL_STATUS || 'Unknown',
+                address:   f.properties.ADDRESS,
+                city:      f.properties.CITY,
+                state:     f.properties.STATE,
+                epaId:     f.properties.EPA_ID,
             },
         }));
     return { type: 'FeatureCollection', features };
