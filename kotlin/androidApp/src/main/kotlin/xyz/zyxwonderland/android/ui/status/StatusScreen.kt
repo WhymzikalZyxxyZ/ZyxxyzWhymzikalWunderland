@@ -129,8 +129,12 @@ private fun ServiceCard(svc: ServiceStatus, sparkline: List<SparklinePoint>) {
             Spacer(Modifier.height(4.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                svc.latency?.let { Text("${it}ms", color = MaterialTheme.colorScheme.onSurface.copy(0.7f), fontSize = 12.sp) }
-                svc.uptime?.let { Text("${it}% uptime", color = MaterialTheme.colorScheme.onSurface.copy(0.7f), fontSize = 12.sp) }
+                svc.latency?.let {
+                    Text("${it}ms", color = MaterialTheme.colorScheme.onSurface.copy(0.7f), fontSize = 12.sp)
+                }
+                svc.uptime?.let {
+                    Text("${it}% uptime", color = MaterialTheme.colorScheme.onSurface.copy(0.7f), fontSize = 12.sp)
+                }
             }
 
             if (sparkline.isNotEmpty()) {

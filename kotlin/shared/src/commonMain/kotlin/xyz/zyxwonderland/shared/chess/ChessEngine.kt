@@ -170,7 +170,11 @@ fun rawMoves(
         }
         CH_BISHOP -> for ((dr, dc) in listOf(-1 to -1, -1 to 1, 1 to -1, 1 to 1)) slide(dr, dc)
         CH_ROOK -> for ((dr, dc) in listOf(-1 to 0, 1 to 0, 0 to -1, 0 to 1)) slide(dr, dc)
-        CH_QUEEN -> for ((dr, dc) in listOf(-1 to -1, -1 to 0, -1 to 1, 0 to -1, 0 to 1, 1 to -1, 1 to 0, 1 to 1)) slide(dr, dc)
+        CH_QUEEN -> {
+            for ((dr, dc) in listOf(-1 to -1, -1 to 0, -1 to 1, 0 to -1, 0 to 1, 1 to -1, 1 to 0, 1 to 1)) {
+                slide(dr, dc)
+            }
+        }
         CH_KING -> {
             for ((dr, dc) in listOf(-1 to -1, -1 to 0, -1 to 1, 0 to -1, 0 to 1, 1 to -1, 1 to 0, 1 to 1)) {
                 if (inBounds(r + dr, c + dc) && !owns(board[r + dr][c + dc], color))
