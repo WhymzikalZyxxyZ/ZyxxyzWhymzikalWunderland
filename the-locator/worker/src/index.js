@@ -71,7 +71,7 @@ const US_BOUNDS = { minLng: -180, minLat: 18, maxLng: -66, maxLat: 72 };
 
 function sanitizeQuery(raw) {
     if (typeof raw !== 'string') return null;
-    return raw.trim().slice(0, 100).replace(/[^a-zA-Z0-9 ,.\-]/g, '') || null;
+    return raw.trim().slice(0, 100).replace(/[^a-zA-Z0-9 ,.-]/g, '') || null;
 }
 
 function parseBbox(raw) {

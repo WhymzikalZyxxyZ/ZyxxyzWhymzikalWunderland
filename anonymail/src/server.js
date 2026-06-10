@@ -16,8 +16,8 @@ const { byToken, mailboxCount, setExpiryNotifier } = require('./lib/mailstore');
 const sender  = require('./lib/sender');
 const apiRouter = require('./routes/api');
 
-const PORT      = parseInt(process.env.PORT)      || 3000;
-const SMTP_PORT = parseInt(process.env.SMTP_PORT) || 2525;
+const PORT      = parseInt(process.env.PORT,      10) || 3000;
+const SMTP_PORT = parseInt(process.env.SMTP_PORT, 10) || 2525;
 const DOMAIN    = process.env.DOMAIN              || 'anonymail.local';
 const START_TS  = Date.now();
 
@@ -162,7 +162,7 @@ setInterval(() => {
 // ── Outbound SMTP ─────────────────────────────────────────────────────────────
 sender.configure({
     host: process.env.SMTP_OUT_HOST,
-    port: parseInt(process.env.SMTP_OUT_PORT) || 587,
+    port: parseInt(process.env.SMTP_OUT_PORT, 10) || 587,
     user: process.env.SMTP_OUT_USER,
     pass: process.env.SMTP_OUT_PASS,
 });

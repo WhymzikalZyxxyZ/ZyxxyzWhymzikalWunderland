@@ -126,8 +126,8 @@ function validateBox(req, res) {
 // ── Mailbox ───────────────────────────────────────────────────────────────────
 router.post('/mailbox', (req, res) => {
     const domain = req.app.get('domain');
-    const max    = parseInt(process.env.MAX_MAILBOXES) || 0;
-    const ttl    = Math.min(parseInt(process.env.MAILBOX_TTL_MS) || 3_600_000, 86_400_000);
+    const max    = parseInt(process.env.MAX_MAILBOXES,   10) || 0;
+    const ttl    = Math.min(parseInt(process.env.MAILBOX_TTL_MS, 10) || 3_600_000, 86_400_000);
     try {
         res.json(store.createMailbox(domain, ttl, max));
     } catch (err) {
@@ -140,7 +140,7 @@ router.get('/mailbox', auth, (req, res) => {
 });
 
 router.post('/mailbox/extend', auth, writeLimit, (req, res) => {
-    const extra = Math.min(parseInt(req.body?.extra) || 3_600_000, 3_600_000);
+    const extra = Math.min(parseInt(req.body?.extra, 10) || 3_600_000, 3_600_000);
     const expiresAt = store.extendTtl(req.token, extra);
     if (!expiresAt) return res.status(404).json({ error: 'Session not found' });
     res.json({ expiresAt });
