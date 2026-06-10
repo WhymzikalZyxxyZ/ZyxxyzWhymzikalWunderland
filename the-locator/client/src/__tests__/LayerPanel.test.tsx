@@ -50,4 +50,31 @@ describe('LayerPanel', () => {
         fireEvent.click(screen.getByText('Population'));
         expect(onToggle).toHaveBeenCalledWith('population');
     });
+
+    it('shows error message when a layer has an error', () => {
+        render(
+            <LayerPanel
+                activeLayers={new Set(['population'])}
+                onToggle={vi.fn()}
+                layerErrors={{ population: 'Population layer requires a Census API key — not configured on this server' }}
+            />
+        );
+        expect(screen.getByText('⚠ Unavailable')).toBeInTheDocument();
+    });
+
+    it('shows error tooltip with full message', () => {
+        render(
+            <LayerPanel
+                activeLayers={new Set(['population'])}
+                onToggle={vi.fn()}
+                layerErrors={{ population: 'Census API unavailable' }}
+            />
+        );
+        expect(screen.getByTitle('Census API unavailable')).toBeInTheDocument();
+    });
+
+    it('does not show error when no layerErrors provided', () => {
+        render(<LayerPanel activeLayers={new Set()} onToggle={vi.fn()} />);
+        expect(screen.queryByText('⚠ Unavailable')).not.toBeInTheDocument();
+    });
 });

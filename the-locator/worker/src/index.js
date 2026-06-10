@@ -176,7 +176,12 @@ async function handlePopulation(request, env, ip) {
 
     let data;
     try { data = await fetchPopulation(bbox, env); }
-    catch { return err('Census API unavailable', 502); }
+    catch (e) {
+        const msg = (e instanceof Error && e.message.startsWith('CENSUS_API_KEY'))
+            ? 'Population layer requires a Census API key — not configured on this server'
+            : 'Census API unavailable';
+        return err(msg, 502);
+    }
 
     await setCache(env, cacheKey, data, 86_400);
     return json(data);
