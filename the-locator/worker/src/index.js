@@ -68,7 +68,7 @@ const US_BOUNDS = { minLng: -180, minLat: 18, maxLng: -66, maxLat: 72 };
 
 function sanitizeQuery(raw) {
     if (typeof raw !== 'string') return null;
-    return raw.trim().slice(0, 100).replace(/[^a-zA-Z0-9 ,.-]/g, '') || null;
+    return raw.trim().slice(0, 100).replace(/[^a-zA-Z0-9 ,.\-#]/g, '') || null;
 }
 
 function parseBbox(raw) {
@@ -110,7 +110,7 @@ async function handleSearch(request, env, ip) {
 
 async function geocodeMapbox(q, token) {
     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json`
-        + `?types=place,postcode&country=us&access_token=${token}`;
+        + `?types=address,place,postcode&country=us&access_token=${token}`;
     const r = await fetch(url);
     if (!r.ok) return null;
     const data = await r.json();
@@ -126,14 +126,20 @@ async function geocodeNominatim(q) {
     const features = data
         .map(p => ({ p, lon: parseFloat(p.lon), lat: parseFloat(p.lat) }))
         .filter(({ lon, lat }) => withinUS([lon, lat]))
-        .map(({ p, lon, lat }) => ({
-            place_name: p.display_name,
-            center:     [lon, lat],
-            bbox:       p.boundingbox
-                ? [parseFloat(p.boundingbox[2]), parseFloat(p.boundingbox[0]),
-                   parseFloat(p.boundingbox[3]), parseFloat(p.boundingbox[1])]
-                : null,
-        }));
+        .map(({ p, lon, lat }) => {
+            const isAddress = p.type === 'house' || p.addresstype === 'house_number';
+            const isPostcode = p.type === 'postcode' || p.addresstype === 'postcode';
+            const place_type = isAddress ? ['address'] : isPostcode ? ['postcode'] : ['place'];
+            return {
+                place_name: p.display_name,
+                place_type,
+                center:     [lon, lat],
+                bbox:       p.boundingbox
+                    ? [parseFloat(p.boundingbox[2]), parseFloat(p.boundingbox[0]),
+                       parseFloat(p.boundingbox[3]), parseFloat(p.boundingbox[1])]
+                    : null,
+            };
+        });
     return { features };
 }
 

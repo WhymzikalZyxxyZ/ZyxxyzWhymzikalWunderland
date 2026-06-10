@@ -6,9 +6,10 @@ interface Props {
 }
 
 interface Suggestion {
-    name:   string;
-    center: [number, number];
-    bbox:   [number, number, number, number];
+    name:      string;
+    center:    [number, number];
+    bbox:      [number, number, number, number];
+    placeType: string[];
 }
 
 export default function SearchBar({ onSelect }: Props) {
@@ -26,13 +27,23 @@ export default function SearchBar({ onSelect }: Props) {
             const data = await res.json();
             const results: Suggestion[] = (data.features || []).map((f: {
                 place_name: string;
-                center: [number, number];
-                bbox?: [number, number, number, number];
-            }) => ({
-                name:   f.place_name,
-                center: f.center,
-                bbox:   f.bbox ?? [f.center[0] - 0.5, f.center[1] - 0.5, f.center[0] + 0.5, f.center[1] + 0.5],
-            }));
+                center:     [number, number];
+                bbox?:      [number, number, number, number];
+                place_type?: string[];
+            }) => {
+                const placeType = f.place_type ?? ['place'];
+                const isAddress = placeType.includes('address');
+                const delta     = isAddress ? 0.003 : 0.5;
+                return {
+                    name:      f.place_name,
+                    center:    f.center,
+                    placeType,
+                    bbox:      f.bbox ?? [
+                        f.center[0] - delta, f.center[1] - delta,
+                        f.center[0] + delta, f.center[1] + delta,
+                    ],
+                };
+            });
             setSuggestions(results);
             setOpen(true);
         } catch {
@@ -53,7 +64,10 @@ export default function SearchBar({ onSelect }: Props) {
         setQuery(s.name.split(',')[0]);
         setSuggestions([]);
         setOpen(false);
-        onSelect({ name: s.name, center: s.center, bbox: s.bbox });
+        const zoom = s.placeType.includes('address') ? 17
+                   : s.placeType.includes('postcode') ? 14
+                   : 13;
+        onSelect({ name: s.name, center: s.center, bbox: s.bbox, zoom });
     };
 
     // Cancel any pending debounce when the component unmounts.
@@ -76,7 +90,7 @@ export default function SearchBar({ onSelect }: Props) {
                 <input
                     className="search-input"
                     type="text"
-                    placeholder="Search city or ZIP code…"
+                    placeholder="Search address, city or ZIP…"
                     value={query}
                     onChange={handleChange}
                     onFocus={() => suggestions.length > 0 && setOpen(true)}
