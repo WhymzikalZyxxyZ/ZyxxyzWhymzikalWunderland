@@ -122,7 +122,7 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError }
     // ── Fly to city ───────────────────────────────────────────────────────────
     useEffect(() => {
         if (!city || !mapRef.current) return;
-        mapRef.current.fitBounds(city.bbox, { padding: 60, maxZoom: 13 });
+        mapRef.current.fitBounds(city.bbox, { padding: 60, maxZoom: city.zoom ?? 13 });
     }, [city]);
 
     // ── Fetch GeoJSON for current viewport ────────────────────────────────────

@@ -10,6 +10,7 @@ export interface CityResult {
     center: [number, number];
     bbox:   [number, number, number, number];
     name:   string;
+    zoom?:  number;
 }
 
 export interface ActiveFeature {
