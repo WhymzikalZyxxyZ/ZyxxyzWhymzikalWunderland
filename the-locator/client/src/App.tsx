@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import Map        from './components/Map';
 import SearchBar  from './components/SearchBar';
+import CityPicker from './components/CityPicker';
 import LayerPanel from './components/LayerPanel';
 import InfoPanel  from './components/InfoPanel';
 import type { LayerName } from './types/geojson';
@@ -46,6 +47,7 @@ export default function App() {
                     </div>
                 )}
                 <SearchBar onSelect={setCity} />
+                <CityPicker onSelect={setCity} />
                 <LayerPanel activeLayers={activeLayers} onToggle={toggleLayer} />
                 {activeFeature && (
                     <InfoPanel feature={activeFeature} onClose={() => setActiveFeature(null)} />
