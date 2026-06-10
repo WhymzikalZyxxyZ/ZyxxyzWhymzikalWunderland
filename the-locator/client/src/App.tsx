@@ -21,6 +21,7 @@ export default function App() {
     const [city,          setCity]          = useState<CityResult | null>(null);
     const [activeLayers,  setActiveLayers]  = useState<Set<LayerName>>(new Set());
     const [activeFeature, setActiveFeature] = useState<ActiveFeature | null>(null);
+    const [layerErrors,   setLayerErrors]   = useState<Partial<Record<LayerName, string>>>({});
 
     const isEmbed = useMemo(
         () => new URLSearchParams(window.location.search).get('embed') === '1',
@@ -34,6 +35,16 @@ export default function App() {
             return next;
         });
         setActiveFeature(null);
+        setLayerErrors(prev => { const n = { ...prev }; delete n[layer]; return n; });
+    }, []);
+
+    const handleLayerError = useCallback((layer: LayerName, error: string | null) => {
+        setLayerErrors(prev => {
+            const next = { ...prev };
+            if (error === null) delete next[layer];
+            else next[layer] = error;
+            return next;
+        });
     }, []);
 
     return (
@@ -48,7 +59,7 @@ export default function App() {
                 )}
                 <SearchBar onSelect={setCity} />
                 <CityPicker onSelect={setCity} />
-                <LayerPanel activeLayers={activeLayers} onToggle={toggleLayer} />
+                <LayerPanel activeLayers={activeLayers} onToggle={toggleLayer} layerErrors={layerErrors} />
                 {activeFeature && (
                     <InfoPanel feature={activeFeature} onClose={() => setActiveFeature(null)} />
                 )}
@@ -58,6 +69,7 @@ export default function App() {
                     city={city}
                     activeLayers={activeLayers}
                     onFeatureClick={setActiveFeature}
+                    onLayerError={handleLayerError}
                 />
             </main>
         </div>
