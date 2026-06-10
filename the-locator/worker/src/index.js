@@ -185,24 +185,30 @@ async function handlePopulation(request, env, ip) {
 // ── External data fetchers ────────────────────────────────────────────────────
 
 // TIGERweb ArcGIS REST endpoints
+// The School service uses STATE (not STUSAB), so each layer gets its own field list.
+// where=1=1 is required by the School service; harmless for other layers.
 const CENSUS_LAYER_URLS = {
-    // Census-Designated Places + County Subdivisions
     neighborhoods: 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/0/query',
-    // Unified School Districts — TIGERweb/School service, layer 0; requires where=1=1
     schools:       'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/School/MapServer/0/query',
+};
+const CENSUS_LAYER_FIELDS = {
+    neighborhoods: 'NAME,GEOID,STUSAB',
+    schools:       'NAME,GEOID,STATE',
 };
 
 async function fetchCensusLayer(name, [minLng, minLat, maxLng, maxLat]) {
-    const base = CENSUS_LAYER_URLS[name] || CENSUS_LAYER_URLS.neighborhoods;
-    // Schools uses STATE (not STUSAB); include both so the popup can coalesce them client-side.
-    // where=1=1 is required by the School service; harmless for other layers.
-    const url  = base
+    const base   = CENSUS_LAYER_URLS[name]   || CENSUS_LAYER_URLS.neighborhoods;
+    const fields = CENSUS_LAYER_FIELDS[name] || CENSUS_LAYER_FIELDS.neighborhoods;
+    const url    = base
         + `?where=1%3D1&geometry=${minLng},${minLat},${maxLng},${maxLat}`
         + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
-        + '&outFields=NAME,GEOID,STUSAB,STATE&resultRecordCount=500&f=geojson';
-    const r = await fetch(url);
+        + `&outFields=${fields}&resultRecordCount=500&f=geojson`;
+    const r    = await fetch(url);
     if (!r.ok) throw new Error(`Census ${name} HTTP ${r.status}`);
-    return r.json();
+    const data = await r.json();
+    // ArcGIS returns HTTP 200 with an error body on bad queries — treat as failure so it isn't cached.
+    if (data.error) throw new Error(`Census ${name} API error ${data.error.code}: ${data.error.message}`);
+    return data;
 }
 
 async function fetchSuperfund([minLng, minLat, maxLng, maxLat]) {
@@ -254,13 +260,14 @@ async function fetchPopulation([minLng, minLat, maxLng, maxLat], env) {
             .filter(Boolean)
     )];
 
-    // ACS requires a specific state + county:* when querying tracts.
-    // Omitting county:* causes the API to return an error instead of data.
+    if (!apiKey) throw new Error('CENSUS_API_KEY is not configured — population layer unavailable');
+
+    // ACS requires state + county:* when querying tracts; omitting county:* causes a silent failure.
     const acsRows = (await Promise.all(
         states.map(state => {
             const url = `https://api.census.gov/data/${year}/acs/acs5`
                 + `?get=B01003_001E&for=tract:*&in=state:${state}+county:*`
-                + (apiKey ? `&key=${apiKey}` : '');
+                + `&key=${apiKey}`;
             return fetch(url)
                 .then(r => {
                     if (!r.ok) { console.error(`[population] ACS state ${state} HTTP ${r.status}`); return []; }
@@ -273,6 +280,9 @@ async function fetchPopulation([minLng, minLat, maxLng, maxLat], env) {
                 .catch(e => { console.error(`[population] ACS state ${state} fetch error`, e); return []; });
         })
     )).flat();
+
+    // If ACS returned nothing (bad key, rate limit, etc.) throw so the result is not cached.
+    if (acsRows.length === 0) throw new Error('ACS API returned no data');
 
     // ACS response columns: [B01003_001E, state, county, tract]
     const popByGeoid = new Map(acsRows.map(row => {
