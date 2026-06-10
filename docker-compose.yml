@@ -1,37 +1,122 @@
 version: '3.9'
 
+# ── Port map ──────────────────────────────────────────────────────────────────
+#  8080  →  frontend      (main static site — nginx)
+#  3000  →  anonymail     (HTTP API + WebSocket)
+#  2525  →  anonymail     (inbound SMTP)
+#  5060  →  typescript-api
+#  5050  →  python-api
+#  5001  →  dotnet-api
+#  8085  →  editor-service
+#  3001  →  locator        (Cloudflare Worker local simulator + React client)
+# ─────────────────────────────────────────────────────────────────────────────
+
 services:
 
-  # Live development — mounts the repo and serves it with file watching.
-  # Usage: docker compose up dev
-  dev:
-    image: node:20-alpine
-    working_dir: /app
-    volumes:
-      - .:/app
-      - node_modules:/app/node_modules
-    ports:
-      - '8080:8080'
-    command: sh -c "npm install && npx serve -l 8080 ."
-
-  # Run the full test suite inside a clean container.
-  # Usage: docker compose run --rm test
-  test:
-    image: node:20-alpine
-    working_dir: /app
-    volumes:
-      - .:/app
-      - node_modules:/app/node_modules
-    command: sh -c "npm ci && npm test"
-
-  # Build and preview the production nginx image locally.
-  # Usage: docker compose up preview  (then open http://localhost:8080)
-  preview:
+  # ── Main static site ───────────────────────────────────────────────────────
+  frontend:
     build:
       context: .
       target: server
     ports:
       - '8080:80'
+    restart: unless-stopped
+
+  # ── Anonymail (temp-inbox Node.js service) ─────────────────────────────────
+  anonymail:
+    build:
+      context: ./anonymail
+    ports:
+      - '3000:3000'
+      - '2525:2525'
+    environment:
+      PORT:            '3000'
+      SMTP_PORT:       '2525'
+      DOMAIN:          '${ANONYMAIL_DOMAIN:-anonymail.local}'
+      MAILBOX_TTL_MS:  '${MAILBOX_TTL_MS:-3600000}'
+      MAX_MAILBOXES:   '${MAX_MAILBOXES:-0}'
+      SMTP_OUT_HOST:   '${SMTP_OUT_HOST:-}'
+      SMTP_OUT_PORT:   '${SMTP_OUT_PORT:-587}'
+      SMTP_OUT_USER:   '${SMTP_OUT_USER:-}'
+      SMTP_OUT_PASS:   '${SMTP_OUT_PASS:-}'
+    restart: unless-stopped
+
+  # ── TypeScript Express API ──────────────────────────────────────────────────
+  typescript-api:
+    build:
+      context: ./typescript/api
+    ports:
+      - '5060:5060'
+    environment:
+      PORT:       '5060'
+      JWT_SECRET: '${JWT_SECRET}'
+    restart: unless-stopped
+
+  # ── Python Flask API ────────────────────────────────────────────────────────
+  python-api:
+    build:
+      context: ./python/api
+    ports:
+      - '5050:5050'
+    environment:
+      JWT_SECRET: '${JWT_SECRET}'
+    restart: unless-stopped
+
+  # ── .NET 9 API ──────────────────────────────────────────────────────────────
+  dotnet-api:
+    build:
+      context: ./dotnet
+      dockerfile: api/Dockerfile
+    ports:
+      - '5001:8080'
+    environment:
+      ASPNETCORE_ENVIRONMENT: 'Development'
+      Jwt__Key: '${JWT_SECRET}'
+    restart: unless-stopped
+
+  # ── Editor service (Go — PDF / ZIP tools) ──────────────────────────────────
+  editor-service:
+    build:
+      context: ./editor-service
+    ports:
+      - '8085:8080'
+    restart: unless-stopped
+
+  # ── The Locator (React client + Cloudflare Worker local sim) ───────────────
+  locator:
+    build:
+      context: ./the-locator
+    ports:
+      - '3001:8787'
+    environment:
+      MAPBOX_TOKEN:    '${MAPBOX_TOKEN:-}'
+      CENSUS_API_KEY:  '${CENSUS_API_KEY:-}'
+    restart: unless-stopped
+
+  # ── Utilities (not started by default) ────────────────────────────────────
+
+  # Run the full test suite: docker compose run --rm test
+  test:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+      - node_modules_test:/app/node_modules
+    command: sh -c "npm ci && npm test"
+    profiles: ['tools']
+
+  # Live-reload dev server for the main site: docker compose run --rm dev
+  dev:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+      - node_modules_dev:/app/node_modules
+    ports:
+      - '8080:8080'
+    command: sh -c "npm install && npx serve -l 8080 ."
+    profiles: ['tools']
 
 volumes:
-  node_modules:
+  node_modules_test:
+  node_modules_dev:
