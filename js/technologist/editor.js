@@ -9,7 +9,7 @@ const resultBlobs = {};
 // ── Tab switching ──────────────────────────────────────────────────────────
 function switchTab(name) {
     document.querySelectorAll('.tab-btn').forEach((b, i) => {
-        const tabs = ['merge','extract','remove','rotate','compress','zip'];
+        const tabs = ['merge','extract','remove','rotate','edit','compress','zip'];
         b.classList.toggle('active', tabs[i] === name);
     });
     document.querySelectorAll('.tab-panel').forEach(p => {
@@ -119,6 +119,13 @@ function endpoint(op) {
     return 'pdf/' + op;
 }
 
+function opLabel(op) {
+    const labels = { merge: 'Merge & Download', extract: 'Extract & Download', remove: 'Remove & Download',
+        rotate: 'Rotate & Download', watermark: 'Apply Watermark & Download', pagenumbers: 'Add Numbers & Download',
+        reorder: 'Reorder & Download', compress: 'Compress & Download', zip: 'Zip & Download' };
+    return labels[op] || op;
+}
+
 function buildFormData(op) {
     const fd = new FormData();
 
@@ -147,6 +154,31 @@ function buildFormData(op) {
         fd.append('degrees', document.getElementById('deg-rotate').value);
         const pages = document.getElementById('pages-rotate').value.trim();
         if (pages) fd.append('pages', pages);
+    } else if (op === 'watermark') {
+        const f = document.getElementById('f-watermark').files[0];
+        if (!f) { setStatus(op, 'Select a PDF file.', 'error'); return null; }
+        const text = document.getElementById('wm-text').value.trim();
+        if (!text) { setStatus(op, 'Enter watermark text.', 'error'); return null; }
+        fd.append('file', f);
+        fd.append('text', text);
+        fd.append('opacity', document.getElementById('wm-opacity').value);
+        fd.append('rotation', document.getElementById('wm-rotation').value);
+        const pages = document.getElementById('wm-pages').value.trim();
+        if (pages) fd.append('pages', pages);
+    } else if (op === 'pagenumbers') {
+        const f = document.getElementById('f-pagenumbers').files[0];
+        if (!f) { setStatus(op, 'Select a PDF file.', 'error'); return null; }
+        fd.append('file', f);
+        fd.append('position', document.getElementById('pn-position').value);
+        const pages = document.getElementById('pn-pages').value.trim();
+        if (pages) fd.append('pages', pages);
+    } else if (op === 'reorder') {
+        const f = document.getElementById('f-reorder').files[0];
+        if (!f) { setStatus(op, 'Select a PDF file.', 'error'); return null; }
+        const order = document.getElementById('reorder-order').value.trim();
+        if (!order) { setStatus(op, 'Enter the new page order.', 'error'); return null; }
+        fd.append('file', f);
+        fd.append('order', order);
     } else if (op === 'compress') {
         const f = document.getElementById('f-compress').files[0];
         if (!f) { setStatus(op, 'Select a file to compress.', 'error'); return null; }
@@ -172,16 +204,20 @@ async function printResult(op) {
 }
 
 function clearOp(op) {
-    ['f-merge','f-extract','f-remove','f-rotate','f-compress','f-zip'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el && el.id === 'f-' + op || (op === 'merge' && el.id === 'f-merge') || (op === 'zip' && el.id === 'f-zip')) {
-            try { el.value = ''; } catch (_) { /* read-only input */ }
-        }
-    });
     const fileInput = document.getElementById('f-' + op);
-    if (fileInput) { try { fileInput.value = ''; } catch (_) { /* read-only input */ } }
+    if (fileInput) { try { fileInput.value = ''; } catch (_) { /* read-only in some browsers */ } }
     const fl = document.getElementById('fl-' + op);
     if (fl) fl.innerHTML = '';
+    // Clear any extra fields for this op
+    if (op === 'watermark') {
+        document.getElementById('wm-text').value = '';
+        document.getElementById('wm-opacity').value = '0.3';
+        document.getElementById('wm-pages').value = '';
+    } else if (op === 'pagenumbers') {
+        document.getElementById('pn-pages').value = '';
+    } else if (op === 'reorder') {
+        document.getElementById('reorder-order').value = '';
+    }
     if (resultBlobs[op]) { URL.revokeObjectURL(resultBlobs[op]); delete resultBlobs[op]; }
     setStatus(op, '', '');
 }
