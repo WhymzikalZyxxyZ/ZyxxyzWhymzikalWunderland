@@ -37,6 +37,9 @@ func main() {
 	mux.HandleFunc("/api/pdf/extract", withCORS(handleExtract))
 	mux.HandleFunc("/api/pdf/remove", withCORS(handleRemove))
 	mux.HandleFunc("/api/pdf/rotate", withCORS(handleRotate))
+	mux.HandleFunc("/api/pdf/watermark", withCORS(handleWatermark))
+	mux.HandleFunc("/api/pdf/pagenumbers", withCORS(handlePageNumbers))
+	mux.HandleFunc("/api/pdf/reorder", withCORS(handleReorder))
 	mux.HandleFunc("/api/compress", withCORS(handleCompress))
 	mux.HandleFunc("/api/zip", withCORS(handleZip))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -360,6 +363,143 @@ func handleCompress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sendDownload(w, out.Bytes(), name+".gz", "application/gzip")
+}
+
+// POST /api/pdf/watermark
+// Form fields: file (PDF), text (string), opacity (0.05-1.0), rotation (degrees), pages (optional)
+// Returns: watermarked PDF
+func handleWatermark(w http.ResponseWriter, r *http.Request) {
+	data, name, err := readOne(r, "file")
+	if err != nil {
+		apiErr(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	text := strings.TrimSpace(r.FormValue("text"))
+	if text == "" {
+		apiErr(w, "watermark text is required", http.StatusBadRequest)
+		return
+	}
+	opacity := "0.3"
+	if v := strings.TrimSpace(r.FormValue("opacity")); v != "" {
+		op, e := strconv.ParseFloat(v, 64)
+		if e != nil || op < 0.05 || op > 1.0 {
+			apiErr(w, "opacity must be between 0.05 and 1.0", http.StatusBadRequest)
+			return
+		}
+		opacity = v
+	}
+	rotation := "45"
+	if v := strings.TrimSpace(r.FormValue("rotation")); v != "" {
+		if _, e := strconv.ParseFloat(v, 64); e != nil {
+			apiErr(w, "invalid rotation value", http.StatusBadRequest)
+			return
+		}
+		rotation = v
+	}
+	desc := fmt.Sprintf("fo:Helvetica, points:48, scale:0.9 rel, color:0.5 0.5 0.5, op:%s, rot:%s, pos:c", opacity, rotation)
+	wm, err := api.TextWatermark(text, desc, true, false, 0)
+	if err != nil {
+		apiErr(w, "watermark config error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	var selectedPages []string
+	if pages := strings.TrimSpace(r.FormValue("pages")); pages != "" {
+		selectedPages = []string{pages}
+	}
+	var out bytes.Buffer
+	if err := api.AddWatermarks(bytes.NewReader(data), &out, selectedPages, wm, pdfConf()); err != nil {
+		apiErr(w, "watermark failed: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	outName := stripExt(name, ".pdf") + "_watermarked.pdf"
+	sendDownload(w, out.Bytes(), outName, "application/pdf")
+}
+
+// POST /api/pdf/pagenumbers
+// Form fields: file (PDF), position (top|bottom), pages (optional)
+// Returns: PDF with page numbers stamped at the chosen position
+func handlePageNumbers(w http.ResponseWriter, r *http.Request) {
+	data, name, err := readOne(r, "file")
+	if err != nil {
+		apiErr(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	position := strings.TrimSpace(r.FormValue("position"))
+	if position != "top" {
+		position = "bottom"
+	}
+	posDesc := "pos:bc, offset: 0 15"
+	if position == "top" {
+		posDesc = "pos:tc, offset: 0 -15"
+	}
+	desc := fmt.Sprintf("fo:Helvetica, points:10, scale:1 abs, color:0.3 0.3 0.3, op:1, rot:0, %s", posDesc)
+	wm, err := api.TextWatermark("Page %p", desc, false, false, 0)
+	if err != nil {
+		apiErr(w, "page number config error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	var selectedPages []string
+	if pages := strings.TrimSpace(r.FormValue("pages")); pages != "" {
+		selectedPages = []string{pages}
+	}
+	var out bytes.Buffer
+	if err := api.AddWatermarks(bytes.NewReader(data), &out, selectedPages, wm, pdfConf()); err != nil {
+		apiErr(w, "page numbers failed: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	outName := stripExt(name, ".pdf") + "_numbered.pdf"
+	sendDownload(w, out.Bytes(), outName, "application/pdf")
+}
+
+// POST /api/pdf/reorder
+// Form fields: file (PDF), order (comma-separated page numbers in desired order, e.g. "3,1,2,4")
+// Returns: PDF with pages in the specified order
+func handleReorder(w http.ResponseWriter, r *http.Request) {
+	data, name, err := readOne(r, "file")
+	if err != nil {
+		apiErr(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	orderStr := strings.TrimSpace(r.FormValue("order"))
+	if orderStr == "" {
+		apiErr(w, `"order" field required (e.g. "3,1,2,4")`, http.StatusBadRequest)
+		return
+	}
+	total, err := api.PageCount(bytes.NewReader(data), pdfConf())
+	if err != nil {
+		apiErr(w, "could not read PDF: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	var order []int
+	for _, s := range strings.Split(orderStr, ",") {
+		n, e := strconv.Atoi(strings.TrimSpace(s))
+		if e != nil || n < 1 || n > total {
+			apiErr(w, fmt.Sprintf("invalid page %q — PDF has %d pages", strings.TrimSpace(s), total), http.StatusBadRequest)
+			return
+		}
+		order = append(order, n)
+	}
+	// Extract each requested page individually then merge in order
+	pageReaders := make([]io.ReadSeeker, len(order))
+	for i, p := range order {
+		kept := parsePageNums([]string{strconv.Itoa(p)}, total)
+		toRemove := complementDescs(kept, total)
+		var pageBuf bytes.Buffer
+		if len(toRemove) == 0 {
+			pageBuf.Write(data)
+		} else if err := api.RemovePages(bytes.NewReader(data), &pageBuf, toRemove, pdfConf()); err != nil {
+			apiErr(w, fmt.Sprintf("failed to extract page %d: %s", p, err.Error()), http.StatusInternalServerError)
+			return
+		}
+		pageReaders[i] = bytes.NewReader(pageBuf.Bytes())
+	}
+	var out bytes.Buffer
+	if err := api.MergeRaw(pageReaders, &out, false, pdfConf()); err != nil {
+		apiErr(w, "reorder failed: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	outName := stripExt(name, ".pdf") + "_reordered.pdf"
+	sendDownload(w, out.Bytes(), outName, "application/pdf")
 }
 
 // POST /api/zip
