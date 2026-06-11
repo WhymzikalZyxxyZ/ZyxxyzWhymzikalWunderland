@@ -45,6 +45,10 @@ func main() {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
+		if r.URL.Path == "/" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 		http.NotFound(w, r)
 	})
 	log.Printf("editor-service on :%s", port)
