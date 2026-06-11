@@ -119,9 +119,9 @@ jobs:
       - name: Restore + build shared (Roslyn warnings-as-errors)
         run: dotnet build dotnet/shared/ZyxxyzShared.csproj -c Release /warnaserror
       - name: Restore + build API
-        run: dotnet build dotnet/api/ZyxxyzApi.csproj --no-restore -c Release /warnaserror
+        run: dotnet build dotnet/api/ZyxxyzApi.csproj -c Release /warnaserror
       - name: Restore + build Blazor
-        run: dotnet build dotnet/blazor/ZyxxyzBlazor.csproj --no-restore -c Release /warnaserror
+        run: dotnet build dotnet/blazor/ZyxxyzBlazor.csproj -c Release /warnaserror
       - name: Restore + build SignalR
         run: dotnet build dotnet/realtime/ZyxxyzRealtime.csproj -c Release /warnaserror
 
@@ -216,7 +216,7 @@ jobs:
       - name: Install SwiftLint
         run: brew install swiftlint
       - name: SwiftLint
-        run: swiftlint lint --path swift/ --strict
+        run: swiftlint lint swift/ --strict
 
   test-swift:
     name: Build Swift package
