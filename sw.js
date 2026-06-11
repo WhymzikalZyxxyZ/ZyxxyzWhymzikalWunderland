@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'wunderland-v6';
+const CACHE_NAME = 'wunderland-v7';
 
 // Static assets to pre-cache on install
 const PRECACHE = [
@@ -65,10 +65,16 @@ self.addEventListener('fetch', e => {
     // Pages serves the right file; cache under the original extensionless URL.
     if (request.headers.get('accept')?.includes('text/html')) {
         const u = new URL(request.url);
-        const seg = u.pathname.split('/').pop();
-        const fetchUrl = (seg && !seg.includes('.'))
-            ? new URL(u.pathname + '.html', u.origin).href
-            : request.url;
+        const p = u.pathname.replace(/\/$/, '') || '/';
+        let fetchUrl = request.url;
+        if (p === '/technologist') {
+            fetchUrl = new URL('/technologist/apps.html', u.origin).href;
+        } else {
+            const seg = p.split('/').pop();
+            if (seg && !seg.includes('.')) {
+                fetchUrl = new URL(p + '.html', u.origin).href;
+            }
+        }
         e.respondWith(
             fetch(fetchUrl)
                 .then(res => {

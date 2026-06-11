@@ -7,12 +7,18 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <script>
         // Redirect extensionless URLs to their .html counterpart.
-        // GitHub Pages (Actions deploy) doesn't strip .html automatically,
-        // so /technologist/apps must become /technologist/apps.html.
+        // Having technologist/index.html broke GitHub Pages' .html stripping
+        // for the whole directory; that file is now gone so this is a safety net.
         (function () {
-            var seg = location.pathname.split('/').pop();
+            var p = location.pathname.replace(/\/$/, '') || '/';
+            // Bare /technologist has no index.html — send to the apps hub.
+            if (p === '/technologist') {
+                location.replace('/technologist/apps');
+                return;
+            }
+            var seg = p.split('/').pop();
             if (seg && !seg.includes('.')) {
-                location.replace(location.pathname + '.html' + location.search + location.hash);
+                location.replace(p + '.html' + location.search + location.hash);
             }
         }());
     </script>
