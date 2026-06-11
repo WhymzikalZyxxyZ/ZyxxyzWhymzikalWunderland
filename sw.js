@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'wunderland-v7';
+const CACHE_NAME = 'wunderland-v8';
 
 // Static assets to pre-cache on install
 const PRECACHE = [
@@ -67,9 +67,9 @@ self.addEventListener('fetch', e => {
         const u = new URL(request.url);
         const p = u.pathname.replace(/\/$/, '') || '/';
         let fetchUrl = request.url;
-        if (p === '/technologist') {
-            fetchUrl = new URL('/technologist/apps.html', u.origin).href;
-        } else {
+        // technologist pages now use directory/index.html structure — GitHub
+        // Pages serves them natively; no rewrite needed.
+        if (!p.startsWith('/technologist')) {
             const seg = p.split('/').pop();
             if (seg && !seg.includes('.')) {
                 fetchUrl = new URL(p + '.html', u.origin).href;

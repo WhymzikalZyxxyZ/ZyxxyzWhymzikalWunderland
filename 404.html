@@ -6,18 +6,17 @@
     <title>404 — Page Not Found · ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <script>
-        // Redirect extensionless URLs to their .html counterpart.
-        // Having technologist/index.html broke GitHub Pages' .html stripping
-        // for the whole directory; that file is now gone so this is a safety net.
+        // Redirect extensionless URLs to their canonical location.
+        // technologist/* pages use directory/index.html — GitHub Pages serves
+        // them natively so no redirect is needed there.
+        // Other sections still use flat .html files so we append .html for those.
         (function () {
             var p = location.pathname.replace(/\/$/, '') || '/';
-            // Bare /technologist has no index.html — send to the apps hub.
+            var seg = p.split('/').pop();
+            if (!seg || seg.includes('.')) return; // already has extension or empty
             if (p === '/technologist') {
                 location.replace('/technologist/apps');
-                return;
-            }
-            var seg = p.split('/').pop();
-            if (seg && !seg.includes('.')) {
+            } else if (!p.startsWith('/technologist/')) {
                 location.replace(p + '.html' + location.search + location.hash);
             }
         }());
