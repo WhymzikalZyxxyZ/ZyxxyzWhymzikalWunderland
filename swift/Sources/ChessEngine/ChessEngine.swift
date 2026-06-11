@@ -128,9 +128,9 @@ private func pseudoMoves(_ b: [[Int]],_ r: Int,_ c: Int, turn: Int,
             let (tr,tc)=(r+dr,c+dc)
             if inb(tr,tc) && !(b[tr][tc] != 0 && (b[tr][tc]>0)==(turn>0)) { moves.append(ChessMove(r,c,tr,tc)) }
         }
-    case B: addSlider(&moves,b,r,c,turn,dirs:[(1,1),(1,-1),(-1,1),(-1,-1)])
-    case R: addSlider(&moves,b,r,c,turn,dirs:[(1,0),(-1,0),(0,1),(0,-1)])
-    case Q: addSlider(&moves,b,r,c,turn,dirs:[(1,1),(1,-1),(-1,1),(-1,-1)]); addSlider(&moves,b,r,c,turn,dirs:[(1,0),(-1,0),(0,1),(0,-1)])
+    case B: addSlider(&moves,b,r,c,turn:turn,dirs:[(1,1),(1,-1),(-1,1),(-1,-1)])
+    case R: addSlider(&moves,b,r,c,turn:turn,dirs:[(1,0),(-1,0),(0,1),(0,-1)])
+    case Q: addSlider(&moves,b,r,c,turn:turn,dirs:[(1,1),(1,-1),(-1,1),(-1,-1)]); addSlider(&moves,b,r,c,turn:turn,dirs:[(1,0),(-1,0),(0,1),(0,-1)])
     case K:
         for dr in -1...1 { for dc in -1...1 {
             if dr==0&&dc==0 { continue }
@@ -138,12 +138,12 @@ private func pseudoMoves(_ b: [[Int]],_ r: Int,_ c: Int, turn: Int,
             if inb(tr,tc) && !(b[tr][tc] != 0 && (b[tr][tc]>0)==(turn>0)) { moves.append(ChessMove(r,c,tr,tc)) }
         }}
         if turn==1&&r==7&&c==4 {
-            if wK&&b[7][5]==0&&b[7][6]==0&&!attacked(b,7,4,by:-1)&&!attacked(b,7,5,by:-1) { var m=ChessMove(7,4,7,6); m.castle="K"; moves.append(m) }
-            if wQ&&b[7][3]==0&&b[7][2]==0&&b[7][1]==0&&!attacked(b,7,4,by:-1)&&!attacked(b,7,3,by:-1) { var m=ChessMove(7,4,7,2); m.castle="Q"; moves.append(m) }
+            if wK&&b[7][5]==0&&b[7][6]==0 && !attacked(b,7,4,by:-1) && !attacked(b,7,5,by:-1) { var m=ChessMove(7,4,7,6); m.castle="K"; moves.append(m) }
+            if wQ&&b[7][3]==0&&b[7][2]==0&&b[7][1]==0 && !attacked(b,7,4,by:-1) && !attacked(b,7,3,by:-1) { var m=ChessMove(7,4,7,2); m.castle="Q"; moves.append(m) }
         }
         if turn == -1&&r==0&&c==4 {
-            if bK&&b[0][5]==0&&b[0][6]==0&&!attacked(b,0,4,by:1)&&!attacked(b,0,5,by:1) { var m=ChessMove(0,4,0,6); m.castle="k"; moves.append(m) }
-            if bQ&&b[0][3]==0&&b[0][2]==0&&b[0][1]==0&&!attacked(b,0,4,by:1)&&!attacked(b,0,3,by:1) { var m=ChessMove(0,4,0,2); m.castle="q"; moves.append(m) }
+            if bK&&b[0][5]==0&&b[0][6]==0 && !attacked(b,0,4,by:1) && !attacked(b,0,5,by:1) { var m=ChessMove(0,4,0,6); m.castle="k"; moves.append(m) }
+            if bQ&&b[0][3]==0&&b[0][2]==0&&b[0][1]==0 && !attacked(b,0,4,by:1) && !attacked(b,0,3,by:1) { var m=ChessMove(0,4,0,2); m.castle="q"; moves.append(m) }
         }
     default: break
     }
