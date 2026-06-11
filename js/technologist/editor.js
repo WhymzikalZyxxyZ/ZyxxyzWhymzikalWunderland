@@ -6,8 +6,13 @@ const API_BASE = 'https://zyxxyz-editor.fly.dev';
 // Tracks the latest result blob URL per operation so Print can reuse it.
 const resultBlobs = {};
 
+// Holds the most-recently produced result so it can be piped into the next op.
+let activeResult = null;
+let currentTab = 'merge';
+
 // ── Tab switching ──────────────────────────────────────────────────────────
 function switchTab(name) {
+    currentTab = name;
     document.querySelectorAll('.tab-btn').forEach((b, i) => {
         const tabs = ['merge','extract','remove','rotate','edit','compress','zip'];
         b.classList.toggle('active', tabs[i] === name);
@@ -100,6 +105,13 @@ async function run(op) {
         const filename = disposition(res.headers.get('content-disposition')) || op + '_result';
         const url = URL.createObjectURL(blob);
         resultBlobs[op] = url;
+
+        // Store result for chaining into subsequent operations
+        const pdfOps = ['merge','extract','remove','rotate','watermark','pagenumbers','reorder'];
+        if (pdfOps.includes(op)) {
+            activeResult = { blob, filename };
+            updateActiveResultBar();
+        }
 
         // Trigger download
         const a = document.createElement('a');
@@ -226,4 +238,38 @@ function disposition(header) {
     if (!header) return '';
     const m = header.match(/filename[^;=\n]*=\s*["']?([^"'\n;]+)/i);
     return m ? m[1].trim() : '';
+}
+
+// ── Result chaining ────────────────────────────────────────────────────────
+function updateActiveResultBar() {
+    const bar = document.getElementById('active-result-bar');
+    const nameEl = document.getElementById('active-result-name');
+    if (activeResult) {
+        bar.style.display = 'flex';
+        nameEl.textContent = activeResult.filename;
+    } else {
+        bar.style.display = 'none';
+    }
+}
+
+function clearActiveResult() {
+    activeResult = null;
+    updateActiveResultBar();
+}
+
+function useActiveResult() {
+    if (!activeResult) return;
+    // Resolve which tab is active; for the 'edit' super-tab default to watermark
+    const op = currentTab === 'edit' ? 'watermark' : currentTab;
+    const inputId = 'f-' + op;
+    const listId  = 'fl-' + op;
+    const input = document.getElementById(inputId);
+    if (!input) { return; }
+    const file = new File([activeResult.blob], activeResult.filename,
+        { type: activeResult.blob.type || 'application/pdf' });
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    showFiles(inputId, listId);
+    setStatus(op, 'Loaded last result as input.', 'ok');
 }

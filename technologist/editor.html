@@ -154,6 +154,22 @@
         No uploads are stored. Files exist only for the duration of the request.
     </div>
 
+    <!-- Active result bar — shown after any successful operation -->
+    <div id="active-result-bar" style="display:none; margin-bottom:16px;
+        background:rgba(109,207,138,0.07); border:1px solid rgba(109,207,138,0.28);
+        border-radius:8px; padding:10px 16px; align-items:center; gap:12px;
+        font-family:'Courier New',monospace; font-size:12px; color:#6dcf8a;">
+        <span style="white-space:nowrap;">📋 Last result:</span>
+        <span id="active-result-name" style="flex:1; color:#b0e0c0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+        <button class="btn-secondary" onclick="useActiveResult()"
+            style="padding:5px 14px; font-size:11px; white-space:nowrap;">
+            Load into current tab
+        </button>
+        <button onclick="clearActiveResult()"
+            style="background:none; border:none; color:#6dcf8a; cursor:pointer; font-size:16px; padding:0 4px; line-height:1;"
+            title="Dismiss">✕</button>
+    </div>
+
     <!-- Tab bar -->
     <div class="tab-bar">
         <button class="tab-btn active" onclick="switchTab('merge')">🔗 Merge PDFs</button>
