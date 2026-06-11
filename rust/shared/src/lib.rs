@@ -112,11 +112,7 @@ fn piece_val(p: i8) -> i32 {
 }
 
 // ── Move generation ──────────────────────────────────────────────────────────
-fn inb(r: i8, c: i8) -> bool { r >= 0 && r < 8 && c >= 0 && c < 8 }
-
-fn own(b: &Board, r: usize, c: usize, turn: i8) -> bool {
-    b[r][c] != 0 && (b[r][c] > 0) == (turn > 0)
-}
+fn inb(r: i8, c: i8) -> bool { (0..8).contains(&r) && (0..8).contains(&c) }
 
 fn enemy_or_empty(b: &Board, r: i8, c: i8, turn: i8) -> bool {
     let (r, c) = (r as usize, c as usize);
@@ -240,6 +236,7 @@ fn apply_raw(board: &Board, m: &ChessMove) -> Board {
     b
 }
 
+#[allow(clippy::too_many_arguments)]
 fn pseudo_moves(b: &Board, r: u8, c: u8, turn: i8,
                 w_k: bool, w_q: bool, bk: bool, bq: bool,
                 ep_r: i8, ep_c: i8) -> Vec<ChessMove> {
@@ -284,6 +281,7 @@ fn pseudo_moves(b: &Board, r: u8, c: u8, turn: i8,
     out
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn get_legal_moves(board: &Board, turn: i8, w_k: bool, w_q: bool, bk: bool, bq: bool, ep_r: i8, ep_c: i8) -> Vec<ChessMove> {
     let mut legal = Vec::new();
     for r in 0..8u8 { for c in 0..8u8 {
@@ -316,8 +314,10 @@ pub fn apply_move(g: &ChessGame, m: &ChessMove) -> ChessGame {
     let piece = g.board[m.r as usize][m.c as usize].unsigned_abs();
     if piece == 6 { if g.turn == 1 { w_k = false; w_q = false; } else { b_k = false; b_q = false; } }
     if piece == 4 {
-        if m.r==7&&m.c==7 { w_k=false; } if m.r==7&&m.c==0 { w_q=false; }
-        if m.r==0&&m.c==7 { b_k=false; } if m.r==0&&m.c==0 { b_q=false; }
+        if m.r==7&&m.c==7 { w_k=false; }
+        if m.r==7&&m.c==0 { w_q=false; }
+        if m.r==0&&m.c==7 { b_k=false; }
+        if m.r==0&&m.c==0 { b_q=false; }
     }
     if m.double_push { ep_r = (m.r as i8 + m.tr as i8) / 2; ep_c = m.c as i8; }
     let next_turn = -g.turn;
