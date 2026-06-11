@@ -180,6 +180,9 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError }
 
         const labelId = `lyr-${layer}-label`;
 
+        // Insert fills below all existing outline layers so boundaries always render on top.
+        const firstLineId = ALL_LAYERS.map(l => `lyr-${l}-outline`).find(id => map.getLayer(id));
+
         if (layer === 'superfund') {
             map.addLayer({
                 id: lyrId, type: 'circle', source: srcId,
@@ -196,15 +199,14 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError }
                 id: lyrId, type: 'fill', source: srcId,
                 paint: {
                     'fill-color':   populationColorExpression(data.features),
-                    'fill-opacity': 0.7,
+                    'fill-opacity': 0.5,
                 },
-            });
+            }, firstLineId);
             map.addLayer({
                 id: lineId, type: 'line', source: srcId,
-                paint: { 'line-color': 'rgba(0,0,0,0.15)', 'line-width': 0.5 },
+                paint: { 'line-color': 'rgba(0,0,0,0.2)', 'line-width': 0.5 },
             });
             // Label: density/km² at zoom 10-12, population count at zoom 13+
-            // zoom must be the direct input to 'step' — cannot be nested in 'case'
             map.addLayer({
                 id: labelId, type: 'symbol', source: srcId,
                 minzoom: 10,
@@ -231,11 +233,11 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError }
             // neighborhoods / schools — semi-transparent fill + bold outline
             map.addLayer({
                 id: lyrId, type: 'fill', source: srcId,
-                paint: { 'fill-color': color, 'fill-opacity': 0.2 },
-            });
+                paint: { 'fill-color': color, 'fill-opacity': 0.15 },
+            }, firstLineId);
             map.addLayer({
                 id: lineId, type: 'line', source: srcId,
-                paint: { 'line-color': color, 'line-width': 2, 'line-opacity': 0.85 },
+                paint: { 'line-color': color, 'line-width': 2, 'line-opacity': 0.9 },
             });
         }
 
