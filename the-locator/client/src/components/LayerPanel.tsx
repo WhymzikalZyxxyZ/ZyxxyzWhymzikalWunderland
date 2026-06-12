@@ -7,7 +7,7 @@ interface Props {
 }
 
 const LAYERS: { id: LayerName; label: string; color: string; desc: string }[] = [
-    { id: 'neighborhoods', label: 'Neighborhoods',    color: '#f43f5e', desc: 'Census-designated district boundaries' },
+    { id: 'neighborhoods', label: 'Neighborhoods',    color: '#22c55e', desc: 'Census-designated district boundaries' },
     { id: 'schools',       label: 'School Districts', color: '#3b82f6', desc: 'Unified school district boundaries'    },
     { id: 'superfund',     label: 'Superfund Sites',  color: '#ef4444', desc: 'EPA CERCLIS contamination sites'       },
     { id: 'population',    label: 'Population',       color: '#2171b5', desc: 'Density per km² by census tract'      },
