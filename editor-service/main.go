@@ -12,10 +12,13 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/pdfcpu/pdfcpu/pkg/api"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 )
+
+var bufPool = sync.Pool{New: func() any { return new(bytes.Buffer) }}
 
 const (
 	maxFileSize  = 50 << 20  // 50 MB per file
@@ -96,14 +99,18 @@ func readOne(r *http.Request, key string) (data []byte, filename string, err err
 	}
 	defer f.Close()
 	lr := io.LimitReader(f, maxFileSize+1)
-	buf := &bytes.Buffer{}
+	buf := bufPool.Get().(*bytes.Buffer)
+	buf.Reset()
+	defer bufPool.Put(buf)
 	if _, e := io.Copy(buf, lr); e != nil {
 		return nil, "", e
 	}
 	if buf.Len() > maxFileSize {
 		return nil, "", fmt.Errorf("file exceeds 50 MB limit")
 	}
-	return buf.Bytes(), fh.Filename, nil
+	b := make([]byte, buf.Len())
+	copy(b, buf.Bytes())
+	return b, fh.Filename, nil
 }
 
 func readMany(r *http.Request, key string) (datas [][]byte, names []string, err error) {
@@ -114,13 +121,15 @@ func readMany(r *http.Request, key string) (datas [][]byte, names []string, err 
 	if len(fhs) == 0 {
 		return nil, nil, fmt.Errorf("no files in field %q", key)
 	}
+	buf := bufPool.Get().(*bytes.Buffer)
+	defer bufPool.Put(buf)
 	for _, fh := range fhs {
 		f, e := fh.Open()
 		if e != nil {
 			return nil, nil, e
 		}
 		lr := io.LimitReader(f, maxFileSize+1)
-		buf := &bytes.Buffer{}
+		buf.Reset()
 		if _, e := io.Copy(buf, lr); e != nil {
 			f.Close()
 			return nil, nil, e
@@ -129,7 +138,9 @@ func readMany(r *http.Request, key string) (datas [][]byte, names []string, err 
 		if buf.Len() > maxFileSize {
 			return nil, nil, fmt.Errorf("%q exceeds 50 MB limit", fh.Filename)
 		}
-		datas = append(datas, buf.Bytes())
+		b := make([]byte, buf.Len())
+		copy(b, buf.Bytes())
+		datas = append(datas, b)
 		names = append(names, fh.Filename)
 	}
 	return datas, names, nil
