@@ -15,9 +15,9 @@ interface Props {
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
 
 const LAYER_COLORS: Record<LayerName, string> = {
-    neighborhoods: '#f43f5e',
+    neighborhoods: '#22c55e',
     schools:       '#3b82f6',
-    superfund:     '#f97316',
+    superfund:     '#ef4444',
     population:    '#2171b5',
 };
 
