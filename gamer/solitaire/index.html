@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solitaire — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/js/config/firebase-config.js"></script>
+    <script src="/js/username-gen.js"></script>
+    <script src="/js/engines/card-engine.js"></script>
+    <script src="/js/engines/solitaire-engine.js"></script>
+    <style>
+        #sol-page { max-width:760px; margin:0 auto; padding:0 12px 80px; }
+        .sol-panel { background:rgba(0,0,0,0.75); border:1px solid #2a2a2a;
+            border-radius:12px; padding:16px; margin-bottom:14px; }
+        .sol-title { font-family:'Courier New',monospace; font-size:11px; letter-spacing:3px;
+            text-transform:uppercase; color:#f4a261;
+            border-bottom:1px solid #2a2a2a; padding-bottom:8px; margin:0 0 14px; }
+        /* Cards */
+        .card { display:inline-flex; flex-direction:column; justify-content:space-between;
+            width:48px; height:70px; background:#f8f8f0; border:1.5px solid #bbb;
+            border-radius:6px; padding:3px 4px; font-family:'Courier New',monospace;
+            font-size:12px; font-weight:bold; color:#111; user-select:none;
+            cursor:pointer; flex-shrink:0; box-sizing:border-box; }
+        .card.red { color:#c0392b; }
+        .card.back { background:repeating-linear-gradient(45deg,#1a237e,#1a237e 5px,#283593 5px,#283593 10px);
+            border-color:#0d1b6e; cursor:default; }
+        .card.selected { outline:2px solid #f4a261; box-shadow:0 0 8px rgba(244,162,97,0.5); }
+        .card.empty-slot { background:rgba(255,255,255,0.04); border:1.5px dashed #333;
+            cursor:pointer; color:transparent; }
+        .card-b { transform:rotate(180deg); }
+        /* Layout */
+        #top-row { display:flex; gap:8px; align-items:flex-start; margin-bottom:10px; }
+        #stock-waste { display:flex; gap:6px; }
+        #foundations { display:flex; gap:6px; margin-left:auto; }
+        #tableau { display:flex; gap:6px; align-items:flex-start; }
+        .col { display:flex; flex-direction:column; position:relative;
+            min-height:80px; width:52px; flex-shrink:0; }
+        .col .card + .card { margin-top:-50px; }
+        .col .card.face-up + .card { margin-top:-46px; }
+        /* Timer + controls */
+        .ctrl-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+        .sol-btn { background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15);
+            color:#bbb; border-radius:6px; padding:7px 16px;
+            font-family:'Courier New',monospace; font-size:12px; cursor:pointer; }
+        .sol-btn:hover { border-color:#f4a261; color:#fff; }
+        .sol-btn.accent { background:#f4a261; border-color:#f4a261; color:#111; font-weight:bold; }
+        #sol-timer { font-family:'Courier New',monospace; font-size:18px; color:#f4a261; }
+        #sol-moves { font-family:'Courier New',monospace; font-size:12px; color:#888; }
+        #sol-msg   { font-family:'Courier New',monospace; font-size:1.1em; color:#4caf50;
+            text-align:center; min-height:1.3em; margin-top:6px; }
+        #hs-box { text-align:center; font-family:'Courier New',monospace;
+            font-size:11px; color:#666; margin-top:10px; }
+        #hs-box strong { color:#f4a261; }
+        .mode-tabs { display:flex; gap:8px; margin-bottom:12px; }
+        .mode-tab { flex:1; padding:7px; background:rgba(255,255,255,0.05);
+            border:1px solid #333; border-radius:6px; cursor:pointer;
+            font-family:'Courier New',monospace; font-size:11px; letter-spacing:2px;
+            text-transform:uppercase; color:#888; text-align:center; }
+        .mode-tab.active { border-color:#f4a261; color:#f4a261; background:rgba(244,162,97,0.08); }
+        #mp-room-info { font-family:'Courier New',monospace; font-size:12px; color:#888; margin-top:6px; }
+        #mp-players-list { font-family:'Courier New',monospace; font-size:11px; color:#666; margin-top:6px; }
+    </style>
+</head>
+<body class="wunderBody">
+    <div class="navbar">
+        <a href="../">Home</a>
+        <a href="../gamer/games">Games</a>
+    </div>
+
+    <div id="sol-page">
+        <div class="sol-panel">
+            <div class="sol-title">Klondike Solitaire</div>
+            <div class="mode-tabs">
+                <div class="mode-tab active" id="tab-sp" onclick="setMode('sp')">Single Player</div>
+                <div class="mode-tab"        id="tab-mp" onclick="setMode('mp')">Race Mode</div>
+            </div>
+            <div id="sp-setup">
+                <button class="sol-btn accent" onclick="spStart()">&#9654; New Game</button>
+            </div>
+            <div id="mp-setup" style="display:none;">
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <button class="sol-btn accent" onclick="mpCreate()">Create Race</button>
+                    <input id="mp-join-id" placeholder="Room ID" maxlength="6"
+                        style="width:90px;background:rgba(255,255,255,0.07);border:1px solid #444;
+                               color:#ccc;border-radius:5px;padding:5px 8px;
+                               font-family:'Courier New',monospace;font-size:13px;">
+                    <button class="sol-btn" onclick="mpJoin()">Join</button>
+                </div>
+                <div id="mp-room-info"></div>
+                <div id="mp-players-list"></div>
+            </div>
+        </div>
+
+        <div class="sol-panel" id="game-panel" style="display:none;">
+            <div class="ctrl-row">
+                <span id="sol-timer">0:00</span>
+                <span id="sol-moves">0 moves</span>
+                <button class="sol-btn" onclick="autoFoundation()">Auto</button>
+                <button class="sol-btn" onclick="restartGame()">Restart</button>
+                <span style="font-family:'Courier New',monospace;font-size:11px;color:#555;">
+                    (click card to select, click destination to place)
+                </span>
+            </div>
+            <div id="sol-msg"></div>
+
+            <!-- Stock + Waste + Foundations -->
+            <div id="top-row" style="margin-top:12px;">
+                <div id="stock-waste">
+                    <div id="stock-slot"  class="col" style="cursor:pointer;" onclick="doDrawStock()"></div>
+                    <div id="waste-slot"  class="col"></div>
+                </div>
+                <div id="foundations">
+                    <div id="found-S" class="col" onclick="doClickFoundation('S')"></div>
+                    <div id="found-H" class="col" onclick="doClickFoundation('H')"></div>
+                    <div id="found-D" class="col" onclick="doClickFoundation('D')"></div>
+                    <div id="found-C" class="col" onclick="doClickFoundation('C')"></div>
+                </div>
+            </div>
+
+            <!-- Tableau -->
+            <div id="tableau"></div>
+        </div>
+
+        <div id="hs-box">
+            &#127942; Best Score: <strong id="hs-val">—</strong> by <strong id="hs-user">—</strong>
+            <span style="color:#555;">(10000 - moves×5 - seconds×2)</span>
+        </div>
+    </div>
+
+    <button type="button" onclick="navigateToPage('/gamer/games')">&#8592; Back to Games</button>
+    <script src="/js/gamer/gamer-chat.js"></script>
+    <script src="/js/gamer/solitaire.js" defer></script>
+</body>
+</html>

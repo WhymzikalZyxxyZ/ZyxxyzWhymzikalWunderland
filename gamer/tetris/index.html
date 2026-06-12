@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <script src="/js/engines/tetris-engine.js"></script>
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/js/config/firebase-config.js"></script>
+    <style>
+        #tetris-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 16px;
+            margin: 24px auto;
+        }
+        #tetris-board {
+            border: 2px solid #555;
+            display: block;
+        }
+        #tetris-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 110px;
+        }
+        .tetris-box {
+            background: rgba(0,0,0,0.6);
+            border: 1px solid #555;
+            padding: 8px;
+            text-align: center;
+        }
+        .tetris-box label {
+            display: block;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
+        .tetris-box span {
+            display: block;
+            font-family: 'Courier New', monospace;
+            font-size: 22px;
+            font-weight: bold;
+            color: #f4a261;
+        }
+        #tetris-next { display: block; margin: 0 auto; }
+        #tetris-best { color: #ffd700; }
+        #tetris-world { color: #4caf50; }
+        .tetris-box.new-best { animation: bestFlash 0.5s ease 3; }
+        @keyframes bestFlash {
+            0%, 100% { background: rgba(0,0,0,0.6); }
+            50%       { background: rgba(255,215,0,0.25); }
+        }
+        .tetris-box.new-world { animation: worldFlash 0.5s ease 3; }
+        @keyframes worldFlash {
+            0%, 100% { background: rgba(0,0,0,0.6); }
+            50%       { background: rgba(76,175,80,0.25); }
+        }
+        #tetris-status {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            font-weight: bold;
+            color: #f00;
+            text-align: center;
+            min-height: 20px;
+            background: rgba(0,0,0,0.6);
+            padding: 4px;
+        }
+        #tetris-start { width: 100%; font-family: 'Courier New', monospace; }
+        #tetris-keys {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #888;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #444;
+            padding: 8px;
+        }
+        #tetris-keys p { color: #888; margin: 2px 0; text-align: left; }
+    </style>
+</head>
+<body class="wunderBody">
+
+    <h2>Tetris</h2>
+
+    <div class="navbar">
+        <a href="../">Home</a>
+        <a href="games">Games</a>
+        <a href="tetris">Tetris</a>
+        <a href="snake">Snake</a>
+    </div>
+
+    <div id="tetris-wrapper">
+        <canvas id="tetris-board" width="300" height="600" role="img" aria-label="Tetris game board" tabindex="0"></canvas>
+
+        <div id="tetris-sidebar">
+            <div class="tetris-box">
+                <label>NEXT</label>
+                <canvas id="tetris-next" width="96" height="96"></canvas>
+            </div>
+            <div class="tetris-box">
+                <label>SCORE</label>
+                <span id="tetris-score" aria-live="polite">0</span>
+            </div>
+            <div class="tetris-box" id="tetris-best-box">
+                <label>BEST</label>
+                <span id="tetris-best">0</span>
+            </div>
+            <div class="tetris-box" id="tetris-world-box">
+                <label>WORLD</label>
+                <span id="tetris-world">—</span>
+            </div>
+            <div class="tetris-box">
+                <label>LINES</label>
+                <span id="tetris-lines">0</span>
+            </div>
+            <div class="tetris-box">
+                <label>LEVEL</label>
+                <span id="tetris-level">1</span>
+            </div>
+            <div id="tetris-status" role="status" aria-live="assertive"></div>
+            <button id="tetris-start" onclick="startGame()">PLAY</button>
+            <div id="tetris-keys">
+                <p>&#8592; &#8594; &nbsp;Move</p>
+                <p>&#8593; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Rotate</p>
+                <p>&#8595; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Soft drop</p>
+                <p>Spc &nbsp;&nbsp;Hard drop</p>
+                <p>P &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Pause</p>
+                <p style="color:#666;margin-top:6px;">&#128241; Swipe to move/rotate</p>
+                <p style="color:#666;">&#128241; Tap = hard drop</p>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" onclick="navigateToPage('/gamer/games')">&#8592; Back to Games</button>
+
+    <script src="/js/gamer/tetris.js" defer></script>
+</body>
+</html>
