@@ -14,20 +14,29 @@ describe('InfoPanel', () => {
         expect(screen.getByText('CO')).toBeInTheDocument();
     });
 
-    it('shows school district label and properties', () => {
+    it('shows school district label and properties using STATE field', () => {
         render(<InfoPanel
-            feature={{ layer: 'schools', properties: { NAME: 'Denver USD 1', GEOID: '0800001', STUSAB: 'CO' } }}
+            feature={{ layer: 'schools', properties: { NAME: 'Denver USD 1', GEOID: '0800001', STATE: 'CO' } }}
             onClose={vi.fn()}
         />);
         expect(screen.getByText('School District')).toBeInTheDocument();
         expect(screen.getByText('Denver USD 1')).toBeInTheDocument();
+        expect(screen.getByText('CO')).toBeInTheDocument();
     });
 
-    it('shows superfund site properties', () => {
+    it('shows school district state from STUSAB when STATE is absent', () => {
+        render(<InfoPanel
+            feature={{ layer: 'schools', properties: { NAME: 'Denver USD 1', GEOID: '0800001', STUSAB: 'CO' } }}
+            onClose={vi.fn()}
+        />);
+        expect(screen.getByText('CO')).toBeInTheDocument();
+    });
+
+    it('shows superfund site properties including EPA ID', () => {
         render(<InfoPanel
             feature={{
                 layer: 'superfund',
-                properties: { name: 'Toxic Site', nplStatus: 'NPL', address: '123 Main', city: 'Denver', state: 'CO' },
+                properties: { name: 'Toxic Site', nplStatus: 'NPL', address: '123 Main', city: 'Denver', state: 'CO', epaId: 'COD000123' },
             }}
             onClose={vi.fn()}
         />);
@@ -35,6 +44,7 @@ describe('InfoPanel', () => {
         expect(screen.getByText('Toxic Site')).toBeInTheDocument();
         expect(screen.getByText('NPL')).toBeInTheDocument();
         expect(screen.getByText('123 Main')).toBeInTheDocument();
+        expect(screen.getByText('COD000123')).toBeInTheDocument();
     });
 
     it('shows population properties with formatted number', () => {

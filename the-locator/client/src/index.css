@@ -296,13 +296,14 @@ html, body, #root { height: 100%; }
 .locator-popup .maplibregl-popup-close-button:hover { color: var(--text); background: none; }
 
 /* Popup inner layout */
-.lp-popup  { display: flex; flex-direction: column; }
+.lp-popup    { display: flex; flex-direction: column; }
+.lp-section  { display: flex; flex-direction: column; }
+.lp-section + .lp-section { border-top: 1px solid var(--border); }
 .lp-header {
     font-size:     13px;
     font-weight:   600;
-    padding:       10px 32px 10px 12px;
+    padding:       10px 32px 10px 16px;
     border-bottom: 1px solid var(--border);
-    padding-left:  16px;
 }
 .lp-body  { padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
 .lp-row   { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; }
