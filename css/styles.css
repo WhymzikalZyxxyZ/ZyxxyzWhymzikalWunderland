@@ -64,17 +64,6 @@ p { margin: 0; }
     color: var(--accent);
 }
 
-/* On mobile the theme toggle sits in the top row above the collapsed links */
-@media (width <= 768px) {
-    .theme-toggle {
-        position: absolute;
-        top: 8px;
-        right: 58px;
-        margin: 0;
-        padding: 4px 10px;
-    }
-}
-
 /* Light theme — override tokens first, then structural rules */
 [data-theme="light"] {
     --accent:      #c07030;
@@ -426,6 +415,14 @@ a.nav-link.nav-active {
 
     .nav-dropdown.nav-dropdown-open > .nav-link.nav-dropdown-toggle::after {
         content: ' ▾';
+    }
+
+    .theme-toggle {
+        position: absolute;
+        top: 8px;
+        right: 58px;
+        margin: 0;
+        padding: 4px 10px;
     }
 }
 
