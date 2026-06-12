@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gamer — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/js/config/firebase-config.js"></script>
+    <script src="/js/username-gen.js"></script>
+    <style>
+        /* ── Page layout ─────────────────────────────────────────────── */
+        .games-page { max-width: 1100px; margin: 0 auto; padding: 0 24px 72px; }
+
+        .games-hero { text-align: center; padding: 48px 24px 40px; }
+        .games-hero h1 {
+            font-family: Jokerman, fantasy;
+            font-size: 2.4em; font-weight: 900;
+            color: #f4a261;
+            text-shadow: 0 0 28px rgba(244,162,97,0.35);
+            margin-bottom: 10px;
+        }
+        .games-hero p { color: #8fa8d0; font-size: 1em; letter-spacing: 0.4px; margin: 0; }
+
+        #identity-bar {
+            text-align: center; font-family: 'Courier New', monospace;
+            font-size: 11px; color: #666; margin: -24px 0 32px;
+        }
+        #identity-bar span { color: #f4a261; }
+
+        .cat-section { margin-bottom: 52px; }
+        .cat-heading {
+            font-family: Papyrus, fantasy;
+            font-size: 1em; font-weight: 700;
+            color: #c8b0d8;
+            letter-spacing: 2.5px; text-transform: uppercase;
+            padding: 0 4px 10px;
+            border-bottom: 1px solid rgba(200,176,216,0.18);
+            margin-bottom: 22px;
+        }
+
+        /* ── Game cards ──────────────────────────────────────────────── */
+        .game-cards {
+            display: flex; flex-wrap: wrap;
+            gap: 24px; margin: 0;
+        }
+        .game-card {
+            background: rgba(0,0,0,0.69); border: 2px solid #555;
+            border-radius: 12px; padding: 28px 20px 18px; width: 200px;
+            text-align: center; text-decoration: none; color: #fff;
+            transition: transform 0.2s, border-color 0.2s;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .game-card:hover { transform: translateY(-8px); border-color: #f4a261; }
+        .game-card-icon { font-size: 2.6em; display: block; margin-bottom: 10px; }
+        .game-card h3 {
+            font-family: 'Courier New', monospace; color: #f4a261;
+            margin: 0 0 7px; font-size: 1.05em;
+        }
+        .game-card > p {
+            font-family: 'Courier New', monospace; font-size: 11px;
+            color: #aaa; margin: 0 0 12px; flex: 1; line-height: 1.5;
+        }
+
+        /* Featured card (Daedalus) */
+        .game-card--featured {
+            width: 340px; padding: 32px 28px 22px;
+            border-color: rgba(244,162,97,0.45);
+            background: rgba(10,4,22,0.82);
+        }
+        .game-card--featured .game-card-icon { font-size: 3.2em; }
+        .game-card--featured h3 { font-size: 1.3em; }
+        .game-card--featured > p { font-size: 12px; max-width: 260px; }
+
+        /* ── Score box ───────────────────────────────────────────────── */
+        .world-score-box {
+            width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #2a2a2a;
+            border-radius: 8px; padding: 8px 10px; margin-top: auto;
+        }
+        .world-score-box label {
+            display: block; font-family: 'Courier New', monospace;
+            font-size: 9px; letter-spacing: 2px; color: #555; margin-bottom: 2px;
+        }
+        .world-score-box .score-num {
+            display: block; font-family: 'Courier New', monospace;
+            font-size: 20px; font-weight: bold; color: #4caf50;
+        }
+        .world-score-box .score-user {
+            display: block; font-family: 'Courier New', monospace;
+            font-size: 9px; color: #888; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis;
+        }
+
+        /* ── Suggestions ─────────────────────────────────────────── */
+        #suggestions-fab {
+            position: fixed; bottom: 24px; right: 24px; z-index: 900;
+            background: #f4a261; border: none; border-radius: 28px;
+            padding: 11px 20px; color: #0e0818; font-family: 'Courier New', monospace;
+            font-size: 13px; font-weight: bold; letter-spacing: 1px;
+            cursor: pointer; box-shadow: 0 4px 20px rgba(244,162,97,0.45);
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+        }
+        #suggestions-fab:hover {
+            background: #e8955a; transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(244,162,97,0.55);
+        }
+
+        #suggestions-overlay {
+            display: none; position: fixed; inset: 0; z-index: 950;
+            background: rgba(0,0,0,0.72);
+        }
+        #suggestions-overlay.open { display: flex; align-items: center; justify-content: center; }
+
+        #suggestions-modal {
+            background: rgba(12,7,22,0.98); border: 1px solid rgba(244,162,97,0.28);
+            border-radius: 14px; padding: 28px 28px 24px; width: min(540px, calc(100vw - 40px));
+            max-height: 80vh; display: flex; flex-direction: column;
+            box-shadow: 0 16px 56px rgba(0,0,0,0.7);
+        }
+        #suggestions-modal h2 {
+            font-family: 'Courier New', monospace; color: #f4a261;
+            font-size: 15px; letter-spacing: 2px; text-transform: uppercase;
+            margin: 0 0 18px; text-align: center;
+        }
+        #suggestions-form {
+            display: flex; gap: 8px; margin-bottom: 20px;
+        }
+        #suggestion-input {
+            flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(244,162,97,0.25);
+            border-radius: 8px; padding: 9px 12px; color: #f0f0f0;
+            font-family: 'Courier New', monospace; font-size: 13px; outline: none;
+            transition: border-color 0.2s;
+        }
+        #suggestion-input:focus { border-color: rgba(244,162,97,0.6); }
+        #suggestion-input::placeholder { color: #555; }
+        #suggestions-submit {
+            background: #f4a261; border: none; border-radius: 8px;
+            padding: 9px 16px; color: #0e0818; font-family: 'Courier New', monospace;
+            font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap;
+            transition: background 0.2s;
+        }
+        #suggestions-submit:hover { background: #e8955a; }
+        #suggestions-submit:disabled { background: #5a4a38; color: #888; cursor: default; }
+        #suggestions-offline {
+            display: none; text-align: center; font-family: 'Courier New', monospace;
+            font-size: 12px; color: #888; margin-bottom: 14px;
+        }
+        #suggestions-list {
+            overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 10px;
+        }
+        #suggestions-list::-webkit-scrollbar { width: 4px; }
+        #suggestions-list::-webkit-scrollbar-thumb { background: rgba(244,162,97,0.3); border-radius: 2px; }
+        .sug-item {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 8px; padding: 10px 14px;
+        }
+        .sug-meta {
+            font-family: 'Courier New', monospace; font-size: 10px; color: #666;
+            margin-bottom: 5px; display: flex; justify-content: space-between; gap: 8px;
+        }
+        .sug-meta .sug-user { color: #f4a261; }
+        .sug-text {
+            font-family: 'Courier New', monospace; font-size: 13px; color: #d0d0d0;
+            word-break: break-word; line-height: 1.45;
+        }
+        #suggestions-empty {
+            font-family: 'Courier New', monospace; font-size: 12px;
+            color: #555; text-align: center; padding: 24px 0;
+        }
+        #suggestions-close {
+            align-self: flex-end; background: transparent; border: 1px solid rgba(244,162,97,0.2);
+            border-radius: 6px; padding: 5px 12px; color: #888;
+            font-family: 'Courier New', monospace; font-size: 11px;
+            cursor: pointer; margin-top: 16px; transition: color 0.2s, border-color 0.2s;
+        }
+        #suggestions-close:hover { color: #f4a261; border-color: rgba(244,162,97,0.5); }
+    </style>
+</head>
+<body class="wunderBody">
+<div class="navbar"></div>
+
+<div class="games-page">
+
+    <div class="games-hero">
+        <h1>🎮 Games</h1>
+        <p>Twelve games. Eleven leaderboards. One maze with no end.</p>
+    </div>
+
+    <div id="identity-bar">Playing as <span id="username-display">—</span></div>
+
+    <!-- ── Featured ────────────────────────────────────────────────── -->
+    <section class="cat-section">
+        <h2 class="cat-heading">🌀 Featured</h2>
+        <div class="game-cards">
+            <a href="daedalus" class="game-card game-card--featured">
+                <span class="game-card-icon">🌀</span>
+                <h3>Daedalus</h3>
+                <p>Ten labyrinthine mazes of escalating difficulty — braided paths, fog of war, and enemies that hunt you. Escape them all. Your total time is your score.</p>
+                <div class="world-score-box">
+                    <label>GLOBAL BEST</label>
+                    <span class="score-num" id="world-daedalus" style="font-size:14px;">—</span>
+                    <span class="score-user" id="user-daedalus"></span>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <!-- ── Strategy ───────────────────────────────────────────────── -->
+    <section class="cat-section">
+        <h2 class="cat-heading">♟️ Strategy</h2>
+        <div class="game-cards">
+            <a href="chess" class="game-card">
+                <span class="game-card-icon">♟️</span>
+                <h3>Chess</h3>
+                <p>Classic strategy. Play vs AI or a friend online.</p>
+                <div class="world-score-box">
+                    <label>MOST WINS</label>
+                    <span class="score-num" id="world-chess">—</span>
+                    <span class="score-user" id="user-chess">—</span>
+                </div>
+            </a>
+            <a href="checkers" class="game-card">
+                <span class="game-card-icon">🔴</span>
+                <h3>Checkers</h3>
+                <p>Jump your way to victory. SP or online MP.</p>
+                <div class="world-score-box">
+                    <label>MOST WINS</label>
+                    <span class="score-num" id="world-checkers">—</span>
+                    <span class="score-user" id="user-checkers">—</span>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <!-- ── Arcade ─────────────────────────────────────────────────── -->
+    <section class="cat-section">
+        <h2 class="cat-heading">🕹️ Arcade</h2>
+        <div class="game-cards">
+            <a href="tetris" class="game-card">
+                <span class="game-card-icon">🧱</span>
+                <h3>Tetris</h3>
+                <p>Stack the blocks, clear the lines.</p>
+                <div class="world-score-box">
+                    <label>ALL-TIME BEST</label>
+                    <span class="score-num" id="world-tetris">—</span>
+                    <span class="score-user" id="user-tetris">—</span>
+                </div>
+            </a>
+            <a href="snake" class="game-card">
+                <span class="game-card-icon">🐍</span>
+                <h3>Snake</h3>
+                <p>Eat, grow, don't bite yourself.</p>
+                <div class="world-score-box">
+                    <label>ALL-TIME BEST</label>
+                    <span class="score-num" id="world-snake">—</span>
+                    <span class="score-user" id="user-snake">—</span>
+                </div>
+            </a>
+            <a href="pong" class="game-card">
+                <span class="game-card-icon">🏓</span>
+                <h3>Pong</h3>
+                <p>The original arcade classic. VS AI or a friend.</p>
+                <div class="world-score-box">
+                    <label>ALL-TIME BEST</label>
+                    <span class="score-num" id="world-pong">—</span>
+                    <span class="score-user" id="user-pong">—</span>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <!-- ── Casual ─────────────────────────────────────────────────── -->
+    <section class="cat-section">
+        <h2 class="cat-heading">🧩 Casual</h2>
+        <div class="game-cards">
+            <a href="rps" class="game-card">
+                <span class="game-card-icon">✂️</span>
+                <h3>Rock Paper Scissors</h3>
+                <p>Beat the AI's pattern. Best win streak wins.</p>
+                <div class="world-score-box">
+                    <label>BEST STREAK</label>
+                    <span class="score-num" id="world-rps">—</span>
+                    <span class="score-user" id="user-rps">—</span>
+                </div>
+            </a>
+            <a href="puzzle" class="game-card">
+                <span class="game-card-icon">🧩</span>
+                <h3>Puzzle</h3>
+                <p>9–420 pieces. Fastest completion per piece wins.</p>
+                <div class="world-score-box">
+                    <label>BEST SCORE</label>
+                    <span class="score-num" id="world-puzzle">—</span>
+                    <span class="score-user" id="user-puzzle">—</span>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <!-- ── Card Games ─────────────────────────────────────────────── -->
+    <section class="cat-section">
+        <h2 class="cat-heading">🃏 Card Games</h2>
+        <div class="game-cards">
+            <a href="blackjack" class="game-card">
+                <span class="game-card-icon">🃏</span>
+                <h3>Blackjack</h3>
+                <p>Beat the dealer to 21. SP or online MP with friends.</p>
+                <div class="world-score-box">
+                    <label>MOST CHIPS</label>
+                    <span class="score-num" id="world-blackjack">—</span>
+                    <span class="score-user" id="user-blackjack">—</span>
+                </div>
+            </a>
+            <a href="solitaire" class="game-card">
+                <span class="game-card-icon">♠</span>
+                <h3>Solitaire</h3>
+                <p>Klondike SP or race mode — same deck, first to solve wins.</p>
+                <div class="world-score-box">
+                    <label>BEST SCORE</label>
+                    <span class="score-num" id="world-solitaire">—</span>
+                    <span class="score-user" id="user-solitaire">—</span>
+                </div>
+            </a>
+            <a href="poker" class="game-card">
+                <span class="game-card-icon">♥</span>
+                <h3>Texas Hold'em</h3>
+                <p>No-limit Hold'em vs AI opponents or friends online.</p>
+                <div class="world-score-box">
+                    <label>MOST CHIPS</label>
+                    <span class="score-num" id="world-poker">—</span>
+                    <span class="score-user" id="user-poker">—</span>
+                </div>
+            </a>
+            <a href="five-card-draw" class="game-card">
+                <span class="game-card-icon">♦</span>
+                <h3>Five Card Draw</h3>
+                <p>Classic draw poker SP or multiplayer. Click cards to discard.</p>
+                <div class="world-score-box">
+                    <label>MOST CHIPS</label>
+                    <span class="score-num" id="world-fivecarddraw">—</span>
+                    <span class="score-user" id="user-fivecarddraw">—</span>
+                </div>
+            </a>
+        </div>
+    </section>
+
+</div>
+
+    <!-- Suggestions FAB -->
+    <button id="suggestions-fab" type="button" onclick="openSuggestions()">💬 Suggestions</button>
+
+    <!-- Suggestions modal -->
+    <div id="suggestions-overlay" role="dialog" aria-modal="true" aria-label="Suggestions">
+        <div id="suggestions-modal">
+            <h2>💬 Suggestions</h2>
+            <div id="suggestions-offline">Firebase unavailable — suggestions require an internet connection.</div>
+            <div id="suggestions-form">
+                <input id="suggestion-input" type="text" maxlength="280"
+                    placeholder="Got an idea? Suggest a game or feature…" autocomplete="off">
+                <button id="suggestions-submit" type="button" onclick="submitSuggestion()">Send</button>
+            </div>
+            <div id="suggestions-list">
+                <div id="suggestions-empty">No suggestions yet — be the first!</div>
+            </div>
+            <button id="suggestions-close" type="button" onclick="closeSuggestions()">Close</button>
+        </div>
+    </div>
+
+    <script src="/js/gamer/gamer-chat.js"></script>
+    <script src="/js/gamer/games.js" defer></script>
+</body>
+</html>

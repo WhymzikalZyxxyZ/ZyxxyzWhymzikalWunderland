@@ -6,18 +6,13 @@
     <title>404 — Page Not Found · ZYXXYZ's Whymzykal Wunderland</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <script>
-        // Redirect extensionless URLs to their canonical location.
-        // technologist/* pages use directory/index.html — GitHub Pages serves
-        // them natively so no redirect is needed there.
-        // Other sections still use flat .html files so we append .html for those.
+        // Redirect old .html URLs to their clean extensionless equivalents.
+        // All pages now use directory/index.html so the canonical URL never
+        // has a .html suffix.
         (function () {
-            var p = location.pathname.replace(/\/$/, '') || '/';
-            var seg = p.split('/').pop();
-            if (!seg || seg.includes('.')) return; // already has extension or empty
-            if (p === '/technologist') {
-                location.replace('/technologist/apps');
-            } else if (!p.startsWith('/technologist/')) {
-                location.replace(p + '.html' + location.search + location.hash);
+            var p = location.pathname;
+            if (p.endsWith('.html')) {
+                location.replace(p.slice(0, -5) + location.search + location.hash);
             }
         }());
     </script>
@@ -56,31 +51,71 @@
             line-height: 1.7;
             margin-bottom: 36px;
         }
-        .err-links {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .err-link {
-            padding: 10px 22px;
-            border: 1px solid rgba(244,162,97,0.4);
-            border-radius: 8px;
-            color: #f4a261;
-            text-decoration: none;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            transition: background 0.15s, border-color 0.15s;
-        }
-        .err-link:hover { background: rgba(244,162,97,0.1); border-color: #f4a261; }
-        .err-link.primary { background: #f4a261; color: #111; border-color: #f4a261; font-weight: bold; }
-        .err-link.primary:hover { background: #e76f51; border-color: #e76f51; }
         .err-img {
             width: clamp(180px, 45vw, 320px);
             opacity: 0.82;
             margin-bottom: 28px;
             border-radius: 10px;
         }
+        .err-choices {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 36px;
+        }
+        .err-choice {
+            width: clamp(200px, 38vw, 280px);
+            background: rgba(0,0,0,0.55);
+            border: 1px solid rgba(244,162,97,0.25);
+            border-radius: 14px;
+            padding: 28px 24px 24px;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s, border-color 0.2s, transform 0.18s, box-shadow 0.18s;
+        }
+        .err-choice:hover {
+            background: rgba(244,162,97,0.1);
+            border-color: var(--accent);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 36px rgba(0,0,0,0.5);
+        }
+        .err-choice-icon { font-size: 2.2em; line-height: 1; }
+        .err-choice-label {
+            font-family: Jokerman, fantasy;
+            font-size: 1.15em;
+            color: var(--accent);
+        }
+        .err-choice-desc {
+            font-family: 'Courier New', monospace;
+            font-size: 0.78em;
+            color: #777;
+            line-height: 1.65;
+        }
+        .err-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .err-link {
+            padding: 8px 18px;
+            border: 1px solid rgba(244,162,97,0.3);
+            border-radius: 8px;
+            color: #888;
+            text-decoration: none;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+        .err-link:hover { background: rgba(244,162,97,0.08); border-color: rgba(244,162,97,0.5); color: var(--accent); }
     </style>
 </head>
 <body class="wunderBody">
@@ -93,8 +128,19 @@
             This page doesn't exist — or maybe it did once, and it doesn't anymore.
             Either way, there's plenty worth finding if you head back to the wunderland.
         </p>
+        <div class="err-choices">
+            <button class="err-choice" onclick="history.length > 1 ? history.back() : (window.location.href = '/')">
+                <span class="err-choice-icon">↩</span>
+                <span class="err-choice-label">Turn Back</span>
+                <span class="err-choice-desc">Whatever you left behind, it's still there. One step backward and this whole detour disappears.</span>
+            </button>
+            <a class="err-choice" href="/">
+                <span class="err-choice-icon">⌂</span>
+                <span class="err-choice-label">Begin Again</span>
+                <span class="err-choice-desc">Forget the wrong turn entirely. Return to where every path in the wunderland starts.</span>
+            </a>
+        </div>
         <div class="err-links">
-            <a href="/" class="err-link primary">← Home</a>
             <a href="/gamer/games" class="err-link">Games</a>
             <a href="/virtuoso/virtuoso" class="err-link">Virtuoso</a>
             <a href="/community/forum" class="err-link">Community</a>
