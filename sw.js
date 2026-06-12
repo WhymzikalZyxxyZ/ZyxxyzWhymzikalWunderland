@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'wunderland-v8';
+const CACHE_NAME = 'wunderland-v9';
 
 // Static assets to pre-cache on install
 const PRECACHE = [

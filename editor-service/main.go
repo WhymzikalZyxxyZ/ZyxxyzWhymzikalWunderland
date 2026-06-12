@@ -366,53 +366,62 @@ func handleCompress(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /api/pdf/watermark
-// Form fields: file (PDF), text (string), opacity (0.05-1.0), rotation (degrees), pages (optional)
-// Returns: watermarked PDF
+// Form fields: file (PDF), count (int), text_N, opacity_N, rotation_N, pages_N for each N in [0, count)
+// Returns: PDF with all watermarks applied sequentially
 func handleWatermark(w http.ResponseWriter, r *http.Request) {
 	data, name, err := readOne(r, "file")
 	if err != nil {
 		apiErr(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	text := strings.TrimSpace(r.FormValue("text"))
-	if text == "" {
-		apiErr(w, "watermark text is required", http.StatusBadRequest)
-		return
+	count, _ := strconv.Atoi(strings.TrimSpace(r.FormValue("count")))
+	if count < 1 {
+		count = 1
 	}
-	opacity := "0.3"
-	if v := strings.TrimSpace(r.FormValue("opacity")); v != "" {
-		op, e := strconv.ParseFloat(v, 64)
-		if e != nil || op < 0.05 || op > 1.0 {
-			apiErr(w, "opacity must be between 0.05 and 1.0", http.StatusBadRequest)
+	current := data
+	for i := range count {
+		sfx := fmt.Sprintf("_%d", i)
+		text := strings.TrimSpace(r.FormValue("text" + sfx))
+		if text == "" {
+			apiErr(w, fmt.Sprintf("watermark %d: text is required", i+1), http.StatusBadRequest)
 			return
 		}
-		opacity = v
-	}
-	rotation := "45"
-	if v := strings.TrimSpace(r.FormValue("rotation")); v != "" {
-		if _, e := strconv.ParseFloat(v, 64); e != nil {
-			apiErr(w, "invalid rotation value", http.StatusBadRequest)
+		opacity := "0.3"
+		if v := strings.TrimSpace(r.FormValue("opacity" + sfx)); v != "" {
+			op, e := strconv.ParseFloat(v, 64)
+			if e != nil || op < 0.05 || op > 1.0 {
+				apiErr(w, fmt.Sprintf("watermark %d: opacity must be 0.05–1.0", i+1), http.StatusBadRequest)
+				return
+			}
+			opacity = v
+		}
+		rotation := "45"
+		if v := strings.TrimSpace(r.FormValue("rotation" + sfx)); v != "" {
+			if _, e := strconv.ParseFloat(v, 64); e != nil {
+				apiErr(w, fmt.Sprintf("watermark %d: invalid rotation", i+1), http.StatusBadRequest)
+				return
+			}
+			rotation = v
+		}
+		desc := fmt.Sprintf("fo:Helvetica, points:48, scale:0.9 rel, color:0.5 0.5 0.5, op:%s, rot:%s, pos:c", opacity, rotation)
+		wm, err := api.TextWatermark(text, desc, true, false, 0)
+		if err != nil {
+			apiErr(w, fmt.Sprintf("watermark %d: config error: %s", i+1, err.Error()), http.StatusInternalServerError)
 			return
 		}
-		rotation = v
-	}
-	desc := fmt.Sprintf("fo:Helvetica, points:48, scale:0.9 rel, color:0.5 0.5 0.5, op:%s, rot:%s, pos:c", opacity, rotation)
-	wm, err := api.TextWatermark(text, desc, true, false, 0)
-	if err != nil {
-		apiErr(w, "watermark config error: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-	var selectedPages []string
-	if pages := strings.TrimSpace(r.FormValue("pages")); pages != "" {
-		selectedPages = []string{pages}
-	}
-	var out bytes.Buffer
-	if err := api.AddWatermarks(bytes.NewReader(data), &out, selectedPages, wm, pdfConf()); err != nil {
-		apiErr(w, "watermark failed: "+err.Error(), http.StatusInternalServerError)
-		return
+		var selectedPages []string
+		if pages := strings.TrimSpace(r.FormValue("pages" + sfx)); pages != "" {
+			selectedPages = []string{pages}
+		}
+		var out bytes.Buffer
+		if err := api.AddWatermarks(bytes.NewReader(current), &out, selectedPages, wm, pdfConf()); err != nil {
+			apiErr(w, fmt.Sprintf("watermark %d: failed: %s", i+1, err.Error()), http.StatusInternalServerError)
+			return
+		}
+		current = out.Bytes()
 	}
 	outName := stripExt(name, ".pdf") + "_watermarked.pdf"
-	sendDownload(w, out.Bytes(), outName, "application/pdf")
+	sendDownload(w, current, outName, "application/pdf")
 }
 
 // POST /api/pdf/pagenumbers

@@ -169,14 +169,24 @@ function buildFormData(op) {
     } else if (op === 'watermark') {
         const f = document.getElementById('f-watermark').files[0];
         if (!f) { setStatus(op, 'Select a PDF file.', 'error'); return null; }
-        const text = document.getElementById('wm-text').value.trim();
-        if (!text) { setStatus(op, 'Enter watermark text.', 'error'); return null; }
+        const entries = [...document.querySelectorAll('#wm-list .wm-entry')];
+        let allValid = true;
+        entries.forEach((entry, i) => {
+            if (!entry.querySelector('.wm-text').value.trim()) {
+                setStatus(op, 'Watermark ' + (i + 1) + ': enter text.', 'error');
+                allValid = false;
+            }
+        });
+        if (!allValid) return null;
         fd.append('file', f);
-        fd.append('text', text);
-        fd.append('opacity', document.getElementById('wm-opacity').value);
-        fd.append('rotation', document.getElementById('wm-rotation').value);
-        const pages = document.getElementById('wm-pages').value.trim();
-        if (pages) fd.append('pages', pages);
+        fd.append('count', String(entries.length));
+        entries.forEach((entry, i) => {
+            fd.append('text_' + i, entry.querySelector('.wm-text').value.trim());
+            fd.append('opacity_' + i, entry.querySelector('.wm-opacity').value);
+            fd.append('rotation_' + i, entry.querySelector('.wm-rotation').value);
+            const pages = entry.querySelector('.wm-pages').value.trim();
+            if (pages) fd.append('pages_' + i, pages);
+        });
     } else if (op === 'pagenumbers') {
         const f = document.getElementById('f-pagenumbers').files[0];
         if (!f) { setStatus(op, 'Select a PDF file.', 'error'); return null; }
@@ -222,9 +232,13 @@ function clearOp(op) {
     if (fl) fl.innerHTML = '';
     // Clear any extra fields for this op
     if (op === 'watermark') {
-        document.getElementById('wm-text').value = '';
-        document.getElementById('wm-opacity').value = '0.3';
-        document.getElementById('wm-pages').value = '';
+        const list = document.getElementById('wm-list');
+        list.innerHTML = '';
+        const entry = document.createElement('div');
+        entry.className = 'wm-entry';
+        entry.innerHTML = wmEntryHTML();
+        list.appendChild(entry);
+        updateWatermarkLabels();
     } else if (op === 'pagenumbers') {
         document.getElementById('pn-pages').value = '';
     } else if (op === 'reorder') {
@@ -255,6 +269,64 @@ function updateActiveResultBar() {
 function clearActiveResult() {
     activeResult = null;
     updateActiveResultBar();
+}
+
+// ── Multiple watermarks ────────────────────────────────────────────────────
+function wmEntryHTML() {
+    return `<div class="wm-entry-header">
+        <span class="wm-entry-label">Watermark</span>
+        <button class="wm-remove-btn" onclick="removeWatermarkEntry(this)" title="Remove">✕</button>
+    </div>
+    <div class="form-row">
+        <div class="form-group" style="flex:2;">
+            <label>Text</label>
+            <input type="text" class="wm-text" placeholder="e.g.  CONFIDENTIAL">
+        </div>
+        <div class="form-group" style="max-width:130px;">
+            <label>Opacity (0.05–1)</label>
+            <input type="number" class="wm-opacity" min="0.05" max="1" step="0.05" value="0.3">
+        </div>
+        <div class="form-group" style="max-width:160px;">
+            <label>Rotation</label>
+            <select class="wm-rotation">
+                <option value="45">45° (diagonal)</option>
+                <option value="-45">-45° (diagonal)</option>
+                <option value="0">0° (horizontal)</option>
+                <option value="90">90° (vertical)</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>Pages (leave blank for all)</label>
+            <input type="text" class="wm-pages" placeholder="e.g.  1-3, 5  — blank = all">
+        </div>
+    </div>`;
+}
+
+function addWatermarkEntry() {
+    const list = document.getElementById('wm-list');
+    const entry = document.createElement('div');
+    entry.className = 'wm-entry';
+    entry.innerHTML = wmEntryHTML();
+    list.appendChild(entry);
+    updateWatermarkLabels();
+}
+
+function removeWatermarkEntry(btn) {
+    const list = document.getElementById('wm-list');
+    if (list.children.length <= 1) return;
+    btn.closest('.wm-entry').remove();
+    updateWatermarkLabels();
+}
+
+function updateWatermarkLabels() {
+    const entries = document.querySelectorAll('#wm-list .wm-entry');
+    const multi = entries.length > 1;
+    entries.forEach((entry, i) => {
+        entry.querySelector('.wm-entry-label').textContent = multi ? 'Watermark #' + (i + 1) : 'Watermark';
+        entry.querySelector('.wm-remove-btn').style.display = multi ? 'inline' : 'none';
+    });
 }
 
 function useActiveResult() {
