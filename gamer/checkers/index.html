@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkers — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/js/config/firebase-config.js"></script>
+    <script src="/js/username-gen.js"></script>
+    <script src="/js/engines/checkers-engine.js"></script>
+    <style>
+        #ck-page { max-width: 640px; margin: 0 auto; padding: 0 16px 80px; }
+        .ck-panel { background:rgba(0,0,0,0.75); border:1px solid #2a2a2a;
+            border-radius:12px; padding:20px; margin-bottom:16px; }
+        .ck-title { font-family:'Courier New',monospace; font-size:11px; letter-spacing:3px;
+            text-transform:uppercase; color:#f4a261;
+            border-bottom:1px solid #2a2a2a; padding-bottom:8px; margin:0 0 16px; }
+        .mode-btns { display:flex; gap:12px; justify-content:center; }
+        .mode-btn { background:rgba(255,255,255,0.06); border:2px solid rgba(255,255,255,0.14);
+            color:#bbb; border-radius:8px; padding:12px 24px;
+            font-family:'Courier New',monospace; font-size:13px; cursor:pointer;
+            transition:border-color 0.15s,color 0.15s; }
+        .mode-btn:hover,.mode-btn.active { border-color:#f4a261; color:#fff; }
+        .diff-row { display:flex; align-items:center; gap:12px; margin:12px 0; }
+        .diff-row label { font-family:'Courier New',monospace; font-size:11px; color:#888; }
+        #ck-diff-slider { flex:1; accent-color:#f4a261; }
+        #ck-diff-val { font-family:'Courier New',monospace; font-size:13px; color:#f4a261; min-width:14px; }
+        #ck-canvas-wrap { position:relative; margin:0 auto; line-height:0; }
+        #ck-canvas { display:block; max-width:100%; height:auto; cursor:pointer; }
+        #ck-status { font-family:'Courier New',monospace; font-size:13px;
+            color:#f4a261; text-align:center; min-height:1.6em; margin:8px 0; }
+        .ck-ctrl-row { display:flex; gap:10px; justify-content:center; margin-top:8px; }
+        .ctrl-btn { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14);
+            color:#bbb; border-radius:6px; padding:8px 18px;
+            font-family:'Courier New',monospace; font-size:12px; cursor:pointer; }
+        .ctrl-btn:hover { border-color:#f4a261; color:#fff; }
+        .ctrl-btn.accent { background:#f4a261; border-color:#f4a261; color:#111; font-weight:bold; }
+        #hs-box { text-align:center; font-family:'Courier New',monospace;
+            font-size:11px; color:#666; margin-top:12px; }
+        #hs-box strong { color:#f4a261; }
+        .mp-row { display:flex; gap:8px; margin-bottom:8px; }
+        .mp-input { flex:1; background:rgba(255,255,255,0.07); border:1px solid #333;
+            border-radius:6px; color:#fff; font-family:'Courier New',monospace;
+            font-size:12px; padding:6px 10px; outline:none; text-transform:uppercase; }
+        .mp-input:focus { border-color:#f4a261; }
+        .mp-btn { background:#f4a261; border:none; border-radius:6px; color:#111;
+            font-family:'Courier New',monospace; font-size:12px; font-weight:bold;
+            padding:6px 14px; cursor:pointer; }
+        .mp-btn:hover { background:#e76f51; }
+        #ck-mp-status { font-family:'Courier New',monospace; font-size:11px;
+            color:#888; min-height:1.4em; }
+        #ck-room-code { color:#f4a261; font-weight:bold; letter-spacing:3px; }
+    </style>
+</head>
+<body class="wunderBody">
+    <div class="navbar">
+        <a href="../">Home</a>
+        <a href="../gamer/games">Games</a>
+    </div>
+
+    <div id="ck-page">
+        <div class="ck-panel">
+            <div class="ck-title">Checkers</div>
+            <div class="mode-btns">
+                <button class="mode-btn active" id="btn-sp" onclick="setMode('sp')">&#129302; Single Player</button>
+                <button class="mode-btn"        id="btn-mp" onclick="setMode('mp')">&#127760; Multiplayer</button>
+            </div>
+        </div>
+
+        <!-- Single Player -->
+        <div class="ck-panel" id="sp-panel">
+            <div class="ck-title">Single Player — <span id="ck-user-label" style="color:#bbb;font-size:10px;letter-spacing:1px;"></span></div>
+            <div class="diff-row">
+                <label>AI Difficulty</label>
+                <input type="range" id="ck-diff-slider" min="0" max="9" value="3">
+                <span id="ck-diff-val">3</span>
+            </div>
+            <p style="font-family:'Courier New',monospace;font-size:11px;color:#555;margin:0 0 10px;">
+                You play White (bottom). Click a piece, then click a destination.
+            </p>
+            <div id="ck-status">Press New Game to start.</div>
+            <div id="ck-canvas-wrap">
+                <canvas id="ck-canvas" width="480" height="480"></canvas>
+            </div>
+            <div class="ck-ctrl-row">
+                <button class="ctrl-btn accent" onclick="startCheckers()">&#9654; New Game</button>
+            </div>
+        </div>
+
+        <!-- Multiplayer -->
+        <div class="ck-panel" id="mp-panel" style="display:none;">
+            <div class="ck-title">Multiplayer</div>
+            <div class="mp-row">
+                <button class="mp-btn" onclick="ckMpCreate()">Create Room</button>
+                <input class="mp-input" id="ck-join-code" placeholder="ROOM CODE" maxlength="6">
+                <button class="mp-btn" onclick="ckMpJoin()">Join</button>
+            </div>
+            <div id="ck-mp-status">Not connected.</div>
+            <div id="ck-room-code"></div>
+            <div id="ck-mp-game" style="display:none;">
+                <div id="ck-mp-status2" style="font-family:'Courier New',monospace;font-size:13px;color:#f4a261;text-align:center;min-height:1.6em;margin:8px 0;"></div>
+                <div id="ck-canvas-wrap-mp">
+                    <canvas id="ck-canvas-mp" width="480" height="480" style="display:block;max-width:100%;cursor:pointer;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="hs-box">
+            🏆 Total Wins: <strong id="hs-val">—</strong> by <strong id="hs-user">—</strong>
+        </div>
+    </div>
+
+    <button type="button" onclick="navigateToPage('/gamer/games')">&#8592; Back to Games</button>
+    <script src="/js/gamer/gamer-chat.js"></script>
+    <script src="/js/gamer/checkers.js" defer></script>
+</body>
+</html>

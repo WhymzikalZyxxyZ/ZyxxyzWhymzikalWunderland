@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/js/config/firebase-config.js"></script>
+    <script src="/js/username-gen.js"></script>
+    <script src="/js/engines/pong-engine.js"></script>
+    <style>
+        #pong-page { max-width: 860px; margin: 0 auto; padding: 0 16px 80px; }
+        .pong-panel {
+            background:rgba(0,0,0,0.75); border:1px solid #2a2a2a;
+            border-radius:12px; padding:20px; margin-bottom:16px; }
+        .pong-title { font-family:'Courier New',monospace; font-size:11px;
+            letter-spacing:3px; text-transform:uppercase; color:#f4a261;
+            border-bottom:1px solid #2a2a2a; padding-bottom:8px; margin:0 0 16px; }
+        .mode-btns { display:flex; gap:12px; justify-content:center; }
+        .mode-btn { background:rgba(255,255,255,0.06); border:2px solid rgba(255,255,255,0.14);
+            color:#bbb; border-radius:8px; padding:12px 24px;
+            font-family:'Courier New',monospace; font-size:13px; cursor:pointer;
+            transition:border-color 0.15s,color 0.15s; }
+        .mode-btn:hover,.mode-btn.active { border-color:#f4a261; color:#fff; }
+        .diff-row { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+        .diff-row label { font-family:'Courier New',monospace; font-size:11px; color:#888; }
+        #diff-slider { flex:1; accent-color:#f4a261; }
+        #diff-val { font-family:'Courier New',monospace; font-size:13px; color:#f4a261; min-width:14px; }
+        #pong-canvas-wrap {
+            position:relative; line-height:0; margin:12px auto;
+            border:2px solid #2a2a2a; border-radius:4px; overflow:hidden;
+            max-width:800px; background:#000;
+        }
+        #pong-canvas { display:block; max-width:100%; height:auto; }
+        .pong-score-row {
+            display:flex; justify-content:space-around; align-items:center;
+            font-family:'Courier New',monospace; font-size:22px; color:#f4a261;
+            padding:6px 0; }
+        .pong-ctrl-row { display:flex; gap:10px; justify-content:center; margin-top:10px; }
+        .ctrl-btn { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14);
+            color:#bbb; border-radius:6px; padding:8px 18px;
+            font-family:'Courier New',monospace; font-size:12px; cursor:pointer; }
+        .ctrl-btn:hover:not(:disabled) { border-color:#f4a261; color:#fff; }
+        .ctrl-btn.accent { background:#f4a261; border-color:#f4a261; color:#111; font-weight:bold; }
+        .ctrl-btn:disabled { opacity:0.35; cursor:default; }
+        #pong-msg { text-align:center; font-family:'Courier New',monospace;
+            font-size:13px; color:#888; min-height:1.4em; margin-top:6px; }
+        #hs-box { text-align:center; font-family:'Courier New',monospace;
+            font-size:11px; color:#666; margin-top:12px; }
+        #hs-box strong { color:#f4a261; }
+        .mp-row { display:flex; gap:8px; margin-bottom:8px; }
+        .mp-input { flex:1; background:rgba(255,255,255,0.07); border:1px solid #333;
+            border-radius:6px; color:#fff; font-family:'Courier New',monospace;
+            font-size:12px; padding:6px 10px; outline:none; text-transform:uppercase; }
+        .mp-input:focus { border-color:#f4a261; }
+        .mp-btn { background:#f4a261; border:none; border-radius:6px; color:#111;
+            font-family:'Courier New',monospace; font-size:12px; font-weight:bold;
+            padding:6px 14px; cursor:pointer; }
+        .mp-btn:hover { background:#e76f51; }
+        #mp-status { font-family:'Courier New',monospace; font-size:11px; color:#888; min-height:1.4em; }
+        #room-code-disp { color:#f4a261; font-weight:bold; letter-spacing:3px; }
+    </style>
+</head>
+<body class="wunderBody">
+    <div class="navbar">
+        <a href="../">Home</a>
+        <a href="../gamer/games">Games</a>
+    </div>
+
+    <div id="pong-page">
+        <div class="pong-panel">
+            <div class="pong-title">Pong</div>
+            <div class="mode-btns">
+                <button class="mode-btn active" id="btn-sp" onclick="setMode('sp')">&#129302; Single Player</button>
+                <button class="mode-btn"        id="btn-mp" onclick="setMode('mp')">&#127760; Multiplayer</button>
+            </div>
+        </div>
+
+        <!-- Single Player Panel -->
+        <div class="pong-panel" id="sp-panel">
+            <div class="pong-title">Single Player — <span id="user-label" style="color:#bbb;font-size:10px;letter-spacing:1px;"></span></div>
+            <div class="diff-row">
+                <label>AI Difficulty</label>
+                <input type="range" id="diff-slider" min="0" max="9" value="4">
+                <span id="diff-val">4</span>
+            </div>
+            <p style="font-family:'Courier New',monospace;font-size:11px;color:#555;margin:0 0 10px;">
+                Controls: W/S or ↑/↓ to move your paddle (left side) · 📱 drag on canvas to control
+            </p>
+            <div class="pong-score-row">
+                <span id="score-left">0</span>
+                <span style="color:#333;font-size:14px;">VS</span>
+                <span id="score-right">0</span>
+            </div>
+            <div id="pong-canvas-wrap">
+                <canvas id="pong-canvas" width="800" height="500" role="img" aria-label="Pong game" tabindex="0"></canvas>
+            </div>
+            <div id="pong-msg">Press Start to play.</div>
+            <div class="pong-ctrl-row">
+                <button class="ctrl-btn accent" id="btn-start" onclick="startGame()">&#9654; Start</button>
+                <button class="ctrl-btn" id="btn-pause" onclick="togglePause()" disabled>&#9646;&#9646; Pause</button>
+                <button class="ctrl-btn" id="btn-reset" onclick="resetGame()" disabled>&#8635; Reset</button>
+            </div>
+        </div>
+
+        <!-- Multiplayer Panel -->
+        <div class="pong-panel" id="mp-panel" style="display:none;">
+            <div class="pong-title">Multiplayer</div>
+            <div class="mp-row">
+                <button class="mp-btn" onclick="mpCreate()">Create Room</button>
+                <input class="mp-input" id="mp-join-code" placeholder="ROOM CODE" maxlength="6">
+                <button class="mp-btn" onclick="mpJoin()">Join</button>
+            </div>
+            <div id="mp-status">Not connected.</div>
+            <div id="room-code-disp"></div>
+            <div id="mp-game" style="display:none;">
+                <div class="pong-score-row">
+                    <span id="mp-score-left">0</span>
+                    <span style="color:#333;font-size:14px;">VS</span>
+                    <span id="mp-score-right">0</span>
+                </div>
+                <div id="pong-canvas-wrap-mp" style="position:relative;line-height:0;margin:12px auto;border:2px solid #2a2a2a;border-radius:4px;overflow:hidden;max-width:800px;background:#000;">
+                    <canvas id="pong-canvas-mp" width="800" height="500"></canvas>
+                </div>
+                <p style="font-family:'Courier New',monospace;font-size:11px;color:#555;text-align:center;">
+                    P1 controls left paddle (W/S), P2 controls right paddle (↑/↓)
+                </p>
+            </div>
+        </div>
+
+        <div id="hs-box">
+            🏆 High Score: <strong id="hs-val">—</strong> by <strong id="hs-user">—</strong>
+        </div>
+    </div>
+
+    <button type="button" onclick="navigateToPage('/gamer/games')">&#8592; Back to Games</button>
+    <script src="/js/gamer/gamer-chat.js"></script>
+    <script src="/js/gamer/pong.js" defer></script>
+</body>
+</html>
