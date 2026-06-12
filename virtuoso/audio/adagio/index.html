@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adagio — Sound Mixing Studio</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <style>
+        #adagio-app {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 14px 80px;
+        }
+
+        .adagio-page-title {
+            font-family: Jokerman, fantasy;
+            font-size: 42px;
+            color: #f4a261;
+            text-align: center;
+            margin: 24px 0 2px;
+            letter-spacing: 4px;
+        }
+        .adagio-subtitle {
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #555;
+            margin: 0 0 24px;
+        }
+
+        /* ══ TRANSPORT ══ */
+        .transport-bar {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: rgba(0,0,0,0.75);
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            padding: 10px 18px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+        .transport-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tbtn {
+            width: 36px; height: 36px;
+            border-radius: 6px;
+            border: 1px solid #333;
+            background: rgba(255,255,255,0.05);
+            color: #aaa;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.13s, border-color 0.13s, color 0.13s;
+            flex-shrink: 0;
+        }
+        .tbtn:hover { border-color: #f4a261; color: #f4a261; background: rgba(244,162,97,0.1); }
+        .tbtn.active { background: #f4a261; border-color: #f4a261; color: #111; }
+        .tbtn.active:hover { background: #e76f51; }
+        .transport-time {
+            font-family: 'Courier New', monospace;
+            font-size: 22px;
+            color: #f4a261;
+            letter-spacing: 3px;
+            min-width: 96px;
+            text-align: center;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid #222;
+            border-radius: 5px;
+            padding: 4px 10px;
+        }
+        .transport-label {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            letter-spacing: 2px;
+            color: #444;
+        }
+        .master-slider {
+            width: 80px;
+            accent-color: #f4a261;
+            cursor: pointer;
+        }
+        .transport-spacer { flex: 1; }
+        .export-btn {
+            padding: 7px 14px;
+            background: rgba(244,162,97,0.12);
+            border: 1px solid rgba(244,162,97,0.35);
+            border-radius: 6px;
+            color: #f4a261;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.13s;
+        }
+        .export-btn:hover { background: rgba(244,162,97,0.25); }
+        .export-btn:disabled { opacity: 0.4; cursor: default; }
+
+        /* ══ SECTION HEADER ══ */
+        .section-hdr {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .section-lbl {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #f4a261;
+            border-bottom: 1px solid #2a2a2a;
+            padding-bottom: 4px;
+            flex: 1;
+        }
+        .add-track-btn {
+            padding: 5px 12px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid #333;
+            border-radius: 5px;
+            color: #888;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: border-color 0.13s, color 0.13s;
+        }
+        .add-track-btn:hover { border-color: #f4a261; color: #f4a261; }
+
+        /* ══ TRACKS ══ */
+        .tracks-area { margin-bottom: 28px; }
+        #track-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .track {
+            display: flex;
+            background: rgba(0,0,0,0.55);
+            border: 1px solid #2a2a2a;
+            border-radius: 9px;
+            overflow: hidden;
+            min-height: 110px;
+        }
+        .track-accent {
+            width: 4px;
+            flex-shrink: 0;
+        }
+        .track-sidebar {
+            width: 152px;
+            flex-shrink: 0;
+            border-right: 1px solid #2a2a2a;
+            padding: 10px 10px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .track-name-input {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 4px;
+            color: #ddd;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            padding: 4px 7px;
+            width: 100%;
+            box-sizing: border-box;
+            outline: none;
+        }
+        .track-name-input:focus { border-color: rgba(244,162,97,0.4); }
+        .ctrl-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .ctrl-lbl {
+            font-family: 'Courier New', monospace;
+            font-size: 8px;
+            letter-spacing: 1px;
+            color: #444;
+            width: 24px;
+            flex-shrink: 0;
+        }
+        .ctrl-slider {
+            flex: 1;
+            accent-color: #f4a261;
+            cursor: pointer;
+            min-width: 0;
+        }
+        .ctrl-val {
+            font-family: 'Courier New', monospace;
+            font-size: 8px;
+            color: #555;
+            width: 26px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .track-btns {
+            display: flex;
+            gap: 4px;
+            margin-top: auto;
+        }
+        .tk-btn {
+            padding: 3px 7px;
+            border-radius: 4px;
+            border: 1px solid #333;
+            background: rgba(255,255,255,0.04);
+            color: #666;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.12s;
+        }
+        .tk-btn:hover { border-color: #888; color: #ccc; }
+        .tk-btn.muted { border-color: #f4c21c; color: #f4c21c; background: rgba(244,194,28,0.12); }
+        .tk-btn.soloed { border-color: #4caf50; color: #4caf50; background: rgba(76,175,80,0.12); }
+        .tk-btn.remove-btn:hover { border-color: #f66; color: #f66; }
+
+        .track-main {
+            flex: 1;
+            min-width: 0;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        /* Drop zone */
+        .track-drop {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed rgba(255,255,255,0.1);
+            border-radius: 6px;
+            color: #444;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            cursor: pointer;
+            gap: 6px;
+            transition: border-color 0.13s, color 0.13s, background 0.13s;
+            padding: 12px;
+            text-align: center;
+        }
+        .track-drop:hover, .track-drop.drag-over {
+            border-color: rgba(244,162,97,0.4);
+            color: #888;
+            background: rgba(244,162,97,0.04);
+        }
+        .track-drop-icon { font-size: 20px; opacity: 0.5; }
+        .track-drop input { display: none; }
+
+        /* Waveform area */
+        .track-wave-area { display: flex; flex-direction: column; gap: 5px; }
+        .track-file-info {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            color: #555;
+            display: flex;
+            gap: 10px;
+            align-items: baseline;
+        }
+        .track-file-name { color: #888; }
+        .wave-canvas-wrap {
+            position: relative;
+            border: 1px solid #222;
+            border-radius: 3px;
+            overflow: hidden;
+            background: #080808;
+            cursor: crosshair;
+            line-height: 0;
+        }
+        canvas.wave-canvas {
+            display: block;
+            width: 100%;
+            height: 80px;
+        }
+        .track-wave-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .wave-btn {
+            padding: 3px 9px;
+            border-radius: 4px;
+            border: 1px solid #333;
+            background: rgba(255,255,255,0.04);
+            color: #777;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            cursor: pointer;
+            transition: border-color 0.12s, color 0.12s, background 0.12s;
+        }
+        .wave-btn:hover { border-color: #f4a261; color: #f4a261; }
+        .wave-btn.primary-wave-btn {
+            background: rgba(244,162,97,0.1);
+            border-color: rgba(244,162,97,0.3);
+            color: #f4a261;
+        }
+        .wave-btn.primary-wave-btn:hover { background: rgba(244,162,97,0.22); }
+        .sel-info {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            color: #555;
+            margin-left: auto;
+        }
+        .track-status {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #888;
+            text-align: center;
+            padding: 8px 0;
+        }
+
+        /* ══ CLIPS ══ */
+        .clips-area { margin-top: 4px; }
+        .clips-count {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #444;
+        }
+        .clip-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            padding: 4px 0;
+            min-height: 50px;
+        }
+        .empty-clips {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #333;
+            padding: 20px 0;
+            grid-column: 1 / -1;
+            text-align: center;
+        }
+        .clip-card {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #2a2a2a;
+            border-radius: 7px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .clip-color-bar { height: 3px; }
+        .clip-body { padding: 10px 12px 8px; }
+        .clip-name-input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            color: #ccc;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            width: 100%;
+            outline: none;
+            padding: 0 0 3px;
+            margin-bottom: 4px;
+        }
+        .clip-name-input:focus { border-bottom-color: rgba(244,162,97,0.4); }
+        .clip-dur {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            color: #444;
+            margin-bottom: 8px;
+        }
+        .clip-wave-mini {
+            width: 100%;
+            height: 32px;
+            display: block;
+            border-radius: 2px;
+            margin-bottom: 8px;
+            background: #0a0a0a;
+        }
+        .clip-btns { display: flex; gap: 5px; }
+        .clip-btn {
+            flex: 1;
+            padding: 4px 0;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            cursor: pointer;
+            transition: background 0.12s, border-color 0.12s, color 0.12s;
+            text-align: center;
+        }
+        .clip-btn-play {
+            background: rgba(244,162,97,0.1);
+            border: 1px solid rgba(244,162,97,0.28);
+            color: #f4a261;
+        }
+        .clip-btn-play:hover { background: rgba(244,162,97,0.22); }
+        .clip-btn-dl {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #666;
+        }
+        .clip-btn-dl:hover { color: #ccc; border-color: #888; }
+        .clip-btn-del {
+            background: transparent;
+            border: 1px solid transparent;
+            color: #444;
+        }
+        .clip-btn-del:hover { color: #f66; border-color: rgba(255,102,102,0.3); }
+
+        /* ══ FX PANEL ══ */
+        .fx-panel {
+            border-top: 1px solid #1a1a1a;
+            padding: 10px 12px 8px;
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            background: rgba(0,0,0,0.35);
+        }
+        .fx-panel.open { display: flex; }
+        .fx-section-lbl {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #555;
+            margin-bottom: 2px;
+        }
+        .eq-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .eq-band-lbl {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            color: #666;
+            width: 32px;
+            flex-shrink: 0;
+        }
+        .eq-slider {
+            flex: 1;
+            accent-color: #80cbc4;
+            cursor: pointer;
+            min-width: 0;
+        }
+        .eq-val {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            color: #555;
+            width: 36px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .fx-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+        .fx-toggle {
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid #333;
+            background: rgba(255,255,255,0.04);
+            color: #666;
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            cursor: pointer;
+            transition: all 0.12s;
+        }
+        .fx-toggle:hover { border-color: #80cbc4; color: #80cbc4; }
+        .fx-toggle.on { border-color: #80cbc4; color: #80cbc4; background: rgba(128,203,196,0.12); }
+        .fx-normalize-btn {
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid #333;
+            background: rgba(255,255,255,0.04);
+            color: #777;
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            cursor: pointer;
+            transition: border-color 0.12s, color 0.12s;
+        }
+        .fx-normalize-btn:hover { border-color: #f4a261; color: #f4a261; }
+
+        /* ══ RECORD ══ */
+        .tbtn.looping { background: rgba(76,175,80,0.22); border-color: #4caf50; color: #4caf50; }
+        .tbtn.looping:hover { background: rgba(76,175,80,0.35); }
+        .tbtn.recording { background: rgba(239,83,80,0.22); border-color: #ef5350; color: #ef5350; animation: rec-pulse 1s ease-in-out infinite; }
+        @keyframes rec-pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
+
+        /* ══ RESPONSIVE ══ */
+        @media (max-width: 640px) {
+            .track { flex-direction: column; }
+            .track-accent { width: 100%; height: 4px; }
+            .track-sidebar { width: 100%; border-right: none; border-bottom: 1px solid #2a2a2a; flex-direction: row; flex-wrap: wrap; }
+            .track-name-input { width: 100%; }
+            .transport-time { font-size: 16px; }
+        }
+    </style>
+</head>
+<body class="wunderBody">
+
+    <h2>Adagio — Sound Mixing Studio</h2>
+    <div class="navbar"></div>
+    <div class="banner"></div>
+
+    <div id="adagio-app">
+
+        <p class="adagio-subtitle">Multi-track · EQ · Loop · Record · Clip Library · WAV Export</p>
+
+        <!-- ══ TRANSPORT ══ -->
+        <div class="transport-bar">
+            <div class="transport-group">
+                <button class="tbtn" id="btn-rtz"  onclick="returnToZero()" title="Return to zero">&#9198;</button>
+                <button class="tbtn active" id="btn-play" onclick="togglePlay()" title="Play / Pause">&#9654;</button>
+                <button class="tbtn" id="btn-stop" onclick="stopAll()" title="Stop &amp; rewind">&#9632;</button>
+                <button class="tbtn" id="btn-loop" onclick="toggleLoop()" title="Toggle loop">&#9854;</button>
+                <button class="tbtn" id="btn-rec"  onclick="toggleRecord()" title="Record from microphone">&#9679;</button>
+            </div>
+
+            <div class="transport-time" id="position-display">00:00.00</div>
+
+            <div class="transport-group">
+                <span class="transport-label">MASTER</span>
+                <input type="range" class="master-slider" id="master-vol" min="0" max="100" value="100"
+                    oninput="masterVol = this.value / 100; document.getElementById('master-val').textContent = this.value + '%'">
+                <span class="ctrl-val" id="master-val">100%</span>
+            </div>
+
+            <div class="transport-spacer"></div>
+
+            <button class="export-btn" id="export-btn" onclick="exportMix()">&#8595; Export WAV</button>
+        </div>
+
+        <!-- ══ TRACKS ══ -->
+        <div class="tracks-area">
+            <div class="section-hdr">
+                <span class="section-lbl">Tracks</span>
+                <button class="add-track-btn" onclick="addTrack()">+ Add Track</button>
+            </div>
+            <div id="track-list"></div>
+        </div>
+
+        <!-- ══ CLIP LIBRARY ══ -->
+        <div class="clips-area">
+            <div class="section-hdr">
+                <span class="section-lbl">Clip Library</span>
+                <span class="clips-count" id="clips-count">0 clips</span>
+            </div>
+            <div id="clip-grid" class="clip-grid">
+                <div class="empty-clips">Select a region on a waveform, then click ✂ Clip to save it here</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="/js/virtuoso/audio/adagio.js" defer></script>
+
+</body>
+</html>

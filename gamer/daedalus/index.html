@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daedalus — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/js/config/firebase-config.js"></script>
+    <script src="/js/username-gen.js"></script>
+    <style>
+        :root { --gold: #d4a853; --red: #e05050; --teal: #80cbc4; }
+
+        #daeWrap {
+            display: flex; flex-direction: column; align-items: center;
+            min-height: calc(100vh - 60px); padding: 20px 16px 60px;
+        }
+
+        /* ── Title screen ───────────────────────────────────────────────── */
+        #titleScreen {
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center; padding: 48px 20px; max-width: 480px;
+        }
+        .dae-wordmark {
+            font-size: clamp(2.4rem, 8vw, 4rem); font-weight: 900;
+            letter-spacing: 0.35em; color: var(--gold);
+            text-shadow: 0 0 40px rgba(212,168,83,0.45);
+            margin: 0 0 6px;
+        }
+        .dae-sub {
+            font-size: 0.78rem; color: #555; letter-spacing: 0.2em;
+            text-transform: uppercase; margin: 0 0 36px;
+        }
+        .dae-lore {
+            font-size: 0.87rem; color: #777; line-height: 1.75; margin: 0 0 28px;
+        }
+        #bestBox {
+            background: #0d0d0d; border: 1px solid #1e1e1e; border-radius: 8px;
+            padding: 10px 28px; margin-bottom: 32px; font-size: 0.82rem; color: #555;
+        }
+        #bestBox strong { color: var(--gold); font-size: 1.05rem; }
+        .dae-btn {
+            padding: 13px 38px; border: 2px solid var(--gold); border-radius: 8px;
+            background: transparent; color: var(--gold);
+            font-size: 0.95rem; font-weight: 700; letter-spacing: 0.1em;
+            cursor: pointer; transition: all .2s;
+        }
+        .dae-btn:hover { background: var(--gold); color: #000; }
+        .dae-btn.sec { border-color: #333; color: #666; margin-top: 10px; }
+        .dae-btn.sec:hover { background: #1a1a1a; color: #aaa; }
+        .key-hint { font-size: 0.72rem; color: #333; margin-top: 16px; line-height: 1.6; }
+
+        /* ── Game area ──────────────────────────────────────────────────── */
+        #gameArea { display: none; flex-direction: column; align-items: center; width: 100%; }
+
+        #levelDots {
+            display: flex; gap: 6px; align-items: center; margin-bottom: 10px;
+        }
+        .ldot {
+            width: 8px; height: 8px; border-radius: 50%; background: #1e1e1e;
+            transition: background .3s, box-shadow .3s;
+        }
+        .ldot.done    { background: var(--gold); }
+        .ldot.current { background: #fff; box-shadow: 0 0 6px rgba(255,255,255,0.6); }
+
+        #hud {
+            display: flex; align-items: center; justify-content: space-between;
+            width: 100%; max-width: 600px; margin-bottom: 8px;
+            padding: 8px 14px; box-sizing: border-box;
+            background: #080808; border: 1px solid #181818; border-radius: 8px;
+        }
+        .hud-lbl { font-size: 0.78rem; color: #555; }
+        .hud-lbl strong { color: #bbb; }
+        #hudTimer {
+            font-size: 1.5rem; font-weight: 700; font-family: monospace;
+            color: var(--gold); letter-spacing: 0.04em;
+        }
+        #hudTimer.penalty { animation: timerFlash .35s ease; }
+        @keyframes timerFlash { 0%,100% { color: var(--gold); } 50% { color: var(--red); } }
+
+        #mazeCanvas { display: block; border-radius: 4px; outline: none; }
+
+        /* Mobile D-pad */
+        #dpad {
+            display: none; flex-direction: column; align-items: center;
+            gap: 5px; margin-top: 14px;
+        }
+        .dpad-row { display: flex; gap: 5px; }
+        .dpad-btn {
+            width: 56px; height: 56px; border-radius: 10px;
+            border: 1px solid #2a2a2a; background: #0e0e0e;
+            color: #777; font-size: 1.3rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            touch-action: manipulation; user-select: none; -webkit-user-select: none;
+            transition: background .1s;
+        }
+        .dpad-btn:active { background: #1a1a1a; color: var(--gold); }
+        @media (hover: none) { #dpad { display: flex; } }
+        @media (width <= 640px) { #dpad { display: flex; } }
+
+        .esc-hint { font-size: 0.7rem; color: #2a2a2a; margin-top: 10px; }
+
+
+        /* ── Overlays ───────────────────────────────────────────────────── */
+        .dae-overlay {
+            position: fixed; inset: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(4,2,8,0.9); backdrop-filter: blur(10px);
+            z-index: 500; text-align: center; padding: 32px;
+        }
+        .ovl-eyebrow {
+            font-size: 0.72rem; color: #555; text-transform: uppercase;
+            letter-spacing: 1.5px; margin-bottom: 6px;
+        }
+        .ovl-head {
+            font-size: clamp(1.6rem, 6vw, 2.4rem); font-weight: 900;
+            letter-spacing: 0.15em; color: var(--gold); margin: 0 0 4px;
+        }
+        .ovl-time {
+            font-size: clamp(2rem, 8vw, 3rem); font-family: monospace;
+            font-weight: 700; color: #fff; margin: 8px 0 6px;
+        }
+        .ovl-detail { font-size: 0.82rem; color: #555; margin: 3px 0; }
+        .ovl-newbest {
+            font-size: 0.95rem; font-weight: 700; color: var(--gold);
+            margin: 8px 0; display: none;
+        }
+        .ovl-btns { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 24px; }
+
+        /* Penalty flash */
+        #catchFlash {
+            position: fixed; inset: 0; background: rgba(224,80,80,0.28);
+            pointer-events: none; z-index: 400; opacity: 0;
+            transition: opacity 0s;
+        }
+        #catchFlash.show { opacity: 1; transition: opacity 0s; }
+        #catchFlash.hide { opacity: 0; transition: opacity 0.5s; }
+
+        /* Penalty label */
+        #penaltyLabel {
+            position: fixed; left: 50%; top: 40%;
+            transform: translate(-50%, -50%);
+            font-size: 1.6rem; font-weight: 900; color: var(--red);
+            font-family: monospace; pointer-events: none; z-index: 401;
+            opacity: 0; text-shadow: 0 0 20px rgba(224,80,80,0.7);
+            transition: opacity 0s;
+        }
+        #penaltyLabel.show { opacity: 1; transition: opacity 0s; }
+        #penaltyLabel.hide { opacity: 0; transition: opacity 0.5s; }
+
+        /* ── Intro cutscene overlay (level 5, 6 …) */
+        #icOverlay {
+            position: fixed; inset: 0; z-index: 500;
+            background: #000; display: none;
+        }
+        #icCanvas  { position: absolute; inset: 0; }
+
+        /* ── Cutscene overlay (no backdrop-filter — it breaks canvas compositing) */
+        #gcOverlay {
+            position: fixed; inset: 0; z-index: 500;
+            background: #000; display: none;
+        }
+        #csCanvas  { position: absolute; inset: 0; z-index: 1; }
+        #csScore   {
+            position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px 32px 40px; text-align: center;
+            opacity: 0; transition: opacity 0.8s; pointer-events: none;
+        }
+        #csScore button { pointer-events: auto; }
+    </style>
+</head>
+<body class="wunderBody">
+<div class="navbar"></div>
+<div id="daeWrap">
+
+    <!-- Title -->
+    <div id="titleScreen">
+        <div class="dae-wordmark">DAEDALUS</div>
+        <div class="dae-sub">The Labyrinth of Ten</div>
+        <p class="dae-lore">
+            Ten mazes. One unbroken run. Escape every level before the Minotaur finds you.<br>
+            Your score is the total time to clear all ten — lowest wins.
+        </p>
+        <div id="bestBox">Best Run: <strong id="bestTitle">—</strong></div>
+        <button class="dae-btn" id="startBtn">Enter the Labyrinth</button>
+        <p class="key-hint">
+            Arrow keys or WASD &nbsp;·&nbsp; <strong>hold</strong> to move continuously &nbsp;·&nbsp; <strong>click</strong> maze to pathfind<br>
+            Levels 5–10 have enemies &nbsp;·&nbsp; Caught = +10 s penalty &amp; level restart &nbsp;·&nbsp; ESC to quit
+        </p>
+    </div>
+
+    <!-- Game -->
+    <div id="gameArea">
+        <div id="levelDots"></div>
+        <div id="hud">
+            <div class="hud-lbl">Level <strong id="hudLevel">1</strong><span style="color:#333;">/10</span></div>
+            <div id="hudTimer">00:00.0</div>
+            <div class="hud-lbl">Best <strong id="hudBest">—</strong></div>
+        </div>
+        <canvas id="mazeCanvas" tabindex="0"></canvas>
+        <div id="dpad">
+            <div class="dpad-row"><button class="dpad-btn" id="dUp">▲</button></div>
+            <div class="dpad-row">
+                <button class="dpad-btn" id="dLeft">◀</button>
+                <button class="dpad-btn" id="dDown">▼</button>
+                <button class="dpad-btn" id="dRight">▶</button>
+            </div>
+        </div>
+        <p class="esc-hint">ESC — quit to title</p>
+    </div>
+</div>
+
+<!-- Level complete overlay -->
+<div id="lcOverlay" class="dae-overlay" style="display:none;">
+    <div class="ovl-eyebrow">Level <span id="lcNum">1</span> / 10 complete</div>
+    <div class="ovl-head">ESCAPED!</div>
+    <div class="ovl-time" id="lcTime">00:00.0</div>
+    <p class="ovl-detail" id="lcPenalty"></p>
+    <p class="ovl-detail" style="color:#333;">Running total · tap to continue</p>
+    <div class="ovl-btns">
+        <button class="dae-btn" id="nextBtn">Level <span id="lcNext">2</span> &rarr;</button>
+    </div>
+</div>
+
+<!-- Game complete cutscene overlay -->
+<div id="icOverlay"><canvas id="icCanvas"></canvas></div>
+
+<div id="gcOverlay">
+    <canvas id="csCanvas"></canvas>
+    <div id="csScore">
+        <div class="ovl-time" id="gcTime">00:00.0</div>
+        <p class="ovl-newbest" id="gcNewBest">✦ NEW BEST TIME ✦</p>
+        <p class="ovl-detail" id="gcPrev"></p>
+        <div class="ovl-btns">
+            <button class="dae-btn" id="playAgainBtn">Play Again</button>
+            <button class="dae-btn sec" id="quitBtn">Return to Games</button>
+        </div>
+    </div>
+</div>
+
+<!-- Effects -->
+<div id="catchFlash"></div>
+<div id="penaltyLabel">+10s</div>
+
+<script src="/js/gamer/daedalus.js" defer></script>
+</body>
+</html>

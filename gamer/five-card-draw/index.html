@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Five Card Draw — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/js/config/firebase-config.js"></script>
+    <script src="/js/username-gen.js"></script>
+    <script src="/js/engines/card-engine.js"></script>
+    <script src="/js/engines/five-card-draw-engine.js"></script>
+    <style>
+        #fcd-page { max-width:720px; margin:0 auto; padding:0 16px 80px; }
+        .fcd-panel { background:rgba(0,0,0,0.75); border:1px solid #2a2a2a;
+            border-radius:12px; padding:20px; margin-bottom:16px; }
+        .fcd-title { font-family:'Courier New',monospace; font-size:11px; letter-spacing:3px;
+            text-transform:uppercase; color:#f4a261;
+            border-bottom:1px solid #2a2a2a; padding-bottom:8px; margin:0 0 16px; }
+        .card { display:inline-flex; flex-direction:column; justify-content:space-between;
+            width:54px; height:80px; background:#f8f8f0; border:1px solid #bbb;
+            border-radius:7px; padding:4px 5px; font-family:'Courier New',monospace;
+            font-size:13px; font-weight:bold; color:#111; user-select:none;
+            flex-shrink:0; cursor:pointer; transition:transform .15s, border-color .15s; }
+        .card.red  { color:#c0392b; }
+        .card.back { background:repeating-linear-gradient(45deg,#1a237e,#1a237e 4px,#283593 4px,#283593 8px);
+            border-color:#0d1b6e; cursor:default; }
+        .card.ghost { background:rgba(255,255,255,0.04); border:1px dashed #333; cursor:default; }
+        .card.selected { border-color:#e74c3c; transform:translateY(8px); }
+        .card-b { transform:rotate(180deg); }
+        .mode-tabs { display:flex; gap:8px; margin-bottom:14px; }
+        .mode-tab { flex:1; padding:8px; background:rgba(255,255,255,0.05);
+            border:1px solid #333; border-radius:6px; cursor:pointer;
+            font-family:'Courier New',monospace; font-size:11px; letter-spacing:2px;
+            text-transform:uppercase; color:#888; text-align:center; }
+        .mode-tab.active { border-color:#f4a261; color:#f4a261; background:rgba(244,162,97,0.08); }
+        .fcd-btn { background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15);
+            color:#bbb; border-radius:6px; padding:8px 16px;
+            font-family:'Courier New',monospace; font-size:12px; cursor:pointer; }
+        .fcd-btn:hover:not(:disabled) { border-color:#f4a261; color:#fff; }
+        .fcd-btn:disabled { opacity:0.3; cursor:default; }
+        .fcd-btn.accent { background:#f4a261; border-color:#f4a261; color:#111; font-weight:bold; }
+        .fcd-btn.danger { background:#c0392b; border-color:#c0392b; color:#fff; }
+        .fcd-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+        .phase-bar { display:flex; gap:4px; margin-bottom:14px; }
+        .phase-step { flex:1; text-align:center; padding:5px 2px;
+            font-family:'Courier New',monospace; font-size:9px; letter-spacing:1px;
+            text-transform:uppercase; border-radius:4px;
+            background:rgba(255,255,255,0.05); border:1px solid #2a2a2a; color:#555; }
+        .phase-step.active { background:rgba(244,162,97,0.15); border-color:#f4a261; color:#f4a261; }
+        .phase-step.done   { border-color:#4caf50; color:#4caf50; }
+        .players-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+            gap:8px; margin-bottom:14px; }
+        .player-seat { background:rgba(255,255,255,0.04); border:1px solid #2a2a2a;
+            border-radius:8px; padding:10px; }
+        .player-seat.active { border-color:#f4a261; }
+        .player-seat.folded { opacity:0.4; }
+        .player-seat.winner { border-color:#4caf50; background:rgba(76,175,80,0.06); }
+        .seat-name  { font-family:'Courier New',monospace; font-size:10px; color:#aaa;
+            letter-spacing:1px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .seat-chips { font-family:'Courier New',monospace; font-size:13px; color:#f4a261; }
+        .seat-bet   { font-family:'Courier New',monospace; font-size:10px; color:#888; margin-top:2px; }
+        .seat-cards { display:flex; gap:3px; margin-top:6px; }
+        .seat-status { font-family:'Courier New',monospace; font-size:9px; color:#aaa;
+            margin-top:4px; letter-spacing:1px; }
+        .hand-name  { font-family:'Courier New',monospace; font-size:9px; margin-top:4px; letter-spacing:1px; }
+        .hand-name.winner { color:#4caf50; }
+        .your-hand { border-top:1px solid #2a2a2a; padding-top:14px; margin-top:6px; }
+        .your-cards { display:flex; gap:8px; margin:10px 0; flex-wrap:wrap; }
+        .pot-info { font-family:'Courier New',monospace; font-size:13px; color:#888;
+            text-align:center; margin-bottom:10px; }
+        .pot-info .v { color:#f4a261; font-size:16px; }
+        .action-panel { border-top:1px solid #2a2a2a; padding-top:14px; margin-top:8px; }
+        #raise-input { width:72px; background:rgba(255,255,255,0.07); border:1px solid #444;
+            color:#f4a261; font-family:'Courier New',monospace; font-size:14px;
+            border-radius:5px; padding:4px 8px; text-align:center; }
+        .draw-hint { font-family:'Courier New',monospace; font-size:11px; color:#888;
+            margin-bottom:8px; letter-spacing:1px; }
+        #fcd-msg { font-family:'Courier New',monospace; font-size:1.1em;
+            min-height:1.4em; text-align:center; margin:10px 0; }
+        #fcd-msg.win  { color:#4caf50; }
+        #fcd-msg.lose { color:#e74c3c; }
+        #mp-setup input { background:rgba(255,255,255,0.07); border:1px solid #444;
+            color:#ccc; border-radius:5px; padding:5px 10px;
+            font-family:'Courier New',monospace; font-size:13px; }
+        .lobby-row { font-family:'Courier New',monospace; font-size:12px; color:#ccc; padding:3px 0; }
+        #hs-box { text-align:center; font-family:'Courier New',monospace;
+            font-size:11px; color:#666; margin-top:12px; }
+        #hs-box strong { color:#f4a261; }
+        select.fcd-sel { background:rgba(255,255,255,0.07); border:1px solid #444;
+            color:#ccc; border-radius:5px; padding:4px 8px;
+            font-family:'Courier New',monospace; font-size:12px; }
+    </style>
+</head>
+<body class="wunderBody">
+    <div class="navbar">
+        <a href="../">Home</a>
+        <a href="../gamer/games">Games</a>
+    </div>
+
+    <div id="fcd-page">
+        <div class="fcd-panel">
+            <div class="fcd-title">Five Card Draw</div>
+            <div class="mode-tabs">
+                <div class="mode-tab active" id="tab-sp" onclick="setMode('sp')">Single Player</div>
+                <div class="mode-tab"        id="tab-mp" onclick="setMode('mp')">Multiplayer</div>
+            </div>
+
+            <div id="sp-setup">
+                <div class="fcd-row">
+                    <label style="font-family:'Courier New',monospace;font-size:11px;color:#888;">PLAYERS (incl. you)</label>
+                    <select id="sp-count" class="fcd-sel">
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4" selected>4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                    </select>
+                    <button class="fcd-btn accent" onclick="spStart()">&#9654; New Game</button>
+                </div>
+            </div>
+
+            <div id="mp-setup" style="display:none;">
+                <div class="fcd-row">
+                    <button class="fcd-btn accent" onclick="mpCreate()">Create Room</button>
+                    <input id="mp-join-id" placeholder="Room ID" maxlength="6" style="width:90px;">
+                    <button class="fcd-btn" onclick="mpJoin()">Join</button>
+                </div>
+                <div id="mp-room-info" style="font-family:'Courier New',monospace;font-size:12px;color:#888;margin-top:6px;"></div>
+                <div id="mp-lobby" style="margin-top:10px;"></div>
+            </div>
+        </div>
+
+        <div class="fcd-panel" id="game-panel" style="display:none;">
+            <div class="fcd-title">
+                <span id="phase-label">Waiting</span>
+                &ensp;<span id="dealer-label" style="color:#555;font-size:9px;"></span>
+            </div>
+
+            <div class="phase-bar">
+                <div class="phase-step" id="ph-bet1">Bet 1</div>
+                <div class="phase-step" id="ph-draw">Draw</div>
+                <div class="phase-step" id="ph-bet2">Bet 2</div>
+                <div class="phase-step" id="ph-showdown">Showdown</div>
+            </div>
+
+            <div class="pot-info">
+                Pot: <span class="v" id="pot-val">0</span>
+                &ensp;|&ensp;
+                Current Bet: <span class="v" style="font-size:14px;" id="bet-val">0</span>
+            </div>
+
+            <div class="players-grid" id="players-grid"></div>
+
+            <div class="your-hand">
+                <div style="font-family:'Courier New',monospace;font-size:10px;color:#888;letter-spacing:2px;">YOUR HAND</div>
+                <div class="draw-hint" id="draw-hint" style="display:none;">Click cards to select for discard</div>
+                <div class="your-cards" id="your-cards"></div>
+                <div id="your-hand-name" style="font-family:'Courier New',monospace;font-size:11px;color:#4caf50;margin-top:4px;"></div>
+                <div style="font-family:'Courier New',monospace;font-size:11px;color:#888;margin-top:4px;">
+                    Chips: <span style="color:#f4a261;font-size:14px;" id="my-chips">0</span>
+                    &ensp;Bet: <span style="color:#888;" id="my-bet">0</span>
+                </div>
+            </div>
+
+            <div id="fcd-msg"></div>
+
+            <!-- Draw phase actions -->
+            <div class="action-panel" id="draw-panel" style="display:none;">
+                <div class="fcd-row">
+                    <button class="fcd-btn accent" onclick="doDraw()">Draw Selected</button>
+                    <button class="fcd-btn" onclick="standPat()">Stand Pat (keep all)</button>
+                </div>
+                <div style="font-family:'Courier New',monospace;font-size:10px;color:#888;margin-top:4px;">
+                    <span id="selected-count">0</span> card(s) selected for discard
+                </div>
+            </div>
+
+            <!-- Betting actions -->
+            <div class="action-panel" id="bet-panel" style="display:none;">
+                <div class="fcd-row">
+                    <button class="fcd-btn danger" onclick="doBetAction('fold')">Fold</button>
+                    <button class="fcd-btn" id="btn-check" onclick="doBetAction('check')">Check</button>
+                    <button class="fcd-btn accent" id="btn-call" onclick="doBetAction('call')">Call</button>
+                </div>
+                <div class="fcd-row">
+                    <input type="number" id="raise-input" min="10" value="20">
+                    <button class="fcd-btn" onclick="doBetAction('raise', +document.getElementById('raise-input').value)">Raise</button>
+                </div>
+            </div>
+
+            <div id="next-panel" style="display:none;margin-top:12px;">
+                <button class="fcd-btn accent" id="btn-next-hand" onclick="newHand()">Next Hand</button>
+            </div>
+        </div>
+
+        <div id="hs-box">
+            &#127942; Most Chips: <strong id="hs-val">—</strong> by <strong id="hs-user">—</strong>
+        </div>
+    </div>
+
+    <button type="button" onclick="navigateToPage('/gamer/games')">&#8592; Back to Games</button>
+    <script src="/js/gamer/gamer-chat.js"></script>
+    <script src="/js/gamer/five-card-draw.js" defer></script>
+</body>
+</html>

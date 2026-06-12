@@ -15,9 +15,9 @@ interface Props {
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
 
 const LAYER_COLORS: Record<LayerName, string> = {
-    neighborhoods: '#f43f5e',
+    neighborhoods: '#22c55e',
     schools:       '#3b82f6',
-    superfund:     '#f97316',
+    superfund:     '#ef4444',
     population:    '#2171b5',
 };
 
@@ -30,14 +30,14 @@ const LAYER_TITLES: Record<LayerName, string> = {
 
 const ALL_LAYERS: LayerName[] = ['neighborhoods', 'schools', 'superfund', 'population'];
 
-// ── Popup HTML ────────────────────────────────────────────────────────────────
+// ── Popup section (one per layer hit) ────────────────────────────────────────
 function row(label: string, value: unknown): string {
     const v = value != null && value !== '' ? String(value) : null;
     if (!v) return '';
     return `<div class="lp-row"><span class="lp-label">${label}</span><span class="lp-value">${v}</span></div>`;
 }
 
-function popupHtml(layer: LayerName, props: Record<string, unknown>): string {
+function popupSection(layer: LayerName, props: Record<string, unknown>): string {
     const color = LAYER_COLORS[layer];
     let body = '';
 
@@ -47,7 +47,8 @@ function popupHtml(layer: LayerName, props: Record<string, unknown>): string {
             row('NPL Status', props.nplStatus) +
             row('Address',    props.address)   +
             row('City',       props.city)      +
-            row('State',      props.state);
+            row('State',      props.state)     +
+            row('EPA ID',     props.epaId);
     } else if (layer === 'population') {
         const pop = props.population != null
             ? Number(props.population).toLocaleString()
@@ -60,13 +61,13 @@ function popupHtml(layer: LayerName, props: Record<string, unknown>): string {
             row('Tract GEOID',  props.GEOID);
     } else {
         body =
-            row('Name',  props.NAME)                    +
-            row('GEOID', props.GEOID)                   +
-            row('State', props.STUSAB ?? props.STATE);
+            row('Name',  props.NAME)                          +
+            row('GEOID', props.GEOID)                         +
+            row('State', (props.STUSAB ?? props.STATE) as unknown);
     }
 
     return `
-        <div class="lp-popup">
+        <div class="lp-section">
             <div class="lp-header" style="border-left:4px solid ${color}">
                 ${LAYER_TITLES[layer]}
             </div>
@@ -241,25 +242,10 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError }
             });
         }
 
-        // Hover cursor
+        // Hover cursor — kept per-layer since mouseenter/leave work for each independently
         map.on('mouseenter', lyrId, () => { map.getCanvas().style.cursor = 'pointer'; });
         map.on('mouseleave', lyrId, () => { map.getCanvas().style.cursor = '';         });
-
-        // Click → popup + sidebar panel
-        map.on('click', lyrId, (e) => {
-            const feature = e.features?.[0];
-            if (!feature) return;
-            const props = feature.properties as Record<string, unknown>;
-
-            popupRef.current?.remove();
-            popupRef.current = new maplibregl.Popup({ maxWidth: '300px', className: 'locator-popup' })
-                .setLngLat(e.lngLat)
-                .setHTML(popupHtml(layer, props))
-                .addTo(map);
-
-            onFeatureClick({ layer, properties: props });
-        });
-    }, [fetchLayer, onFeatureClick, onLayerError]);
+    }, [fetchLayer, onLayerError]);
 
     // ── Remove a layer ────────────────────────────────────────────────────────
     const removeLayer = useCallback((layer: LayerName, map: maplibregl.Map) => {
@@ -297,6 +283,61 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError }
         if (map.isStyleLoaded()) sync();
         else map.once('load', sync);
     }, [activeLayers, addLayer, removeLayer]);
+
+    // ── Unified click handler — queries ALL active layers at click point ───────
+    // Uses queryRenderedFeatures so overlapping layers all respond independently.
+    useEffect(() => {
+        const map = mapRef.current;
+        if (!map) return;
+        let mounted = true;
+
+        const onClick = (e: maplibregl.MapMouseEvent) => {
+            const layerIds = ALL_LAYERS
+                .filter(l => activeLayers.has(l) && map.getLayer(`lyr-${l}`))
+                .map(l => `lyr-${l}`);
+            if (layerIds.length === 0) return;
+
+            // Small bounding box so nearby circle (Superfund) features are also hit
+            const pt = e.point;
+            const hitBox: [maplibregl.PointLike, maplibregl.PointLike] = [
+                [pt.x - 8, pt.y - 8],
+                [pt.x + 8, pt.y + 8],
+            ];
+            const features = map.queryRenderedFeatures(hitBox, { layers: layerIds });
+            if (features.length === 0) return;
+
+            // Deduplicate: one feature per layer (first rendered hit wins)
+            const seen = new Set<LayerName>();
+            const hits: { layer: LayerName; props: Record<string, unknown> }[] = [];
+            for (const f of features) {
+                const layerName = (f.layer.id as string).replace(/^lyr-/, '') as LayerName;
+                if (seen.has(layerName)) continue;
+                seen.add(layerName);
+                hits.push({ layer: layerName, props: f.properties as Record<string, unknown> });
+            }
+            if (hits.length === 0) return;
+
+            const html = `<div class="lp-popup">${hits.map(h => popupSection(h.layer, h.props)).join('')}</div>`;
+
+            popupRef.current?.remove();
+            popupRef.current = new maplibregl.Popup({ maxWidth: '320px', className: 'locator-popup' })
+                .setLngLat(e.lngLat)
+                .setHTML(html)
+                .addTo(map);
+
+            // Report primary (first) feature to the sidebar panel
+            onFeatureClick({ layer: hits[0].layer, properties: hits[0].props });
+        };
+
+        const setup = () => { if (mounted) map.on('click', onClick); };
+        if (map.isStyleLoaded()) setup();
+        else map.once('load', setup);
+
+        return () => {
+            mounted = false;
+            map.off('click', onClick);
+        };
+    }, [activeLayers, onFeatureClick]);
 
     // ── Refresh data after map pan / zoom ─────────────────────────────────────
     useEffect(() => {

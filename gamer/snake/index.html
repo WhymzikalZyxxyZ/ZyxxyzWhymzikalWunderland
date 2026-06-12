@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <script src="/js/engines/snake-engine.js"></script>
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="/js/config/firebase-config.js"></script>
+    <style>
+        #snake-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 16px;
+            margin: 24px auto;
+        }
+        #snake-board { border: 2px solid #555; display: block; }
+        #snake-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 110px;
+        }
+        .snake-box {
+            background: rgba(0,0,0,0.6);
+            border: 1px solid #555;
+            padding: 8px;
+            text-align: center;
+        }
+        .snake-box label {
+            display: block;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
+        .snake-box span {
+            display: block;
+            font-family: 'Courier New', monospace;
+            font-size: 22px;
+            font-weight: bold;
+            color: #f4a261;
+        }
+        #snake-best { color: #ffd700; }
+        #snake-world { color: #4caf50; }
+        .snake-box.new-best { animation: snakeBestFlash 0.5s ease 3; }
+        @keyframes snakeBestFlash {
+            0%, 100% { background: rgba(0,0,0,0.6); }
+            50%       { background: rgba(255,215,0,0.25); }
+        }
+        .snake-box.new-world { animation: snakeWorldFlash 0.5s ease 3; }
+        @keyframes snakeWorldFlash {
+            0%, 100% { background: rgba(0,0,0,0.6); }
+            50%       { background: rgba(76,175,80,0.25); }
+        }
+        #snake-status {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            font-weight: bold;
+            color: #f00;
+            text-align: center;
+            min-height: 20px;
+            background: rgba(0,0,0,0.6);
+            padding: 4px;
+        }
+        #snake-start { width: 100%; font-family: 'Courier New', monospace; }
+        #snake-keys {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #888;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #444;
+            padding: 8px;
+        }
+        #snake-keys p { color: #888; margin: 2px 0; text-align: left; }
+    </style>
+</head>
+<body class="wunderBody">
+
+    <h2>Snake</h2>
+
+    <div class="navbar">
+        <a href="../">Home</a>
+        <a href="games">Games</a>
+        <a href="tetris">Tetris</a>
+        <a href="snake">Snake</a>
+    </div>
+
+    <div id="snake-wrapper">
+        <canvas id="snake-board" width="400" height="400" role="img" aria-label="Snake game board" tabindex="0"></canvas>
+
+        <div id="snake-sidebar">
+            <div class="snake-box">
+                <label>SCORE</label>
+                <span id="snake-score" aria-live="polite">0</span>
+            </div>
+            <div class="snake-box" id="snake-best-box">
+                <label>BEST</label>
+                <span id="snake-best">0</span>
+            </div>
+            <div class="snake-box" id="snake-world-box">
+                <label>WORLD</label>
+                <span id="snake-world">—</span>
+            </div>
+            <div class="snake-box">
+                <label>LENGTH</label>
+                <span id="snake-length">3</span>
+            </div>
+            <div id="snake-status" role="status" aria-live="assertive"></div>
+            <button id="snake-start" onclick="snakeStartGame()">PLAY</button>
+            <div id="snake-keys">
+                <p>&#8592; &#8594; &nbsp;Move</p>
+                <p>&#8593; &#8595; &nbsp;Move</p>
+                <p>P &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Pause</p>
+                <p style="color:#666;margin-top:6px;">&#128241; Swipe to steer</p>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" onclick="navigateToPage('/gamer/games')">&#8592; Back to Games</button>
+
+    <script src="/js/gamer/snake.js" defer></script>
+</body>
+</html>

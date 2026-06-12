@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Melody — Music Theory</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <style>
+        #melody-app {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 0 16px 80px;
+        }
+        .mel-subtitle {
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #555;
+            margin: 0 0 28px;
+        }
+
+        /* ── TABS ── */
+        .mel-tab-bar {
+            display: flex;
+            gap: 4px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(244,162,97,0.15);
+            border-radius: 10px;
+            padding: 5px;
+            margin-bottom: 26px;
+            flex-wrap: wrap;
+        }
+        .mel-tab {
+            flex: 1;
+            min-width: 110px;
+            padding: 10px 12px;
+            border: 1px solid transparent;
+            border-radius: 7px;
+            background: transparent;
+            color: #666;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.16s, color 0.16s;
+            text-align: center;
+        }
+        .mel-tab:hover  { color: #f4a261; background: rgba(244,162,97,0.07); }
+        .mel-tab.active { background: rgba(244,162,97,0.14); color: #f4a261; border-color: rgba(244,162,97,0.28); }
+        .mel-tab-panel  { display: none; }
+        .mel-tab-panel.active { display: block; }
+
+        /* ── SECTION LABEL ── */
+        .sec-lbl {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #f4a261;
+            border-bottom: 1px solid rgba(244,162,97,0.18);
+            padding-bottom: 6px;
+            margin: 28px 0 14px;
+        }
+
+        /* ── GLOSSARY ── */
+        .gls-search-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .gls-search {
+            flex: 1;
+            min-width: 180px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 9px 14px;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .gls-search:focus { border-color: #f4a261; }
+        .gls-search::placeholder { color: #555; }
+        .gls-cat-bar {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .gls-cat-btn {
+            padding: 5px 12px;
+            border: 1px solid #333;
+            border-radius: 20px;
+            background: transparent;
+            color: #666;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .gls-cat-btn:hover  { border-color: #f4a261; color: #f4a261; }
+        .gls-cat-btn.active { border-color: #f4a261; background: rgba(244,162,97,0.12); color: #f4a261; }
+        .gls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 10px;
+        }
+        .gls-card {
+            background: rgba(0,0,0,0.55);
+            border: 1px solid #252525;
+            border-radius: 9px;
+            padding: 14px 16px;
+            transition: border-color 0.15s;
+        }
+        .gls-card:hover { border-color: rgba(244,162,97,0.3); }
+        .gls-term {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            color: #f4a261;
+            margin-bottom: 2px;
+        }
+        .gls-cat-tag {
+            display: inline-block;
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #555;
+            background: rgba(255,255,255,0.05);
+            border-radius: 3px;
+            padding: 1px 6px;
+            margin-bottom: 6px;
+        }
+        .gls-def {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #aaa;
+            line-height: 1.6;
+        }
+        .gls-example {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #666;
+            font-style: italic;
+            margin-top: 5px;
+        }
+        .gls-none {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #555;
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        /* ── REFERENCE ── */
+        .ref-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin-bottom: 24px;
+        }
+        .ref-table th {
+            background: rgba(244,162,97,0.1);
+            color: #f4a261;
+            padding: 8px 12px;
+            text-align: left;
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(244,162,97,0.2);
+        }
+        .ref-table td {
+            padding: 7px 12px;
+            color: #aaa;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .ref-table tr:hover td { background: rgba(244,162,97,0.04); }
+        .ref-table td:first-child { color: #f4d0aa; font-weight: bold; }
+        .note-name {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(244,162,97,0.15);
+            border: 1px solid rgba(244,162,97,0.3);
+            color: #f4a261;
+            text-align: center;
+            line-height: 28px;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            margin: 1px;
+        }
+        .scale-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: center;
+        }
+        .step-badge {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 4px;
+            padding: 2px 6px;
+            color: #888;
+        }
+        .chord-formula {
+            color: #c9a0e8;
+            font-weight: bold;
+        }
+
+        /* ── EXERCISES ── */
+        .ex-card {
+            background: rgba(0,0,0,0.55);
+            border: 1px solid #252525;
+            border-radius: 12px;
+            padding: 22px 24px;
+            margin-bottom: 20px;
+        }
+        .ex-title {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            color: #f4a261;
+            margin-bottom: 4px;
+        }
+        .ex-desc {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 16px;
+        }
+        .ex-prompt {
+            background: rgba(244,162,97,0.06);
+            border: 1px solid rgba(244,162,97,0.18);
+            border-radius: 8px;
+            padding: 14px 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #f4d0aa;
+            text-align: center;
+            margin-bottom: 14px;
+            min-height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .ex-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .ex-opt-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px 14px;
+            border: 1px solid #333;
+            border-radius: 7px;
+            background: rgba(255,255,255,0.04);
+            color: #bbb;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: center;
+        }
+        .ex-opt-btn:hover:not(:disabled) { border-color: #f4a261; color: #f4a261; }
+        .ex-opt-btn.correct  { background: rgba(76,175,80,0.18); border-color: #4caf50; color: #81c784; }
+        .ex-opt-btn.wrong    { background: rgba(244,67,54,0.15); border-color: #f44336; color: #e57373; }
+        .ex-opt-btn:disabled { cursor: default; }
+        .ex-feedback {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            min-height: 20px;
+            margin-bottom: 10px;
+            color: #888;
+        }
+        .ex-feedback.good { color: #4caf50; }
+        .ex-feedback.bad  { color: #e57373; }
+        .ex-score {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #555;
+            text-align: right;
+        }
+        .ex-next-btn {
+            background: rgba(244,162,97,0.12);
+            border: 1px solid rgba(244,162,97,0.35);
+            border-radius: 7px;
+            padding: 9px 22px;
+            color: #f4a261;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.15s;
+            margin-top: 4px;
+        }
+        .ex-next-btn:hover { background: rgba(244,162,97,0.22); }
+        .ex-next-btn:disabled { opacity: 0.3; cursor: default; }
+
+        /* Staff / notation */
+        .staff-wrap {
+            overflow-x: auto;
+            margin-bottom: 12px;
+        }
+        canvas.staff-canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 6px;
+        }
+
+        /* Keyboard */
+        .keyboard-wrap {
+            overflow-x: auto;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: center;
+        }
+        .piano-key {
+            cursor: pointer;
+            transition: fill 0.1s;
+        }
+        .piano-key:hover rect { filter: brightness(1.3); }
+
+        /* Writing exercise */
+        .mel-staff-interactive {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .note-palette {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .note-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid rgba(244,162,97,0.4);
+            background: rgba(244,162,97,0.08);
+            color: #f4a261;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .note-btn:hover { background: rgba(244,162,97,0.22); }
+        .note-btn.sharp { border-color: rgba(180,100,220,0.5); background: rgba(180,100,220,0.08); color: #c9a0e8; }
+        .note-btn.sharp:hover { background: rgba(180,100,220,0.2); }
+        .composed-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            min-height: 44px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+        .composed-note {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(244,162,97,0.2);
+            border: 1px solid rgba(244,162,97,0.5);
+            color: #f4d0aa;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.12s;
+            position: relative;
+        }
+        .composed-note:hover { background: rgba(220,60,60,0.3); border-color: #e57373; }
+        .compose-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .compose-btn {
+            padding: 7px 16px;
+            border: 1px solid #333;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.04);
+            color: #bbb;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .compose-btn:hover { border-color: #f4a261; color: #f4a261; }
+        .compose-btn.primary {
+            border-color: rgba(244,162,97,0.4);
+            background: rgba(244,162,97,0.1);
+            color: #f4a261;
+        }
+        .compose-btn.primary:hover { background: rgba(244,162,97,0.22); }
+        .compose-analysis {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #888;
+            background: rgba(0,0,0,0.3);
+            border-radius: 6px;
+            padding: 10px 14px;
+            margin-top: 8px;
+            line-height: 1.7;
+            display: none;
+        }
+    </style>
+</head>
+<body class="wunderBody">
+    <h2>Melody</h2>
+
+    <div class="navbar"></div>
+    <div class="banner"></div>
+
+    <div id="melody-app">
+        <p class="mel-subtitle">Music Theory · Glossary · Exercises</p>
+
+        <div class="mel-tab-bar">
+            <button class="mel-tab active" onclick="showTab('glossary')">Glossary</button>
+            <button class="mel-tab"        onclick="showTab('exercises')">Exercises</button>
+            <button class="mel-tab"        onclick="showTab('reference')">Reference</button>
+            <button class="mel-tab"        onclick="showTab('compose')">Compose</button>
+        </div>
+
+        <!-- ══════════════════════════════ GLOSSARY ══════════════════════════════ -->
+        <div id="tab-glossary" class="mel-tab-panel active">
+            <div class="gls-search-row">
+                <input class="gls-search" id="gls-search" type="text" placeholder="Search terms..." oninput="filterGls()">
+            </div>
+            <div class="gls-cat-bar" id="gls-cats"></div>
+            <div class="gls-grid" id="gls-grid"></div>
+        </div>
+
+        <!-- ══════════════════════════════ EXERCISES ══════════════════════════════ -->
+        <div id="tab-exercises" class="mel-tab-panel">
+
+            <!-- Interval ID -->
+            <div class="ex-card" id="ex-interval">
+                <div class="ex-title">Interval Identification</div>
+                <div class="ex-desc">Name the interval between the two notes shown.</div>
+                <div class="ex-prompt" id="int-prompt">—</div>
+                <div class="ex-options" id="int-opts"></div>
+                <div class="ex-feedback" id="int-fb"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <button class="ex-next-btn" id="int-next" onclick="nextInterval()" disabled>Next →</button>
+                    <div class="ex-score" id="int-score">0 / 0</div>
+                </div>
+            </div>
+
+            <!-- Scale Builder -->
+            <div class="ex-card" id="ex-scale">
+                <div class="ex-title">Scale Builder</div>
+                <div class="ex-desc">Select the correct notes to build the requested scale. Click notes in order from the root.</div>
+                <div class="ex-prompt" id="scl-prompt">—</div>
+                <div class="keyboard-wrap" id="scl-keyboard"></div>
+                <div class="ex-feedback" id="scl-fb"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <button class="ex-next-btn" id="scl-next" onclick="nextScale()" disabled>Next →</button>
+                    <div class="ex-score" id="scl-score">0 / 0</div>
+                </div>
+            </div>
+
+            <!-- Chord Construction -->
+            <div class="ex-card" id="ex-chord">
+                <div class="ex-title">Chord Construction</div>
+                <div class="ex-desc">Choose the three notes that make up the given chord.</div>
+                <div class="ex-prompt" id="chd-prompt">—</div>
+                <div class="ex-options" id="chd-opts"></div>
+                <div class="ex-feedback" id="chd-fb"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <button class="ex-next-btn" id="chd-next" onclick="nextChord()" disabled>Next →</button>
+                    <div class="ex-score" id="chd-score">0 / 0</div>
+                </div>
+            </div>
+
+            <!-- Rhythm -->
+            <div class="ex-card" id="ex-rhythm">
+                <div class="ex-title">Rhythm Recognition</div>
+                <div class="ex-desc">Choose the time signature that matches the beat pattern shown.</div>
+                <div class="ex-prompt" id="rhy-prompt" style="font-size:18px;letter-spacing:4px;">—</div>
+                <div class="ex-options" id="rhy-opts"></div>
+                <div class="ex-feedback" id="rhy-fb"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <button class="ex-next-btn" id="rhy-next" onclick="nextRhythm()" disabled>Next →</button>
+                    <div class="ex-score" id="rhy-score">0 / 0</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ══════════════════════════════ REFERENCE ══════════════════════════════ -->
+        <div id="tab-reference" class="mel-tab-panel">
+
+            <div class="sec-lbl">The 12 Notes (Chromatic Scale)</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px;">
+                <span class="note-name">C</span>
+                <span class="note-name" style="background:rgba(180,100,220,0.15);border-color:rgba(180,100,220,0.35);color:#c9a0e8;">C♯</span>
+                <span class="note-name">D</span>
+                <span class="note-name" style="background:rgba(180,100,220,0.15);border-color:rgba(180,100,220,0.35);color:#c9a0e8;">D♯</span>
+                <span class="note-name">E</span>
+                <span class="note-name">F</span>
+                <span class="note-name" style="background:rgba(180,100,220,0.15);border-color:rgba(180,100,220,0.35);color:#c9a0e8;">F♯</span>
+                <span class="note-name">G</span>
+                <span class="note-name" style="background:rgba(180,100,220,0.15);border-color:rgba(180,100,220,0.35);color:#c9a0e8;">G♯</span>
+                <span class="note-name">A</span>
+                <span class="note-name" style="background:rgba(180,100,220,0.15);border-color:rgba(180,100,220,0.35);color:#c9a0e8;">A♯</span>
+                <span class="note-name">B</span>
+            </div>
+
+            <div class="sec-lbl">Intervals</div>
+            <table class="ref-table">
+                <thead><tr><th>Semitones</th><th>Name</th><th>Symbol</th><th>Example (from C)</th><th>Character</th></tr></thead>
+                <tbody>
+                    <tr><td>0</td><td>Perfect Unison</td><td>P1</td><td>C → C</td><td>Identical pitch</td></tr>
+                    <tr><td>1</td><td>Minor Second</td><td>m2</td><td>C → D♭</td><td>Dissonant, tense</td></tr>
+                    <tr><td>2</td><td>Major Second</td><td>M2</td><td>C → D</td><td>Whole step, mild</td></tr>
+                    <tr><td>3</td><td>Minor Third</td><td>m3</td><td>C → E♭</td><td>Dark, sad</td></tr>
+                    <tr><td>4</td><td>Major Third</td><td>M3</td><td>C → E</td><td>Bright, happy</td></tr>
+                    <tr><td>5</td><td>Perfect Fourth</td><td>P4</td><td>C → F</td><td>Stable, open</td></tr>
+                    <tr><td>6</td><td>Tritone</td><td>TT</td><td>C → F♯</td><td>Restless, tense</td></tr>
+                    <tr><td>7</td><td>Perfect Fifth</td><td>P5</td><td>C → G</td><td>Strong, open</td></tr>
+                    <tr><td>8</td><td>Minor Sixth</td><td>m6</td><td>C → A♭</td><td>Yearning</td></tr>
+                    <tr><td>9</td><td>Major Sixth</td><td>M6</td><td>C → A</td><td>Warm, bright</td></tr>
+                    <tr><td>10</td><td>Minor Seventh</td><td>m7</td><td>C → B♭</td><td>Bluesy, tense</td></tr>
+                    <tr><td>11</td><td>Major Seventh</td><td>M7</td><td>C → B</td><td>Dreamy, unresolved</td></tr>
+                    <tr><td>12</td><td>Perfect Octave</td><td>P8</td><td>C → C'</td><td>Complete, resolved</td></tr>
+                </tbody>
+            </table>
+
+            <div class="sec-lbl">Common Scales &amp; Their Patterns</div>
+            <table class="ref-table">
+                <thead><tr><th>Scale</th><th>Pattern (W=Whole, H=Half)</th><th>Notes (from C)</th><th>Feel</th></tr></thead>
+                <tbody id="scales-body"></tbody>
+            </table>
+
+            <div class="sec-lbl">Chord Formulas</div>
+            <table class="ref-table">
+                <thead><tr><th>Chord Type</th><th>Formula</th><th>Intervals</th><th>Example (C)</th><th>Symbol</th></tr></thead>
+                <tbody id="chords-body"></tbody>
+            </table>
+
+            <div class="sec-lbl">Modes of the Major Scale</div>
+            <table class="ref-table">
+                <thead><tr><th>Mode</th><th>Starts on</th><th>Pattern</th><th>Character</th></tr></thead>
+                <tbody>
+                    <tr><td>Ionian</td><td>1st degree</td><td>W W H W W W H</td><td>Bright, happy (= Major)</td></tr>
+                    <tr><td>Dorian</td><td>2nd degree</td><td>W H W W W H W</td><td>Minor but with brightness</td></tr>
+                    <tr><td>Phrygian</td><td>3rd degree</td><td>H W W W H W W</td><td>Dark, exotic, Spanish</td></tr>
+                    <tr><td>Lydian</td><td>4th degree</td><td>W W W H W W H</td><td>Dreamy, floating, ethereal</td></tr>
+                    <tr><td>Mixolydian</td><td>5th degree</td><td>W W H W W H W</td><td>Major with a bluesy ♭7</td></tr>
+                    <tr><td>Aeolian</td><td>6th degree</td><td>W H W W H W W</td><td>Sad, natural (= Natural Minor)</td></tr>
+                    <tr><td>Locrian</td><td>7th degree</td><td>H W W H W W W</td><td>Very dark, unstable, rare</td></tr>
+                </tbody>
+            </table>
+
+            <div class="sec-lbl">Cadences</div>
+            <table class="ref-table">
+                <thead><tr><th>Cadence</th><th>Chords</th><th>Feel</th><th>Common Use</th></tr></thead>
+                <tbody>
+                    <tr><td>Authentic (Perfect)</td><td>V → I</td><td>Conclusive, final</td><td>Endings, resolutions</td></tr>
+                    <tr><td>Half Cadence</td><td>? → V</td><td>Open, unfinished</td><td>Phrase endings, questions</td></tr>
+                    <tr><td>Plagal</td><td>IV → I</td><td>Peaceful, "Amen"</td><td>Hymns, gentle endings</td></tr>
+                    <tr><td>Deceptive</td><td>V → vi</td><td>Surprising, unresolved</td><td>Extending phrases, emotion</td></tr>
+                    <tr><td>Imperfect Authentic</td><td>V → I (inverted)</td><td>Less conclusive</td><td>Interior phrase endings</td></tr>
+                </tbody>
+            </table>
+
+            <div class="sec-lbl">Dynamic Markings</div>
+            <table class="ref-table">
+                <thead><tr><th>Symbol</th><th>Italian</th><th>Meaning</th></tr></thead>
+                <tbody>
+                    <tr><td>ppp</td><td>pianississimo</td><td>Extremely soft</td></tr>
+                    <tr><td>pp</td><td>pianissimo</td><td>Very soft</td></tr>
+                    <tr><td>p</td><td>piano</td><td>Soft</td></tr>
+                    <tr><td>mp</td><td>mezzo-piano</td><td>Moderately soft</td></tr>
+                    <tr><td>mf</td><td>mezzo-forte</td><td>Moderately loud</td></tr>
+                    <tr><td>f</td><td>forte</td><td>Loud</td></tr>
+                    <tr><td>ff</td><td>fortissimo</td><td>Very loud</td></tr>
+                    <tr><td>fff</td><td>fortississimo</td><td>Extremely loud</td></tr>
+                    <tr><td>cresc. / &lt;</td><td>crescendo</td><td>Gradually louder</td></tr>
+                    <tr><td>decresc. / &gt;</td><td>decrescendo</td><td>Gradually softer</td></tr>
+                    <tr><td>sfz</td><td>sforzando</td><td>Sudden forced accent</td></tr>
+                </tbody>
+            </table>
+
+            <div class="sec-lbl">Tempo Markings</div>
+            <table class="ref-table">
+                <thead><tr><th>Term</th><th>BPM (approx.)</th><th>Meaning</th></tr></thead>
+                <tbody>
+                    <tr><td>Larghissimo</td><td>&lt; 24</td><td>Extremely slow</td></tr>
+                    <tr><td>Largo</td><td>40–60</td><td>Very slow, broad</td></tr>
+                    <tr><td>Lento</td><td>45–60</td><td>Slow</td></tr>
+                    <tr><td>Adagio</td><td>66–76</td><td>Slow and stately</td></tr>
+                    <tr><td>Andante</td><td>76–108</td><td>Walking pace</td></tr>
+                    <tr><td>Moderato</td><td>108–120</td><td>Moderate speed</td></tr>
+                    <tr><td>Allegretto</td><td>112–120</td><td>Moderately fast</td></tr>
+                    <tr><td>Allegro</td><td>120–156</td><td>Fast, lively</td></tr>
+                    <tr><td>Vivace</td><td>156–176</td><td>Lively, brisk</td></tr>
+                    <tr><td>Presto</td><td>168–200</td><td>Very fast</td></tr>
+                    <tr><td>Prestissimo</td><td>&gt; 200</td><td>Extremely fast</td></tr>
+                </tbody>
+            </table>
+
+        </div>
+
+        <!-- ══════════════════════════════ COMPOSE ══════════════════════════════ -->
+        <div id="tab-compose" class="mel-tab-panel">
+            <div class="sec-lbl">Melodic Phrase Builder</div>
+            <div class="ex-card">
+                <div class="ex-title">Build a Melody</div>
+                <div class="ex-desc">Click note names below to add them to your phrase. Click a placed note to remove it. When done, press Analyze to see theory feedback.</div>
+
+                <div style="margin-bottom:10px;">
+                    <span style="font-family:'Courier New',monospace;font-size:11px;color:#666;letter-spacing:2px;text-transform:uppercase;">Root key: </span>
+                    <select id="compose-key" style="background:rgba(255,255,255,0.05);border:1px solid #444;border-radius:6px;padding:5px 10px;color:#f4a261;font-family:'Courier New',monospace;font-size:12px;outline:none;">
+                        <option>C</option><option>D</option><option>E</option><option>F</option>
+                        <option>G</option><option>A</option><option>B</option>
+                        <option>C♯</option><option>F♯</option><option>B♭</option><option>E♭</option>
+                    </select>
+                    <span style="font-family:'Courier New',monospace;font-size:11px;color:#666;letter-spacing:2px;text-transform:uppercase;margin-left:14px;">Scale: </span>
+                    <select id="compose-scale" style="background:rgba(255,255,255,0.05);border:1px solid #444;border-radius:6px;padding:5px 10px;color:#f4a261;font-family:'Courier New',monospace;font-size:12px;outline:none;">
+                        <option>Major</option><option>Natural Minor</option><option>Harmonic Minor</option>
+                        <option>Pentatonic Major</option><option>Pentatonic Minor</option>
+                        <option>Dorian</option><option>Phrygian</option><option>Lydian</option>
+                        <option>Mixolydian</option><option>Blues</option><option>Chromatic</option>
+                    </select>
+                </div>
+
+                <div class="note-palette" id="compose-palette"></div>
+
+                <div class="sec-lbl" style="margin-top:0;">Your Phrase</div>
+                <div class="composed-row" id="composed-row">
+                    <span style="font-family:'Courier New',monospace;font-size:11px;color:#333;font-style:italic;">Click notes above to start your phrase...</span>
+                </div>
+
+                <div class="compose-actions">
+                    <button class="compose-btn primary" onclick="analyzePhrase()">Analyze</button>
+                    <button class="compose-btn" onclick="playPhrase()">▶ Play</button>
+                    <button class="compose-btn" onclick="clearPhrase()">Clear</button>
+                </div>
+
+                <div class="compose-analysis" id="compose-analysis"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/virtuoso/audio/melody.js" defer></script>
+</body>
+</html>

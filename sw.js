@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'wunderland-v8';
+const CACHE_NAME = 'wunderland-v11';
 
 // Static assets to pre-cache on install
 const PRECACHE = [
@@ -32,6 +32,13 @@ const PRECACHE = [
     '/js/engines/rps-engine.js',
     '/js/engines/puzzle-engine.js',
     '/js/gamer/puzzle.js',
+    '/js/gamer/solitaire.js',
+    '/js/engines/solitaire-engine.js',
+    '/js/gamer/poker.js',
+    '/js/engines/poker-engine.js',
+    '/js/gamer/five-card-draw.js',
+    '/js/engines/five-card-draw-engine.js',
+    '/js/gamer/gamer-chat.js',
     '/mail/',
     '/mail/css/app.css',
     '/mail/js/app.js',
@@ -61,22 +68,11 @@ self.addEventListener('fetch', e => {
     if (url.origin !== self.location.origin) return;
 
     // HTML: network-first (always fresh navigation); only cache 2xx responses.
-    // Rewrite extensionless paths (e.g. /technologist/apps) to .html so GitHub
-    // Pages serves the right file; cache under the original extensionless URL.
+    // All pages now use directory/index.html structure, so GitHub Pages serves
+    // extensionless URLs natively — no path rewriting needed.
     if (request.headers.get('accept')?.includes('text/html')) {
-        const u = new URL(request.url);
-        const p = u.pathname.replace(/\/$/, '') || '/';
-        let fetchUrl = request.url;
-        // technologist pages now use directory/index.html structure — GitHub
-        // Pages serves them natively; no rewrite needed.
-        if (!p.startsWith('/technologist')) {
-            const seg = p.split('/').pop();
-            if (seg && !seg.includes('.')) {
-                fetchUrl = new URL(p + '.html', u.origin).href;
-            }
-        }
         e.respondWith(
-            fetch(fetchUrl)
+            fetch(request)
                 .then(res => {
                     if (res.ok) {
                         const clone = res.clone();
