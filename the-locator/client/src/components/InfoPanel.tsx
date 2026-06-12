@@ -30,15 +30,16 @@ function renderProps(layer: string, props: Record<string, unknown>) {
             <Row label="Address"    value={props.address} />
             <Row label="City"       value={props.city} />
             <Row label="State"      value={props.state} />
+            <Row label="EPA ID"     value={props.epaId} />
         </>
     );
     if (layer === 'population') return (
         <>
-            <Row label="Population"       value={props.population != null ? Number(props.population).toLocaleString() : null} />
-            <Row label="Area (km²)"       value={props.areaKm2} />
-            <Row label="Density / km²"    value={props.densityPerKm2} />
-            <Row label="ACS Year"         value={props.acsYear} />
-            <Row label="Tract GEOID"      value={props.GEOID} />
+            <Row label="Population"    value={props.population != null ? Number(props.population).toLocaleString() : null} />
+            <Row label="Area (km²)"    value={props.areaKm2} />
+            <Row label="Density / km²" value={props.densityPerKm2} />
+            <Row label="ACS Year"      value={props.acsYear} />
+            <Row label="Tract GEOID"   value={props.GEOID} />
         </>
     );
     // neighborhoods + schools
@@ -46,7 +47,7 @@ function renderProps(layer: string, props: Record<string, unknown>) {
         <>
             <Row label="Name"  value={props.NAME} />
             <Row label="GEOID" value={props.GEOID} />
-            <Row label="State" value={props.STUSAB} />
+            <Row label="State" value={(props.STUSAB ?? props.STATE) as unknown} />
         </>
     );
 }
