@@ -15,6 +15,7 @@ const LAYERS: { id: LayerName; label: string; color: string; desc: string }[] = 
     { id: 'superfund',     label: 'Superfund Sites',  color: '#ef4444', desc: 'EPA CERCLIS contamination sites'                                 },
     { id: 'population',    label: 'Population',       color: '#2171b5', desc: 'Density per km² by census tract'                                 },
     { id: 'walkscore',     label: 'Walkability',      color: '#4ade80', desc: 'EPA National Walkability Index by block group'                   },
+    { id: 'transit',       label: 'Transit Stops',    color: '#06b6d4', desc: 'Bus stops, rail stations, and subway entrances (OpenStreetMap)'  },
 ];
 
 // ACS 5-year estimates run from 2009 to 2022 (available as of 2026).

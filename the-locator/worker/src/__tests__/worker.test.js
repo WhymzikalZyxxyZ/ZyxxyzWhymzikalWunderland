@@ -1,7 +1,18 @@
 'use strict';
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll } from 'vitest';
 import worker from '../index.js';
+
+// Cloudflare Cache API is not available in Node/vitest — stub it so tests run.
+// match() returns null (no edge cache hit) and put() is a no-op.
+beforeAll(() => {
+    global.caches = {
+        default: {
+            match: vi.fn(async () => null),
+            put:   vi.fn(async () => undefined),
+        },
+    };
+});
 
 // ── Fetch mock helpers ────────────────────────────────────────────────────────
 
@@ -588,6 +599,99 @@ describe('/api/cities', () => {
         }
         const r = await worker.fetch(req(`/api/cities?bbox=${validBbox}`, { ip: '9.9.9.7' }), env);
         expect(r.status).toBe(429);
+    });
+});
+
+// ── /api/transit ──────────────────────────────────────────────────────────────
+
+describe('/api/transit', () => {
+    const validBbox = '-105.1,39.6,-104.7,39.9';
+
+    it('returns 400 when bbox is missing', async () => {
+        const res = await worker.fetch(req('/api/transit'), makeEnv());
+        expect(res.status).toBe(400);
+    });
+
+    it('returns cached transit data', async () => {
+        const cached = { type: 'FeatureCollection', features: [] };
+        const res    = await worker.fetch(req(`/api/transit?bbox=${validBbox}`), makeEnv({ cacheGet: cached }));
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.type).toBe('FeatureCollection');
+    });
+
+    it('fetches from Overpass and converts to GeoJSON', async () => {
+        const overpassData = {
+            elements: [
+                { type: 'node', id: 1, lat: 39.7, lon: -105.0, tags: { highway: 'bus_stop', name: 'Main & 1st', ref: 'A1' } },
+                { type: 'node', id: 2, lat: 39.8, lon: -104.9, tags: { railway: 'station', name: 'Union Station' } },
+                { type: 'node', id: 3, lat: 39.75, lon: -104.95, tags: { railway: 'subway_entrance' } },
+                { type: 'node', id: 4 }, // no lat/lon — should be filtered out
+            ],
+        };
+        global.fetch = mockFetch({ ok: true, body: overpassData });
+        const res  = await worker.fetch(req(`/api/transit?bbox=${validBbox}`), makeEnv());
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.features).toHaveLength(3);
+        expect(body.features[0].properties.transit).toBe('bus');
+        expect(body.features[0].properties.name).toBe('Main & 1st');
+        expect(body.features[1].properties.transit).toBe('rail');
+        expect(body.features[2].properties.transit).toBe('subway');
+    });
+
+    it('returns 502 when Overpass API fails', async () => {
+        global.fetch = mockFetch({ ok: false });
+        const res = await worker.fetch(req(`/api/transit?bbox=${validBbox}`), makeEnv());
+        expect(res.status).toBe(502);
+    });
+
+    it('caches transit data with 1-hour TTL', async () => {
+        global.fetch = mockFetch({ ok: true, body: { elements: [] } });
+        const cachePut = vi.fn();
+        await worker.fetch(req(`/api/transit?bbox=${validBbox}`), makeEnv({ cacheSet: cachePut }));
+        expect(cachePut).toHaveBeenCalledWith(
+            `transit:${validBbox}`,
+            expect.any(String),
+            { expirationTtl: 3600 }
+        );
+    });
+
+    it('rate limits after 30 requests from same IP', async () => {
+        const env = makeEnv({ cacheGet: { type: 'FeatureCollection', features: [] } });
+        for (let i = 0; i < 30; i++) {
+            const r = await worker.fetch(req(`/api/transit?bbox=${validBbox}`, { ip: '9.9.9.8' }), env);
+            expect(r.status).toBe(200);
+        }
+        const r = await worker.fetch(req(`/api/transit?bbox=${validBbox}`, { ip: '9.9.9.8' }), env);
+        expect(r.status).toBe(429);
+    });
+});
+
+// ── /api/health ───────────────────────────────────────────────────────────────
+
+describe('/api/health', () => {
+    it('returns status ok when all probes succeed', async () => {
+        global.fetch = mockFetch({ ok: true, body: {} });
+        const res  = await worker.fetch(req('/api/health'), makeEnv());
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.status).toBe('ok');
+        expect(body.checks).toHaveProperty('arcgis');
+        expect(body.checks).toHaveProperty('census');
+        expect(body.checks).toHaveProperty('epa');
+        expect(body.checks).toHaveProperty('overpass');
+    });
+
+    it('returns degraded when any probe fails', async () => {
+        let call = 0;
+        global.fetch = vi.fn(async () => {
+            call++;
+            return { ok: call !== 1, json: async () => ({}) }; // first probe fails
+        });
+        const res  = await worker.fetch(req('/api/health'), makeEnv());
+        const body = await res.json();
+        expect(body.status).toBe('degraded');
     });
 });
 
