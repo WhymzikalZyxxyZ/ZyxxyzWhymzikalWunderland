@@ -229,6 +229,29 @@ html, body, #root { height: 100%; }
 .layer-toggle.on                { background: var(--accent); }
 .layer-toggle.on::after         { transform: translateX(14px); background: #fff; }
 
+.layer-year-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px 6px 34px;
+}
+.layer-year-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+.layer-year-select {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 12px;
+    padding: 3px 6px;
+    cursor: pointer;
+}
+.layer-year-select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
 .layer-error {
     margin: 2px 0 6px 12px;
     font-size: 11px;
