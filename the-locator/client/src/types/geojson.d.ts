@@ -7,9 +7,7 @@ export interface NeighborhoodProperties {
 export interface SchoolDistrictProperties {
     GEOID: string;
     NAME: string;
-    STATEFP: string;
-    LOGRADE: string;
-    HIGRADE: string;
+    STATE: string;
 }
 
 export interface SuperfundProperties {
@@ -18,7 +16,7 @@ export interface SuperfundProperties {
     address: string;
     city: string;
     state: string;
-    programSystemId: string;
+    epaId: string;
 }
 
 export interface PopulationProperties {
