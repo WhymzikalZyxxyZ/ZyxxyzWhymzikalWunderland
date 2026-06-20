@@ -500,6 +500,97 @@ describe('/api/population', () => {
     });
 });
 
+// ── /api/cities ───────────────────────────────────────────────────────────────
+
+describe('/api/cities', () => {
+    const validBbox = '-105.1,39.6,-104.7,39.9';
+
+    it('returns 400 when bbox is missing', async () => {
+        const res = await worker.fetch(req('/api/cities'), makeEnv());
+        expect(res.status).toBe(400);
+    });
+
+    it('returns cached cities data', async () => {
+        const cached = { type: 'FeatureCollection', features: [] };
+        const res    = await worker.fetch(req(`/api/cities?bbox=${validBbox}`), makeEnv({ cacheGet: cached }));
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.type).toBe('FeatureCollection');
+    });
+
+    it('fetches place geometry and returns null population without Census key', async () => {
+        const geoData = {
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                geometry:   { type: 'Polygon', coordinates: [] },
+                properties: { NAME: 'Denver', GEOID: '0820000', STUSAB: 'CO' },
+            }],
+        };
+        global.fetch = mockFetch({ ok: true, body: geoData });
+        const res  = await worker.fetch(req(`/api/cities?bbox=${validBbox}`), makeEnv());
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.features[0].properties.name).toBe('Denver');
+        expect(body.features[0].properties.population).toBeNull();
+        expect(body.features[0].properties.acsYear).toBeNull();
+    });
+
+    it('fetches place geometry + ACS population and joins by GEOID', async () => {
+        const geoData = {
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                geometry:   { type: 'Polygon', coordinates: [] },
+                properties: { NAME: 'Denver', GEOID: '0820000', STUSAB: 'CO' },
+            }],
+        };
+        // ACS place columns: [B01003_001E, state, place]
+        const acsData = [
+            ['B01003_001E', 'state', 'place'],
+            ['715522', '08', '20000'],
+        ];
+        global.fetch = mockFetch([
+            { ok: true, body: geoData },
+            { ok: true, body: acsData },
+        ]);
+        const res  = await worker.fetch(req(`/api/cities?bbox=${validBbox}`), makeEnv({ censusKey: 'test-key' }));
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.features[0].properties.name).toBe('Denver');
+        expect(body.features[0].properties.population).toBe(715522);
+        expect(body.features[0].properties.acsYear).toBe(2022);
+    });
+
+    it('returns 502 when TIGERweb geo fetch fails', async () => {
+        global.fetch = mockFetch({ ok: false });
+        const res = await worker.fetch(req(`/api/cities?bbox=${validBbox}`), makeEnv());
+        expect(res.status).toBe(502);
+    });
+
+    it('caches cities with 24-hour TTL keyed by year', async () => {
+        const geoData = { type: 'FeatureCollection', features: [] };
+        global.fetch  = mockFetch({ ok: true, body: geoData });
+        const cachePut = vi.fn();
+        await worker.fetch(req(`/api/cities?bbox=${validBbox}&year=2019`), makeEnv({ cacheSet: cachePut }));
+        expect(cachePut).toHaveBeenCalledWith(
+            `cities:2019:${validBbox}`,
+            expect.any(String),
+            { expirationTtl: 86400 }
+        );
+    });
+
+    it('rate limits after 30 requests from same IP', async () => {
+        const env = makeEnv({ cacheGet: { type: 'FeatureCollection', features: [] } });
+        for (let i = 0; i < 30; i++) {
+            const r = await worker.fetch(req(`/api/cities?bbox=${validBbox}`, { ip: '9.9.9.7' }), env);
+            expect(r.status).toBe(200);
+        }
+        const r = await worker.fetch(req(`/api/cities?bbox=${validBbox}`, { ip: '9.9.9.7' }), env);
+        expect(r.status).toBe(429);
+    });
+});
+
 // ── KV cache fault tolerance ──────────────────────────────────────────────────
 
 describe('KV cache fault tolerance', () => {

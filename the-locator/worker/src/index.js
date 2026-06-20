@@ -397,6 +397,106 @@ async function fetchWalkability([minLng, minLat, maxLng, maxLat]) {
     return { type: 'FeatureCollection', features };
 }
 
+async function handleCities(request, env, ip) {
+    if (!ipAllow(ip, 30)) return err('Too many requests — slow down', 429);
+
+    const params = new URL(request.url).searchParams;
+    const bbox   = parseBbox(params.get('bbox'));
+    if (!bbox) return err('bbox required (minLng,minLat,maxLng,maxLat)');
+
+    const year     = parseACSYear(params.get('year'), env.ACS_YEAR);
+    const cacheKey = `cities:${year}:${bbox.join(',')}`;
+    const cached   = await getCache(env, cacheKey);
+    if (cached) return json(cached);
+
+    let data;
+    try { data = await fetchCities(bbox, env, year); }
+    catch { return err('City data unavailable', 502); }
+
+    await setCache(env, cacheKey, data, 86_400);
+    return json(data);
+}
+
+async function fetchCities([minLng, minLat, maxLng, maxLat], env, year) {
+    // Fetch incorporated place polygons from TIGERweb
+    const geoUrl = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/2/query'
+        + `?where=1%3D1&geometry=${minLng},${minLat},${maxLng},${maxLat}`
+        + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
+        + '&outFields=NAME,GEOID,STUSAB&resultRecordCount=200&f=geojson';
+
+    const geoRes = await fetch(geoUrl);
+    if (!geoRes.ok) throw new Error(`Census cities geo HTTP ${geoRes.status}`);
+    const geoData = await geoRes.json();
+    if (geoData.error) throw new Error(`Census cities API error: ${geoData.error.message}`);
+
+    if (!geoData.features?.length) return { type: 'FeatureCollection', features: [] };
+
+    const apiKey = env.CENSUS_API_KEY || '';
+
+    if (!apiKey) {
+        // Return place outlines with null population when no Census API key is configured.
+        const features = geoData.features.map(f => ({
+            ...f,
+            properties: {
+                name:       f.properties.NAME,
+                GEOID:      f.properties.GEOID,
+                state:      f.properties.STUSAB,
+                population: null,
+                acsYear:    null,
+            },
+        }));
+        return { type: 'FeatureCollection', features };
+    }
+
+    // Extract unique state FIPS codes from place GEOIDs (first 2 chars of 7-char place GEOID)
+    const states = [...new Set(
+        geoData.features
+            .map(f => f.properties?.GEOID?.slice(0, 2))
+            .filter(Boolean)
+    )];
+
+    // ACS place-level population: columns are [B01003_001E, state, place]
+    const acsRows = (await Promise.all(
+        states.map(state => {
+            const url = `https://api.census.gov/data/${year}/acs/acs5`
+                + `?get=B01003_001E&for=place:*&in=state:${state}`
+                + `&key=${apiKey}`;
+            return fetch(url)
+                .then(r => {
+                    if (!r.ok) { console.error(`[cities] ACS state ${state} HTTP ${r.status}`); return []; }
+                    return r.json();
+                })
+                .then(data => {
+                    if (!Array.isArray(data)) { console.error(`[cities] ACS state ${state} unexpected response`, data); return []; }
+                    return data.slice(1);
+                })
+                .catch(e => { console.error(`[cities] ACS state ${state} fetch error`, e); return []; });
+        })
+    )).flat();
+
+    // Place GEOID = state(2) + place(5) = 7 chars
+    const popByGeoid = new Map(acsRows.map(row => {
+        const state = String(row[1]).padStart(2, '0');
+        const place = String(row[2]).padStart(5, '0');
+        const raw   = parseInt(row[0], 10);
+        const pop   = (isNaN(raw) || raw < 0) ? null : raw;
+        return [`${state}${place}`, pop];
+    }));
+
+    const features = geoData.features.map(f => ({
+        ...f,
+        properties: {
+            name:       f.properties.NAME,
+            GEOID:      f.properties.GEOID,
+            state:      f.properties.STUSAB,
+            population: popByGeoid.get(f.properties.GEOID) ?? null,
+            acsYear:    parseInt(year, 10),
+        },
+    }));
+
+    return { type: 'FeatureCollection', features };
+}
+
 // ── Main Worker ───────────────────────────────────────────────────────────────
 export default {
     async fetch(request, env) {
@@ -428,6 +528,8 @@ export default {
             response = await handlePopulation(request, env, ip);
         } else if (path === '/api/walkscore') {
             response = await handleWalkscore(request, env, ip);
+        } else if (path === '/api/cities') {
+            response = await handleCities(request, env, ip);
         } else if (path === '/favicon.ico') {
             return new Response(null, { status: 204 });
         } else {
