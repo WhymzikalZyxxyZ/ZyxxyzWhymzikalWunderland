@@ -497,6 +497,83 @@ async function fetchCities([minLng, minLat, maxLng, maxLat], env, year) {
     return { type: 'FeatureCollection', features };
 }
 
+async function handleTransit(request, env, ip) {
+    if (!ipAllow(ip, 30)) return err('Too many requests — slow down', 429);
+
+    const bbox = parseBbox(new URL(request.url).searchParams.get('bbox'));
+    if (!bbox) return err('bbox required (minLng,minLat,maxLng,maxLat)');
+
+    const cacheKey = `transit:${bbox.join(',')}`;
+    const cached   = await getCache(env, cacheKey);
+    if (cached) return json(cached);
+
+    let data;
+    try { data = await fetchTransit(bbox); }
+    catch { return err('Transit data unavailable', 502); }
+
+    await setCache(env, cacheKey, data, 3_600); // 1-hour TTL
+    return json(data);
+}
+
+async function fetchTransit([minLng, minLat, maxLng, maxLat]) {
+    // Overpass API bbox order: (south,west,north,east) = (minLat,minLng,maxLat,maxLng)
+    const query = `[out:json][timeout:15];(`
+        + `node["highway"="bus_stop"](${minLat},${minLng},${maxLat},${maxLng});`
+        + `node["railway"~"^(station|halt|subway_entrance)$"](${minLat},${minLng},${maxLat},${maxLng});`
+        + `node["public_transport"="platform"](${minLat},${minLng},${maxLat},${maxLng});`
+        + `);out body;`;
+    const r = await fetch('https://overpass-api.de/api/interpreter', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body:    `data=${encodeURIComponent(query)}`,
+    });
+    if (!r.ok) throw new Error(`Overpass HTTP ${r.status}`);
+    const data = await r.json();
+
+    const features = (data.elements || [])
+        .filter(el => el.type === 'node' && el.lat != null && el.lon != null)
+        .map(el => {
+            const tags   = el.tags || {};
+            const rway   = tags.railway || '';
+            const transit = rway === 'subway_entrance' ? 'subway'
+                : rway ? 'rail'
+                : 'bus';
+            return {
+                type:     'Feature',
+                geometry: { type: 'Point', coordinates: [el.lon, el.lat] },
+                properties: {
+                    id:     el.id,
+                    name:   tags.name || tags.ref || 'Transit Stop',
+                    transit,
+                    ref:    tags.ref    || null,
+                    routes: tags.route_ref || null,
+                },
+            };
+        });
+
+    return { type: 'FeatureCollection', features };
+}
+
+async function handleHealth(request, env) {
+    function probe(url, opts = {}) {
+        return Promise.race([
+            fetch(url, opts).then(r => r.ok).catch(() => false),
+            new Promise(resolve => setTimeout(() => resolve(false), 6_000)),
+        ]);
+    }
+
+    const [arcgis, census, epa, overpass] = await Promise.all([
+        probe('https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/School/MapServer?f=json'),
+        probe(`https://api.census.gov/data/2022/acs/acs5?get=NAME&for=state:01${env.CENSUS_API_KEY ? `&key=${env.CENSUS_API_KEY}` : ''}`),
+        probe('https://geodata.epa.gov/arcgis/rest/services/OLEM/Superfund_National_Priorities_List/MapServer?f=json'),
+        probe('https://overpass-api.de/api/status'),
+    ]);
+
+    const checks = { arcgis, census, epa, overpass };
+    const status = Object.values(checks).every(Boolean) ? 'ok' : 'degraded';
+    return json({ status, checks });
+}
+
 // ── Main Worker ───────────────────────────────────────────────────────────────
 export default {
     async fetch(request, env) {
@@ -512,6 +589,15 @@ export default {
         }
 
         if (method !== 'GET') return err('Method not allowed', 405, cors);
+
+        // ── L1 edge cache (Cloudflare Cache API) ─────────────────────────────
+        // Per-PoP in-memory cache that bypasses KV for repeat requests at the
+        // same edge node. Best-effort — failures fall through to KV + origin.
+        const edgeCache = caches.default;
+        if (path.startsWith('/api/') && path !== '/api/health') {
+            const edgeCached = await edgeCache.match(request).catch(() => null);
+            if (edgeCached) return edgeCached;
+        }
 
         let response;
 
@@ -530,6 +616,10 @@ export default {
             response = await handleWalkscore(request, env, ip);
         } else if (path === '/api/cities') {
             response = await handleCities(request, env, ip);
+        } else if (path === '/api/transit') {
+            response = await handleTransit(request, env, ip);
+        } else if (path === '/api/health') {
+            response = await handleHealth(request, env);
         } else if (path === '/favicon.ico') {
             return new Response(null, { status: 204 });
         } else {
@@ -545,6 +635,13 @@ export default {
         // Attach CORS headers to every response
         const r = new Response(response.body, response);
         for (const [k, v] of Object.entries(cors)) r.headers.set(k, v);
+
+        // ── Store successful API data in edge cache ────────────────────────────
+        if (r.status === 200 && path.startsWith('/api/') && path !== '/api/health') {
+            r.headers.set('Cache-Control', 'public, s-maxage=300, max-age=60');
+            edgeCache.put(request, r.clone()).catch(() => {});
+        }
+
         return r;
     },
 };

@@ -5,11 +5,12 @@ import type { CityResult, ActiveFeature } from '../App';
 import type { LayerName } from '../types/geojson';
 
 interface Props {
-    city:            CityResult | null;
-    activeLayers:    Set<LayerName>;
-    onFeatureClick:  (f: ActiveFeature) => void;
-    onLayerError?:   (layer: LayerName, error: string | null) => void;
-    populationYear?: number;
+    city:             CityResult | null;
+    activeLayers:     Set<LayerName>;
+    onFeatureClick:   (f: ActiveFeature) => void;
+    onLayerError?:    (layer: LayerName, error: string | null) => void;
+    onOpenSidebar?:   () => void;
+    populationYear?:  number;
 }
 
 // CARTO Voyager — free, no token required
@@ -22,6 +23,7 @@ const LAYER_COLORS: Record<LayerName, string> = {
     superfund:     '#ef4444',
     population:    '#2171b5',
     walkscore:     '#4ade80',
+    transit:       '#06b6d4',
 };
 
 const LAYER_TITLES: Record<LayerName, string> = {
@@ -31,9 +33,16 @@ const LAYER_TITLES: Record<LayerName, string> = {
     superfund:     'Superfund Site',
     population:    'Population Data',
     walkscore:     'Walkability',
+    transit:       'Transit Stop',
 };
 
-const ALL_LAYERS: LayerName[] = ['neighborhoods', 'schools', 'cities', 'superfund', 'population', 'walkscore'];
+const ALL_LAYERS: LayerName[] = ['neighborhoods', 'schools', 'cities', 'superfund', 'population', 'walkscore', 'transit'];
+
+const TRANSIT_COLORS: Record<string, string> = {
+    bus:    '#06b6d4',
+    rail:   '#1d4ed8',
+    subway: '#7c3aed',
+};
 
 // ── Popup section (one per layer hit) ────────────────────────────────────────
 function escHtml(s: string): string {
@@ -50,7 +59,16 @@ function popupSection(layer: LayerName, props: Record<string, unknown>): string 
     const color = LAYER_COLORS[layer];
     let body = '';
 
-    if (layer === 'cities') {
+    if (layer === 'transit') {
+        const typeLabel = props.transit === 'rail' ? 'Rail Station'
+            : props.transit === 'subway' ? 'Subway / Metro'
+            : 'Bus Stop';
+        body =
+            row('Stop',    props.name)    +
+            row('Type',    typeLabel)     +
+            row('Ref',     props.ref)     +
+            row('Routes',  props.routes);
+    } else if (layer === 'cities') {
         const pop = props.population != null
             ? Number(props.population).toLocaleString()
             : null;
@@ -134,7 +152,7 @@ function walkscoreColorExpression(): maplibregl.ExpressionSpecification {
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function Map({ city, activeLayers, onFeatureClick, onLayerError, populationYear = 2022 }: Props) {
+export default function Map({ city, activeLayers, onFeatureClick, onLayerError, onOpenSidebar, populationYear = 2022 }: Props) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef       = useRef<maplibregl.Map | null>(null);
     const pendingRef   = useRef<Set<LayerName>>(new Set());
@@ -178,6 +196,8 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError, 
             ? `/api/walkscore?bbox=${bbox}`
             : layer === 'cities'
             ? `/api/cities?bbox=${bbox}&year=${populationYear}`
+            : layer === 'transit'
+            ? `/api/transit?bbox=${bbox}`
             : `/api/layers/${layer}?bbox=${bbox}`;
 
         const res = await fetch(url);
@@ -196,7 +216,11 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError, 
     const addLayer = useCallback(async (layer: LayerName, map: maplibregl.Map) => {
         let data: GeoJSON.FeatureCollection;
         try {
-            data = await fetchLayer(layer, map);
+            // One automatic retry after 2 seconds on transient failures
+            data = await fetchLayer(layer, map).catch(async () => {
+                await new Promise(r => setTimeout(r, 2000));
+                return fetchLayer(layer, map);
+            });
         } catch (e) {
             const msg = e instanceof Error ? e.message : 'Data unavailable';
             console.error(`[Locator] "${layer}" fetch failed: ${msg}`);
@@ -224,7 +248,28 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError, 
         // Insert fills below all existing outline layers so boundaries always render on top.
         const firstLineId = ALL_LAYERS.map(l => `lyr-${l}-outline`).find(id => map.getLayer(id));
 
-        if (layer === 'superfund') {
+        if (layer === 'transit') {
+            map.addLayer({
+                id: lyrId, type: 'circle', source: srcId,
+                paint: {
+                    'circle-color': [
+                        'match', ['get', 'transit'],
+                        'rail',   TRANSIT_COLORS.rail,
+                        'subway', TRANSIT_COLORS.subway,
+                        TRANSIT_COLORS.bus,
+                    ] as maplibregl.ExpressionSpecification,
+                    'circle-radius': [
+                        'match', ['get', 'transit'],
+                        'rail',   8,
+                        'subway', 7,
+                        5,
+                    ] as maplibregl.ExpressionSpecification,
+                    'circle-opacity':      0.85,
+                    'circle-stroke-width': 1.5,
+                    'circle-stroke-color': '#ffffff',
+                },
+            });
+        } else if (layer === 'superfund') {
             map.addLayer({
                 id: lyrId, type: 'circle', source: srcId,
                 paint: {
@@ -431,6 +476,8 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError, 
 
             // Report primary (first) feature to the sidebar panel
             onFeatureClick({ layer: hits[0].layer, properties: hits[0].props });
+            // On mobile, auto-open the sidebar so the InfoPanel is visible
+            if (window.innerWidth < 768) onOpenSidebar?.();
         };
 
         const setup = () => { if (mounted) map.on('click', onClick); };
