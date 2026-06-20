@@ -23,10 +23,11 @@ export interface ActiveFeature {
 const VALID_LAYERS = new Set<LayerName>(['neighborhoods', 'schools', 'superfund', 'population', 'walkscore']);
 
 export default function App() {
-    const [city,          setCity]          = useState<CityResult | null>(null);
-    const [activeLayers,  setActiveLayers]  = useState<Set<LayerName>>(new Set<LayerName>(['population']));
-    const [activeFeature, setActiveFeature] = useState<ActiveFeature | null>(null);
-    const [layerErrors,   setLayerErrors]   = useState<Partial<Record<LayerName, string>>>({});
+    const [city,           setCity]          = useState<CityResult | null>(null);
+    const [activeLayers,   setActiveLayers]  = useState<Set<LayerName>>(new Set<LayerName>(['population']));
+    const [activeFeature,  setActiveFeature] = useState<ActiveFeature | null>(null);
+    const [layerErrors,    setLayerErrors]   = useState<Partial<Record<LayerName, string>>>({});
+    const [populationYear, setPopulationYear] = useState<number>(2022);
 
     const isEmbed = useMemo(
         () => new URLSearchParams(window.location.search).get('embed') === '1',
@@ -142,7 +143,13 @@ export default function App() {
                 <SearchBar onSelect={setCity} />
                 <CityPicker onSelect={setCity} />
                 <HelpPanel />
-                <LayerPanel activeLayers={activeLayers} onToggle={toggleLayer} layerErrors={layerErrors} />
+                <LayerPanel
+                    activeLayers={activeLayers}
+                    onToggle={toggleLayer}
+                    layerErrors={layerErrors}
+                    populationYear={populationYear}
+                    onYearChange={setPopulationYear}
+                />
                 {activeFeature && (
                     <InfoPanel feature={activeFeature} onClose={() => setActiveFeature(null)} />
                 )}
@@ -153,6 +160,7 @@ export default function App() {
                     activeLayers={activeLayers}
                     onFeatureClick={setActiveFeature}
                     onLayerError={handleLayerError}
+                    populationYear={populationYear}
                 />
                 <Legend activeLayers={activeLayers} />
             </main>
