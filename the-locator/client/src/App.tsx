@@ -24,7 +24,7 @@ const VALID_LAYERS = new Set<LayerName>(['neighborhoods', 'schools', 'superfund'
 
 export default function App() {
     const [city,          setCity]          = useState<CityResult | null>(null);
-    const [activeLayers,  setActiveLayers]  = useState<Set<LayerName>>(new Set());
+    const [activeLayers,  setActiveLayers]  = useState<Set<LayerName>>(new Set<LayerName>(['population']));
     const [activeFeature, setActiveFeature] = useState<ActiveFeature | null>(null);
     const [layerErrors,   setLayerErrors]   = useState<Partial<Record<LayerName, string>>>({});
 
