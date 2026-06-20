@@ -18,6 +18,9 @@
     var SUIT_COLS  = { '♠': '#c8d6ff', '♥': '#ff4d6d', '♦': '#ff9f43', '♣': '#5eead4' };
     var SUIT_SYMS  = ['♠', '♥', '♦', '♣'];
 
+    // Light direction for gradient shading — unit vector from upper-left
+    var LX = -0.6, LY = -0.8;
+
     // ── seeded scene data ─────────────────────────────────────────────────────
     var stars = [];
     for (var i = 0; i < 80; i++) {
@@ -114,6 +117,52 @@
     // Alternating-shade color factory for Riemann strips
     function altFn(hexA, hexB) {
         return function(i) { return (i % 2 === 0) ? hexA : hexB; };
+    }
+
+    // 2D Riemann sum fill of an ellipse with ∇f gradient shading.
+    // Each cell of size `cell` is tested: is its centre inside the ellipse?
+    // Shade = dot(normalised ∇f, light direction), mapped to [0.30, 1.0].
+    function riemannGrid2D(cx, cy, rx, ry, cell, hexBase, lx, ly) {
+        var br = parseInt(hexBase.slice(1,3),16);
+        var bg = parseInt(hexBase.slice(3,5),16);
+        var bb = parseInt(hexBase.slice(5,7),16);
+        var rxSq = rx * rx, rySq = ry * ry;
+        var x0 = Math.floor(cx - rx), x1 = cx + rx;
+        var y0 = Math.floor(cy - ry), y1 = cy + ry;
+        for (var xi = x0; xi < x1; xi += cell) {
+            for (var yi = y0; yi < y1; yi += cell) {
+                var xm = xi + cell * 0.5, ym = yi + cell * 0.5;
+                var dx = xm - cx, dy = ym - cy;
+                if ((dx*dx)/rxSq + (dy*dy)/rySq > 1) continue;
+                var gx = dx / rxSq, gy = dy / rySq;
+                var gLen = Math.sqrt(gx*gx + gy*gy) || 1e-6;
+                var dot  = (gx*lx + gy*ly) / gLen;
+                var bright = Math.max(0.30, Math.min(1.0, 0.68 + dot * 0.38));
+                ctx.fillStyle = 'rgb('+Math.round(br*bright)+','+Math.round(bg*bright)+','+Math.round(bb*bright)+')';
+                ctx.fillRect(xi, yi, cell, cell);
+            }
+        }
+    }
+
+    // 2D Riemann sum fill of a rectangle with gradient shading from its centre.
+    function riemannRect2D(x, y, w, h, cell, hexBase, lx, ly) {
+        var br = parseInt(hexBase.slice(1,3),16);
+        var bg = parseInt(hexBase.slice(3,5),16);
+        var bb = parseInt(hexBase.slice(5,7),16);
+        var hcx = x + w*0.5, hcy = y + h*0.5;
+        var hwSq = (w*0.5)*(w*0.5), hhSq = (h*0.5)*(h*0.5);
+        for (var xi = x; xi < x + w; xi += cell) {
+            for (var yi = y; yi < y + h; yi += cell) {
+                var xm = xi + cell*0.5, ym = yi + cell*0.5;
+                var dx = xm - hcx, dy = ym - hcy;
+                var gx = dx / hwSq, gy = dy / hhSq;
+                var gLen = Math.sqrt(gx*gx + gy*gy) || 1e-6;
+                var dot  = (gx*lx + gy*ly) / gLen;
+                var bright = Math.max(0.30, Math.min(1.0, 0.68 + dot * 0.38));
+                ctx.fillStyle = 'rgb('+Math.round(br*bright)+','+Math.round(bg*bright)+','+Math.round(bb*bright)+')';
+                ctx.fillRect(xi, yi, cell, cell);
+            }
+        }
     }
 
     // Smooth gradient color factory (top→bottom)
@@ -409,6 +458,10 @@
         var caneBot = baseY + bob + 9 * sc;
         var shlY    = bY - bRY * 0.58;
 
+        // Cell sizes for 2D Riemann grids — scale with canvas
+        var cell   = Math.max(3, Math.round(4 * sc));
+        var cellSm = Math.max(2, Math.round(3 * sc));
+
         // Ground shadow
         ctx.globalAlpha = 0.28;
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
@@ -419,13 +472,13 @@
         [-1, 1].forEach(function (side) {
             var lx = cx + side * bRX * 0.40;
             var ly = bY + bRY * 0.58;
-            riemannEllipse(lx, ly, 20*sc, 28*sc, 16, gradFn(furLight, furMid, 16));
+            riemannGrid2D(lx, ly, 20*sc, 28*sc, cell, '#ede0cc', LX, LY);
             ctx.strokeStyle = furDark; ctx.lineWidth = 0.7*sc;
             polygonPath(lx, ly, 20*sc, 28*sc, 16);
             ctx.stroke();
             // Foot pads — rounded hexagons
             var fx = cx + side * bRX * 0.46, fy = baseY + bob - 2*sc;
-            riemannEllipse(fx, fy, 22*sc, 10*sc, 10, altFn(furLight, furMid));
+            riemannGrid2D(fx, fy, 22*sc, 10*sc, cellSm, '#ede0cc', LX, LY);
             roundedPolygon(fx, fy, 22*sc, 10*sc, 10, 3*sc);
             ctx.strokeStyle = furDark; ctx.lineWidth = 0.7*sc; ctx.stroke();
             // Toe bumps as small rounded triangles
@@ -446,14 +499,8 @@
             ctx.lineCap = 'butt';
         });
 
-        // ── jacket body — Riemann fill (20 strips), 14-gon outline ────────────
-        riemannEllipse(cx, bY, bRX, bRY, 20, function(i, n) {
-            var f = i / (n - 1);
-            var r = Math.round(0xdd - (0xdd-0x7a)*f);
-            var g = Math.round(0xb8 - (0xb8-0x50)*f);
-            var b = Math.round(0xcc - (0xcc-0x70)*f);
-            return 'rgb('+r+','+g+','+b+')';
-        });
+        // ── jacket body — 2D Riemann grid, 14-gon outline ────────────────────
+        riemannGrid2D(cx, bY, bRX, bRY, cell, '#cc9ab0', LX, LY);
         ctx.strokeStyle = '#6a4060'; ctx.lineWidth = 1.2*sc;
         polygonPath(cx, bY, bRX, bRY, 14);
         ctx.stroke();
@@ -581,7 +628,7 @@
             ctx.save();
             roundedPolygon(hx, hy, pR, pR * 0.80, 8, 3*sc, 0);
             ctx.clip();
-            riemannEllipse(hx, hy, pR, pR * 0.80, 8, altFn('#c03838', '#a02828'));
+            riemannGrid2D(hx, hy, pR, pR * 0.80, cellSm, '#c03838', LX, LY);
             ctx.restore();
             ctx.strokeStyle = '#7a1f1f'; ctx.lineWidth = 1;
             roundedPolygon(hx, hy, pR, pR * 0.80, 8, 3*sc, 0);
@@ -608,7 +655,7 @@
         ctx.save();
         polygonPath(cx, hY, hR, hR, 16);
         ctx.clip();
-        riemannEllipse(cx, hY, hR, hR, 24, gradFn(furLight, furMid, 24));
+        riemannGrid2D(cx, hY, hR, hR, cellSm, '#ede0cc', LX, LY);
         ctx.restore();
         ctx.strokeStyle = furDark; ctx.lineWidth = 1.0*sc;
         polygonPath(cx, hY, hR, hR, 16);
@@ -630,24 +677,18 @@
             ctx.save();
             roundedPolygon(eX, eY, 12*sc, 14*sc, 6, 3*sc, side * 0.22);
             ctx.clip();
-            riemannEllipse(eX, eY, 12*sc, 14*sc, 10, gradFn(furLight, furMid, 10));
+            riemannGrid2D(eX, eY, 12*sc, 14*sc, cellSm, '#ede0cc', LX, LY);
             ctx.restore();
             ctx.fillStyle = faceCol;
             roundedPolygon(eX, eY, 7*sc, 9*sc, 6, 2*sc, side * 0.22);
             ctx.fill();
         });
 
-        // ── face — Riemann fill ellipse, 14-gon outline ───────────────────────
+        // ── face — 2D Riemann grid, 14-gon outline ───────────────────────────
         ctx.save();
         polygonPath(cx, hY + hR*0.06, hR*0.72, hR*0.80, 14);
         ctx.clip();
-        riemannEllipse(cx, hY + hR*0.06, hR*0.72, hR*0.80, 16, function(i, n) {
-            var f = i / (n - 1);
-            var r = Math.round(0xe0 - (0xe0-0xa0)*f);
-            var g = Math.round(0x88 - (0x88-0x40)*f);
-            var b = Math.round(0x78 - (0x78-0x40)*f);
-            return 'rgb('+r+','+g+','+b+')';
-        });
+        riemannGrid2D(cx, hY + hR*0.06, hR*0.72, hR*0.80, cellSm, '#d07878', LX, LY);
         ctx.restore();
         ctx.strokeStyle = '#904030'; ctx.lineWidth = 0.8*sc;
         polygonPath(cx, hY + hR*0.06, hR*0.72, hR*0.80, 14);
@@ -657,7 +698,7 @@
         ctx.save();
         roundedPolygon(cx, hY + hR*0.46, hR*0.36, hR*0.24, 8, 4*sc);
         ctx.clip();
-        riemannEllipse(cx, hY + hR*0.46, hR*0.36, hR*0.24, 8, altFn('#d07070', '#c06060'));
+        riemannGrid2D(cx, hY + hR*0.46, hR*0.36, hR*0.24, cellSm, '#d07070', LX, LY);
         ctx.restore();
         ctx.strokeStyle = '#903030'; ctx.lineWidth = 0.7*sc;
         roundedPolygon(cx, hY + hR*0.46, hR*0.36, hR*0.24, 8, 4*sc);
@@ -692,11 +733,11 @@
             ctx.fillStyle = '#3a2028';
             roundedPolygon(gx, gY, gR + 3*sc, gR + 3*sc, 8, 2*sc, Math.PI/8);
             ctx.fill();
-            // Lens Riemann fill
+            // Lens 2D Riemann grid
             ctx.save();
             roundedPolygon(gx, gY, gR, gR, 8, 2*sc, Math.PI/8);
             ctx.clip();
-            riemannEllipse(gx, gY, gR, gR, 12, gradFn('#1a0e18', '#080408', 12));
+            riemannGrid2D(gx, gY, gR, gR, cellSm, '#120a14', LX, LY);
             ctx.restore();
             ctx.strokeStyle = '#5a3048'; ctx.lineWidth = 1*sc;
             roundedPolygon(gx, gY, gR, gR, 8, 2*sc, Math.PI/8);
@@ -721,15 +762,8 @@
         var crH    = 32 * sc;
         var crTopY = htY - crH;
 
-        // Crown — N=14 Riemann horizontal strips
-        for (var hi = 0; hi < 14; hi++) {
-            var hf = hi / 13;
-            var hr2 = Math.round(0xe0 - (0xe0-0x8a)*hf);
-            var hg2 = Math.round(0xc0 - (0xc0-0x50)*hf);
-            var hb2 = Math.round(0xd0 - (0xd0-0x68)*hf);
-            ctx.fillStyle = 'rgb('+hr2+','+hg2+','+hb2+')';
-            ctx.fillRect(cx - crWd, crTopY + hi*(crH/14), crWd*2, (crH/14) + 0.5);
-        }
+        // Crown — 2D Riemann grid
+        riemannRect2D(cx - crWd, crTopY, crWd*2, crH, cell, '#d0a0be', LX, LY);
         // Crown outline as rect with thin polygon-style corners
         ctx.strokeStyle = '#7a5070'; ctx.lineWidth = 1*sc;
         ctx.strokeRect(cx - crWd, crTopY, crWd*2, crH);
@@ -737,7 +771,7 @@
         ctx.save();
         roundedPolygon(cx, crTopY, crWd, 7*sc, 10, 3*sc);
         ctx.clip();
-        riemannEllipse(cx, crTopY, crWd, 7*sc, 8, altFn('#e0c2d2', '#d0b0c2'));
+        riemannGrid2D(cx, crTopY, crWd, 7*sc, cell, '#e0c2d2', LX, LY);
         ctx.restore();
         ctx.strokeStyle = '#9a7090'; ctx.lineWidth = 0.8*sc;
         roundedPolygon(cx, crTopY, crWd, 7*sc, 10, 3*sc);
@@ -772,7 +806,7 @@
         ctx.save();
         polygonPath(cx, htY, brimW, brimH2, 12);
         ctx.clip();
-        riemannEllipse(cx, htY, brimW, brimH2, 12, gradFn('#c0809a', '#a86880', 12));
+        riemannGrid2D(cx, htY, brimW, brimH2, cell, '#c0809a', LX, LY);
         ctx.restore();
         ctx.strokeStyle = 'rgba(100,50,70,0.22)'; ctx.lineWidth = 1;
         polygonPath(cx, htY, brimW, brimH2, 12);
