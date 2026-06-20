@@ -213,7 +213,7 @@ async function handlePopulation(request, env, ip) {
 // The School service uses STATE (not STUSAB), so each layer gets its own field list.
 // where=1=1 is required by the School service; harmless for other layers.
 const CENSUS_LAYER_URLS = {
-    neighborhoods: 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/2/query',
+    neighborhoods: 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/0/query',
     schools:       'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/School/MapServer/0/query',
 };
 const CENSUS_LAYER_FIELDS = {
@@ -239,7 +239,7 @@ async function fetchCensusLayer(name, [minLng, minLat, maxLng, maxLat]) {
 async function fetchSuperfund([minLng, minLat, maxLng, maxLat]) {
     // EPA geodata ArcGIS service — more reliable than the legacy ofmpub FRS endpoint
     const url = 'https://geodata.epa.gov/arcgis/rest/services/OLEM/Superfund_National_Priorities_List/MapServer/0/query'
-        + `?geometry=${minLng},${minLat},${maxLng},${maxLat}`
+        + `?where=1%3D1&geometry=${minLng},${minLat},${maxLng},${maxLat}`
         + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
         + '&outFields=SITE_NAME,NPL_STATUS,ADDRESS,CITY,STATE,EPA_ID&resultRecordCount=200&f=geojson';
     const r = await fetch(url);
@@ -267,7 +267,7 @@ async function fetchPopulation([minLng, minLat, maxLng, maxLat], env, year) {
 
     // Fetch census tracts in the bbox first
     const geoUrl = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Tracts_Blocks/MapServer/0/query'
-        + `?geometry=${minLng},${minLat},${maxLng},${maxLat}`
+        + `?where=1%3D1&geometry=${minLng},${minLat},${maxLng},${maxLat}`
         + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
         + '&outFields=GEOID,AREALAND&returnGeometry=true&resultRecordCount=500&f=geojson';
 
@@ -376,7 +376,7 @@ async function handleWalkscore(request, env, ip) {
 
 async function fetchWalkability([minLng, minLat, maxLng, maxLat]) {
     const url = 'https://geodata.epa.gov/arcgis/rest/services/OA/WalkabilityIndex/MapServer/0/query'
-        + `?geometry=${minLng},${minLat},${maxLng},${maxLat}`
+        + `?where=1%3D1&geometry=${minLng},${minLat},${maxLng},${maxLat}`
         + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
         + '&outFields=GEOID10,NatWalkInd,StatAbbr&resultRecordCount=500&f=geojson';
     const r = await fetch(url);
