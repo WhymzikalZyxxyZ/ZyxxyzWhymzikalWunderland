@@ -177,17 +177,6 @@
         }
     }
 
-    // Smooth gradient color factory (top→bottom)
-    function gradFn(topHex, botHex, n) {
-        var tr = parseInt(topHex.slice(1,3),16), tg = parseInt(topHex.slice(3,5),16), tb = parseInt(topHex.slice(5,7),16);
-        var br = parseInt(botHex.slice(1,3),16), bg = parseInt(botHex.slice(3,5),16), bb = parseInt(botHex.slice(5,7),16);
-        return function(i) {
-            var f = i / Math.max(1, n - 1);
-            var r = Math.round(tr + (br-tr)*f), g = Math.round(tg + (bg-tg)*f), b = Math.round(tb + (bb-tb)*f);
-            return 'rgb('+r+','+g+','+b+')';
-        };
-    }
-
     // ── animation frame ───────────────────────────────────────────────────────
     function frame(ts) {
         if (t0 === null) { t0 = ts; }
@@ -850,7 +839,7 @@
 
         // Hat band — 8 alternating strips
         var bandH = 7 * sc;
-        for (hi = 0; hi < 8; hi++) {
+        for (var hi = 0; hi < 8; hi++) {
             ctx.fillStyle = (hi % 2 === 0) ? '#7a4860' : '#5a3448';
             ctx.fillRect(cx - crWd, htY - bandH + hi*(bandH/8), crWd*2, (bandH/8) + 0.5);
         }
