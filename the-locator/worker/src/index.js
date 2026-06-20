@@ -170,18 +170,30 @@ async function handleLayer(layerName, request, env, ip) {
     return json(data);
 }
 
+// ACS 5-year estimates are available from 2009 through 2022 (as of 2026).
+const ACS_MIN_YEAR = 2009;
+const ACS_MAX_YEAR = 2022;
+
+function parseACSYear(raw, fallback) {
+    const y = parseInt(raw, 10);
+    if (!isNaN(y) && y >= ACS_MIN_YEAR && y <= ACS_MAX_YEAR) return String(y);
+    return String(parseInt(fallback, 10) || ACS_MAX_YEAR);
+}
+
 async function handlePopulation(request, env, ip) {
     if (!ipAllow(ip, 30)) return err('Too many requests — slow down', 429);
 
-    const bbox = parseBbox(new URL(request.url).searchParams.get('bbox'));
+    const params = new URL(request.url).searchParams;
+    const bbox   = parseBbox(params.get('bbox'));
     if (!bbox) return err('bbox required (minLng,minLat,maxLng,maxLat)');
 
-    const cacheKey = `population:${bbox.join(',')}`;
+    const year     = parseACSYear(params.get('year'), env.ACS_YEAR);
+    const cacheKey = `population:${year}:${bbox.join(',')}`;
     const cached   = await getCache(env, cacheKey);
     if (cached) return json(cached);
 
     let data;
-    try { data = await fetchPopulation(bbox, env); }
+    try { data = await fetchPopulation(bbox, env, year); }
     catch (e) {
         const msg = (e instanceof Error && e.message.startsWith('CENSUS_API_KEY'))
             ? 'Population layer requires a Census API key — not configured on this server'
@@ -250,8 +262,7 @@ async function fetchSuperfund([minLng, minLat, maxLng, maxLat]) {
     return { type: 'FeatureCollection', features };
 }
 
-async function fetchPopulation([minLng, minLat, maxLng, maxLat], env) {
-    const year   = env.ACS_YEAR || '2022';
+async function fetchPopulation([minLng, minLat, maxLng, maxLat], env, year) {
     const apiKey = env.CENSUS_API_KEY || '';
 
     // Fetch census tracts in the bbox first
