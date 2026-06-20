@@ -11,7 +11,7 @@ const defaultProps = {
 };
 
 describe('LayerPanel', () => {
-    it('renders all six layer buttons', () => {
+    it('renders all seven layer buttons', () => {
         render(<LayerPanel {...defaultProps} />);
         expect(screen.getByText('Neighborhoods')).toBeInTheDocument();
         expect(screen.getByText('School Districts')).toBeInTheDocument();
@@ -19,6 +19,7 @@ describe('LayerPanel', () => {
         expect(screen.getByText('Superfund Sites')).toBeInTheDocument();
         expect(screen.getByText('Population')).toBeInTheDocument();
         expect(screen.getByText('Walkability')).toBeInTheDocument();
+        expect(screen.getByText('Transit Stops')).toBeInTheDocument();
     });
 
     it('active layer button has active class', () => {
