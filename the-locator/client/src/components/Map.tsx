@@ -19,6 +19,7 @@ const LAYER_COLORS: Record<LayerName, string> = {
     schools:       '#3b82f6',
     superfund:     '#ef4444',
     population:    '#2171b5',
+    walkscore:     '#4ade80',
 };
 
 const LAYER_TITLES: Record<LayerName, string> = {
@@ -26,13 +27,18 @@ const LAYER_TITLES: Record<LayerName, string> = {
     schools:       'School District',
     superfund:     'Superfund Site',
     population:    'Population Data',
+    walkscore:     'Walkability',
 };
 
-const ALL_LAYERS: LayerName[] = ['neighborhoods', 'schools', 'superfund', 'population'];
+const ALL_LAYERS: LayerName[] = ['neighborhoods', 'schools', 'superfund', 'population', 'walkscore'];
 
 // ── Popup section (one per layer hit) ────────────────────────────────────────
+function escHtml(s: string): string {
+    return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+}
+
 function row(label: string, value: unknown): string {
-    const v = value != null && value !== '' ? String(value) : null;
+    const v = value != null && value !== '' ? escHtml(String(value)) : null;
     if (!v) return '';
     return `<div class="lp-row"><span class="lp-label">${label}</span><span class="lp-value">${v}</span></div>`;
 }
@@ -41,7 +47,13 @@ function popupSection(layer: LayerName, props: Record<string, unknown>): string 
     const color = LAYER_COLORS[layer];
     let body = '';
 
-    if (layer === 'superfund') {
+    if (layer === 'walkscore') {
+        const score = props.natWalkInd != null ? `${props.natWalkInd}/20` : null;
+        body =
+            row('Walk Index',  score)          +
+            row('State',       props.statAbbr) +
+            row('Block Group', props.GEOID10);
+    } else if (layer === 'superfund') {
         body =
             row('Site',       props.name)      +
             row('NPL Status', props.nplStatus) +
@@ -97,6 +109,17 @@ function populationColorExpression(features: GeoJSON.Feature[]): maplibregl.Expr
     ];
 }
 
+// ── Walkability score colour ramp (static data-driven) ───────────────────────
+function walkscoreColorExpression(): maplibregl.ExpressionSpecification {
+    return [
+        'interpolate', ['linear'], ['get', 'natWalkInd'],
+        1,  '#ef4444',
+        7,  '#eab308',
+        13, '#84cc16',
+        20, '#22c55e',
+    ] as maplibregl.ExpressionSpecification;
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function Map({ city, activeLayers, onFeatureClick, onLayerError }: Props) {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -138,6 +161,8 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError }
 
         const url = layer === 'population'
             ? `/api/population?bbox=${bbox}`
+            : layer === 'walkscore'
+            ? `/api/walkscore?bbox=${bbox}`
             : `/api/layers/${layer}?bbox=${bbox}`;
 
         const res = await fetch(url);
@@ -223,6 +248,35 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError }
                     'text-allow-overlap':    false,
                     'text-ignore-placement': false,
                     'text-max-width':        6,
+                },
+                paint: {
+                    'text-color':      '#0f172a',
+                    'text-halo-color': 'rgba(255,255,255,0.85)',
+                    'text-halo-width': 1.5,
+                },
+            });
+        } else if (layer === 'walkscore') {
+            map.addLayer({
+                id: lyrId, type: 'fill', source: srcId,
+                paint: {
+                    'fill-color':   walkscoreColorExpression(),
+                    'fill-opacity': 0.5,
+                },
+            }, firstLineId);
+            map.addLayer({
+                id: lineId, type: 'line', source: srcId,
+                paint: { 'line-color': 'rgba(0,0,0,0.15)', 'line-width': 0.5 },
+            });
+            map.addLayer({
+                id: labelId, type: 'symbol', source: srcId,
+                minzoom: 11,
+                layout: {
+                    'text-field':            ['concat', ['to-string', ['round', ['get', 'natWalkInd']]], '/20'],
+                    'text-size':             10,
+                    'text-font':             ['Open Sans Regular'],
+                    'text-anchor':           'center',
+                    'text-allow-overlap':    false,
+                    'text-ignore-placement': false,
                 },
                 paint: {
                     'text-color':      '#0f172a',
