@@ -5,10 +5,11 @@ import type { CityResult, ActiveFeature } from '../App';
 import type { LayerName } from '../types/geojson';
 
 interface Props {
-    city:           CityResult | null;
-    activeLayers:   Set<LayerName>;
-    onFeatureClick: (f: ActiveFeature) => void;
-    onLayerError?:  (layer: LayerName, error: string | null) => void;
+    city:            CityResult | null;
+    activeLayers:    Set<LayerName>;
+    onFeatureClick:  (f: ActiveFeature) => void;
+    onLayerError?:   (layer: LayerName, error: string | null) => void;
+    populationYear?: number;
 }
 
 // CARTO Voyager — free, no token required
@@ -121,7 +122,7 @@ function walkscoreColorExpression(): maplibregl.ExpressionSpecification {
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function Map({ city, activeLayers, onFeatureClick, onLayerError }: Props) {
+export default function Map({ city, activeLayers, onFeatureClick, onLayerError, populationYear = 2022 }: Props) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef       = useRef<maplibregl.Map | null>(null);
     const pendingRef   = useRef<Set<LayerName>>(new Set());
@@ -160,7 +161,7 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError }
         ].join(',');
 
         const url = layer === 'population'
-            ? `/api/population?bbox=${bbox}`
+            ? `/api/population?bbox=${bbox}&year=${populationYear}`
             : layer === 'walkscore'
             ? `/api/walkscore?bbox=${bbox}`
             : `/api/layers/${layer}?bbox=${bbox}`;
@@ -175,7 +176,7 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError }
             throw new Error(message);
         }
         return res.json() as Promise<GeoJSON.FeatureCollection>;
-    }, []);
+    }, [populationYear]);
 
     // ── Add a layer to the map for the first time ─────────────────────────────
     const addLayer = useCallback(async (layer: LayerName, map: maplibregl.Map) => {
@@ -392,6 +393,30 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError }
             map.off('click', onClick);
         };
     }, [activeLayers, onFeatureClick]);
+
+    // ── Re-fetch population when year changes ─────────────────────────────────
+    useEffect(() => {
+        const map = mapRef.current;
+        if (!map || !activeLayers.has('population')) return;
+        const srcId = 'src-population';
+        if (!map.getSource(srcId) || pendingRef.current.has('population')) return;
+
+        pendingRef.current.add('population');
+        fetchLayer('population', map)
+            .then(data => {
+                if (!map.getSource(srcId)) return;
+                (map.getSource(srcId) as maplibregl.GeoJSONSource).setData(data);
+                onLayerError?.('population', null);
+                if (map.getLayer('lyr-population')) {
+                    map.setPaintProperty('lyr-population', 'fill-color', populationColorExpression(data.features));
+                }
+            })
+            .catch(e => {
+                const msg = e instanceof Error ? e.message : 'Data unavailable';
+                onLayerError?.('population', msg);
+            })
+            .finally(() => pendingRef.current.delete('population'));
+    }, [populationYear, fetchLayer, activeLayers, onLayerError]);
 
     // ── Refresh data after map pan / zoom ─────────────────────────────────────
     useEffect(() => {

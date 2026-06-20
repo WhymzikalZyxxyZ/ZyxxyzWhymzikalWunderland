@@ -449,17 +449,41 @@ describe('/api/population', () => {
         expect(res.status).toBe(502);
     });
 
-    it('caches population with 24-hour TTL', async () => {
-        const acsData = [['B01003_001E', 'NAME', 'state', 'county', 'tract']];
+    it('caches population with 24-hour TTL keyed by year', async () => {
+        const acsData = [['B01003_001E', 'state', 'county', 'tract']];
         const geoData = { type: 'FeatureCollection', features: [] };
         global.fetch = mockFetch([
-            { ok: true, body: acsData },
             { ok: true, body: geoData },
+            { ok: true, body: acsData },
         ]);
         const cachePut = vi.fn();
+        await worker.fetch(req(`/api/population?bbox=${validBbox}&year=2020`), makeEnv({ cacheSet: cachePut, censusKey: 'test-key' }));
+        expect(cachePut).toHaveBeenCalledWith(
+            `population:2020:${validBbox}`,
+            expect.any(String),
+            { expirationTtl: 86400 }
+        );
+    });
+
+    it('year defaults to 2022 when not provided', async () => {
+        const cachePut = vi.fn();
+        const geoData  = { type: 'FeatureCollection', features: [] };
+        global.fetch   = mockFetch({ ok: true, body: geoData });
         await worker.fetch(req(`/api/population?bbox=${validBbox}`), makeEnv({ cacheSet: cachePut }));
         expect(cachePut).toHaveBeenCalledWith(
-            `population:${validBbox}`,
+            `population:2022:${validBbox}`,
+            expect.any(String),
+            { expirationTtl: 86400 }
+        );
+    });
+
+    it('rejects out-of-range year and falls back to 2022', async () => {
+        const cachePut = vi.fn();
+        const geoData  = { type: 'FeatureCollection', features: [] };
+        global.fetch   = mockFetch({ ok: true, body: geoData });
+        await worker.fetch(req(`/api/population?bbox=${validBbox}&year=1990`), makeEnv({ cacheSet: cachePut }));
+        expect(cachePut).toHaveBeenCalledWith(
+            `population:2022:${validBbox}`,
             expect.any(String),
             { expirationTtl: 86400 }
         );

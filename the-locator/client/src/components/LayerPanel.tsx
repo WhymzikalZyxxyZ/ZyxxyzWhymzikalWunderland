@@ -1,9 +1,11 @@
 import type { LayerName } from '../types/geojson';
 
 interface Props {
-    activeLayers: Set<LayerName>;
-    onToggle:     (layer: LayerName) => void;
-    layerErrors?: Partial<Record<LayerName, string>>;
+    activeLayers:    Set<LayerName>;
+    onToggle:        (layer: LayerName) => void;
+    layerErrors?:    Partial<Record<LayerName, string>>;
+    populationYear:  number;
+    onYearChange:    (year: number) => void;
 }
 
 const LAYERS: { id: LayerName; label: string; color: string; desc: string }[] = [
@@ -14,7 +16,12 @@ const LAYERS: { id: LayerName; label: string; color: string; desc: string }[] = 
     { id: 'walkscore',     label: 'Walkability',      color: '#4ade80', desc: 'EPA National Walkability Index by block group'   },
 ];
 
-export default function LayerPanel({ activeLayers, onToggle, layerErrors }: Props) {
+// ACS 5-year estimates run from 2009 to 2022 (available as of 2026).
+const ACS_MIN_YEAR = 2009;
+const ACS_MAX_YEAR = 2022;
+const ACS_YEARS = Array.from({ length: ACS_MAX_YEAR - ACS_MIN_YEAR + 1 }, (_, i) => ACS_MAX_YEAR - i);
+
+export default function LayerPanel({ activeLayers, onToggle, layerErrors, populationYear, onYearChange }: Props) {
     return (
         <div className="layer-panel">
             <h2 className="panel-title">Layers</h2>
@@ -32,6 +39,21 @@ export default function LayerPanel({ activeLayers, onToggle, layerErrors }: Prop
                             <span className="layer-label">{label}</span>
                             <span className={`layer-toggle ${active ? 'on' : ''}`} />
                         </button>
+                        {id === 'population' && active && (
+                            <div className="layer-year-row">
+                                <label className="layer-year-label" htmlFor="pop-year">ACS year</label>
+                                <select
+                                    id="pop-year"
+                                    className="layer-year-select"
+                                    value={populationYear}
+                                    onChange={e => onYearChange(Number(e.target.value))}
+                                >
+                                    {ACS_YEARS.map(y => (
+                                        <option key={y} value={y}>{y}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                         {error && (
                             <p className="layer-error" title={error}>
                                 ⚠ Unavailable
