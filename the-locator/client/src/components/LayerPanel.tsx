@@ -9,11 +9,12 @@ interface Props {
 }
 
 const LAYERS: { id: LayerName; label: string; color: string; desc: string }[] = [
-    { id: 'neighborhoods', label: 'Neighborhoods',    color: '#22c55e', desc: 'Census-designated district boundaries'           },
-    { id: 'schools',       label: 'School Districts', color: '#3b82f6', desc: 'Unified school district boundaries'              },
-    { id: 'superfund',     label: 'Superfund Sites',  color: '#ef4444', desc: 'EPA CERCLIS contamination sites'                 },
-    { id: 'population',    label: 'Population',       color: '#2171b5', desc: 'Density per km² by census tract'                 },
-    { id: 'walkscore',     label: 'Walkability',      color: '#4ade80', desc: 'EPA National Walkability Index by block group'   },
+    { id: 'neighborhoods', label: 'Neighborhoods',    color: '#22c55e', desc: 'Census-designated district boundaries'                           },
+    { id: 'schools',       label: 'School Districts', color: '#3b82f6', desc: 'Unified school district boundaries'                              },
+    { id: 'cities',        label: 'City Limits',      color: '#f59e0b', desc: 'Incorporated city and town boundaries with ACS population counts' },
+    { id: 'superfund',     label: 'Superfund Sites',  color: '#ef4444', desc: 'EPA CERCLIS contamination sites'                                 },
+    { id: 'population',    label: 'Population',       color: '#2171b5', desc: 'Density per km² by census tract'                                 },
+    { id: 'walkscore',     label: 'Walkability',      color: '#4ade80', desc: 'EPA National Walkability Index by block group'                   },
 ];
 
 // ACS 5-year estimates run from 2009 to 2022 (available as of 2026).
@@ -39,7 +40,8 @@ export default function LayerPanel({ activeLayers, onToggle, layerErrors, popula
                             <span className="layer-label">{label}</span>
                             <span className={`layer-toggle ${active ? 'on' : ''}`} />
                         </button>
-                        {id === 'population' && active && (
+                        {((id === 'population' && active) ||
+                          (id === 'cities'     && active && !activeLayers.has('population'))) && (
                             <div className="layer-year-row">
                                 <label className="layer-year-label" htmlFor="pop-year">ACS year</label>
                                 <select

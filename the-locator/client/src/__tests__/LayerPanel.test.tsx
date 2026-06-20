@@ -11,10 +11,11 @@ const defaultProps = {
 };
 
 describe('LayerPanel', () => {
-    it('renders all five layer buttons', () => {
+    it('renders all six layer buttons', () => {
         render(<LayerPanel {...defaultProps} />);
         expect(screen.getByText('Neighborhoods')).toBeInTheDocument();
         expect(screen.getByText('School Districts')).toBeInTheDocument();
+        expect(screen.getByText('City Limits')).toBeInTheDocument();
         expect(screen.getByText('Superfund Sites')).toBeInTheDocument();
         expect(screen.getByText('Population')).toBeInTheDocument();
         expect(screen.getByText('Walkability')).toBeInTheDocument();
@@ -63,6 +64,16 @@ describe('LayerPanel', () => {
     it('shows year selector when population layer is active', () => {
         render(<LayerPanel {...defaultProps} activeLayers={new Set<LayerName>(['population'])} />);
         expect(screen.getByLabelText('ACS year')).toBeInTheDocument();
+    });
+
+    it('shows year selector when cities layer is active and population is not', () => {
+        render(<LayerPanel {...defaultProps} activeLayers={new Set<LayerName>(['cities'])} />);
+        expect(screen.getByLabelText('ACS year')).toBeInTheDocument();
+    });
+
+    it('shows only one year selector when both population and cities are active', () => {
+        render(<LayerPanel {...defaultProps} activeLayers={new Set<LayerName>(['population', 'cities'])} />);
+        expect(screen.getAllByLabelText('ACS year')).toHaveLength(1);
     });
 
     it('hides year selector when population layer is inactive', () => {
