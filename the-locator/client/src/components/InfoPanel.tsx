@@ -10,6 +10,7 @@ const LAYER_LABELS: Record<string, string> = {
     schools:       'School District',
     superfund:     'Superfund Site',
     population:    'Population Data',
+    walkscore:     'Walkability',
 };
 
 function Row({ label, value }: { label: string; value: unknown }) {
@@ -23,6 +24,13 @@ function Row({ label, value }: { label: string; value: unknown }) {
 }
 
 function renderProps(layer: string, props: Record<string, unknown>) {
+    if (layer === 'walkscore') return (
+        <>
+            <Row label="Walk Index"  value={props.natWalkInd != null ? `${props.natWalkInd}/20` : null} />
+            <Row label="State"       value={props.statAbbr} />
+            <Row label="Block Group" value={props.GEOID10} />
+        </>
+    );
     if (layer === 'superfund') return (
         <>
             <Row label="Site"       value={props.name} />
