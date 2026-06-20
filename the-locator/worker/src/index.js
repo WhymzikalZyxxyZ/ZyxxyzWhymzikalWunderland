@@ -593,10 +593,16 @@ export default {
         // ── L1 edge cache (Cloudflare Cache API) ─────────────────────────────
         // Per-PoP in-memory cache that bypasses KV for repeat requests at the
         // same edge node. Best-effort — failures fall through to KV + origin.
+        // CORS headers are stripped before storage and re-applied fresh on hit
+        // so a cached response never leaks one origin's ACAO to a different one.
         const edgeCache = caches.default;
         if (path.startsWith('/api/') && path !== '/api/health') {
             const edgeCached = await edgeCache.match(request).catch(() => null);
-            if (edgeCached) return edgeCached;
+            if (edgeCached) {
+                const fresh = new Response(edgeCached.body, edgeCached);
+                for (const [k, v] of Object.entries(cors)) fresh.headers.set(k, v);
+                return fresh;
+            }
         }
 
         let response;
@@ -639,7 +645,14 @@ export default {
         // ── Store successful API data in edge cache ────────────────────────────
         if (r.status === 200 && path.startsWith('/api/') && path !== '/api/health') {
             r.headers.set('Cache-Control', 'public, s-maxage=300, max-age=60');
-            edgeCache.put(request, r.clone()).catch(() => {});
+            // Cache a CORS-stripped copy — CORS headers are origin-specific and
+            // must be freshly applied per request (see cache-hit path above).
+            const toCache = r.clone();
+            for (const h of ['Access-Control-Allow-Origin', 'Access-Control-Allow-Methods',
+                              'Access-Control-Allow-Headers', 'Access-Control-Max-Age', 'Vary']) {
+                toCache.headers.delete(h);
+            }
+            edgeCache.put(request, toCache).catch(() => {});
         }
 
         return r;

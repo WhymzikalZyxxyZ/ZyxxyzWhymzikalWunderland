@@ -87,6 +87,27 @@ describe('CORS', () => {
         expect(res.headers.get('Access-Control-Allow-Origin')).toBeNull();
     });
 
+    it('edge cache hit reattaches CORS for the requesting origin, not the cached origin', async () => {
+        // Simulate a cached response that was stored without CORS headers
+        // (as our fix requires), coming back from a request with a different origin.
+        const cachedBody = JSON.stringify({ features: [] });
+        const cachedResponse = new Response(cachedBody, {
+            status:  200,
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, s-maxage=300' },
+            // No Access-Control-Allow-Origin — stripped before storage
+        });
+        global.caches.default.match = vi.fn(async () => cachedResponse);
+
+        const res = await worker.fetch(
+            req('/api/search?q=Denver', { origin: 'https://locator.zyxwonderland.xyz' }),
+            makeEnv(),
+        );
+        expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://locator.zyxwonderland.xyz');
+
+        // Restore the default null-returning mock for other tests
+        global.caches.default.match = vi.fn(async () => null);
+    });
+
     it('non-GET returns 405', async () => {
         const res = await worker.fetch(req('/api/search', { method: 'POST' }), makeEnv());
         expect(res.status).toBe(405);
