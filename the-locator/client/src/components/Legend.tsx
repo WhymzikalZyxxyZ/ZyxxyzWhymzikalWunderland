@@ -11,6 +11,7 @@ const LAYER_COLORS: Record<LayerName, string> = {
     superfund:     '#ef4444',
     population:    '#2171b5',
     walkscore:     '#4ade80',
+    transit:       '#06b6d4',
 };
 
 const LAYER_LABELS: Record<LayerName, string> = {
@@ -20,9 +21,10 @@ const LAYER_LABELS: Record<LayerName, string> = {
     superfund:     'Superfund Sites',
     population:    'Population Density',
     walkscore:     'Walkability Index',
+    transit:       'Transit Stops',
 };
 
-const RENDER_ORDER: LayerName[] = ['neighborhoods', 'schools', 'cities', 'superfund', 'population', 'walkscore'];
+const RENDER_ORDER: LayerName[] = ['neighborhoods', 'schools', 'cities', 'superfund', 'population', 'walkscore', 'transit'];
 
 export default function Legend({ activeLayers }: Props) {
     const visible = RENDER_ORDER.filter(l => activeLayers.has(l));

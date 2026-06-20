@@ -41,7 +41,15 @@ export interface CityProperties {
     acsYear: number | null;
 }
 
-export type LayerName = 'neighborhoods' | 'schools' | 'superfund' | 'population' | 'walkscore' | 'cities';
+export interface TransitProperties {
+    id: number;
+    name: string;
+    transit: 'bus' | 'rail' | 'subway';
+    ref: string | null;
+    routes: string | null;
+}
+
+export type LayerName = 'neighborhoods' | 'schools' | 'cities' | 'superfund' | 'population' | 'walkscore' | 'transit';
 
 export interface EmbedCommand {
     action: 'flyTo' | 'setLayers' | 'toggleLayer';
