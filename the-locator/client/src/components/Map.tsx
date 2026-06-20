@@ -18,6 +18,7 @@ const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json'
 const LAYER_COLORS: Record<LayerName, string> = {
     neighborhoods: '#22c55e',
     schools:       '#3b82f6',
+    cities:        '#f59e0b',
     superfund:     '#ef4444',
     population:    '#2171b5',
     walkscore:     '#4ade80',
@@ -26,12 +27,13 @@ const LAYER_COLORS: Record<LayerName, string> = {
 const LAYER_TITLES: Record<LayerName, string> = {
     neighborhoods: 'Neighborhood',
     schools:       'School District',
+    cities:        'City / Place',
     superfund:     'Superfund Site',
     population:    'Population Data',
     walkscore:     'Walkability',
 };
 
-const ALL_LAYERS: LayerName[] = ['neighborhoods', 'schools', 'superfund', 'population', 'walkscore'];
+const ALL_LAYERS: LayerName[] = ['neighborhoods', 'schools', 'cities', 'superfund', 'population', 'walkscore'];
 
 // ── Popup section (one per layer hit) ────────────────────────────────────────
 function escHtml(s: string): string {
@@ -48,7 +50,17 @@ function popupSection(layer: LayerName, props: Record<string, unknown>): string 
     const color = LAYER_COLORS[layer];
     let body = '';
 
-    if (layer === 'walkscore') {
+    if (layer === 'cities') {
+        const pop = props.population != null
+            ? Number(props.population).toLocaleString()
+            : null;
+        body =
+            row('City',       props.name)       +
+            row('State',      props.state)      +
+            row('Population', pop)              +
+            row('ACS Year',   props.acsYear)    +
+            row('GEOID',      props.GEOID);
+    } else if (layer === 'walkscore') {
         const score = props.natWalkInd != null ? `${props.natWalkInd}/20` : null;
         body =
             row('Walk Index',  score)          +
@@ -164,6 +176,8 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError, 
             ? `/api/population?bbox=${bbox}&year=${populationYear}`
             : layer === 'walkscore'
             ? `/api/walkscore?bbox=${bbox}`
+            : layer === 'cities'
+            ? `/api/cities?bbox=${bbox}&year=${populationYear}`
             : `/api/layers/${layer}?bbox=${bbox}`;
 
         const res = await fetch(url);
@@ -285,6 +299,41 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError, 
                     'text-halo-width': 1.5,
                 },
             });
+        } else if (layer === 'cities') {
+            // Line-only: city boundary outlines with population labels, no fill polygon
+            map.addLayer({
+                id: lyrId, type: 'line', source: srcId,
+                paint: {
+                    'line-color':     color,
+                    'line-width':     2.5,
+                    'line-opacity':   0.9,
+                    'line-dasharray': [3, 1.5],
+                },
+            });
+            map.addLayer({
+                id: labelId, type: 'symbol', source: srcId,
+                minzoom: 9,
+                layout: {
+                    'text-field': [
+                        'case',
+                        ['to-boolean', ['get', 'population']],
+                        ['concat', ['get', 'name'], '\n',
+                            ['number-format', ['get', 'population'], { 'locale': 'en-US' }]],
+                        ['get', 'name'],
+                    ] as maplibregl.ExpressionSpecification,
+                    'text-size':             11,
+                    'text-font':             ['Open Sans Semibold'],
+                    'text-anchor':           'center',
+                    'text-allow-overlap':    false,
+                    'text-ignore-placement': false,
+                    'text-max-width':        8,
+                },
+                paint: {
+                    'text-color':      '#78350f',
+                    'text-halo-color': 'rgba(255,255,255,0.92)',
+                    'text-halo-width': 2,
+                },
+            });
         } else {
             // neighborhoods / schools — semi-transparent fill + bold outline
             map.addLayer({
@@ -394,28 +443,32 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError, 
         };
     }, [activeLayers, onFeatureClick]);
 
-    // ── Re-fetch population when year changes ─────────────────────────────────
+    // ── Re-fetch ACS-backed layers (population, cities) when year changes ────────
     useEffect(() => {
         const map = mapRef.current;
-        if (!map || !activeLayers.has('population')) return;
-        const srcId = 'src-population';
-        if (!map.getSource(srcId) || pendingRef.current.has('population')) return;
+        if (!map) return;
 
-        pendingRef.current.add('population');
-        fetchLayer('population', map)
-            .then(data => {
-                if (!map.getSource(srcId)) return;
-                (map.getSource(srcId) as maplibregl.GeoJSONSource).setData(data);
-                onLayerError?.('population', null);
-                if (map.getLayer('lyr-population')) {
-                    map.setPaintProperty('lyr-population', 'fill-color', populationColorExpression(data.features));
-                }
-            })
-            .catch(e => {
-                const msg = e instanceof Error ? e.message : 'Data unavailable';
-                onLayerError?.('population', msg);
-            })
-            .finally(() => pendingRef.current.delete('population'));
+        for (const layer of ['population', 'cities'] as LayerName[]) {
+            if (!activeLayers.has(layer)) continue;
+            const srcId = `src-${layer}`;
+            if (!map.getSource(srcId) || pendingRef.current.has(layer)) continue;
+
+            pendingRef.current.add(layer);
+            fetchLayer(layer, map)
+                .then(data => {
+                    if (!map.getSource(srcId)) return;
+                    (map.getSource(srcId) as maplibregl.GeoJSONSource).setData(data);
+                    onLayerError?.(layer, null);
+                    if (layer === 'population' && map.getLayer('lyr-population')) {
+                        map.setPaintProperty('lyr-population', 'fill-color', populationColorExpression(data.features));
+                    }
+                })
+                .catch(e => {
+                    const msg = e instanceof Error ? e.message : 'Data unavailable';
+                    onLayerError?.(layer, msg);
+                })
+                .finally(() => pendingRef.current.delete(layer));
+        }
     }, [populationYear, fetchLayer, activeLayers, onLayerError]);
 
     // ── Refresh data after map pan / zoom ─────────────────────────────────────
