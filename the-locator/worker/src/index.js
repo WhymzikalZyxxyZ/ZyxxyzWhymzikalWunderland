@@ -196,10 +196,12 @@ async function handlePopulation(request, env, ip) {
 // ── External data fetchers ────────────────────────────────────────────────────
 
 // TIGERweb ArcGIS REST endpoints
+// Neighborhoods uses County Subdivisions (complete US coverage) rather than
+// Census Places (which are absent in most suburban/rural areas).
 // The School service uses STATE (not STUSAB), so each layer gets its own field list.
 // where=1=1 is required by the School service; harmless for other layers.
 const CENSUS_LAYER_URLS = {
-    neighborhoods: 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/0/query',
+    neighborhoods: 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/2/query',
     schools:       'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/School/MapServer/0/query',
 };
 const CENSUS_LAYER_FIELDS = {
@@ -264,14 +266,31 @@ async function fetchPopulation([minLng, minLat, maxLng, maxLat], env) {
 
     if (!geoData.features?.length) return { type: 'FeatureCollection', features: [] };
 
+    // Without a Census API key: return tract boundaries with null population so
+    // the map still renders the tract outlines (uniform colour) without ACS data.
+    if (!apiKey) {
+        const features = geoData.features.map(f => {
+            const areaKm2 = +((f.properties.AREALAND || 0) / 1_000_000).toFixed(2);
+            return {
+                ...f,
+                properties: {
+                    GEOID:         f.properties.GEOID,
+                    population:    null,
+                    areaKm2,
+                    densityPerKm2: null,
+                    acsYear:       parseInt(year, 10),
+                },
+            };
+        });
+        return { type: 'FeatureCollection', features };
+    }
+
     // Extract unique state FIPS codes from tract GEOIDs (first 2 chars)
     const states = [...new Set(
         geoData.features
             .map(f => f.properties?.GEOID?.slice(0, 2))
             .filter(Boolean)
     )];
-
-    if (!apiKey) throw new Error('CENSUS_API_KEY is not configured — population layer unavailable');
 
     // ACS requires state + county:* when querying tracts; omitting county:* causes a silent failure.
     const acsRows = (await Promise.all(
