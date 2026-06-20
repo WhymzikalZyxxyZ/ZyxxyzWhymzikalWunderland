@@ -321,6 +321,47 @@ async function fetchPopulation([minLng, minLat, maxLng, maxLat], env) {
     return { type: 'FeatureCollection', features };
 }
 
+async function handleWalkscore(request, env, ip) {
+    if (!ipAllow(ip, 60)) return err('Too many requests — slow down', 429);
+
+    const bbox = parseBbox(new URL(request.url).searchParams.get('bbox'));
+    if (!bbox) return err('bbox required (minLng,minLat,maxLng,maxLat)');
+
+    const cacheKey = `walkscore:${bbox.join(',')}`;
+    const cached   = await getCache(env, cacheKey);
+    if (cached) return json(cached);
+
+    let data;
+    try { data = await fetchWalkability(bbox); }
+    catch { return err('EPA walkability data unavailable', 502); }
+
+    await setCache(env, cacheKey, data, 86_400 * 7);
+    return json(data);
+}
+
+async function fetchWalkability([minLng, minLat, maxLng, maxLat]) {
+    const url = 'https://geodata.epa.gov/arcgis/rest/services/OA/WalkabilityIndex/MapServer/0/query'
+        + `?geometry=${minLng},${minLat},${maxLng},${maxLat}`
+        + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
+        + '&outFields=GEOID10,NatWalkInd,StatAbbr&resultRecordCount=500&f=geojson';
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`EPA walkability HTTP ${r.status}`);
+    const data = await r.json();
+    if (data.error) throw new Error(`EPA walkability error: ${data.error.message}`);
+    const features = (data.features || [])
+        .filter(f => f.geometry?.coordinates)
+        .map(f => ({
+            type:     'Feature',
+            geometry: f.geometry,
+            properties: {
+                GEOID10:    f.properties.GEOID10,
+                natWalkInd: parseFloat(f.properties.NatWalkInd) || 0,
+                statAbbr:   f.properties.StatAbbr,
+            },
+        }));
+    return { type: 'FeatureCollection', features };
+}
+
 // ── Main Worker ───────────────────────────────────────────────────────────────
 export default {
     async fetch(request, env) {
@@ -350,6 +391,8 @@ export default {
             }
         } else if (path === '/api/population') {
             response = await handlePopulation(request, env, ip);
+        } else if (path === '/api/walkscore') {
+            response = await handleWalkscore(request, env, ip);
         } else if (path === '/favicon.ico') {
             return new Response(null, { status: 204 });
         } else {

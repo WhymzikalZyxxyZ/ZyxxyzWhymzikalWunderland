@@ -27,7 +27,13 @@ export interface PopulationProperties {
     acsYear: number;
 }
 
-export type LayerName = 'neighborhoods' | 'schools' | 'superfund' | 'population';
+export interface WalkabilityProperties {
+    GEOID10: string;
+    natWalkInd: number;
+    statAbbr: string;
+}
+
+export type LayerName = 'neighborhoods' | 'schools' | 'superfund' | 'population' | 'walkscore';
 
 export interface EmbedCommand {
     action: 'flyTo' | 'setLayers' | 'toggleLayer';
@@ -43,6 +49,6 @@ export interface EmbedEvent {
     bbox?: [number, number, number, number];
     center?: [number, number];
     layer?: LayerName;
-    properties?: NeighborhoodProperties | SchoolDistrictProperties | SuperfundProperties | PopulationProperties;
+    properties?: Record<string, unknown>;
     visible?: boolean;
 }
