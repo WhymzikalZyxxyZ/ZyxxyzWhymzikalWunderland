@@ -31,8 +31,12 @@ const LAYER_TITLES: Record<LayerName, string> = {
 const ALL_LAYERS: LayerName[] = ['neighborhoods', 'schools', 'superfund', 'population'];
 
 // ── Popup section (one per layer hit) ────────────────────────────────────────
+function escHtml(s: string): string {
+    return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+}
+
 function row(label: string, value: unknown): string {
-    const v = value != null && value !== '' ? String(value) : null;
+    const v = value != null && value !== '' ? escHtml(String(value)) : null;
     if (!v) return '';
     return `<div class="lp-row"><span class="lp-label">${label}</span><span class="lp-value">${v}</span></div>`;
 }
