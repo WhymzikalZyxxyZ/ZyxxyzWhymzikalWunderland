@@ -55,6 +55,18 @@
     ];
 
     var flies = [], flyClock = 0;
+
+    var idle = {
+        blinkNext:  3.2,
+        blinkPhase: 0,
+        tiltAngle:  0,
+        tiltTarget: 0,
+        tiltNext:   5.5,
+        tapPhase:   0,
+        tapNext:    7.0,
+        tapDust:    0
+    };
+
     var t0 = null, prevT = 0;
 
     // ── helpers ───────────────────────────────────────────────────────────────
@@ -210,6 +222,29 @@
             if (ff.life <= 0 || ff.y < H * 0.12) flies.splice(fi, 1);
         }
 
+        // Idle personality animation state updates
+        if (t >= idle.blinkNext && idle.blinkPhase === 0) {
+            idle.blinkPhase = dt;
+            idle.blinkNext  = t + 3.0 + Math.random() * 4.5;
+        } else if (idle.blinkPhase > 0) {
+            idle.blinkPhase += dt;
+            if (idle.blinkPhase >= 0.18) idle.blinkPhase = 0;
+        }
+        if (t >= idle.tiltNext) {
+            idle.tiltTarget = (Math.random() - 0.5) * 0.18;
+            idle.tiltNext   = t + 4.0 + Math.random() * 5.5;
+        }
+        idle.tiltAngle += (idle.tiltTarget - idle.tiltAngle) * 0.055;
+        if (t >= idle.tapNext && idle.tapPhase === 0) {
+            idle.tapPhase = dt;
+            idle.tapNext  = t + 5.0 + Math.random() * 6.0;
+            idle.tapDust  = 1;
+        } else if (idle.tapPhase > 0) {
+            idle.tapPhase += dt;
+            idle.tapDust   = Math.max(0, idle.tapDust - dt * 3.5);
+            if (idle.tapPhase >= 0.35) { idle.tapPhase = 0; idle.tapDust = 0; }
+        }
+
         drawBackground(W, H, t);
         drawConstellations(W, H, t);
         drawFairyLights(W, H, t);
@@ -217,7 +252,7 @@
         drawTrees(W, H, t);
         drawFloaters(W, H, t);
         drawFireflies();
-        drawZyxxyz(cx, baseY, sc, t);
+        drawZyxxyz(cx, baseY, sc, t, idle);
         drawWelcome(W, H, t);
         requestAnimationFrame(frame);
     }
@@ -438,7 +473,7 @@
     }
 
     // ── ZYXXYZ character — Riemann fills + polygon/rounded outlines ───────────
-    function drawZyxxyz(cx, baseY, sc, t) {
+    function drawZyxxyz(cx, baseY, sc, t, idle) {
         var bob = Math.sin(t * 1.4) * 2.8 * sc;
 
         // Core geometry
@@ -446,6 +481,7 @@
         var bY  = baseY + bob - 46 * sc;
         var hR  = 40 * sc;
         var hY  = bY - bRY * 0.72;
+        var neckY = hY + hR * 0.88;
 
         var furLight = '#ede0cc';
         var furMid   = '#d0b890';
@@ -453,9 +489,10 @@
         var faceCol  = '#c87060';
         var shirtCol = '#4a7fc0';
 
-        var caneX   = cx;
-        var handY   = bY - bRY * 0.12;
-        var caneBot = baseY + bob + 9 * sc;
+        var caneX    = cx;
+        var handY    = bY - bRY * 0.12;
+        var tapBounce = idle.tapPhase > 0 ? Math.sin(idle.tapPhase / 0.35 * Math.PI) * 10 * sc : 0;
+        var caneBot  = baseY + bob + 9 * sc + tapBounce;
         var shlY    = bY - bRY * 0.58;
 
         // Cell sizes for 2D Riemann grids — scale with canvas
@@ -587,6 +624,20 @@
         ctx.beginPath(); ctx.moveTo(caneX - 1*sc, handY + 18*sc); ctx.lineTo(caneX + 1*sc, caneBot - 4*sc); ctx.stroke();
         ctx.lineCap = 'butt';
 
+        // Dust puff on cane tap
+        if (idle.tapDust > 0) {
+            ctx.globalAlpha = idle.tapDust * 0.60;
+            var dustR = 8 * sc * idle.tapDust;
+            ctx.fillStyle = '#c8b890';
+            for (var di = 0; di < 5; di++) {
+                var da = (di / 5) * Math.PI * 2;
+                var dpx = caneX + 3*sc + Math.cos(da) * dustR * 0.8;
+                var dpy = caneBot + Math.sin(da) * dustR * 0.3;
+                ctx.beginPath(); ctx.arc(dpx, dpy, dustR * 0.38, 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+        }
+
         // ── banana handle — polygon arc ───────────────────────────────────────
         // Sample N=16 points along the arc curve as polygon
         var bLen = 22*sc, bH = 9*sc;
@@ -640,6 +691,12 @@
             });
             ctx.lineCap = 'butt'; ctx.restore();
         });
+
+        // ── head + hat — wrapped in idle head tilt rotation ─────────────────
+        ctx.save();
+        ctx.translate(cx, neckY);
+        ctx.rotate(idle.tiltAngle);
+        ctx.translate(-cx, -neckY);
 
         // ── head — Riemann fill, 16-gon outline, fluffy hexagon halo ─────────
         // Fluffy halo — 16 rounded hexagons ringing the head
@@ -756,6 +813,20 @@
         ctx.stroke();
         ctx.lineCap = 'butt';
 
+        // Blink eyelid — fur-coloured rect sweeps down over each goggle lens
+        if (idle.blinkPhase > 0) {
+            var blinkP = Math.sin(idle.blinkPhase / 0.18 * Math.PI);
+            var lidH   = (gR + 4*sc) * 2 * blinkP;
+            [gLX, gRX].forEach(function (gx) {
+                ctx.save();
+                roundedPolygon(gx, gY, gR + 3*sc, gR + 3*sc, 8, 2*sc, Math.PI/8);
+                ctx.clip();
+                ctx.fillStyle = furLight;
+                ctx.fillRect(gx - (gR + 4*sc), gY - (gR + 4*sc), (gR + 4*sc)*2, lidH);
+                ctx.restore();
+            });
+        }
+
         // ── bucket hat ────────────────────────────────────────────────────────
         var htY    = hY - hR * 0.60;
         var crWd   = hR * 0.86;
@@ -814,6 +885,8 @@
         // Brim highlight
         ctx.fillStyle = 'rgba(235,185,210,0.22)';
         ctx.beginPath(); ctx.ellipse(cx - brimW*0.22, htY - brimH2*0.12, brimW*0.42, brimH2*0.35, 0, 0, Math.PI*2); ctx.fill();
+
+        ctx.restore(); // end head tilt rotation
     }
 
     // ── typewriter welcome text ────────────────────────────────────────────────
