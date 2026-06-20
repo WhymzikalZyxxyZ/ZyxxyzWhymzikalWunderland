@@ -33,7 +33,15 @@ export interface WalkabilityProperties {
     statAbbr: string;
 }
 
-export type LayerName = 'neighborhoods' | 'schools' | 'superfund' | 'population' | 'walkscore';
+export interface CityProperties {
+    name: string;
+    GEOID: string;
+    state: string;
+    population: number | null;
+    acsYear: number | null;
+}
+
+export type LayerName = 'neighborhoods' | 'schools' | 'superfund' | 'population' | 'walkscore' | 'cities';
 
 export interface EmbedCommand {
     action: 'flyTo' | 'setLayers' | 'toggleLayer';

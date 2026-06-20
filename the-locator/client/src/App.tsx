@@ -1,11 +1,12 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import Map        from './components/Map';
-import SearchBar  from './components/SearchBar';
-import CityPicker from './components/CityPicker';
-import LayerPanel from './components/LayerPanel';
-import InfoPanel  from './components/InfoPanel';
-import HelpPanel  from './components/HelpPanel';
-import Legend     from './components/Legend';
+import Map          from './components/Map';
+import SearchBar    from './components/SearchBar';
+import CityPicker   from './components/CityPicker';
+import LayerPanel   from './components/LayerPanel';
+import InfoPanel    from './components/InfoPanel';
+import HelpPanel    from './components/HelpPanel';
+import Legend       from './components/Legend';
+import BannerStrip  from './components/BannerStrip';
 import type { LayerName, EmbedCommand, EmbedEvent } from './types/geojson';
 
 export interface CityResult {
@@ -20,7 +21,7 @@ export interface ActiveFeature {
     properties: Record<string, unknown>;
 }
 
-const VALID_LAYERS = new Set<LayerName>(['neighborhoods', 'schools', 'superfund', 'population', 'walkscore']);
+const VALID_LAYERS = new Set<LayerName>(['neighborhoods', 'schools', 'cities', 'superfund', 'population', 'walkscore']);
 
 export default function App() {
     const [city,           setCity]          = useState<CityResult | null>(null);
@@ -132,38 +133,41 @@ export default function App() {
 
     return (
         <div className={`app${isEmbed ? ' app--embed' : ''}`}>
-            <aside className="sidebar">
-                {!isEmbed && (
-                    <div className="sidebar-header">
-                        <span className="logo-pin">📍</span>
-                        <h1>The Locator</h1>
-                        <p className="tagline">Real estate district explorer</p>
-                    </div>
-                )}
-                <SearchBar onSelect={setCity} />
-                <CityPicker onSelect={setCity} />
-                <HelpPanel />
-                <LayerPanel
-                    activeLayers={activeLayers}
-                    onToggle={toggleLayer}
-                    layerErrors={layerErrors}
-                    populationYear={populationYear}
-                    onYearChange={setPopulationYear}
-                />
-                {activeFeature && (
-                    <InfoPanel feature={activeFeature} onClose={() => setActiveFeature(null)} />
-                )}
-            </aside>
-            <main className="map-wrap">
-                <Map
-                    city={city}
-                    activeLayers={activeLayers}
-                    onFeatureClick={setActiveFeature}
-                    onLayerError={handleLayerError}
-                    populationYear={populationYear}
-                />
-                <Legend activeLayers={activeLayers} />
-            </main>
+            {!isEmbed && <BannerStrip />}
+            <div className="app-body">
+                <aside className="sidebar">
+                    {!isEmbed && (
+                        <div className="sidebar-header">
+                            <span className="logo-pin">📍</span>
+                            <h1>The Locator</h1>
+                            <p className="tagline">Real estate district explorer</p>
+                        </div>
+                    )}
+                    <SearchBar onSelect={setCity} />
+                    <CityPicker onSelect={setCity} />
+                    <HelpPanel />
+                    <LayerPanel
+                        activeLayers={activeLayers}
+                        onToggle={toggleLayer}
+                        layerErrors={layerErrors}
+                        populationYear={populationYear}
+                        onYearChange={setPopulationYear}
+                    />
+                    {activeFeature && (
+                        <InfoPanel feature={activeFeature} onClose={() => setActiveFeature(null)} />
+                    )}
+                </aside>
+                <main className="map-wrap">
+                    <Map
+                        city={city}
+                        activeLayers={activeLayers}
+                        onFeatureClick={setActiveFeature}
+                        onLayerError={handleLayerError}
+                        populationYear={populationYear}
+                    />
+                    <Legend activeLayers={activeLayers} />
+                </main>
+            </div>
         </div>
     );
 }
