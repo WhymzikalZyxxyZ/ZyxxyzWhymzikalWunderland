@@ -35,10 +35,10 @@ const SEC_HEADERS = {
     'Strict-Transport-Security': 'max-age=63072000; includeSubDomains',
     'Content-Security-Policy':
         "default-src 'self'; " +
-        "script-src 'self'; " +
+        "script-src 'self' https://static.cloudflareinsights.com; " +
         "style-src 'self' 'unsafe-inline'; " +
         // 'self' already covers same-origin ws/wss — no need for the broad ws:/wss: wildcards
-        "connect-src 'self'; " +
+        "connect-src 'self' https://cloudflareinsights.com; " +
         "img-src 'self' data: blob:; " +
         "font-src 'self'; " +
         "object-src 'none'; " +
