@@ -288,13 +288,13 @@ describe('/api/layers/:name', () => {
     });
 
     it('fetches superfund layer from EPA', async () => {
+        // Worker uses EPA ArcGIS GeoJSON endpoint (not the legacy FRS REST API)
         const epaData = {
-            Results: {
-                FRSFacility: [
-                    { LATITUDE83: '39.7', LONGITUDE83: '-104.9', PRIMARY_NAME: 'Test Site', NPL_STATUS_IND: 'NPL', LOCATION_ADDRESS: '123 Main', CITY_NAME: 'Denver', STATE_CODE: 'CO', PGM_SYS_ID: 'ABC' },
-                    { LATITUDE83: null, LONGITUDE83: null, PRIMARY_NAME: 'Bad Site' },
-                ],
-            },
+            type: 'FeatureCollection',
+            features: [
+                { type: 'Feature', geometry: { type: 'Point', coordinates: [-104.9, 39.7] }, properties: { SITE_NAME: 'Test Site', NPL_STATUS: 'NPL Site', ADDRESS: '123 Main', CITY: 'Denver', STATE: 'CO', EPA_ID: 'ABC' } },
+                { type: 'Feature', geometry: null, properties: { SITE_NAME: 'Bad Site' } },
+            ],
         };
         global.fetch = mockFetch({ ok: true, body: epaData });
         const res = await worker.fetch(req(`/api/layers/superfund?bbox=${validBbox}`), makeEnv());
@@ -302,25 +302,24 @@ describe('/api/layers/:name', () => {
         const body = await res.json();
         expect(body.features).toHaveLength(1);
         expect(body.features[0].properties.name).toBe('Test Site');
-        expect(body.features[0].properties.nplStatus).toBe('NPL');
+        expect(body.features[0].properties.nplStatus).toBe('NPL Site');
     });
 
-    it('superfund site without NPL_STATUS_IND defaults to non-npl', async () => {
+    it('superfund site with no NPL_STATUS falls back to Unknown', async () => {
         const epaData = {
-            Results: {
-                FRSFacility: [
-                    { LATITUDE83: '39.7', LONGITUDE83: '-104.9', PRIMARY_NAME: 'Site', NPL_STATUS_IND: '', LOCATION_ADDRESS: '', CITY_NAME: '', STATE_CODE: '', PGM_SYS_ID: '' },
-                ],
-            },
+            type: 'FeatureCollection',
+            features: [
+                { type: 'Feature', geometry: { type: 'Point', coordinates: [-104.9, 39.7] }, properties: { SITE_NAME: 'Site', NPL_STATUS: '', ADDRESS: '', CITY: '', STATE: '', EPA_ID: '' } },
+            ],
         };
         global.fetch = mockFetch({ ok: true, body: epaData });
         const res  = await worker.fetch(req(`/api/layers/superfund?bbox=${validBbox}`), makeEnv());
         const body = await res.json();
-        expect(body.features[0].properties.nplStatus).toBe('non-npl');
+        expect(body.features[0].properties.nplStatus).toBe('Unknown');
     });
 
-    it('superfund with no Results returns empty collection', async () => {
-        global.fetch = mockFetch({ ok: true, body: {} });
+    it('superfund with no features returns empty collection', async () => {
+        global.fetch = mockFetch({ ok: true, body: { type: 'FeatureCollection', features: [] } });
         const res  = await worker.fetch(req(`/api/layers/superfund?bbox=${validBbox}`), makeEnv());
         const body = await res.json();
         expect(body.features).toHaveLength(0);
@@ -333,7 +332,7 @@ describe('/api/layers/:name', () => {
     });
 
     it('superfund uses 6-hour TTL', async () => {
-        global.fetch = mockFetch({ ok: true, body: { Results: { FRSFacility: [] } } });
+        global.fetch = mockFetch({ ok: true, body: { type: 'FeatureCollection', features: [] } });
         const cachePut = vi.fn();
         await worker.fetch(req(`/api/layers/superfund?bbox=${validBbox}`), makeEnv({ cacheSet: cachePut }));
         expect(cachePut).toHaveBeenCalledWith(expect.any(String), expect.any(String), { expirationTtl: 21600 });
@@ -369,9 +368,10 @@ describe('/api/population', () => {
     });
 
     it('fetches ACS + TIGER and joins by GEOID', async () => {
+        // Census ACS returns [value, state, county, tract] — no NAME column
         const acsData = [
-            ['B01003_001E', 'NAME', 'state', 'county', 'tract'],
-            ['5000', 'Tract 001, Denver', '08', '031', '000100'],
+            ['B01003_001E', 'state', 'county', 'tract'],
+            ['5000', '08', '031', '000100'],
         ];
         const geoData = {
             type: 'FeatureCollection',
@@ -381,11 +381,12 @@ describe('/api/population', () => {
                 properties: { GEOID: '08031000100', AREALAND: 2000000 },
             }],
         };
+        // TIGERweb geo is fetched first, ACS comes second; census key needed to reach ACS path
         global.fetch = mockFetch([
-            { ok: true, body: acsData },
             { ok: true, body: geoData },
+            { ok: true, body: acsData },
         ]);
-        const res  = await worker.fetch(req(`/api/population?bbox=${validBbox}`), makeEnv());
+        const res  = await worker.fetch(req(`/api/population?bbox=${validBbox}`), makeEnv({ censusKey: 'test-key' }));
         expect(res.status).toBe(200);
         const body = await res.json();
         expect(body.features[0].properties.population).toBe(5000);
@@ -394,8 +395,12 @@ describe('/api/population', () => {
         expect(body.features[0].properties.acsYear).toBe(2022);
     });
 
-    it('tract not found in ACS data defaults to population 0', async () => {
-        const acsData = [['B01003_001E', 'NAME', 'state', 'county', 'tract']];
+    it('tract not found in ACS data gets null population', async () => {
+        // ACS returns data for a different tract — our geo tract's GEOID won't match
+        const acsData = [
+            ['B01003_001E', 'state', 'county', 'tract'],
+            ['200', '08', '031', '000200'],
+        ];
         const geoData = {
             type: 'FeatureCollection',
             features: [{
@@ -404,19 +409,21 @@ describe('/api/population', () => {
                 properties: { GEOID: '08031999999', AREALAND: 1000000 },
             }],
         };
+        // TIGERweb geo is fetched first, ACS comes second; census key needed to reach ACS path
         global.fetch = mockFetch([
-            { ok: true, body: acsData },
             { ok: true, body: geoData },
+            { ok: true, body: acsData },
         ]);
-        const res  = await worker.fetch(req(`/api/population?bbox=${validBbox}`), makeEnv());
+        const res  = await worker.fetch(req(`/api/population?bbox=${validBbox}`), makeEnv({ censusKey: 'test-key' }));
         const body = await res.json();
-        expect(body.features[0].properties.population).toBe(0);
+        expect(body.features[0].properties.population).toBeNull();
+        expect(body.features[0].properties.densityPerKm2).toBeNull();
     });
 
-    it('tract with zero area gets densityPerKm2 of 0', async () => {
+    it('tract with zero area gets null densityPerKm2', async () => {
         const acsData = [
-            ['B01003_001E', 'NAME', 'state', 'county', 'tract'],
-            ['100', 'Tract', '08', '031', '000100'],
+            ['B01003_001E', 'state', 'county', 'tract'],
+            ['100', '08', '031', '000100'],
         ];
         const geoData = {
             type: 'FeatureCollection',
@@ -426,13 +433,14 @@ describe('/api/population', () => {
                 properties: { GEOID: '08031000100', AREALAND: 0 },
             }],
         };
+        // TIGERweb geo is fetched first, ACS comes second; census key needed to reach ACS path
         global.fetch = mockFetch([
-            { ok: true, body: acsData },
             { ok: true, body: geoData },
+            { ok: true, body: acsData },
         ]);
-        const res  = await worker.fetch(req(`/api/population?bbox=${validBbox}`), makeEnv());
+        const res  = await worker.fetch(req(`/api/population?bbox=${validBbox}`), makeEnv({ censusKey: 'test-key' }));
         const body = await res.json();
-        expect(body.features[0].properties.densityPerKm2).toBe(0);
+        expect(body.features[0].properties.densityPerKm2).toBeNull();
     });
 
     it('returns 502 when Census APIs fail', async () => {

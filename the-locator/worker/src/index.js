@@ -315,15 +315,18 @@ async function fetchPopulation([minLng, minLat, maxLng, maxLat], env) {
     if (acsRows.length === 0) throw new Error('ACS API returned no data');
 
     // ACS response columns: [B01003_001E, state, county, tract]
+    // The Census Bureau uses -666666666 as a sentinel for suppressed/unavailable data.
     const popByGeoid = new Map(acsRows.map(row => {
         const state  = String(row[1]).padStart(2, '0');
         const county = String(row[2]).padStart(3, '0');
         const tract  = String(row[3]).padStart(6, '0');
-        return [`${state}${county}${tract}`, parseInt(row[0], 10)];
+        const raw    = parseInt(row[0], 10);
+        const pop    = (isNaN(raw) || raw < 0) ? null : raw;
+        return [`${state}${county}${tract}`, pop];
     }));
 
     const features = geoData.features.map(f => {
-        const population = popByGeoid.get(f.properties.GEOID) ?? 0;
+        const population = popByGeoid.get(f.properties.GEOID) ?? null;
         const areaKm2    = (f.properties.AREALAND || 0) / 1_000_000;
         return {
             ...f,
@@ -331,7 +334,9 @@ async function fetchPopulation([minLng, minLat, maxLng, maxLat], env) {
                 GEOID:         f.properties.GEOID,
                 population,
                 areaKm2:       +areaKm2.toFixed(2),
-                densityPerKm2: areaKm2 > 0 ? +(population / areaKm2).toFixed(1) : 0,
+                densityPerKm2: (population !== null && areaKm2 > 0)
+                    ? +(population / areaKm2).toFixed(1)
+                    : null,
                 acsYear:       parseInt(year, 10),
             },
         };

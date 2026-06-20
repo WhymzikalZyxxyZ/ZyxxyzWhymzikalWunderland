@@ -13,6 +13,7 @@ zone_name = "zyxwonderland.xyz"
 [assets]
 directory          = "../client/dist"
 not_found_handling = "single-page-application"
+run_worker_first   = true
 
 [vars]
 ACS_YEAR    = "2022"
