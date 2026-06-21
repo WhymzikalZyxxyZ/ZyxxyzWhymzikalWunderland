@@ -1,0 +1,83 @@
+﻿name: Rollback to release tag
+
+# Emergency rollback: resets main, test, and development to a prior release tag.
+# Requires typing ROLLBACK in the confirm field to prevent accidental runs.
+# Available tags are listed in the Actions summary after each promote-to-main.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release tag to roll back to (e.g. v3.9.5 or v3.9.5-abc1234)'
+        required: true
+        type: string
+      confirm:
+        description: 'Type ROLLBACK to confirm (case-sensitive)'
+        required: true
+        type: string
+
+jobs:
+
+  rollback:
+    name: Reset all branches to ${{ inputs.version }}
+    if: github.event.inputs.confirm == 'ROLLBACK'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Configure git identity
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Validate tag exists
+        run: |
+          git fetch --tags
+          if ! git rev-parse "refs/tags/${{ inputs.version }}" >/dev/null 2>&1; then
+            echo "Tag ${{ inputs.version }} not found. Available release tags:"
+            git tag --sort=-version:refname | grep '^v' | head -20
+            exit 1
+          fi
+          echo "Rolling back to $(git rev-parse refs/tags/${{ inputs.version }})"
+
+      - name: Roll back main
+        run: |
+          git checkout main
+          git reset --hard "refs/tags/${{ inputs.version }}"
+          git push --force-with-lease origin main
+
+      - name: Roll back test
+        run: |
+          git checkout test
+          git reset --hard "refs/tags/${{ inputs.version }}"
+          git push --force-with-lease origin test
+
+      - name: Roll back development
+        run: |
+          git checkout development
+          git reset --hard "refs/tags/${{ inputs.version }}"
+          git push --force-with-lease origin development
+
+      - name: Rollback summary
+        run: |
+          echo "## Rollback complete" >> $GITHUB_STEP_SUMMARY
+          echo "All three branches (main, test, development) have been reset to **${{ inputs.version }}**." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Deploy will re-fire automatically from the main push." >> $GITHUB_STEP_SUMMARY
+
+  guard-wrong-confirmation:
+    name: Guard — wrong confirmation
+    if: github.event.inputs.confirm != 'ROLLBACK'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail with helpful message
+        run: |
+          echo "Rollback aborted: confirmation field must be exactly 'ROLLBACK' (got '${{ inputs.confirm }}')"
+          exit 1
