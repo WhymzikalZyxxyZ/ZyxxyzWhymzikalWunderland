@@ -53,14 +53,32 @@ function ipAllow(ip, max, windowMs = 60_000) {
 }
 
 // ── KV cache ──────────────────────────────────────────────────────────────────
+// All entries are stored with a 30-day KV TTL so stale data outlives upstream
+// outages. Freshness is tracked via the `t` (epoch ms) field inside the envelope.
+// On upstream failure, handlers serve stale data rather than returning 502.
+const STALE_TTL_S = 30 * 86_400;
+
 async function getCache(env, key) {
-    try { const v = await env.LOCATOR_CACHE.get(key); return v ? JSON.parse(v) : null; }
-    catch { return null; }
+    try {
+        const v = await env.LOCATOR_CACHE.get(key);
+        if (!v) return null;
+        const parsed = JSON.parse(v);
+        if (parsed && typeof parsed === 'object' && 'data' in parsed && 't' in parsed) {
+            return { data: parsed.data, t: parsed.t };
+        }
+        // Legacy plain-value entry — treat as immediately stale so upstream is tried first.
+        return { data: parsed, t: 0 };
+    } catch { return null; }
 }
 
-async function setCache(env, key, value, ttl) {
-    try { await env.LOCATOR_CACHE.put(key, JSON.stringify(value), { expirationTtl: ttl }); }
-    catch { /* non-fatal */ }
+async function setCache(env, key, value) {
+    try {
+        await env.LOCATOR_CACHE.put(
+            key,
+            JSON.stringify({ data: value, t: Date.now() }),
+            { expirationTtl: STALE_TTL_S },
+        );
+    } catch { /* non-fatal */ }
 }
 
 // ── Input helpers ─────────────────────────────────────────────────────────────
@@ -96,15 +114,18 @@ async function handleSearch(request, env, ip) {
 
     const cacheKey = `geocode:${q.toLowerCase()}`;
     const cached   = await getCache(env, cacheKey);
-    if (cached) return json(cached);
+    if (cached && Date.now() - cached.t < 3_600_000) return json(cached.data);
 
     // Use Mapbox in production; fall back to Nominatim (free, no token) for local dev
     const result = env.MAPBOX_TOKEN
         ? await geocodeMapbox(q, env.MAPBOX_TOKEN)
         : await geocodeNominatim(q);
 
-    if (!result) return err('Geocoding service unavailable', 502);
-    await setCache(env, cacheKey, result, 3_600);
+    if (!result) {
+        if (cached) return json(cached.data, 200, { 'X-Cache': 'stale', 'Cache-Control': 'no-store' });
+        return err('Geocoding service unavailable', 502);
+    }
+    await setCache(env, cacheKey, result);
     return json(result);
 }
 
@@ -154,8 +175,9 @@ async function handleLayer(layerName, request, env, ip) {
     if (!bbox) return err('bbox required (minLng,minLat,maxLng,maxLat)');
 
     const cacheKey = `layer:${layerName}:${bbox.join(',')}`;
+    const freshMs  = LAYER_TTL[layerName] * 1_000;
     const cached   = await getCache(env, cacheKey);
-    if (cached) return json(cached);
+    if (cached && Date.now() - cached.t < freshMs) return json(cached.data);
 
     let data;
     try {
@@ -163,10 +185,11 @@ async function handleLayer(layerName, request, env, ip) {
             ? await fetchSuperfund(bbox)
             : await fetchCensusLayer(layerName, bbox);
     } catch {
+        if (cached) return json(cached.data, 200, { 'X-Cache': 'stale', 'Cache-Control': 'no-store' });
         return err('Data source unavailable', 502);
     }
 
-    await setCache(env, cacheKey, data, LAYER_TTL[layerName]);
+    await setCache(env, cacheKey, data);
     return json(data);
 }
 
@@ -190,18 +213,19 @@ async function handlePopulation(request, env, ip) {
     const year     = parseACSYear(params.get('year'), env.ACS_YEAR);
     const cacheKey = `population:${year}:${bbox.join(',')}`;
     const cached   = await getCache(env, cacheKey);
-    if (cached) return json(cached);
+    if (cached && Date.now() - cached.t < 86_400_000) return json(cached.data);
 
     let data;
     try { data = await fetchPopulation(bbox, env, year); }
     catch (e) {
+        if (cached) return json(cached.data, 200, { 'X-Cache': 'stale', 'Cache-Control': 'no-store' });
         const msg = (e instanceof Error && e.message.startsWith('CENSUS_API_KEY'))
             ? 'Population layer requires a Census API key — not configured on this server'
             : 'Census API unavailable';
         return err(msg, 502);
     }
 
-    await setCache(env, cacheKey, data, 86_400);
+    await setCache(env, cacheKey, data);
     return json(data);
 }
 
@@ -364,13 +388,16 @@ async function handleWalkscore(request, env, ip) {
 
     const cacheKey = `walkscore:${bbox.join(',')}`;
     const cached   = await getCache(env, cacheKey);
-    if (cached) return json(cached);
+    if (cached && Date.now() - cached.t < 86_400_000 * 7) return json(cached.data);
 
     let data;
     try { data = await fetchWalkability(bbox); }
-    catch { return err('EPA walkability data unavailable', 502); }
+    catch {
+        if (cached) return json(cached.data, 200, { 'X-Cache': 'stale', 'Cache-Control': 'no-store' });
+        return err('EPA walkability data unavailable', 502);
+    }
 
-    await setCache(env, cacheKey, data, 86_400 * 7);
+    await setCache(env, cacheKey, data);
     return json(data);
 }
 
@@ -407,13 +434,16 @@ async function handleCities(request, env, ip) {
     const year     = parseACSYear(params.get('year'), env.ACS_YEAR);
     const cacheKey = `cities:${year}:${bbox.join(',')}`;
     const cached   = await getCache(env, cacheKey);
-    if (cached) return json(cached);
+    if (cached && Date.now() - cached.t < 86_400_000) return json(cached.data);
 
     let data;
     try { data = await fetchCities(bbox, env, year); }
-    catch { return err('City data unavailable', 502); }
+    catch {
+        if (cached) return json(cached.data, 200, { 'X-Cache': 'stale', 'Cache-Control': 'no-store' });
+        return err('City data unavailable', 502);
+    }
 
-    await setCache(env, cacheKey, data, 86_400);
+    await setCache(env, cacheKey, data);
     return json(data);
 }
 
@@ -505,13 +535,16 @@ async function handleTransit(request, env, ip) {
 
     const cacheKey = `transit:${bbox.join(',')}`;
     const cached   = await getCache(env, cacheKey);
-    if (cached) return json(cached);
+    if (cached && Date.now() - cached.t < 3_600_000) return json(cached.data);
 
     let data;
     try { data = await fetchTransit(bbox); }
-    catch { return err('Transit data unavailable', 502); }
+    catch {
+        if (cached) return json(cached.data, 200, { 'X-Cache': 'stale', 'Cache-Control': 'no-store' });
+        return err('Transit data unavailable', 502);
+    }
 
-    await setCache(env, cacheKey, data, 3_600); // 1-hour TTL
+    await setCache(env, cacheKey, data);
     return json(data);
 }
 
@@ -643,7 +676,9 @@ export default {
         for (const [k, v] of Object.entries(cors)) r.headers.set(k, v);
 
         // ── Store successful API data in edge cache ────────────────────────────
-        if (r.status === 200 && path.startsWith('/api/') && path !== '/api/health') {
+        // Skip stale fallback responses — they carry no-store and must not be edge-cached.
+        if (r.status === 200 && path.startsWith('/api/') && path !== '/api/health'
+                && r.headers.get('X-Cache') !== 'stale') {
             r.headers.set('Cache-Control', 'public, s-maxage=300, max-age=60');
             // Cache a CORS-stripped copy — CORS headers are origin-specific and
             // must be freshly applied per request (see cache-hit path above).
