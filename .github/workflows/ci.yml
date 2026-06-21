@@ -59,7 +59,7 @@ jobs:
         run: npm install
       - name: Type-check shared engine
         working-directory: typescript/shared
-        run: npx tsc --noEmit
+        run: ../api/node_modules/.bin/tsc --noEmit
       - name: Type-check API
         working-directory: typescript/api
         run: npx tsc --noEmit
