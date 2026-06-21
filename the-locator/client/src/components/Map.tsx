@@ -152,7 +152,7 @@ function walkscoreColorExpression(): maplibregl.ExpressionSpecification {
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function Map({ city, activeLayers, onFeatureClick, onLayerError, onOpenSidebar, populationYear = 2022 }: Props) {
+export default function Map({ city, activeLayers, onFeatureClick, onLayerError, onOpenSidebar, populationYear = 2024 }: Props) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef       = useRef<maplibregl.Map | null>(null);
     const pendingRef   = useRef<Set<LayerName>>(new Set());
@@ -180,7 +180,7 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError, 
         mapRef.current.fitBounds(city.bbox, { padding: 60, maxZoom: city.zoom ?? 13 });
     }, [city]);
 
-    // ── Fetch GeoJSON for current viewport ────────────────────────────────────
+    // ── Fetch GeoJSON for current viewport (with one automatic retry on failure) ─
     const fetchLayer = useCallback(async (layer: LayerName, map: maplibregl.Map): Promise<GeoJSON.FeatureCollection> => {
         const b = map.getBounds();
         const bbox = [
@@ -200,27 +200,32 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError, 
             ? `/api/transit?bbox=${bbox}`
             : `/api/layers/${layer}?bbox=${bbox}`;
 
-        const res = await fetch(url);
-        if (!res.ok) {
-            let message = 'Data unavailable';
-            try {
-                const body = await res.json() as { error?: string };
-                if (typeof body.error === 'string') message = body.error;
-            } catch { /* ignore */ }
-            throw new Error(message);
+        const attempt = async (): Promise<GeoJSON.FeatureCollection> => {
+            const res = await fetch(url);
+            if (!res.ok) {
+                let message = 'Data unavailable';
+                try {
+                    const body = await res.json() as { error?: string };
+                    if (typeof body.error === 'string') message = body.error;
+                } catch { /* ignore */ }
+                throw new Error(message);
+            }
+            return res.json() as Promise<GeoJSON.FeatureCollection>;
+        };
+
+        try {
+            return await attempt();
+        } catch {
+            await new Promise(r => setTimeout(r, 3_000));
+            return attempt();
         }
-        return res.json() as Promise<GeoJSON.FeatureCollection>;
     }, [populationYear]);
 
     // ── Add a layer to the map for the first time ─────────────────────────────
     const addLayer = useCallback(async (layer: LayerName, map: maplibregl.Map) => {
         let data: GeoJSON.FeatureCollection;
         try {
-            // One automatic retry after 2 seconds on transient failures
-            data = await fetchLayer(layer, map).catch(async () => {
-                await new Promise(r => setTimeout(r, 2000));
-                return fetchLayer(layer, map);
-            });
+            data = await fetchLayer(layer, map);
         } catch (e) {
             const msg = e instanceof Error ? e.message : 'Data unavailable';
             console.error(`[Locator] "${layer}" fetch failed: ${msg}`);

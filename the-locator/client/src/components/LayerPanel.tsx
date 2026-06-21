@@ -18,9 +18,9 @@ const LAYERS: { id: LayerName; label: string; color: string; desc: string }[] = 
     { id: 'transit',       label: 'Transit Stops',    color: '#06b6d4', desc: 'Bus stops, rail stations, and subway entrances (OpenStreetMap)'  },
 ];
 
-// ACS 5-year estimates run from 2009 to 2022 (available as of 2026).
+// ACS 5-year estimates run from 2009 to 2024 (2024 estimates released Dec 2025).
 const ACS_MIN_YEAR = 2009;
-const ACS_MAX_YEAR = 2022;
+const ACS_MAX_YEAR = 2024;
 const ACS_YEARS = Array.from({ length: ACS_MAX_YEAR - ACS_MIN_YEAR + 1 }, (_, i) => ACS_MAX_YEAR - i);
 
 export default function LayerPanel({ activeLayers, onToggle, layerErrors, populationYear, onYearChange }: Props) {
