@@ -293,6 +293,7 @@ async function fetchCensusLayer(name, [minLng, minLat, maxLng, maxLat]) {
     const data = await r.json();
     // ArcGIS returns HTTP 200 with an error body on bad queries — treat as failure so it isn't cached.
     if (data.error) throw new Error(`Census ${name} API error ${data.error.code}: ${data.error.message}`);
+    if (data.exceededTransferLimit) console.warn(`[${name}] ArcGIS resultRecordCount ceiling hit — results are truncated`);
     return data;
 }
 
@@ -305,6 +306,8 @@ async function fetchSuperfund([minLng, minLat, maxLng, maxLat]) {
     const r = await fetchWithTimeout(url, {}, 8_000);
     if (!r.ok) throw new Error(`EPA superfund HTTP ${r.status}`);
     const data = await r.json();
+    if (data.error) throw new Error(`EPA superfund API error ${data.error.code}: ${data.error.message}`);
+    if (data.exceededTransferLimit) console.warn('[superfund] ArcGIS resultRecordCount ceiling hit — results are truncated');
     const features = (data.features || [])
         .filter(f => f.geometry?.coordinates)
         .map(f => ({
@@ -335,6 +338,7 @@ async function fetchPopulation([minLng, minLat, maxLng, maxLat], env, year) {
     if (!geoRes.ok) throw new Error('Census geo fetch failed');
     const geoData = await geoRes.json();
     if (geoData.error) throw new Error(`Census geo error ${geoData.error.code}: ${geoData.error.message}`);
+    if (geoData.exceededTransferLimit) console.warn('[population] TIGERweb tract resultRecordCount ceiling hit — results are truncated');
 
     if (!geoData.features?.length) return { type: 'FeatureCollection', features: [] };
 
@@ -449,6 +453,7 @@ async function fetchWalkability([minLng, minLat, maxLng, maxLat]) {
     if (!r.ok) throw new Error(`EPA walkability HTTP ${r.status}`);
     const data = await r.json();
     if (data.error) throw new Error(`EPA walkability error: ${data.error.message}`);
+    if (data.exceededTransferLimit) console.warn('[walkscore] ArcGIS resultRecordCount ceiling hit — results are truncated');
     const features = (data.features || [])
         .filter(f => f.geometry?.coordinates)
         .map(f => ({
@@ -499,6 +504,7 @@ async function fetchCities([minLng, minLat, maxLng, maxLat], env, year) {
     if (!geoRes.ok) throw new Error(`Census cities geo HTTP ${geoRes.status}`);
     const geoData = await geoRes.json();
     if (geoData.error) throw new Error(`Census cities API error: ${geoData.error.message}`);
+    if (geoData.exceededTransferLimit) console.warn('[cities] TIGERweb place resultRecordCount ceiling hit — results are truncated');
 
     if (!geoData.features?.length) return { type: 'FeatureCollection', features: [] };
 

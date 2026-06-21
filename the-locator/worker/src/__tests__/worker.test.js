@@ -381,6 +381,19 @@ describe('/api/layers/:name', () => {
         expect(res.status).toBe(502);
     });
 
+    it('returns 200 with truncated data when ArcGIS exceeds resultRecordCount', async () => {
+        const truncData = { type: 'FeatureCollection', features: [], exceededTransferLimit: true };
+        global.fetch = mockFetch({ ok: true, body: truncData });
+        const res = await worker.fetch(req(`/api/layers/neighborhoods?bbox=${validBbox}`), makeEnv());
+        expect(res.status).toBe(200);
+    });
+
+    it('returns 502 when EPA superfund returns an ArcGIS error body', async () => {
+        global.fetch = mockFetch({ ok: true, body: { error: { code: 400, message: 'Invalid geometry.' } } });
+        const res = await worker.fetch(req(`/api/layers/superfund?bbox=${validBbox}`), makeEnv());
+        expect(res.status).toBe(502);
+    });
+
     it('superfund stores with 30-day KV TTL', async () => {
         global.fetch = mockFetch({ ok: true, body: { type: 'FeatureCollection', features: [] } });
         const cachePut = vi.fn();
@@ -529,6 +542,13 @@ describe('/api/population', () => {
         expect(res.status).toBe(502);
     });
 
+    it('returns 200 with truncated data when TIGERweb exceeds tract resultRecordCount', async () => {
+        const truncGeo = { type: 'FeatureCollection', features: [], exceededTransferLimit: true };
+        global.fetch   = mockFetch({ ok: true, body: truncGeo });
+        const res = await worker.fetch(req(`/api/population?bbox=${validBbox}`), makeEnv());
+        expect(res.status).toBe(200);
+    });
+
     it('caches population with 24-hour TTL keyed by year', async () => {
         const acsData = [['B01003_001E', 'state', 'county', 'tract']];
         const geoData = { type: 'FeatureCollection', features: [] };
@@ -651,6 +671,13 @@ describe('/api/cities', () => {
         global.fetch = mockFetch({ ok: false });
         const res = await worker.fetch(req(`/api/cities?bbox=${validBbox}`), makeEnv());
         expect(res.status).toBe(502);
+    });
+
+    it('returns 200 with truncated data when TIGERweb places exceeds resultRecordCount', async () => {
+        const truncGeo = { type: 'FeatureCollection', features: [], exceededTransferLimit: true };
+        global.fetch   = mockFetch({ ok: true, body: truncGeo });
+        const res = await worker.fetch(req(`/api/cities?bbox=${validBbox}`), makeEnv());
+        expect(res.status).toBe(200);
     });
 
     it('city not found in ACS data gets null population', async () => {
@@ -881,6 +908,13 @@ describe('/api/walkscore', () => {
         global.fetch = mockFetch({ ok: false });
         const res = await worker.fetch(req(`/api/walkscore?bbox=${validBbox}`), makeEnv());
         expect(res.status).toBe(502);
+    });
+
+    it('returns 200 with truncated data when EPA walkability exceeds resultRecordCount', async () => {
+        const truncData = { type: 'FeatureCollection', features: [], exceededTransferLimit: true };
+        global.fetch    = mockFetch({ ok: true, body: truncData });
+        const res = await worker.fetch(req(`/api/walkscore?bbox=${validBbox}`), makeEnv());
+        expect(res.status).toBe(200);
     });
 
     it('returns 502 when EPA responds with an API error body', async () => {
