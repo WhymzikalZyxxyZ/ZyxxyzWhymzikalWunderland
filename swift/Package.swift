@@ -6,10 +6,10 @@ let package = Package(
     platforms: [.macOS(.v14)],
     products: [
         .library(name: "ChessEngine", targets: ["ChessEngine"]),
-        .executable(name: "ChessApp", targets: ["ChessApp"]),
+        .executable(name: "ChessApp", targets: ["ChessApp"])
     ],
     targets: [
         .target(name: "ChessEngine", path: "Sources/ChessEngine"),
-        .executableTarget(name: "ChessApp", dependencies: ["ChessEngine"], path: "Sources/ChessApp"),
+        .executableTarget(name: "ChessApp", dependencies: ["ChessEngine"], path: "Sources/ChessApp")
     ]
 )
