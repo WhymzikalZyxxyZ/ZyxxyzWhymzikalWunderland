@@ -29,10 +29,14 @@ function mockFetch(responses) {
     });
 }
 
-function makeEnv({ cacheGet = null, cacheSet = vi.fn(), mapboxToken = '', censusKey = '' } = {}) {
+// cacheGetAge: ms in the past to backdate the cached `t` timestamp.
+// 0 (default) = fresh; pass a value larger than the handler's fresh window to simulate stale.
+function makeEnv({ cacheGet = null, cacheGetAge = 0, cacheSet = vi.fn(), mapboxToken = '', censusKey = '' } = {}) {
     return {
         LOCATOR_CACHE: {
-            get: vi.fn(async () => cacheGet !== null ? JSON.stringify(cacheGet) : null),
+            get: vi.fn(async () => cacheGet !== null
+                ? JSON.stringify({ data: cacheGet, t: Date.now() - cacheGetAge })
+                : null),
             put: cacheSet,
         },
         ASSETS: {
@@ -111,6 +115,15 @@ describe('CORS', () => {
     it('non-GET returns 405', async () => {
         const res = await worker.fetch(req('/api/search', { method: 'POST' }), makeEnv());
         expect(res.status).toBe(405);
+    });
+
+    it('falls back to 0.0.0.0 IP and empty origin when headers are absent', async () => {
+        // A bare Request with no CF-Connecting-IP or Origin headers covers the || fallbacks.
+        const bareReq = new Request('https://locator.zyxwonderland.xyz/api/search?q=Denver', { method: 'GET' });
+        const env = makeEnv({ cacheGet: { features: [] } });
+        const res = await worker.fetch(bareReq, env);
+        expect(res.status).toBe(200);
+        expect(res.headers.get('Access-Control-Allow-Origin')).toBeNull(); // empty origin → no CORS
     });
 });
 
@@ -240,7 +253,7 @@ describe('/api/search', () => {
         const cachePut = vi.fn();
         const env      = makeEnv({ mapboxToken: '', cacheSet: cachePut });
         await worker.fetch(req('/api/search?q=Austin'), env);
-        expect(cachePut).toHaveBeenCalledWith('geocode:austin', expect.any(String), { expirationTtl: 3600 });
+        expect(cachePut).toHaveBeenCalledWith('geocode:austin', expect.any(String), { expirationTtl: 30 * 86_400 });
     });
 
     it('rate limits after 30 requests from same IP', async () => {
@@ -309,7 +322,7 @@ describe('/api/layers/:name', () => {
         expect(cachePut).toHaveBeenCalledWith(
             `layer:neighborhoods:${validBbox}`,
             expect.any(String),
-            { expirationTtl: 86400 }
+            { expirationTtl: 30 * 86_400 }
         );
     });
 
@@ -363,11 +376,11 @@ describe('/api/layers/:name', () => {
         expect(res.status).toBe(502);
     });
 
-    it('superfund uses 6-hour TTL', async () => {
+    it('superfund stores with 30-day KV TTL', async () => {
         global.fetch = mockFetch({ ok: true, body: { type: 'FeatureCollection', features: [] } });
         const cachePut = vi.fn();
         await worker.fetch(req(`/api/layers/superfund?bbox=${validBbox}`), makeEnv({ cacheSet: cachePut }));
-        expect(cachePut).toHaveBeenCalledWith(expect.any(String), expect.any(String), { expirationTtl: 21600 });
+        expect(cachePut).toHaveBeenCalledWith(expect.any(String), expect.any(String), { expirationTtl: 30 * 86_400 });
     });
 
     it('rate limits after 60 requests from same IP', async () => {
@@ -475,6 +488,25 @@ describe('/api/population', () => {
         expect(body.features[0].properties.densityPerKm2).toBeNull();
     });
 
+    it('returns tract outlines with null population when no Census API key is configured', async () => {
+        const geoData = {
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                geometry:   { type: 'Polygon', coordinates: [] },
+                properties: { GEOID: '08031000100', AREALAND: 2_000_000 },
+            }],
+        };
+        global.fetch = mockFetch({ ok: true, body: geoData });
+        const res  = await worker.fetch(req(`/api/population?bbox=${validBbox}`), makeEnv()); // no censusKey
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.features[0].properties.population).toBeNull();
+        expect(body.features[0].properties.areaKm2).toBe(2);
+        expect(body.features[0].properties.densityPerKm2).toBeNull();
+        expect(body.features[0].properties.acsYear).toBe(2022);
+    });
+
     it('returns 502 when Census APIs fail', async () => {
         global.fetch = mockFetch({ ok: false });
         const res = await worker.fetch(req(`/api/population?bbox=${validBbox}`), makeEnv());
@@ -493,7 +525,7 @@ describe('/api/population', () => {
         expect(cachePut).toHaveBeenCalledWith(
             `population:2020:${validBbox}`,
             expect.any(String),
-            { expirationTtl: 86400 }
+            { expirationTtl: 30 * 86_400 }
         );
     });
 
@@ -505,7 +537,7 @@ describe('/api/population', () => {
         expect(cachePut).toHaveBeenCalledWith(
             `population:2022:${validBbox}`,
             expect.any(String),
-            { expirationTtl: 86400 }
+            { expirationTtl: 30 * 86_400 }
         );
     });
 
@@ -517,7 +549,7 @@ describe('/api/population', () => {
         expect(cachePut).toHaveBeenCalledWith(
             `population:2022:${validBbox}`,
             expect.any(String),
-            { expirationTtl: 86400 }
+            { expirationTtl: 30 * 86_400 }
         );
     });
 
@@ -600,6 +632,26 @@ describe('/api/cities', () => {
         expect(res.status).toBe(502);
     });
 
+    it('city not found in ACS data gets null population', async () => {
+        const geoData = {
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                geometry:   { type: 'Polygon', coordinates: [] },
+                properties: { NAME: 'Smalltown', GEOID: '0899999', STUSAB: 'CO' },
+            }],
+        };
+        // ACS returns data for a different place GEOID — no match
+        const acsData = [
+            ['B01003_001E', 'state', 'place'],
+            ['5000', '08', '20000'],
+        ];
+        global.fetch = mockFetch([{ ok: true, body: geoData }, { ok: true, body: acsData }]);
+        const res  = await worker.fetch(req(`/api/cities?bbox=${validBbox}`), makeEnv({ censusKey: 'test-key' }));
+        const body = await res.json();
+        expect(body.features[0].properties.population).toBeNull();
+    });
+
     it('caches cities with 24-hour TTL keyed by year', async () => {
         const geoData = { type: 'FeatureCollection', features: [] };
         global.fetch  = mockFetch({ ok: true, body: geoData });
@@ -608,7 +660,7 @@ describe('/api/cities', () => {
         expect(cachePut).toHaveBeenCalledWith(
             `cities:2019:${validBbox}`,
             expect.any(String),
-            { expirationTtl: 86400 }
+            { expirationTtl: 30 * 86_400 }
         );
     });
 
@@ -667,6 +719,28 @@ describe('/api/transit', () => {
         expect(res.status).toBe(502);
     });
 
+    it('handles Overpass response with no elements field', async () => {
+        global.fetch = mockFetch({ ok: true, body: {} }); // no elements key
+        const res  = await worker.fetch(req(`/api/transit?bbox=${validBbox}`), makeEnv());
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.features).toHaveLength(0);
+    });
+
+    it('handles transit node with no tags using fallback name', async () => {
+        const overpassData = {
+            elements: [
+                { type: 'node', id: 5, lat: 39.72, lon: -104.98 }, // no tags
+            ],
+        };
+        global.fetch = mockFetch({ ok: true, body: overpassData });
+        const res  = await worker.fetch(req(`/api/transit?bbox=${validBbox}`), makeEnv());
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.features[0].properties.name).toBe('Transit Stop');
+        expect(body.features[0].properties.transit).toBe('bus');
+    });
+
     it('caches transit data with 1-hour TTL', async () => {
         global.fetch = mockFetch({ ok: true, body: { elements: [] } });
         const cachePut = vi.fn();
@@ -674,7 +748,7 @@ describe('/api/transit', () => {
         expect(cachePut).toHaveBeenCalledWith(
             `transit:${validBbox}`,
             expect.any(String),
-            { expirationTtl: 3600 }
+            { expirationTtl: 30 * 86_400 }
         );
     });
 
@@ -713,6 +787,196 @@ describe('/api/health', () => {
         const res  = await worker.fetch(req('/api/health'), makeEnv());
         const body = await res.json();
         expect(body.status).toBe('degraded');
+    });
+
+    it('includes Census API key in probe URL when key is configured', async () => {
+        global.fetch = mockFetch({ ok: true, body: {} });
+        const fetchSpy = vi.fn(async () => ({ ok: true, json: async () => ({}) }));
+        global.fetch = fetchSpy;
+        await worker.fetch(req('/api/health'), makeEnv({ censusKey: 'test-key' }));
+        const urls = fetchSpy.mock.calls.map(c => c[0]);
+        expect(urls.some(u => u.includes('key=test-key'))).toBe(true);
+    });
+});
+
+// ── /api/walkscore ────────────────────────────────────────────────────────────
+
+describe('/api/walkscore', () => {
+    const validBbox = '-105.1,39.6,-104.7,39.9';
+
+    it('returns 400 when bbox is missing', async () => {
+        const res = await worker.fetch(req('/api/walkscore'), makeEnv());
+        expect(res.status).toBe(400);
+    });
+
+    it('returns cached walkscore data', async () => {
+        const cached = { type: 'FeatureCollection', features: [] };
+        const res    = await worker.fetch(req(`/api/walkscore?bbox=${validBbox}`), makeEnv({ cacheGet: cached }));
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.type).toBe('FeatureCollection');
+    });
+
+    it('fetches from EPA and maps features to GeoJSON', async () => {
+        const epaData = {
+            type: 'FeatureCollection',
+            features: [
+                { type: 'Feature', geometry: { type: 'Polygon', coordinates: [] }, properties: { GEOID10: '080310001001', NatWalkInd: '15.5', StatAbbr: 'CO' } },
+                { type: 'Feature', geometry: null, properties: {} }, // filtered out — no coordinates
+            ],
+        };
+        global.fetch = mockFetch({ ok: true, body: epaData });
+        const res  = await worker.fetch(req(`/api/walkscore?bbox=${validBbox}`), makeEnv());
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.features).toHaveLength(1);
+        expect(body.features[0].properties.natWalkInd).toBe(15.5);
+        expect(body.features[0].properties.statAbbr).toBe('CO');
+    });
+
+    it('returns 502 when EPA responds with HTTP error', async () => {
+        global.fetch = mockFetch({ ok: false });
+        const res = await worker.fetch(req(`/api/walkscore?bbox=${validBbox}`), makeEnv());
+        expect(res.status).toBe(502);
+    });
+
+    it('returns 502 when EPA responds with an API error body', async () => {
+        global.fetch = mockFetch({ ok: true, body: { error: { message: 'service unavailable' } } });
+        const res = await worker.fetch(req(`/api/walkscore?bbox=${validBbox}`), makeEnv());
+        expect(res.status).toBe(502);
+    });
+
+    it('stores walkscore with 30-day KV TTL', async () => {
+        global.fetch = mockFetch({ ok: true, body: { type: 'FeatureCollection', features: [] } });
+        const cachePut = vi.fn();
+        await worker.fetch(req(`/api/walkscore?bbox=${validBbox}`), makeEnv({ cacheSet: cachePut }));
+        expect(cachePut).toHaveBeenCalledWith(
+            `walkscore:${validBbox}`,
+            expect.any(String),
+            { expirationTtl: 30 * 86_400 }
+        );
+    });
+
+    it('rate limits after 60 requests from same IP', async () => {
+        const env = makeEnv({ cacheGet: { type: 'FeatureCollection', features: [] } });
+        for (let i = 0; i < 60; i++) {
+            const r = await worker.fetch(req(`/api/walkscore?bbox=${validBbox}`, { ip: '9.9.9.9' }), env);
+            expect(r.status).toBe(200);
+        }
+        const r = await worker.fetch(req(`/api/walkscore?bbox=${validBbox}`, { ip: '9.9.9.9' }), env);
+        expect(r.status).toBe(429);
+    });
+});
+
+// ── Misc route coverage ───────────────────────────────────────────────────────
+
+describe('Misc routes', () => {
+    it('returns 400 for layer name with non-alpha characters', async () => {
+        const res = await worker.fetch(req('/api/layers/bad-name?bbox=-105.1,39.6,-104.7,39.9'), makeEnv());
+        expect(res.status).toBe(400);
+    });
+
+    it('returns 204 for /favicon.ico', async () => {
+        const res = await worker.fetch(req('/favicon.ico'), makeEnv());
+        expect(res.status).toBe(204);
+    });
+});
+
+// ── Stale cache fallback ──────────────────────────────────────────────────────
+
+describe('Stale cache fallback', () => {
+    const validBbox = '-105.1,39.6,-104.7,39.9';
+    const staleData = { type: 'FeatureCollection', features: [{ type: 'Feature', geometry: null, properties: { name: 'cached' } }] };
+
+    it('serves stale transit data with X-Cache: stale when Overpass is down', async () => {
+        global.fetch = mockFetch({ ok: false });
+        // cacheGetAge 2 hours — past the 1-hour transit fresh window
+        const env = makeEnv({ cacheGet: staleData, cacheGetAge: 7_200_000 });
+        const res = await worker.fetch(req(`/api/transit?bbox=${validBbox}`), env);
+        expect(res.status).toBe(200);
+        expect(res.headers.get('X-Cache')).toBe('stale');
+        const body = await res.json();
+        expect(body.features[0].properties.name).toBe('cached');
+    });
+
+    it('serves stale walkscore data when EPA geodata is down', async () => {
+        global.fetch = mockFetch({ ok: false });
+        // cacheGetAge 8 days — past the 7-day walkscore fresh window
+        const env = makeEnv({ cacheGet: staleData, cacheGetAge: 86_400_000 * 8 });
+        const res = await worker.fetch(req(`/api/walkscore?bbox=${validBbox}`), env);
+        expect(res.status).toBe(200);
+        expect(res.headers.get('X-Cache')).toBe('stale');
+    });
+
+    it('serves stale neighborhoods layer when TIGERweb is down', async () => {
+        global.fetch = mockFetch({ ok: false });
+        // cacheGetAge 2 days — past the 24-hour layer fresh window
+        const env = makeEnv({ cacheGet: staleData, cacheGetAge: 86_400_000 * 2 });
+        const res = await worker.fetch(req(`/api/layers/neighborhoods?bbox=${validBbox}`), env);
+        expect(res.status).toBe(200);
+        expect(res.headers.get('X-Cache')).toBe('stale');
+    });
+
+    it('serves stale population data when Census geo is down', async () => {
+        global.fetch = mockFetch({ ok: false });
+        const env = makeEnv({ cacheGet: staleData, cacheGetAge: 86_400_000 * 2 });
+        const res = await worker.fetch(req(`/api/population?bbox=${validBbox}`), env);
+        expect(res.status).toBe(200);
+        expect(res.headers.get('X-Cache')).toBe('stale');
+    });
+
+    it('serves stale cities data when TIGERweb is down', async () => {
+        global.fetch = mockFetch({ ok: false });
+        const env = makeEnv({ cacheGet: staleData, cacheGetAge: 86_400_000 * 2 });
+        const res = await worker.fetch(req(`/api/cities?bbox=${validBbox}`), env);
+        expect(res.status).toBe(200);
+        expect(res.headers.get('X-Cache')).toBe('stale');
+    });
+
+    it('serves stale geocode when upstream geocoder is unavailable', async () => {
+        global.fetch = mockFetch({ ok: false });
+        const geocacheData = { features: [{ place_name: 'Denver, CO', center: [-104.9, 39.7] }] };
+        // cacheGetAge 2 hours — past the 1-hour geocode fresh window
+        const env = makeEnv({ cacheGet: geocacheData, cacheGetAge: 7_200_000 });
+        const res = await worker.fetch(req('/api/search?q=denver'), env);
+        expect(res.status).toBe(200);
+        expect(res.headers.get('X-Cache')).toBe('stale');
+        const body = await res.json();
+        expect(body.features[0].place_name).toBe('Denver, CO');
+    });
+
+    it('still returns 502 when upstream fails and no stale data exists', async () => {
+        global.fetch = mockFetch({ ok: false });
+        const res = await worker.fetch(req(`/api/transit?bbox=${validBbox}`), makeEnv());
+        expect(res.status).toBe(502);
+    });
+
+    it('handles legacy KV entries (plain value, no envelope) as stale fallback', async () => {
+        global.fetch = mockFetch({ ok: false }); // upstream fails
+        const env = makeEnv();
+        // Override get to return old plain-value format without { data, t } wrapper
+        env.LOCATOR_CACHE.get = vi.fn(async () => JSON.stringify({ type: 'FeatureCollection', features: [] }));
+        const res = await worker.fetch(req(`/api/walkscore?bbox=${validBbox}`), env);
+        // Legacy entry gets t=0 (treated as stale); upstream fails; stale data served
+        expect(res.status).toBe(200);
+        expect(res.headers.get('X-Cache')).toBe('stale');
+    });
+
+    it('stale response carries Cache-Control: no-store', async () => {
+        global.fetch = mockFetch({ ok: false });
+        const env = makeEnv({ cacheGet: staleData, cacheGetAge: 7_200_000 });
+        const res = await worker.fetch(req(`/api/transit?bbox=${validBbox}`), env);
+        expect(res.headers.get('Cache-Control')).toBe('no-store');
+    });
+
+    it('fresh cache is returned directly without calling upstream', async () => {
+        const fetchSpy = vi.fn();
+        global.fetch = fetchSpy;
+        // cacheGetAge 0 — well within the 1-hour transit fresh window
+        const env = makeEnv({ cacheGet: staleData, cacheGetAge: 0 });
+        const res = await worker.fetch(req(`/api/transit?bbox=${validBbox}`), env);
+        expect(res.status).toBe(200);
+        expect(fetchSpy).not.toHaveBeenCalled();
     });
 });
 
