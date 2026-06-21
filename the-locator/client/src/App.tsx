@@ -30,7 +30,7 @@ export default function App() {
     const [activeLayers,   setActiveLayers]  = useState<Set<LayerName>>(new Set<LayerName>(['population']));
     const [activeFeature,  setActiveFeature] = useState<ActiveFeature | null>(null);
     const [layerErrors,    setLayerErrors]   = useState<Partial<Record<LayerName, string>>>({});
-    const [populationYear, setPopulationYear] = useState<number>(2022);
+    const [populationYear, setPopulationYear] = useState<number>(2024);
     const [sidebarOpen,    setSidebarOpen]   = useState<boolean>(false);
 
     const isEmbed = useMemo(
@@ -93,7 +93,7 @@ export default function App() {
             if (layers.length > 0) setActiveLayers(new Set(layers));
         }
         const yr = parseInt(p.get('year') ?? '', 10);
-        if (yr >= 2009 && yr <= 2022) setPopulationYear(yr);
+        if (yr >= 2009 && yr <= 2024) setPopulationYear(yr);
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Write URL params whenever relevant state changes
