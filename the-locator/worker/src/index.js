@@ -81,8 +81,40 @@ async function setCache(env, key, value) {
     } catch { /* non-fatal */ }
 }
 
+// ── Fetch helpers ─────────────────────────────────────────────────────────────
+async function fetchWithTimeout(url, opts = {}, ms = 8_000) {
+    const ac    = new AbortController();
+    const timer = setTimeout(() => ac.abort(), ms);
+    try {
+        return await fetch(url, { ...opts, signal: ac.signal });
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+const OVERPASS_HOSTS = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+];
+
+async function fetchOverpass(body) {
+    const opts = {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body,
+    };
+    for (const host of OVERPASS_HOSTS) {
+        try {
+            const r = await fetchWithTimeout(host, opts, 12_000);
+            if (r.ok) return r;
+        } catch { /* try next mirror */ }
+    }
+    throw new Error('Overpass unavailable on all mirrors');
+}
+
 // ── Input helpers ─────────────────────────────────────────────────────────────
-const US_BOUNDS = { minLng: -180, minLat: 18, maxLng: -66, maxLat: 72 };
+const US_BOUNDS          = { minLng: -180, minLat: 18, maxLng: -66, maxLat: 72 };
+const MAX_BBOX_AREA_DEG2 = 25; // ~5° × 5°; reject continent-scale queries
 
 function sanitizeQuery(raw) {
     if (typeof raw !== 'string') return null;
@@ -132,7 +164,7 @@ async function handleSearch(request, env, ip) {
 async function geocodeMapbox(q, token) {
     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json`
         + `?types=address,place,postcode&country=us&access_token=${token}`;
-    const r = await fetch(url);
+    const r = await fetchWithTimeout(url, {}, 8_000);
     if (!r.ok) return null;
     const data = await r.json();
     return { features: (data.features || []).filter(f => withinUS(f.center)) };
@@ -141,7 +173,7 @@ async function geocodeMapbox(q, token) {
 async function geocodeNominatim(q) {
     const url = `https://nominatim.openstreetmap.org/search`
         + `?q=${encodeURIComponent(q)}&format=json&countrycodes=us&limit=5&addressdetails=1`;
-    const r = await fetch(url, { headers: { 'User-Agent': 'TheLocator/1.0 (dev)' } });
+    const r = await fetchWithTimeout(url, { headers: { 'User-Agent': 'TheLocator/1.0 (dev)' } }, 8_000);
     if (!r.ok) return null;
     const data = await r.json();
     const features = data
@@ -173,6 +205,8 @@ async function handleLayer(layerName, request, env, ip) {
 
     const bbox = parseBbox(new URL(request.url).searchParams.get('bbox'));
     if (!bbox) return err('bbox required (minLng,minLat,maxLng,maxLat)');
+    if ((bbox[2] - bbox[0]) * (bbox[3] - bbox[1]) > MAX_BBOX_AREA_DEG2)
+        return err('bbox covers too large an area — zoom in first', 400);
 
     const cacheKey = `layer:${layerName}:${bbox.join(',')}`;
     const freshMs  = LAYER_TTL[layerName] * 1_000;
@@ -193,9 +227,9 @@ async function handleLayer(layerName, request, env, ip) {
     return json(data);
 }
 
-// ACS 5-year estimates are available from 2009 through 2022 (as of 2026).
+// ACS 5-year estimates are available from 2009 through 2024 (released Dec 2025).
 const ACS_MIN_YEAR = 2009;
-const ACS_MAX_YEAR = 2022;
+const ACS_MAX_YEAR = 2024;
 
 function parseACSYear(raw, fallback) {
     const y = parseInt(raw, 10);
@@ -209,6 +243,8 @@ async function handlePopulation(request, env, ip) {
     const params = new URL(request.url).searchParams;
     const bbox   = parseBbox(params.get('bbox'));
     if (!bbox) return err('bbox required (minLng,minLat,maxLng,maxLat)');
+    if ((bbox[2] - bbox[0]) * (bbox[3] - bbox[1]) > MAX_BBOX_AREA_DEG2)
+        return err('bbox covers too large an area — zoom in first', 400);
 
     const year     = parseACSYear(params.get('year'), env.ACS_YEAR);
     const cacheKey = `population:${year}:${bbox.join(',')}`;
@@ -252,7 +288,7 @@ async function fetchCensusLayer(name, [minLng, minLat, maxLng, maxLat]) {
         + `?where=1%3D1&geometry=${minLng},${minLat},${maxLng},${maxLat}`
         + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
         + `&outFields=${fields}&resultRecordCount=500&f=geojson`;
-    const r    = await fetch(url);
+    const r    = await fetchWithTimeout(url, {}, 8_000);
     if (!r.ok) throw new Error(`Census ${name} HTTP ${r.status}`);
     const data = await r.json();
     // ArcGIS returns HTTP 200 with an error body on bad queries — treat as failure so it isn't cached.
@@ -266,7 +302,7 @@ async function fetchSuperfund([minLng, minLat, maxLng, maxLat]) {
         + `?where=1%3D1&geometry=${minLng},${minLat},${maxLng},${maxLat}`
         + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
         + '&outFields=SITE_NAME,NPL_STATUS,ADDRESS,CITY,STATE,EPA_ID&resultRecordCount=200&f=geojson';
-    const r = await fetch(url);
+    const r = await fetchWithTimeout(url, {}, 8_000);
     if (!r.ok) throw new Error(`EPA superfund HTTP ${r.status}`);
     const data = await r.json();
     const features = (data.features || [])
@@ -295,9 +331,10 @@ async function fetchPopulation([minLng, minLat, maxLng, maxLat], env, year) {
         + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
         + '&outFields=GEOID,AREALAND&returnGeometry=true&resultRecordCount=500&f=geojson';
 
-    const geoRes = await fetch(geoUrl);
+    const geoRes = await fetchWithTimeout(geoUrl, {}, 8_000);
     if (!geoRes.ok) throw new Error('Census geo fetch failed');
     const geoData = await geoRes.json();
+    if (geoData.error) throw new Error(`Census geo error ${geoData.error.code}: ${geoData.error.message}`);
 
     if (!geoData.features?.length) return { type: 'FeatureCollection', features: [] };
 
@@ -333,7 +370,7 @@ async function fetchPopulation([minLng, minLat, maxLng, maxLat], env, year) {
             const url = `https://api.census.gov/data/${year}/acs/acs5`
                 + `?get=B01003_001E&for=tract:*&in=state:${state}+county:*`
                 + `&key=${apiKey}`;
-            return fetch(url)
+            return fetchWithTimeout(url, {}, 12_000)
                 .then(r => {
                     if (!r.ok) { console.error(`[population] ACS state ${state} HTTP ${r.status}`); return []; }
                     return r.json();
@@ -385,6 +422,8 @@ async function handleWalkscore(request, env, ip) {
 
     const bbox = parseBbox(new URL(request.url).searchParams.get('bbox'));
     if (!bbox) return err('bbox required (minLng,minLat,maxLng,maxLat)');
+    if ((bbox[2] - bbox[0]) * (bbox[3] - bbox[1]) > MAX_BBOX_AREA_DEG2)
+        return err('bbox covers too large an area — zoom in first', 400);
 
     const cacheKey = `walkscore:${bbox.join(',')}`;
     const cached   = await getCache(env, cacheKey);
@@ -406,7 +445,7 @@ async function fetchWalkability([minLng, minLat, maxLng, maxLat]) {
         + `?where=1%3D1&geometry=${minLng},${minLat},${maxLng},${maxLat}`
         + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
         + '&outFields=GEOID10,NatWalkInd,StatAbbr&resultRecordCount=500&f=geojson';
-    const r = await fetch(url);
+    const r = await fetchWithTimeout(url, {}, 8_000);
     if (!r.ok) throw new Error(`EPA walkability HTTP ${r.status}`);
     const data = await r.json();
     if (data.error) throw new Error(`EPA walkability error: ${data.error.message}`);
@@ -430,6 +469,8 @@ async function handleCities(request, env, ip) {
     const params = new URL(request.url).searchParams;
     const bbox   = parseBbox(params.get('bbox'));
     if (!bbox) return err('bbox required (minLng,minLat,maxLng,maxLat)');
+    if ((bbox[2] - bbox[0]) * (bbox[3] - bbox[1]) > MAX_BBOX_AREA_DEG2)
+        return err('bbox covers too large an area — zoom in first', 400);
 
     const year     = parseACSYear(params.get('year'), env.ACS_YEAR);
     const cacheKey = `cities:${year}:${bbox.join(',')}`;
@@ -454,7 +495,7 @@ async function fetchCities([minLng, minLat, maxLng, maxLat], env, year) {
         + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
         + '&outFields=NAME,GEOID,STUSAB&resultRecordCount=200&f=geojson';
 
-    const geoRes = await fetch(geoUrl);
+    const geoRes = await fetchWithTimeout(geoUrl, {}, 8_000);
     if (!geoRes.ok) throw new Error(`Census cities geo HTTP ${geoRes.status}`);
     const geoData = await geoRes.json();
     if (geoData.error) throw new Error(`Census cities API error: ${geoData.error.message}`);
@@ -491,7 +532,7 @@ async function fetchCities([minLng, minLat, maxLng, maxLat], env, year) {
             const url = `https://api.census.gov/data/${year}/acs/acs5`
                 + `?get=B01003_001E&for=place:*&in=state:${state}`
                 + `&key=${apiKey}`;
-            return fetch(url)
+            return fetchWithTimeout(url, {}, 12_000)
                 .then(r => {
                     if (!r.ok) { console.error(`[cities] ACS state ${state} HTTP ${r.status}`); return []; }
                     return r.json();
@@ -532,6 +573,8 @@ async function handleTransit(request, env, ip) {
 
     const bbox = parseBbox(new URL(request.url).searchParams.get('bbox'));
     if (!bbox) return err('bbox required (minLng,minLat,maxLng,maxLat)');
+    if ((bbox[2] - bbox[0]) * (bbox[3] - bbox[1]) > MAX_BBOX_AREA_DEG2)
+        return err('bbox covers too large an area — zoom in first', 400);
 
     const cacheKey = `transit:${bbox.join(',')}`;
     const cached   = await getCache(env, cacheKey);
@@ -550,17 +593,12 @@ async function handleTransit(request, env, ip) {
 
 async function fetchTransit([minLng, minLat, maxLng, maxLat]) {
     // Overpass API bbox order: (south,west,north,east) = (minLat,minLng,maxLat,maxLng)
-    const query = `[out:json][timeout:15];(`
+    const query = `[out:json][timeout:10];(`
         + `node["highway"="bus_stop"](${minLat},${minLng},${maxLat},${maxLng});`
         + `node["railway"~"^(station|halt|subway_entrance)$"](${minLat},${minLng},${maxLat},${maxLng});`
         + `node["public_transport"="platform"](${minLat},${minLng},${maxLat},${maxLng});`
         + `);out body;`;
-    const r = await fetch('https://overpass-api.de/api/interpreter', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body:    `data=${encodeURIComponent(query)}`,
-    });
-    if (!r.ok) throw new Error(`Overpass HTTP ${r.status}`);
+    const r    = await fetchOverpass(`data=${encodeURIComponent(query)}`);
     const data = await r.json();
 
     const features = (data.elements || [])
@@ -589,15 +627,14 @@ async function fetchTransit([minLng, minLat, maxLng, maxLat]) {
 
 async function handleHealth(request, env) {
     function probe(url, opts = {}) {
-        return Promise.race([
-            fetch(url, opts).then(r => r.ok).catch(() => false),
-            new Promise(resolve => setTimeout(() => resolve(false), 6_000)),
-        ]);
+        return fetchWithTimeout(url, opts, 6_000)
+            .then(r => r.ok)
+            .catch(() => false);
     }
 
     const [arcgis, census, epa, overpass] = await Promise.all([
         probe('https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/School/MapServer?f=json'),
-        probe(`https://api.census.gov/data/2022/acs/acs5?get=NAME&for=state:01${env.CENSUS_API_KEY ? `&key=${env.CENSUS_API_KEY}` : ''}`),
+        probe(`https://api.census.gov/data/${ACS_MAX_YEAR}/acs/acs5?get=NAME&for=state:01${env.CENSUS_API_KEY ? `&key=${env.CENSUS_API_KEY}` : ''}`),
         probe('https://geodata.epa.gov/arcgis/rest/services/OLEM/Superfund_National_Priorities_List/MapServer?f=json'),
         probe('https://overpass-api.de/api/status'),
     ]);
