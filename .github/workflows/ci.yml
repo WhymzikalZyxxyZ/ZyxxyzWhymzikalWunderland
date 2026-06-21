@@ -1,4 +1,4 @@
-name: CI — lint + test all languages
+﻿name: CI — lint + test all languages
 
 # Runs on every push to a version/* or feature/* branch, and on PRs into development.
 # The promote workflow waits for this to pass before merging to test/main.
@@ -15,13 +15,78 @@ on:
 
 jobs:
 
+  # ── Detect changed paths ─────────────────────────────────────────────────────
+  # Every language job checks this output; if only unrelated paths changed the
+  # job is skipped, cutting matrix time to what actually matters.
+  # Both the language path AND .github/workflows/ci.yml changes trigger a job,
+  # so editing the workflow itself re-validates all affected suites.
+  detect-changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      web:        ${{ steps.filter.outputs.web }}
+      typescript: ${{ steps.filter.outputs.typescript }}
+      go:         ${{ steps.filter.outputs.go }}
+      kotlin:     ${{ steps.filter.outputs.kotlin }}
+      dotnet:     ${{ steps.filter.outputs.dotnet }}
+      python:     ${{ steps.filter.outputs.python }}
+      rust:       ${{ steps.filter.outputs.rust }}
+      swift:      ${{ steps.filter.outputs.swift }}
+      dart:       ${{ steps.filter.outputs.dart }}
+      cpp:        ${{ steps.filter.outputs.cpp }}
+      ci:         ${{ steps.filter.outputs.ci }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            web:
+              - 'js/**'
+              - 'css/**'
+              - '**/*.html'
+              - 'tests/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'eslint.config.mjs'
+              - '.htmlhintrc'
+              - '.stylelintrc.json'
+            typescript:
+              - 'typescript/**'
+            go:
+              - 'editor-service/**'
+            kotlin:
+              - 'kotlin/**'
+            dotnet:
+              - 'dotnet/**'
+            python:
+              - 'python/**'
+            rust:
+              - 'rust/**'
+            swift:
+              - 'swift/**'
+            dart:
+              - 'dart/**'
+            cpp:
+              - 'cpp/**'
+            ci:
+              - '.github/workflows/ci.yml'
+
   # ── Web: JS / CSS / HTML ──────────────────────────────────────────────────────
   lint-web:
     name: Lint JS · CSS · HTML
     runs-on: ubuntu-latest
-    container: node:20
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.web == 'true' || needs.detect-changes.outputs.ci == 'true'
+    container: node:22
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+      - name: Cache npm
+        uses: actions/cache@v5
+        with:
+          path: /root/.npm
+          key: ${{ runner.os }}-npm-web-${{ hashFiles('package-lock.json') }}
+          restore-keys: ${{ runner.os }}-npm-web-
       - name: Install dependencies
         run: npm ci
       - name: Lint JavaScript
@@ -35,9 +100,17 @@ jobs:
   test-js:
     name: Test JavaScript (Jest)
     runs-on: ubuntu-latest
-    container: node:20
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.web == 'true' || needs.detect-changes.outputs.ci == 'true'
+    container: node:22
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+      - name: Cache npm
+        uses: actions/cache@v5
+        with:
+          path: /root/.npm
+          key: ${{ runner.os }}-npm-web-${{ hashFiles('package-lock.json') }}
+          restore-keys: ${{ runner.os }}-npm-web-
       - name: Install dependencies
         run: npm ci
       - name: Run tests with coverage
@@ -47,8 +120,10 @@ jobs:
   lint-typescript:
     name: Lint + type-check TypeScript
     runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.typescript == 'true' || needs.detect-changes.outputs.ci == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-node@v6
         with:
           node-version: '20'
@@ -82,8 +157,10 @@ jobs:
   lint-go:
     name: Lint Go (editor-service)
     runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.go == 'true' || needs.detect-changes.outputs.ci == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v6
         with:
           go-version-file: editor-service/go.mod
@@ -98,8 +175,10 @@ jobs:
   lint-kotlin:
     name: Lint Kotlin
     runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.kotlin == 'true' || needs.detect-changes.outputs.ci == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Download ktlint
         run: |
           curl -sSLO https://github.com/pinterest/ktlint/releases/download/1.3.1/ktlint
@@ -111,8 +190,10 @@ jobs:
   lint-dotnet:
     name: Build + Roslyn analysis (.NET)
     runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.dotnet == 'true' || needs.detect-changes.outputs.ci == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
@@ -129,11 +210,19 @@ jobs:
   lint-python:
     name: Lint Python (Ruff)
     runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.python == 'true' || needs.detect-changes.outputs.ci == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-ruff-${{ hashFiles('python/**/requirements*.txt') }}
+          restore-keys: ${{ runner.os }}-pip-ruff-
       - name: Install Ruff
         run: pip install ruff
       - name: Lint shared engine
@@ -146,14 +235,22 @@ jobs:
   test-python:
     name: Test Python (pytest + coverage)
     runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.python == 'true' || needs.detect-changes.outputs.ci == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-pytest-${{ hashFiles('python/**/requirements*.txt') }}
+          restore-keys: ${{ runner.os }}-pip-pytest-
       - name: Install test dependencies
         run: pip install pytest pytest-cov
-      - name: Run tests with coverage (≥90% required)
+      - name: Run tests with coverage (>=90% required)
         run: |
           pytest python/tests/ -v \
             --cov=python/shared \
@@ -164,8 +261,10 @@ jobs:
   lint-rust:
     name: Lint Rust (clippy)
     runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.rust == 'true' || needs.detect-changes.outputs.ci == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -190,8 +289,10 @@ jobs:
   test-rust:
     name: Test Rust (cargo test + tarpaulin coverage)
     runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.rust == 'true' || needs.detect-changes.outputs.ci == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - name: Cache Cargo registry
         uses: actions/cache@v5
@@ -203,7 +304,7 @@ jobs:
           restore-keys: ${{ runner.os }}-cargo-test-
       - name: Install cargo-tarpaulin
         run: cargo install cargo-tarpaulin
-      - name: Test + coverage (≥90% required)
+      - name: Test + coverage (>=90% required)
         working-directory: rust/shared
         run: cargo tarpaulin --out Stdout --fail-under 90
 
@@ -211,8 +312,15 @@ jobs:
   lint-swift:
     name: Lint Swift (SwiftLint)
     runs-on: macos-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.swift == 'true' || needs.detect-changes.outputs.ci == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+      - name: Cache Homebrew packages
+        uses: actions/cache@v5
+        with:
+          path: ~/Library/Caches/Homebrew
+          key: ${{ runner.os }}-brew-swiftlint
       - name: Install SwiftLint
         run: brew install swiftlint
       - name: SwiftLint
@@ -221,8 +329,16 @@ jobs:
   test-swift:
     name: Build Swift package
     runs-on: macos-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.swift == 'true' || needs.detect-changes.outputs.ci == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+      - name: Cache Swift PM
+        uses: actions/cache@v5
+        with:
+          path: ~/Library/Caches/org.swift.swiftpm
+          key: ${{ runner.os }}-spm-${{ hashFiles('swift/Package.swift') }}
+          restore-keys: ${{ runner.os }}-spm-
       - name: Build ChessEngine module
         working-directory: swift
         run: swift build -c release
@@ -231,11 +347,19 @@ jobs:
   lint-dart:
     name: Lint Dart (dart analyze)
     runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.dart == 'true' || needs.detect-changes.outputs.ci == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
+      - name: Cache pub
+        uses: actions/cache@v5
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('dart/shared/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-pub-
       - name: Get dependencies — shared
         working-directory: dart/shared
         run: dart pub get
@@ -246,11 +370,19 @@ jobs:
   test-dart:
     name: Test Dart (dart test + coverage)
     runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.dart == 'true' || needs.detect-changes.outputs.ci == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
+      - name: Cache pub
+        uses: actions/cache@v5
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('dart/shared/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-pub-
       - name: Get dependencies
         working-directory: dart/shared
         run: dart pub get
@@ -260,7 +392,7 @@ jobs:
       - name: Generate LCOV report
         working-directory: dart/shared
         run: dart pub global activate coverage && dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
-      - name: Check coverage threshold (≥90%)
+      - name: Check coverage threshold (>=90%)
         working-directory: dart/shared
         run: |
           pip install lcov_cobertura 2>/dev/null || true
@@ -274,8 +406,10 @@ jobs:
   lint-cpp:
     name: Lint C++ (clang-tidy)
     runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.cpp == 'true' || needs.detect-changes.outputs.ci == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install clang-tidy
         run: sudo apt-get install -y clang-tidy
       - name: Run clang-tidy on shared engine
@@ -287,8 +421,10 @@ jobs:
   build-cpp:
     name: Build C++ (CMake)
     runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.cpp == 'true' || needs.detect-changes.outputs.ci == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install build tools
         run: sudo apt-get install -y cmake build-essential
       - name: Configure
