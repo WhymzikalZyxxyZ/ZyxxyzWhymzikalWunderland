@@ -31,7 +31,7 @@ struct ContentView: View {
         HStack {
             Text("♟  Zyxxyz Chess").font(.system(size: 18, weight: .light)).foregroundColor(Color(hex: "#c07fe0"))
             Spacer()
-            Text(vm.statusLabel).foregroundColor(.white.opacity(0.7)).font(.system(size: 13, .monospaced))
+            Text(vm.statusLabel).foregroundColor(.white.opacity(0.7)).font(.system(size: 13, design: .monospaced))
             Button("New Game") { vm.reset() }
                 .buttonStyle(.bordered).tint(Color(hex: "#c07fe0"))
         }
@@ -46,7 +46,7 @@ struct ContentView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(vm.history.indices, id: \.self) { i in
-                        Text("\(i+1). \(vm.history[i])").font(.system(size: 11, .monospaced)).foregroundColor(.white.opacity(0.6))
+                        Text("\(i+1). \(vm.history[i])").font(.system(size: 11, design: .monospaced)).foregroundColor(.white.opacity(0.6))
                     }
                 }
             }
@@ -61,7 +61,7 @@ struct BoardView: View {
 
     var highlights: Set<String> {
         guard let (r, c) = vm.selected else { return [] }
-        return Set(vm.game.legalMoves.filter{$0.r==r&&$0.c==c}.map{"\($0.tr),\($0.tc)"})
+        return Set(vm.game.legalMoves.filter { $0.r==r&&$0.c==c }.map { "\($0.tr),\($0.tc)" })
     }
 
     var body: some View {
@@ -80,7 +80,7 @@ struct BoardView: View {
     @ViewBuilder
     func cell(r: Int, c: Int) -> some View {
         let base = (r+c)%2==0 ? Color(red: 0.94, green: 0.85, blue: 0.71) : Color(red: 0.71, green: 0.53, blue: 0.39)
-        let isSelected = vm.selected == (r, c)
+        let isSelected = vm.selected.map { $0.0 == r && $0.1 == c } ?? false
         let isHighlight = highlights.contains("\(r),\(c)")
         let fill = isSelected ? Color.green.opacity(0.5) : isHighlight ? Color.yellow.opacity(0.45) : base
         let piece = vm.game.board[r][c]
@@ -103,7 +103,7 @@ struct BoardView: View {
 @MainActor
 class ChessViewModel: ObservableObject {
     @Published var game: ChessGame = newGame()
-    @Published var selected: (Int, Int)? = nil
+    @Published var selected: (Int, Int)?
     @Published var history: [String] = []
     @Published var thinking = false
 
@@ -121,7 +121,7 @@ class ChessViewModel: ObservableObject {
     func tap(r: Int, c: Int) {
         guard !thinking else { return }
         if let (sr, sc) = selected {
-            if let m = game.legalMoves.first(where:{$0.r==sr&&$0.c==sc&&$0.tr==r&&$0.tc==c}) {
+            if let m = game.legalMoves.first(where: { $0.r==sr&&$0.c==sc&&$0.tr==r&&$0.tc==c }) {
                 history.append(moveNotation(m))
                 game = applyMove(game, m)
                 selected = nil
