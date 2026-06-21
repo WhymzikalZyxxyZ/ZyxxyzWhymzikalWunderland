@@ -80,7 +80,7 @@ private func attacked(_ b: [[Int]],_ r: Int,_ c: Int, by: Int) -> Bool {
 }
 
 private func inCheck(_ b: [[Int]], turn: Int) -> Bool {
-    for r in 0..<8 { for c in 0..<8 { if b[r][c]==K*turn { return attacked(b,r,c,by:-turn) } } }
+    for r in 0..<8 { for c in 0..<8 { if b[r][c]==K*turn { return attacked(b,r,c,by: -turn) } } }
     return false
 }
 
@@ -128,9 +128,9 @@ private func pseudoMoves(_ b: [[Int]],_ r: Int,_ c: Int, turn: Int,
             let (tr,tc)=(r+dr,c+dc)
             if inb(tr,tc) && !(b[tr][tc] != 0 && (b[tr][tc]>0)==(turn>0)) { moves.append(ChessMove(r,c,tr,tc)) }
         }
-    case B: addSlider(&moves,b,r,c,turn:turn,dirs:[(1,1),(1,-1),(-1,1),(-1,-1)])
-    case R: addSlider(&moves,b,r,c,turn:turn,dirs:[(1,0),(-1,0),(0,1),(0,-1)])
-    case Q: addSlider(&moves,b,r,c,turn:turn,dirs:[(1,1),(1,-1),(-1,1),(-1,-1)]); addSlider(&moves,b,r,c,turn:turn,dirs:[(1,0),(-1,0),(0,1),(0,-1)])
+    case B: addSlider(&moves,b,r,c,turn: turn,dirs: [(1,1),(1,-1),(-1,1),(-1,-1)])
+    case R: addSlider(&moves,b,r,c,turn: turn,dirs: [(1,0),(-1,0),(0,1),(0,-1)])
+    case Q: addSlider(&moves,b,r,c,turn: turn,dirs: [(1,1),(1,-1),(-1,1),(-1,-1)]); addSlider(&moves,b,r,c,turn: turn,dirs: [(1,0),(-1,0),(0,1),(0,-1)])
     case K:
         for dr in -1...1 { for dc in -1...1 {
             if dr==0&&dc==0 { continue }
@@ -138,12 +138,12 @@ private func pseudoMoves(_ b: [[Int]],_ r: Int,_ c: Int, turn: Int,
             if inb(tr,tc) && !(b[tr][tc] != 0 && (b[tr][tc]>0)==(turn>0)) { moves.append(ChessMove(r,c,tr,tc)) }
         }}
         if turn==1&&r==7&&c==4 {
-            if wK&&b[7][5]==0&&b[7][6]==0 && !attacked(b,7,4,by:-1) && !attacked(b,7,5,by:-1) { var m=ChessMove(7,4,7,6); m.castle="K"; moves.append(m) }
-            if wQ&&b[7][3]==0&&b[7][2]==0&&b[7][1]==0 && !attacked(b,7,4,by:-1) && !attacked(b,7,3,by:-1) { var m=ChessMove(7,4,7,2); m.castle="Q"; moves.append(m) }
+            if wK&&b[7][5]==0&&b[7][6]==0 && !attacked(b,7,4,by: -1) && !attacked(b,7,5,by: -1) { var m=ChessMove(7,4,7,6); m.castle="K"; moves.append(m) }
+            if wQ&&b[7][3]==0&&b[7][2]==0&&b[7][1]==0 && !attacked(b,7,4,by: -1) && !attacked(b,7,3,by: -1) { var m=ChessMove(7,4,7,2); m.castle="Q"; moves.append(m) }
         }
         if turn == -1&&r==0&&c==4 {
-            if bK&&b[0][5]==0&&b[0][6]==0 && !attacked(b,0,4,by:1) && !attacked(b,0,5,by:1) { var m=ChessMove(0,4,0,6); m.castle="k"; moves.append(m) }
-            if bQ&&b[0][3]==0&&b[0][2]==0&&b[0][1]==0 && !attacked(b,0,4,by:1) && !attacked(b,0,3,by:1) { var m=ChessMove(0,4,0,2); m.castle="q"; moves.append(m) }
+            if bK&&b[0][5]==0&&b[0][6]==0 && !attacked(b,0,4,by: 1) && !attacked(b,0,5,by: 1) { var m=ChessMove(0,4,0,6); m.castle="k"; moves.append(m) }
+            if bQ&&b[0][3]==0&&b[0][2]==0&&b[0][1]==0 && !attacked(b,0,4,by: 1) && !attacked(b,0,3,by: 1) { var m=ChessMove(0,4,0,2); m.castle="q"; moves.append(m) }
         }
     default: break
     }
@@ -165,8 +165,8 @@ public func getLegalMoves(_ board: [[Int]], turn: Int, wK: Bool, wQ: Bool, bK: B
     var legal = [ChessMove]()
     for r in 0..<8 { for c in 0..<8 {
         if board[r][c] != 0 && (board[r][c]>0)==(turn>0) {
-            for m in pseudoMoves(board,r,c,turn:turn,wK:wK,wQ:wQ,bK:bK,bQ:bQ,epR:epR,epC:epC) {
-                if !inCheck(applyRaw(board,m), turn:turn) { legal.append(m) }
+            for m in pseudoMoves(board,r,c,turn: turn,wK: wK,wQ: wQ,bK: bK,bQ: bQ,epR: epR,epC: epC) {
+                if !inCheck(applyRaw(board,m), turn: turn) { legal.append(m) }
             }
         }
     }}
@@ -177,8 +177,8 @@ public func newGame() -> ChessGame {
     var board = Array(repeating: Array(repeating: 0, count: 8), count: 8)
     let back = [R,N,B,Q,K,B,N,R]
     for c in 0..<8 { board[0][c] = -back[c]; board[1][c] = -P; board[6][c] = P; board[7][c] = back[c] }
-    let moves = getLegalMoves(board, turn:1, wK:true, wQ:true, bK:true, bQ:true, epR:-1, epC:-1)
-    return ChessGame(board:board,turn:1,wK:true,wQ:true,bK:true,bQ:true,epR:-1,epC:-1,halfMove:0,fullMove:1,status:.active,legalMoves:moves)
+    let moves = getLegalMoves(board, turn: 1, wK: true, wQ: true, bK: true, bQ: true, epR: -1, epC: -1)
+    return ChessGame(board: board,turn: 1,wK: true,wQ: true,bK: true,bQ: true,epR: -1,epC: -1,halfMove: 0,fullMove: 1,status: .active,legalMoves: moves)
 }
 
 public func applyMove(_ g: ChessGame,_ m: ChessMove) -> ChessGame {
@@ -193,12 +193,12 @@ public func applyMove(_ g: ChessGame,_ m: ChessMove) -> ChessGame {
     }
     if m.doublePush { epR=(m.r+m.tr)/2; epC=m.c }
     let nextTurn = -g.turn
-    let legal = getLegalMoves(board,turn:nextTurn,wK:wK,wQ:wQ,bK:bK,bQ:bQ,epR:epR,epC:epC)
-    let status: ChessStatus = legal.isEmpty ? (inCheck(board,turn:nextTurn) ? .checkmate : .stalemate)
-                                            : (inCheck(board,turn:nextTurn) ? .check : .active)
+    let legal = getLegalMoves(board,turn: nextTurn,wK: wK,wQ: wQ,bK: bK,bQ: bQ,epR: epR,epC: epC)
+    let status: ChessStatus = legal.isEmpty ? (inCheck(board,turn: nextTurn) ? .checkmate : .stalemate)
+                                            : (inCheck(board,turn: nextTurn) ? .check : .active)
     let half = (piece==P || board[m.tr][m.tc] != 0) ? 0 : g.halfMove+1
     let full = g.fullMove + (g.turn == -1 ? 1 : 0)
-    return ChessGame(board:board,turn:nextTurn,wK:wK,wQ:wQ,bK:bK,bQ:bQ,epR:epR,epC:epC,halfMove:half,fullMove:full,status:status,legalMoves:legal)
+    return ChessGame(board: board,turn: nextTurn,wK: wK,wQ: wQ,bK: bK,bQ: bQ,epR: epR,epC: epC,halfMove: half,fullMove: full,status: status,legalMoves: legal)
 }
 
 private func evaluate(_ board: [[Int]]) -> Int {
@@ -218,7 +218,7 @@ public func getAiMove(_ g: ChessGame) -> ChessMove? {
     let depth = depths[min(g.legalMoves.count, depths.count-1)]
     var bestScore = Int.min/2, bestMove = g.legalMoves[0]
     for m in g.legalMoves {
-        let score = -minimax(applyMove(g,m), depth:depth, alpha:Int.min/2, beta:Int.max/2, maximising:-g.turn)
+        let score = -minimax(applyMove(g,m), depth: depth, alpha: Int.min/2, beta: Int.max/2, maximising: -g.turn)
         if score > bestScore { bestScore=score; bestMove=m }
     }
     return bestMove
@@ -229,7 +229,7 @@ private func minimax(_ g: ChessGame, depth: Int, alpha: Int, beta: Int, maximisi
     let moves = g.legalMoves.sorted { mvvLva(g.board,$0) > mvvLva(g.board,$1) }
     var (best,a) = (Int.min/2, alpha)
     for m in moves {
-        let score = -minimax(applyMove(g,m),depth:depth-1,alpha:-beta,beta:-a,maximising:-maximising)
+        let score = -minimax(applyMove(g,m),depth: depth-1,alpha: -beta,beta: -a,maximising: -maximising)
         best=max(best,score); a=max(a,score); if a>=beta { break }
     }
     return best

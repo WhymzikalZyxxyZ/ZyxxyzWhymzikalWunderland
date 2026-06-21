@@ -334,6 +334,7 @@ fn update_status(board: &Board, turn: i8, legal: &[ChessMove]) -> ChessStatus {
     } else if in_check(board, turn) { ChessStatus::Check } else { ChessStatus::Active }
 }
 
+#[allow(clippy::needless_range_loop)]
 fn evaluate(board: &Board) -> i32 {
     let mut score = 0i32;
     for r in 0..8usize { for c in 0..8usize {
