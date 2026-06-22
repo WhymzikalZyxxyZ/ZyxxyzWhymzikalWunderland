@@ -513,7 +513,12 @@ jobs:
       - name: Install cargo-audit
         run: cargo install cargo-audit
       - name: Audit Rust dependencies
-        run: cargo audit --workspace
+        run: |
+          for manifest in rust/*/Cargo.toml; do
+            dir=$(dirname "$manifest")
+            echo "Auditing $dir"
+            (cd "$dir" && cargo audit)
+          done
 
   audit-python:
     name: Audit Python dependencies (pip-audit)

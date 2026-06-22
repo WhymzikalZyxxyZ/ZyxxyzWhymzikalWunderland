@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 'use strict';
 /**
  * Chess engine benchmark — JavaScript implementation.
@@ -27,21 +27,20 @@ const vm = require('vm');
 const ctx = vm.createContext(G);
 vm.runInContext(require('fs').readFileSync(enginePath, 'utf8'), ctx);
 
-// Engine API surface expected:
+// Engine API (js/engines/chess-engine.js):
 //   G.newChessGame()            → game
-//   G.chessLegalMoves(game)     → moves[]
-//   G.chessApplyMove(game, mv)  → game
-//   G.chessGetAiMove(game, d)   → move | null
-//
+//   G.getLegalMoves(game)       → moves[]
+//   G.applyMove(game, mv)       → game
+//   G.getChessAIMove(game)      → move | null
+
 // Perft: count leaf nodes at given depth (validates move generation correctness)
 function perft(game, depth) {
     if (depth === 0) return 1n;
-    const moves = G.chessLegalMoves ? G.chessLegalMoves(game) : game.legalMoves;
+    const moves = G.getLegalMoves(game);
     if (depth === 1) return BigInt(moves.length);
     let nodes = 0n;
     for (const m of moves) {
-        const next = G.chessApplyMove ? G.chessApplyMove(game, m) : G.applyMove(game, m);
-        nodes += perft(next, depth - 1);
+        nodes += perft(G.applyMove(game, m), depth - 1);
     }
     return nodes;
 }
@@ -51,43 +50,29 @@ const isJson = process.argv.includes('--json');
 
 if (!isJson) console.log('\nZyxxyz Chess Engine — JavaScript Benchmark\n' + '─'.repeat(55));
 
-for (const pos of positions) {
-    // Build game from FEN-like starting position (engine only supports start pos natively)
-    // For non-startpos positions skip perft, run AI timing instead
-    const game = G.newChessGame ? G.newChessGame() : G.chessNewGame();
+// The JS engine starts from the standard position only (no FEN loading).
+// Only run startpos perft — the correctness gate for move generation.
+const perftPositions = positions.filter(p => p.id === 'startpos');
 
-    if (pos.id === 'startpos') {
-        const t0    = performance.now();
-        const nodes = perft(game, pos.depth);
-        const ms    = performance.now() - t0;
-        const nps   = Number(nodes) / (ms / 1000);
-        const pass  = pos.expected_nodes === null || nodes === BigInt(pos.expected_nodes);
+for (const pos of perftPositions) {
+    const game  = G.newChessGame();
+    const t0    = performance.now();
+    const nodes = perft(game, pos.depth);
+    const ms    = performance.now() - t0;
+    const nps   = Number(nodes) / (ms / 1000);
+    const pass  = nodes === BigInt(pos.expected_nodes);
 
-        const row = {
-            id: pos.id, depth: pos.depth, nodes: Number(nodes),
-            ms: Math.round(ms), nps: Math.round(nps),
-            correct: pass, language: 'javascript',
-        };
-        results.push(row);
-        if (!isJson) {
-            const status = pass ? '✓' : '✗';
-            console.log(`${status}  ${pos.description}`);
-            console.log(`   nodes=${nodes}  time=${Math.round(ms)}ms  nps=${Math.round(nps).toLocaleString()}`);
-            if (!pass) console.log(`   EXPECTED ${pos.expected_nodes}, GOT ${nodes}`);
-        }
-    } else {
-        // AI move timing
-        const t0   = performance.now();
-        const move = G.chessGetAiMove ? G.chessGetAiMove(game, pos.depth)
-                   : G.getAiMove     ? G.getAiMove(game)
-                   : null;
-        const ms   = performance.now() - t0;
-        const row  = { id: pos.id, depth: pos.depth, ms: Math.round(ms), language: 'javascript' };
-        results.push(row);
-        if (!isJson) {
-            const mv = move ? `${move.r},${move.c}→${move.tr},${move.tc}` : '(none)';
-            console.log(`   ${pos.description}: ${Math.round(ms)}ms  move=${mv}`);
-        }
+    results.push({
+        id: pos.id, depth: pos.depth, nodes: Number(nodes),
+        ms: Math.round(ms), nps: Math.round(nps),
+        correct: pass, language: 'javascript',
+    });
+
+    if (!isJson) {
+        const status = pass ? '✓' : '✗';
+        console.log(`${status}  ${pos.description}`);
+        console.log(`   nodes=${nodes}  time=${Math.round(ms)}ms  nps=${Math.round(nps).toLocaleString()}`);
+        if (!pass) console.log(`   EXPECTED ${pos.expected_nodes}, GOT ${nodes}`);
     }
 }
 

@@ -8,5 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.*" />
+    <!-- Pin Newtonsoft.Json >=13.0.3 to override vulnerable 11.0.2 pulled in transitively by SignalR 1.x (GHSA-5crp-9r3c-p9vr) -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 </Project>
