@@ -186,10 +186,10 @@ public func applyMove(_ g: ChessGame,_ m: ChessMove) -> ChessGame {
     var (wK,wQ,bK,bQ) = (g.wK,g.wQ,g.bK,g.bQ)
     var (epR,epC) = (-1,-1)
     let piece = abs(g.board[m.r][m.c])
-    if piece==K { if g.turn==1{wK=false;wQ=false}else{bK=false;bQ=false} }
+    if piece==K { if g.turn==1 { wK=false;wQ=false } else { bK=false;bQ=false } }
     if piece==R {
-        if m.r==7&&m.c==7{wK=false}; if m.r==7&&m.c==0{wQ=false}
-        if m.r==0&&m.c==7{bK=false}; if m.r==0&&m.c==0{bQ=false}
+        if m.r==7&&m.c==7 { wK=false }; if m.r==7&&m.c==0 { wQ=false }
+        if m.r==0&&m.c==7 { bK=false }; if m.r==0&&m.c==0 { bQ=false }
     }
     if m.doublePush { epR=(m.r+m.tr)/2; epC=m.c }
     let nextTurn = -g.turn
