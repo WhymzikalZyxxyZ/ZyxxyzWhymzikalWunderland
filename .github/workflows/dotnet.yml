@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '9.0.x'
       - run: dotnet restore dotnet/shared/ZyxxyzShared.csproj
@@ -28,7 +28,7 @@ jobs:
     needs: build-shared
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '9.0.x'
       - run: dotnet restore dotnet/api/ZyxxyzApi.csproj
@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '9.0.x'
       - run: dotnet restore dotnet/realtime/ZyxxyzRealtime.csproj
@@ -51,7 +51,7 @@ jobs:
     needs: build-shared
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '9.0.x'
       - run: dotnet restore dotnet/blazor/ZyxxyzBlazor.csproj
@@ -63,7 +63,7 @@ jobs:
     needs: build-shared
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '9.0.x'
       - run: dotnet workload install maui-android --skip-sign-check
