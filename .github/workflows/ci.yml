@@ -1,4 +1,4 @@
-﻿name: CI — lint + test all languages
+name: CI — lint + test all languages
 
 # Runs on every push to a version/* or feature/* branch, and on PRs into development.
 # The promote workflow waits for this to pass before merging to test/main.
@@ -457,7 +457,7 @@ jobs:
         working-directory: rust/wasm
         run: wasm-pack build --target web --release --out-dir pkg
       - name: Upload WASM artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: chess-wasm
           path: rust/wasm/pkg/
