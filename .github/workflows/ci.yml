@@ -1,4 +1,4 @@
-﻿name: CI — lint + test all languages
+name: CI — lint + test all languages
 
 # Runs on every push to a version/* or feature/* branch, and on PRs into development.
 # The promote workflow waits for this to pass before merging to test/main.
@@ -37,7 +37,7 @@ jobs:
       ci:         ${{ steps.filter.outputs.ci }}
     steps:
       - uses: actions/checkout@v5
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
