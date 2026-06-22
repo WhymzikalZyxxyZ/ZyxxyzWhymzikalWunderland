@@ -45,13 +45,6 @@ fn make_token(username: &str) -> String {
     format!("demo.{}.{}.{}", username, exp, now_secs())
 }
 
-fn verify_token(token: &str) -> Option<String> {
-    let parts: Vec<&str> = token.split('.').collect();
-    if parts.len() < 3 { return None; }
-    let exp: u64 = parts[1].parse().ok()?;
-    if exp < now_secs() { return None; }
-    Some(parts[0].to_string())
-}
 
 #[tokio::main]
 async fn main() {
@@ -95,7 +88,7 @@ async fn get_scores(Extension(state): Extension<State>, Query(q): Query<ScoreQue
     let s = state.lock().unwrap();
     let limit = q.limit.unwrap_or(20).min(100);
     let mut rows: Vec<ScoreRow> = s.scores.iter()
-        .filter(|r| q.game.as_deref().map_or(true, |g| r.game == g))
+        .filter(|r| q.game.as_deref().is_none_or(|g| r.game == g))
         .cloned().collect();
     rows.sort_by_key(|r| -(r.value));
     rows.truncate(limit);

@@ -5,6 +5,7 @@ edition = "2021"
 
 [[bin]]
 name = "desktop"
+path = "src/main.rs"
 
 [dependencies]
 zyxxyz-chess = { path = "../shared" }
