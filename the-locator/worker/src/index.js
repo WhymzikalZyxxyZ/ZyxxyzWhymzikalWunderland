@@ -1,5 +1,15 @@
 'use strict';
 
+// ── Structured logger ─────────────────────────────────────────────────────────
+// Emits JSON lines consumable by Cloudflare Logpush / any log drain.
+// Fields: level, event, ts (ISO-8601), plus any extra context passed as kv.
+function log(level, event, kv = {}) {
+    const entry = JSON.stringify({ level, event, ts: new Date().toISOString(), ...kv });
+    if (level === 'error') console.error(entry);
+    else if (level === 'warn')  console.warn(entry);
+    else                        console.log(entry);
+}
+
 // ── CORS ──────────────────────────────────────────────────────────────────────
 // Allows the apex domain and any direct subdomain (e.g. locator.zyxwonderland.xyz)
 const ALLOWED_ORIGIN_RE = /^https:\/\/([a-z0-9-]+\.)?zyxwonderland\.xyz$/;
@@ -293,7 +303,7 @@ async function fetchCensusLayer(name, [minLng, minLat, maxLng, maxLat]) {
     const data = await r.json();
     // ArcGIS returns HTTP 200 with an error body on bad queries — treat as failure so it isn't cached.
     if (data.error) throw new Error(`Census ${name} API error ${data.error.code}: ${data.error.message}`);
-    if (data.exceededTransferLimit) console.warn(`[${name}] ArcGIS resultRecordCount ceiling hit — results are truncated`);
+    if (data.exceededTransferLimit) log('warn', 'arcgis_transfer_limit', { layer: name, hint: 'results truncated at resultRecordCount ceiling' });
     return data;
 }
 
@@ -307,7 +317,7 @@ async function fetchSuperfund([minLng, minLat, maxLng, maxLat]) {
     if (!r.ok) throw new Error(`EPA superfund HTTP ${r.status}`);
     const data = await r.json();
     if (data.error) throw new Error(`EPA superfund API error ${data.error.code}: ${data.error.message}`);
-    if (data.exceededTransferLimit) console.warn('[superfund] ArcGIS resultRecordCount ceiling hit — results are truncated');
+    if (data.exceededTransferLimit) log('warn', 'arcgis_transfer_limit', { layer: 'superfund', hint: 'results truncated at resultRecordCount ceiling' });
     const features = (data.features || [])
         .filter(f => f.geometry?.coordinates)
         .map(f => ({
@@ -338,7 +348,7 @@ async function fetchPopulation([minLng, minLat, maxLng, maxLat], env, year) {
     if (!geoRes.ok) throw new Error('Census geo fetch failed');
     const geoData = await geoRes.json();
     if (geoData.error) throw new Error(`Census geo error ${geoData.error.code}: ${geoData.error.message}`);
-    if (geoData.exceededTransferLimit) console.warn('[population] TIGERweb tract resultRecordCount ceiling hit — results are truncated');
+    if (geoData.exceededTransferLimit) log('warn', 'arcgis_transfer_limit', { layer: 'population', hint: 'results truncated at resultRecordCount ceiling' });
 
     if (!geoData.features?.length) return { type: 'FeatureCollection', features: [] };
 
@@ -376,14 +386,14 @@ async function fetchPopulation([minLng, minLat, maxLng, maxLat], env, year) {
                 + `&key=${apiKey}`;
             return fetchWithTimeout(url, {}, 12_000)
                 .then(r => {
-                    if (!r.ok) { console.error(`[population] ACS state ${state} HTTP ${r.status}`); return []; }
+                    if (!r.ok) { log('error', 'acs_fetch_failed', { layer: 'population', state, status: r.status }); return []; }
                     return r.json();
                 })
                 .then(data => {
-                    if (!Array.isArray(data)) { console.error(`[population] ACS state ${state} unexpected response`, data); return []; }
+                    if (!Array.isArray(data)) { log('error', 'acs_unexpected_response', { layer: 'population', state }); return []; }
                     return data.slice(1); // drop header row
                 })
-                .catch(e => { console.error(`[population] ACS state ${state} fetch error`, e); return []; });
+                .catch(e => { log('error', 'acs_fetch_error', { layer: 'population', state, message: String(e) }); return []; });
         })
     )).flat();
 
@@ -453,7 +463,7 @@ async function fetchWalkability([minLng, minLat, maxLng, maxLat]) {
     if (!r.ok) throw new Error(`EPA walkability HTTP ${r.status}`);
     const data = await r.json();
     if (data.error) throw new Error(`EPA walkability error: ${data.error.message}`);
-    if (data.exceededTransferLimit) console.warn('[walkscore] ArcGIS resultRecordCount ceiling hit — results are truncated');
+    if (data.exceededTransferLimit) log('warn', 'arcgis_transfer_limit', { layer: 'walkscore', hint: 'results truncated at resultRecordCount ceiling' });
     const features = (data.features || [])
         .filter(f => f.geometry?.coordinates)
         .map(f => ({
@@ -504,7 +514,7 @@ async function fetchCities([minLng, minLat, maxLng, maxLat], env, year) {
     if (!geoRes.ok) throw new Error(`Census cities geo HTTP ${geoRes.status}`);
     const geoData = await geoRes.json();
     if (geoData.error) throw new Error(`Census cities API error: ${geoData.error.message}`);
-    if (geoData.exceededTransferLimit) console.warn('[cities] TIGERweb place resultRecordCount ceiling hit — results are truncated');
+    if (geoData.exceededTransferLimit) log('warn', 'arcgis_transfer_limit', { layer: 'cities', hint: 'results truncated at resultRecordCount ceiling' });
 
     if (!geoData.features?.length) return { type: 'FeatureCollection', features: [] };
 
@@ -540,14 +550,14 @@ async function fetchCities([minLng, minLat, maxLng, maxLat], env, year) {
                 + `&key=${apiKey}`;
             return fetchWithTimeout(url, {}, 12_000)
                 .then(r => {
-                    if (!r.ok) { console.error(`[cities] ACS state ${state} HTTP ${r.status}`); return []; }
+                    if (!r.ok) { log('error', 'acs_fetch_failed', { layer: 'cities', state, status: r.status }); return []; }
                     return r.json();
                 })
                 .then(data => {
-                    if (!Array.isArray(data)) { console.error(`[cities] ACS state ${state} unexpected response`, data); return []; }
+                    if (!Array.isArray(data)) { log('error', 'acs_unexpected_response', { layer: 'cities', state }); return []; }
                     return data.slice(1);
                 })
-                .catch(e => { console.error(`[cities] ACS state ${state} fetch error`, e); return []; });
+                .catch(e => { log('error', 'acs_fetch_error', { layer: 'cities', state, message: String(e) }); return []; });
         })
     )).flat();
 

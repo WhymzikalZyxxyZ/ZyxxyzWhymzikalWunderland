@@ -1,0 +1,252 @@
+﻿openapi: "3.1.0"
+info:
+  title: Zyxxyz Game Score API
+  version: "1.0.0"
+  description: |
+    Auth + leaderboard API shared across the TypeScript, Python, Rust, and .NET
+    implementations. All four expose identical endpoints so the browser can target
+    any runtime interchangeably.
+  contact:
+    email: zyxxyz@zyxwonderland.xyz
+
+servers:
+  - url: http://localhost:5060
+    description: TypeScript / Express (local)
+  - url: http://localhost:5050
+    description: Python / Flask (local)
+  - url: http://localhost:5070
+    description: Rust / Axum (local)
+  - url: http://localhost:5080
+    description: .NET / ASP.NET Core (local)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Token:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    Credentials:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          minLength: 2
+          maxLength: 32
+          pattern: "^[A-Za-z0-9_-]+$"
+          example: "zyxxyz"
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          example: "hunter2hunter2"
+
+    ScoreEntry:
+      type: object
+      required: [username, game, value, ts]
+      properties:
+        username:
+          type: string
+        game:
+          type: string
+          maxLength: 64
+          example: "chess"
+        value:
+          type: integer
+          minimum: 0
+          example: 1420
+        ts:
+          type: integer
+          description: Unix timestamp (ms)
+          example: 1750000000000
+
+    ScoreSubmit:
+      type: object
+      required: [game, value]
+      properties:
+        game:
+          type: string
+          maxLength: 64
+          example: "tetris"
+        value:
+          type: integer
+          minimum: 0
+          example: 8400
+
+    StatusEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        ok:
+          type: boolean
+        latency:
+          type: number
+        ts:
+          type: integer
+        uptime:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+paths:
+  /api/auth/register:
+    post:
+      summary: Register a new user
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Credentials"
+      responses:
+        "201":
+          description: Registration successful — token returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Token"
+        "400":
+          description: Invalid username or password format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Username already taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/auth/login:
+    post:
+      summary: Authenticate and receive a JWT
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Credentials"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Token"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/scores:
+    get:
+      summary: List leaderboard scores
+      operationId: getScores
+      parameters:
+        - name: game
+          in: query
+          schema:
+            type: string
+          description: Filter by game name
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Sorted score list (highest first)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScoreEntry"
+
+    post:
+      summary: Submit a score
+      operationId: submitScore
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScoreSubmit"
+      responses:
+        "201":
+          description: Score recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScoreEntry"
+        "400":
+          description: Missing or invalid fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/status:
+    get:
+      summary: Service status
+      operationId: getStatus
+      responses:
+        "200":
+          description: Array of service status entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StatusEntry"
+
+  /health:
+    get:
+      summary: Health probe
+      operationId: health
+      responses:
+        "200":
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
