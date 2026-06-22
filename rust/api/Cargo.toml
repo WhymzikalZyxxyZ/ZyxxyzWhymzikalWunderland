@@ -5,6 +5,7 @@ edition = "2021"
 
 [[bin]]
 name = "api"
+path = "src/main.rs"
 
 [dependencies]
 zyxxyz-chess = { path = "../shared" }
