@@ -1,4 +1,4 @@
-﻿name: CI — lint + test all languages
+name: CI — lint + test all languages
 
 # Runs on every push to a version/* or feature/* branch, and on PRs into development.
 # The promote workflow waits for this to pass before merging to test/main.
@@ -166,7 +166,7 @@ jobs:
           go-version-file: editor-service/go.mod
           cache-dependency-path: editor-service/go.sum
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v9
         with:
           version: v1.64.8
           working-directory: editor-service
