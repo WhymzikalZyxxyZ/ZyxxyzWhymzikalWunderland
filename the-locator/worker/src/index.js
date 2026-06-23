@@ -105,6 +105,7 @@ async function fetchWithTimeout(url, opts = {}, ms = 8_000) {
 const OVERPASS_HOSTS = [
     'https://overpass-api.de/api/interpreter',
     'https://overpass.kumi.systems/api/interpreter',
+    'https://overpass.private.coffee/api/interpreter',
 ];
 
 async function fetchOverpass(body) {
@@ -113,13 +114,20 @@ async function fetchOverpass(body) {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body,
     };
-    for (const host of OVERPASS_HOSTS) {
-        try {
-            const r = await fetchWithTimeout(host, opts, 12_000);
-            if (r.ok) return r;
-        } catch { /* try next mirror */ }
+    // Race all mirrors in parallel — first successful response wins.
+    // Sequential fallback would double/triple latency; parallel keeps p50 low.
+    try {
+        return await Promise.any(
+            OVERPASS_HOSTS.map(host =>
+                fetchWithTimeout(host, opts, 20_000).then(r => {
+                    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                    return r;
+                })
+            )
+        );
+    } catch {
+        throw new Error('Overpass unavailable on all mirrors');
     }
-    throw new Error('Overpass unavailable on all mirrors');
 }
 
 // ── Input helpers ─────────────────────────────────────────────────────────────
@@ -280,14 +288,16 @@ async function handlePopulation(request, env, ip) {
 // TIGERweb ArcGIS REST endpoints
 // Neighborhoods uses County Subdivisions (complete US coverage) rather than
 // Census Places (which are absent in most suburban/rural areas).
-// The School service uses STATE (not STUSAB), so each layer gets its own field list.
+// All layers use STATE (FIPS code) — STUSAB does not exist in these schemas.
 // where=1=1 is required by the School service; harmless for other layers.
 const CENSUS_LAYER_URLS = {
-    neighborhoods: 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/0/query',
+    // Layer 1 = County Subdivisions (complete US coverage, incl. rural).
+    // Layer 0 is Estates — wrong. Layer uses STATE (FIPS) not STUSAB.
+    neighborhoods: 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/1/query',
     schools:       'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/School/MapServer/0/query',
 };
 const CENSUS_LAYER_FIELDS = {
-    neighborhoods: 'NAME,GEOID,STUSAB',
+    neighborhoods: 'NAME,GEOID,STATE',
     schools:       'NAME,GEOID,STATE',
 };
 
@@ -308,11 +318,12 @@ async function fetchCensusLayer(name, [minLng, minLat, maxLng, maxLat]) {
 }
 
 async function fetchSuperfund([minLng, minLat, maxLng, maxLat]) {
-    // EPA geodata ArcGIS service — more reliable than the legacy ofmpub FRS endpoint
-    const url = 'https://geodata.epa.gov/arcgis/rest/services/OLEM/Superfund_National_Priorities_List/MapServer/0/query'
+    // OLEM folder was retired; SEMS_NPL is now under OEI/FRS_INTERESTS (layer 22).
+    const url = 'https://geodata.epa.gov/arcgis/rest/services/OEI/FRS_INTERESTS/MapServer/22/query'
         + `?where=1%3D1&geometry=${minLng},${minLat},${maxLng},${maxLat}`
         + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
-        + '&outFields=SITE_NAME,NPL_STATUS,ADDRESS,CITY,STATE,EPA_ID&resultRecordCount=200&f=geojson';
+        + '&outFields=PRIMARY_NAME,LOCATION_ADDRESS,CITY_NAME,STATE_CODE,REGISTRY_ID,ACTIVE_STATUS'
+        + '&resultRecordCount=200&f=geojson';
     const r = await fetchWithTimeout(url, {}, 8_000);
     if (!r.ok) throw new Error(`EPA superfund HTTP ${r.status}`);
     const data = await r.json();
@@ -324,12 +335,12 @@ async function fetchSuperfund([minLng, minLat, maxLng, maxLat]) {
             type:     'Feature',
             geometry: f.geometry,
             properties: {
-                name:      f.properties.SITE_NAME,
-                nplStatus: f.properties.NPL_STATUS || 'Unknown',
-                address:   f.properties.ADDRESS,
-                city:      f.properties.CITY,
-                state:     f.properties.STATE,
-                epaId:     f.properties.EPA_ID,
+                name:      f.properties.PRIMARY_NAME,
+                nplStatus: f.properties.ACTIVE_STATUS || 'Unknown',
+                address:   f.properties.LOCATION_ADDRESS,
+                city:      f.properties.CITY_NAME,
+                state:     f.properties.STATE_CODE,
+                epaId:     f.properties.REGISTRY_ID,
             },
         }));
     return { type: 'FeatureCollection', features };
@@ -455,10 +466,11 @@ async function handleWalkscore(request, env, ip) {
 }
 
 async function fetchWalkability([minLng, minLat, maxLng, maxLat]) {
+    // StatAbbr was removed from the WalkabilityIndex schema; use STATEFP instead.
     const url = 'https://geodata.epa.gov/arcgis/rest/services/OA/WalkabilityIndex/MapServer/0/query'
         + `?where=1%3D1&geometry=${minLng},${minLat},${maxLng},${maxLat}`
         + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
-        + '&outFields=GEOID10,NatWalkInd,StatAbbr&resultRecordCount=500&f=geojson';
+        + '&outFields=GEOID10,NatWalkInd,STATEFP&resultRecordCount=500&f=geojson';
     const r = await fetchWithTimeout(url, {}, 8_000);
     if (!r.ok) throw new Error(`EPA walkability HTTP ${r.status}`);
     const data = await r.json();
@@ -472,7 +484,7 @@ async function fetchWalkability([minLng, minLat, maxLng, maxLat]) {
             properties: {
                 GEOID10:    f.properties.GEOID10,
                 natWalkInd: parseFloat(f.properties.NatWalkInd) || 0,
-                statAbbr:   f.properties.StatAbbr,
+                statAbbr:   f.properties.STATEFP,
             },
         }));
     return { type: 'FeatureCollection', features };
@@ -504,11 +516,12 @@ async function handleCities(request, env, ip) {
 }
 
 async function fetchCities([minLng, minLat, maxLng, maxLat], env, year) {
-    // Fetch incorporated place polygons from TIGERweb
-    const geoUrl = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/2/query'
+    // Fetch incorporated place polygons from TIGERweb (layer 4 = Incorporated Places)
+    // Layer 2 is Subbarrios — wrong. Layer 4 has complete incorporated place coverage.
+    const geoUrl = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/4/query'
         + `?where=1%3D1&geometry=${minLng},${minLat},${maxLng},${maxLat}`
         + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'
-        + '&outFields=NAME,GEOID,STUSAB&resultRecordCount=200&f=geojson';
+        + '&outFields=NAME,GEOID,STATE&resultRecordCount=200&f=geojson';
 
     const geoRes = await fetchWithTimeout(geoUrl, {}, 8_000);
     if (!geoRes.ok) throw new Error(`Census cities geo HTTP ${geoRes.status}`);
@@ -527,7 +540,7 @@ async function fetchCities([minLng, minLat, maxLng, maxLat], env, year) {
             properties: {
                 name:       f.properties.NAME,
                 GEOID:      f.properties.GEOID,
-                state:      f.properties.STUSAB,
+                state:      f.properties.STATE,
                 population: null,
                 acsYear:    null,
             },
