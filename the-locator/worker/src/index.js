@@ -180,38 +180,42 @@ async function handleSearch(request, env, ip) {
 }
 
 async function geocodeMapbox(q, token) {
-    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json`
-        + `?types=address,place,postcode&country=us&access_token=${token}`;
-    const r = await fetchWithTimeout(url, {}, 8_000);
-    if (!r.ok) return null;
-    const data = await r.json();
-    return { features: (data.features || []).filter(f => withinUS(f.center)) };
+    try {
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json`
+            + `?types=address,place,postcode&country=us&access_token=${token}`;
+        const r = await fetchWithTimeout(url, {}, 8_000);
+        if (!r.ok) return null;
+        const data = await r.json();
+        return { features: (data.features || []).filter(f => withinUS(f.center)) };
+    } catch { return null; }
 }
 
 async function geocodeNominatim(q) {
-    const url = `https://nominatim.openstreetmap.org/search`
-        + `?q=${encodeURIComponent(q)}&format=json&countrycodes=us&limit=5&addressdetails=1`;
-    const r = await fetchWithTimeout(url, { headers: { 'User-Agent': 'TheLocator/1.0 (dev)' } }, 8_000);
-    if (!r.ok) return null;
-    const data = await r.json();
-    const features = data
-        .map(p => ({ p, lon: parseFloat(p.lon), lat: parseFloat(p.lat) }))
-        .filter(({ lon, lat }) => withinUS([lon, lat]))
-        .map(({ p, lon, lat }) => {
-            const isAddress = p.type === 'house' || p.addresstype === 'house_number';
-            const isPostcode = p.type === 'postcode' || p.addresstype === 'postcode';
-            const place_type = isAddress ? ['address'] : isPostcode ? ['postcode'] : ['place'];
-            return {
-                place_name: p.display_name,
-                place_type,
-                center:     [lon, lat],
-                bbox:       p.boundingbox
-                    ? [parseFloat(p.boundingbox[2]), parseFloat(p.boundingbox[0]),
-                       parseFloat(p.boundingbox[3]), parseFloat(p.boundingbox[1])]
-                    : null,
-            };
-        });
-    return { features };
+    try {
+        const url = `https://nominatim.openstreetmap.org/search`
+            + `?q=${encodeURIComponent(q)}&format=json&countrycodes=us&limit=5&addressdetails=1`;
+        const r = await fetchWithTimeout(url, { headers: { 'User-Agent': 'TheLocator/1.0 (dev)' } }, 8_000);
+        if (!r.ok) return null;
+        const data = await r.json();
+        const features = data
+            .map(p => ({ p, lon: parseFloat(p.lon), lat: parseFloat(p.lat) }))
+            .filter(({ lon, lat }) => withinUS([lon, lat]))
+            .map(({ p, lon, lat }) => {
+                const isAddress = p.type === 'house' || p.addresstype === 'house_number';
+                const isPostcode = p.type === 'postcode' || p.addresstype === 'postcode';
+                const place_type = isAddress ? ['address'] : isPostcode ? ['postcode'] : ['place'];
+                return {
+                    place_name: p.display_name,
+                    place_type,
+                    center:     [lon, lat],
+                    bbox:       p.boundingbox
+                        ? [parseFloat(p.boundingbox[2]), parseFloat(p.boundingbox[0]),
+                           parseFloat(p.boundingbox[3]), parseFloat(p.boundingbox[1])]
+                        : null,
+                };
+            });
+        return { features };
+    } catch { return null; }
 }
 
 const VALID_LAYERS = new Set(['neighborhoods', 'schools', 'superfund']);
@@ -588,7 +592,7 @@ async function fetchCities([minLng, minLat, maxLng, maxLat], env, year) {
         properties: {
             name:       f.properties.NAME,
             GEOID:      f.properties.GEOID,
-            state:      f.properties.STUSAB,
+            state:      f.properties.STATE,
             population: popByGeoid.get(f.properties.GEOID) ?? null,
             acsYear:    parseInt(year, 10),
         },
@@ -664,7 +668,7 @@ async function handleHealth(request, env) {
     const [arcgis, census, epa, overpass] = await Promise.all([
         probe('https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/School/MapServer?f=json'),
         probe(`https://api.census.gov/data/${ACS_MAX_YEAR}/acs/acs5?get=NAME&for=state:01${env.CENSUS_API_KEY ? `&key=${env.CENSUS_API_KEY}` : ''}`),
-        probe('https://geodata.epa.gov/arcgis/rest/services/OLEM/Superfund_National_Priorities_List/MapServer?f=json'),
+        probe('https://geodata.epa.gov/arcgis/rest/services/OEI/FRS_INTERESTS/MapServer/22?f=json'),
         probe('https://overpass-api.de/api/status'),
     ]);
 
