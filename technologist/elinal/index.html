@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELINAL — Explain Like I'm Not A Lawyer — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <style>
+        .elinal-page {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - var(--navbar-height, 56px));
+        }
+
+        .elinal-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 20px;
+            background: var(--surface, #1e1e2e);
+            border-bottom: 1px solid rgba(129, 140, 248, 0.18);
+            flex-shrink: 0;
+            gap: 12px;
+        }
+
+        .elinal-bar-title {
+            font-family: Papyrus, fantasy;
+            font-size: 0.95em;
+            font-weight: 700;
+            color: #818cf8;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .elinal-bar-subtitle {
+            font-size: 0.72em;
+            color: #6b7280;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .elinal-bar-left {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+        }
+
+        .elinal-bar-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .elinal-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.82em;
+            font-family: 'Courier New', monospace;
+            text-decoration: none;
+            transition: background 0.15s, border-color 0.15s;
+            white-space: nowrap;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        .elinal-btn-outline {
+            border: 1px solid rgba(129,140,248,0.4);
+            color: #818cf8;
+            background: transparent;
+        }
+        .elinal-btn-outline:hover { background: rgba(129,140,248,0.1); border-color: #818cf8; }
+
+        .elinal-btn-fill {
+            background: #818cf8;
+            color: #0f0f1a;
+            border: 1px solid #818cf8;
+            font-weight: bold;
+        }
+        .elinal-btn-fill:hover { background: #6366f1; border-color: #6366f1; }
+
+        .embed-wrap { position: relative; }
+
+        .embed-snippet {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            z-index: 200;
+            background: var(--surface, #1e1e2e);
+            border: 1px solid rgba(129,140,248,0.3);
+            border-radius: 8px;
+            padding: 14px 16px;
+            width: 400px;
+            max-width: 90vw;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+        .embed-snippet.open { display: block; }
+        .embed-snippet p {
+            font-size: 0.8em;
+            color: #8fa8d0;
+            margin-bottom: 8px;
+        }
+        .embed-snippet code {
+            display: block;
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
+            padding: 10px 12px;
+            font-size: 0.78em;
+            color: #c9d1d9;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-bottom: 10px;
+            cursor: text;
+            user-select: all;
+        }
+        .embed-copy-btn {
+            padding: 5px 12px;
+            background: rgba(129,140,248,0.12);
+            border: 1px solid rgba(129,140,248,0.35);
+            border-radius: 5px;
+            color: #818cf8;
+            font-size: 0.8em;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .embed-copy-btn:hover { background: rgba(129,140,248,0.22); }
+
+        .elinal-frame {
+            flex: 1;
+            width: 100%;
+            border: none;
+            display: block;
+            background: #0d1117;
+        }
+
+        .elinal-offline {
+            display: none;
+            flex: 1;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+            padding: 48px 40px;
+            text-align: center;
+        }
+        .elinal-offline.visible { display: flex; }
+
+        .elinal-offline-icon {
+            font-size: 2.8em;
+            opacity: 0.6;
+        }
+
+        .elinal-offline h2 {
+            font-family: Papyrus, fantasy;
+            color: #818cf8;
+            font-size: 1.4em;
+            margin: 0;
+        }
+
+        .elinal-offline p {
+            color: #8fa8d0;
+            font-size: 0.9em;
+            max-width: 460px;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .elinal-offline-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 4px;
+        }
+
+        .elinal-stack-pill {
+            font-family: 'Courier New', monospace;
+            font-size: 0.72em;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: rgba(129,140,248,0.1);
+            border: 1px solid rgba(129,140,248,0.25);
+            color: #818cf8;
+        }
+
+        .elinal-offline a { color: #818cf8; }
+
+        .elinal-disclaimer {
+            font-size: 0.72em;
+            color: #4b5563;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body class="wunderBody">
+<div class="navbar"></div>
+
+<div class="elinal-page" id="elinal-page">
+
+    <div class="elinal-bar">
+        <div class="elinal-bar-left">
+            <span class="elinal-bar-title">🏛️ ELINAL</span>
+            <span class="elinal-bar-subtitle">Explain Like I'm Not A Lawyer</span>
+        </div>
+        <div class="elinal-bar-actions">
+            <div class="embed-wrap">
+                <button class="elinal-btn elinal-btn-outline" id="embed-toggle-btn" type="button">&lt;/&gt; Embed</button>
+                <div class="embed-snippet" id="embed-snippet">
+                    <p>Paste this snippet to embed ELINAL on any webpage:</p>
+                    <code id="embed-code">&lt;iframe
+  src="https://elinal.zyxwonderland.xyz?embed=1"
+  width="100%"
+  height="700"
+  style="border:none;border-radius:8px;"
+  title="ELINAL — Supreme Court opinions explained. Educational only, not legal advice."
+  loading="lazy"&gt;
+&lt;/iframe&gt;</code>
+                    <button class="embed-copy-btn" id="copy-snippet-btn" type="button">Copy snippet</button>
+                </div>
+            </div>
+            <a href="https://elinal.zyxwonderland.xyz" target="_blank" rel="noopener noreferrer" class="elinal-btn elinal-btn-fill">Open full app ↗</a>
+        </div>
+    </div>
+
+    <iframe
+        id="elinal-frame"
+        class="elinal-frame"
+        src="https://elinal.zyxwonderland.xyz?embed=1"
+        title="ELINAL — Supreme Court opinions explained. Educational only, not legal advice."
+        loading="lazy">
+    </iframe>
+
+    <div class="elinal-offline" id="elinal-offline">
+        <div class="elinal-offline-icon">🏛️</div>
+        <h2>ELINAL</h2>
+        <p>
+            The Supreme Court's most consequential decisions — explained with intelligence,
+            warmth, and the kind of clarity that makes constitutional law genuinely compelling.
+            Built on Claude AI and Cloudflare Workers. Coming soon.
+        </p>
+        <div class="elinal-offline-stack">
+            <span class="elinal-stack-pill">Cloudflare Workers</span>
+            <span class="elinal-stack-pill">Cloudflare D1</span>
+            <span class="elinal-stack-pill">Cloudflare KV</span>
+            <span class="elinal-stack-pill">Claude AI</span>
+            <span class="elinal-stack-pill">React + TypeScript</span>
+            <span class="elinal-stack-pill">Cron Triggers</span>
+        </div>
+        <p class="elinal-disclaimer">Educational only. Nothing here constitutes legal advice.<br>
+        Once live, open it directly at <a href="https://elinal.zyxwonderland.xyz" target="_blank" rel="noopener noreferrer">elinal.zyxwonderland.xyz</a>.</p>
+    </div>
+
+</div>
+
+<script>
+(function () {
+    const frame      = document.getElementById('elinal-frame');
+    const offline    = document.getElementById('elinal-offline');
+    const toggleBtn  = document.getElementById('embed-toggle-btn');
+    const snippet    = document.getElementById('embed-snippet');
+    const copyBtn    = document.getElementById('copy-snippet-btn');
+    const embedCode  = document.getElementById('embed-code');
+
+    // Show the portfolio fallback if the app hasn't launched yet or fails within 10s
+    let loadTimer = setTimeout(() => {
+        frame.style.display = 'none';
+        offline.classList.add('visible');
+    }, 10000);
+
+    frame.addEventListener('load', () => {
+        // If the frame loads but returns an error page, the offline state is more
+        // useful until the app is live — clear the timer either way on first load
+        clearTimeout(loadTimer);
+    });
+
+    frame.addEventListener('error', () => {
+        clearTimeout(loadTimer);
+        frame.style.display = 'none';
+        offline.classList.add('visible');
+    });
+
+    // Embed snippet toggle
+    toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        snippet.classList.toggle('open');
+    });
+    document.addEventListener('click', (e) => {
+        if (!snippet.contains(e.target) && e.target !== toggleBtn) {
+            snippet.classList.remove('open');
+        }
+    });
+
+    // Copy snippet
+    copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(embedCode.textContent.trim()).then(() => {
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => { copyBtn.textContent = 'Copy snippet'; }, 2000);
+        }).catch(() => {
+            embedCode.focus();
+            document.execCommand('selectAll');
+        });
+    });
+
+    // postMessage relay — forward ELINAL app events to parent if embedded
+    window.addEventListener('message', (e) => {
+        if (e.source === frame.contentWindow) {
+            window.parent.postMessage(e.data, '*');
+        }
+        if (e.source === window.parent) {
+            frame.contentWindow.postMessage(e.data, 'https://elinal.zyxwonderland.xyz');
+        }
+    });
+})();
+</script>
+</body>
+</html>
