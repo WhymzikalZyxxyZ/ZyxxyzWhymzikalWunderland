@@ -45,6 +45,10 @@ function err(msg, status = 400, extraHeaders = {}) {
 }
 
 // ── Per-IP rate limiter (in-memory per isolate) ───────────────────────────────
+// NOTE: Cloudflare runs multiple isolates per PoP and routes requests across them
+// non-deterministically. This limiter is not globally consistent — the effective
+// ceiling is max × (active isolates). Acceptable at this traffic level; replace
+// with a Durable Object if global enforcement is ever needed.
 const _ipLimits = new Map();
 
 function ipAllow(ip, max, windowMs = 60_000) {
@@ -114,19 +118,24 @@ async function fetchOverpass(body) {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body,
     };
-    // Race all mirrors in parallel — first successful response wins.
-    // Sequential fallback would double/triple latency; parallel keeps p50 low.
+    // One AbortController per mirror so the winner's body stream is not cancelled
+    // when we abort the two losers. A shared 20s timer aborts all if none succeed.
+    const controllers = OVERPASS_HOSTS.map(() => new AbortController());
+    const timer = setTimeout(() => controllers.forEach(c => c.abort()), 20_000);
     try {
         return await Promise.any(
-            OVERPASS_HOSTS.map(host =>
-                fetchWithTimeout(host, opts, 20_000).then(r => {
+            OVERPASS_HOSTS.map((host, i) =>
+                fetch(host, { ...opts, signal: controllers[i].signal }).then(r => {
                     if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                    controllers.forEach((c, j) => { if (j !== i) c.abort(); });
                     return r;
                 })
             )
         );
     } catch {
         throw new Error('Overpass unavailable on all mirrors');
+    } finally {
+        clearTimeout(timer);
     }
 }
 
@@ -186,7 +195,7 @@ async function geocodeMapbox(q, token) {
         const r = await fetchWithTimeout(url, {}, 8_000);
         if (!r.ok) return null;
         const data = await r.json();
-        return { features: (data.features || []).filter(f => withinUS(f.center)) };
+        return { features: (data.features || []).filter(f => Array.isArray(f.center) && withinUS(f.center)) };
     } catch { return null; }
 }
 
@@ -456,7 +465,7 @@ async function handleWalkscore(request, env, ip) {
 
     const cacheKey = `walkscore:${bbox.join(',')}`;
     const cached   = await getCache(env, cacheKey);
-    if (cached && Date.now() - cached.t < 86_400_000 * 7) return json(cached.data);
+    if (cached && Date.now() - cached.t < 86_400_000) return json(cached.data);
 
     let data;
     try { data = await fetchWalkability(bbox); }
@@ -577,6 +586,8 @@ async function fetchCities([minLng, minLat, maxLng, maxLat], env, year) {
                 .catch(e => { log('error', 'acs_fetch_error', { layer: 'cities', state, message: String(e) }); return []; });
         })
     )).flat();
+
+    if (acsRows.length === 0) throw new Error('ACS place API returned no data');
 
     // Place GEOID = state(2) + place(5) = 7 chars
     const popByGeoid = new Map(acsRows.map(row => {

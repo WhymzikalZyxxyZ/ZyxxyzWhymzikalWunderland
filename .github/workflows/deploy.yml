@@ -68,8 +68,10 @@ jobs:
           workingDirectory: the-locator/worker
           secrets:          |
             MAPBOX_TOKEN
+            CENSUS_API_KEY
         env:
           MAPBOX_TOKEN:      ${{ secrets.LOCATOR_MAPBOX_TOKEN }}
+          CENSUS_API_KEY:    ${{ secrets.CENSUS_API_KEY }}
 
   # ── Deploy static site to GitHub Pages ───────────────────────────────────────
   deploy:
