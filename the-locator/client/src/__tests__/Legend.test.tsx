@@ -23,9 +23,9 @@ describe('Legend', () => {
         expect(screen.getByText('20')).toBeInTheDocument();
     });
 
-    it('renders swatch item for neighborhoods', () => {
-        render(<Legend activeLayers={new Set<LayerName>(['neighborhoods'])} />);
-        expect(screen.getByText('Neighborhoods')).toBeInTheDocument();
+    it('renders swatch item for counties', () => {
+        render(<Legend activeLayers={new Set<LayerName>(['counties'])} />);
+        expect(screen.getByText('Counties')).toBeInTheDocument();
         expect(document.querySelector('.legend-item--swatch')).toBeInTheDocument();
     });
 
@@ -36,8 +36,8 @@ describe('Legend', () => {
     });
 
     it('renders multiple active layers', () => {
-        render(<Legend activeLayers={new Set<LayerName>(['neighborhoods', 'population', 'walkscore'])} />);
-        expect(screen.getByText('Neighborhoods')).toBeInTheDocument();
+        render(<Legend activeLayers={new Set<LayerName>(['counties', 'population', 'walkscore'])} />);
+        expect(screen.getByText('Counties')).toBeInTheDocument();
         expect(screen.getByText('Population Density')).toBeInTheDocument();
         expect(screen.getByText('Walkability Index')).toBeInTheDocument();
     });

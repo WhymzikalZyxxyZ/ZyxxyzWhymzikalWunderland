@@ -17,7 +17,7 @@ interface Props {
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
 
 const LAYER_COLORS: Record<LayerName, string> = {
-    neighborhoods: '#22c55e',
+    counties:      '#22c55e',
     schools:       '#3b82f6',
     cities:        '#f59e0b',
     superfund:     '#ef4444',
@@ -27,7 +27,7 @@ const LAYER_COLORS: Record<LayerName, string> = {
 };
 
 const LAYER_TITLES: Record<LayerName, string> = {
-    neighborhoods: 'Neighborhood',
+    counties:      'County',
     schools:       'School District',
     cities:        'City / Place',
     superfund:     'Superfund Site',
@@ -36,7 +36,7 @@ const LAYER_TITLES: Record<LayerName, string> = {
     transit:       'Transit Stop',
 };
 
-const ALL_LAYERS: LayerName[] = ['neighborhoods', 'schools', 'cities', 'superfund', 'population', 'walkscore', 'transit'];
+const ALL_LAYERS: LayerName[] = ['counties', 'schools', 'cities', 'superfund', 'population', 'walkscore', 'transit'];
 
 const TRANSIT_COLORS: Record<string, string> = {
     bus:    '#06b6d4',
@@ -385,7 +385,7 @@ export default function Map({ city, activeLayers, onFeatureClick, onLayerError, 
                 },
             });
         } else {
-            // neighborhoods / schools — semi-transparent fill + bold outline
+            // counties / schools — semi-transparent fill + bold outline
             map.addLayer({
                 id: lyrId, type: 'fill', source: srcId,
                 paint: { 'fill-color': color, 'fill-opacity': 0.15 },

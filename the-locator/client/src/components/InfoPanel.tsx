@@ -6,7 +6,7 @@ interface Props {
 }
 
 const LAYER_LABELS: Record<string, string> = {
-    neighborhoods: 'Neighborhood',
+    counties:      'County',
     schools:       'School District',
     superfund:     'Superfund Site',
     population:    'Population Data',
@@ -50,7 +50,7 @@ function renderProps(layer: string, props: Record<string, unknown>) {
             <Row label="Tract GEOID"   value={props.GEOID} />
         </>
     );
-    // neighborhoods + schools
+    // counties + schools
     return (
         <>
             <Row label="Name"  value={props.NAME} />
