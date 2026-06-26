@@ -289,43 +289,43 @@ describe('/api/layers/:name', () => {
     });
 
     it('returns 400 when bbox is missing', async () => {
-        const res = await worker.fetch(req('/api/layers/neighborhoods'), makeEnv());
+        const res = await worker.fetch(req('/api/layers/counties'), makeEnv());
         expect(res.status).toBe(400);
     });
 
     it('returns 400 for malformed bbox', async () => {
-        const res = await worker.fetch(req('/api/layers/neighborhoods?bbox=a,b,c,d'), makeEnv());
+        const res = await worker.fetch(req('/api/layers/counties?bbox=a,b,c,d'), makeEnv());
         expect(res.status).toBe(400);
     });
 
     it('returns 400 when bbox area is too large', async () => {
-        const res = await worker.fetch(req('/api/layers/neighborhoods?bbox=-125.1,27.1,-72.0,50.6'), makeEnv());
+        const res = await worker.fetch(req('/api/layers/counties?bbox=-125.1,27.1,-72.0,50.6'), makeEnv());
         expect(res.status).toBe(400);
     });
 
     it('returns 400 when bbox has wrong range (minLng >= maxLng)', async () => {
-        const res = await worker.fetch(req('/api/layers/neighborhoods?bbox=-100,39,-110,45'), makeEnv());
+        const res = await worker.fetch(req('/api/layers/counties?bbox=-100,39,-110,45'), makeEnv());
         expect(res.status).toBe(400);
     });
 
     it('returns cached layer data', async () => {
         const cached = { type: 'FeatureCollection', features: [] };
         const env    = makeEnv({ cacheGet: cached });
-        const res    = await worker.fetch(req(`/api/layers/neighborhoods?bbox=${validBbox}`), env);
+        const res    = await worker.fetch(req(`/api/layers/counties?bbox=${validBbox}`), env);
         expect(res.status).toBe(200);
         const body = await res.json();
         expect(body.type).toBe('FeatureCollection');
     });
 
-    it('fetches and caches neighborhoods from Census', async () => {
+    it('fetches and caches counties from Census', async () => {
         const censusData = { type: 'FeatureCollection', features: [] };
         global.fetch = mockFetch({ ok: true, body: censusData });
         const cachePut = vi.fn();
         const env      = makeEnv({ cacheSet: cachePut });
-        const res      = await worker.fetch(req(`/api/layers/neighborhoods?bbox=${validBbox}`), env);
+        const res      = await worker.fetch(req(`/api/layers/counties?bbox=${validBbox}`), env);
         expect(res.status).toBe(200);
         expect(cachePut).toHaveBeenCalledWith(
-            `layer:neighborhoods:${validBbox}`,
+            `layer:counties:${validBbox}`,
             expect.any(String),
             { expirationTtl: 30 * 86_400 }
         );
@@ -377,14 +377,14 @@ describe('/api/layers/:name', () => {
 
     it('returns 502 when Census source errors', async () => {
         global.fetch = mockFetch({ ok: false });
-        const res = await worker.fetch(req(`/api/layers/neighborhoods?bbox=${validBbox}`), makeEnv());
+        const res = await worker.fetch(req(`/api/layers/counties?bbox=${validBbox}`), makeEnv());
         expect(res.status).toBe(502);
     });
 
     it('returns 200 with truncated data when ArcGIS exceeds resultRecordCount', async () => {
         const truncData = { type: 'FeatureCollection', features: [], exceededTransferLimit: true };
         global.fetch = mockFetch({ ok: true, body: truncData });
-        const res = await worker.fetch(req(`/api/layers/neighborhoods?bbox=${validBbox}`), makeEnv());
+        const res = await worker.fetch(req(`/api/layers/counties?bbox=${validBbox}`), makeEnv());
         expect(res.status).toBe(200);
     });
 
@@ -404,10 +404,10 @@ describe('/api/layers/:name', () => {
     it('rate limits after 60 requests from same IP', async () => {
         const env = makeEnv({ cacheGet: { type: 'FeatureCollection', features: [] } });
         for (let i = 0; i < 60; i++) {
-            const r = await worker.fetch(req(`/api/layers/neighborhoods?bbox=${validBbox}`, { ip: '9.9.9.2' }), env);
+            const r = await worker.fetch(req(`/api/layers/counties?bbox=${validBbox}`, { ip: '9.9.9.2' }), env);
             expect(r.status).toBe(200);
         }
-        const r = await worker.fetch(req(`/api/layers/neighborhoods?bbox=${validBbox}`, { ip: '9.9.9.2' }), env);
+        const r = await worker.fetch(req(`/api/layers/counties?bbox=${validBbox}`, { ip: '9.9.9.2' }), env);
         expect(r.status).toBe(429);
     });
 });
@@ -985,11 +985,11 @@ describe('Stale cache fallback', () => {
         expect(res.headers.get('X-Cache')).toBe('stale');
     });
 
-    it('serves stale neighborhoods layer when TIGERweb is down', async () => {
+    it('serves stale counties layer when TIGERweb is down', async () => {
         global.fetch = mockFetch({ ok: false });
         // cacheGetAge 2 days — past the 24-hour layer fresh window
         const env = makeEnv({ cacheGet: staleData, cacheGetAge: 86_400_000 * 2 });
-        const res = await worker.fetch(req(`/api/layers/neighborhoods?bbox=${validBbox}`), env);
+        const res = await worker.fetch(req(`/api/layers/counties?bbox=${validBbox}`), env);
         expect(res.status).toBe(200);
         expect(res.headers.get('X-Cache')).toBe('stale');
     });

@@ -47,7 +47,7 @@ vi.mock('../components/SavedLocations', () => ({
             data-testid="trigger-restore"
             onClick={() => onRestore(
                 { name: 'Denver, CO', center: [-104.99, 39.74], bbox: [-105.1, 39.6, -104.7, 39.9] },
-                new Set<LayerName>(['neighborhoods']),
+                new Set<LayerName>(['counties']),
                 2019,
             )}
         />
@@ -168,8 +168,8 @@ describe('App', () => {
     it('restores city from URL lat/lng params on mount', () => {
         Object.defineProperty(window, 'location', {
             value: {
-                href:     'http://localhost/?lat=39.74&lng=-104.99&place=Denver%2C+CO&layers=neighborhoods&year=2019',
-                search:   '?lat=39.74&lng=-104.99&place=Denver%2C+CO&layers=neighborhoods&year=2019',
+                href:     'http://localhost/?lat=39.74&lng=-104.99&place=Denver%2C+CO&layers=counties&year=2019',
+                search:   '?lat=39.74&lng=-104.99&place=Denver%2C+CO&layers=counties&year=2019',
                 pathname: '/',
             },
             writable: true,

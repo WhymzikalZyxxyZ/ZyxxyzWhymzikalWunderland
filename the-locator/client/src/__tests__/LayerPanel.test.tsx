@@ -13,7 +13,7 @@ const defaultProps = {
 describe('LayerPanel', () => {
     it('renders all seven layer buttons', () => {
         render(<LayerPanel {...defaultProps} />);
-        expect(screen.getByText('Neighborhoods')).toBeInTheDocument();
+        expect(screen.getByText('Counties')).toBeInTheDocument();
         expect(screen.getByText('School Districts')).toBeInTheDocument();
         expect(screen.getByText('City Limits')).toBeInTheDocument();
         expect(screen.getByText('Superfund Sites')).toBeInTheDocument();
@@ -23,14 +23,14 @@ describe('LayerPanel', () => {
     });
 
     it('active layer button has active class', () => {
-        render(<LayerPanel {...defaultProps} activeLayers={new Set<LayerName>(['neighborhoods'])} />);
-        const btn = screen.getByTitle('Census-designated district boundaries');
+        render(<LayerPanel {...defaultProps} activeLayers={new Set<LayerName>(['counties'])} />);
+        const btn = screen.getByTitle('County subdivision boundaries (Census TIGERweb)');
         expect(btn).toHaveClass('layer-btn--active');
     });
 
     it('inactive layer button does not have active class', () => {
         render(<LayerPanel {...defaultProps} />);
-        const btn = screen.getByTitle('Census-designated district boundaries');
+        const btn = screen.getByTitle('County subdivision boundaries (Census TIGERweb)');
         expect(btn).not.toHaveClass('layer-btn--active');
     });
 

@@ -3,12 +3,12 @@ import { describe, it, expect, vi } from 'vitest';
 import InfoPanel from '../components/InfoPanel';
 
 describe('InfoPanel', () => {
-    it('shows neighborhood label and properties', () => {
+    it('shows county label and properties', () => {
         render(<InfoPanel
-            feature={{ layer: 'neighborhoods', properties: { NAME: 'Capitol Hill', GEOID: '0801234', STUSAB: 'CO' } }}
+            feature={{ layer: 'counties', properties: { NAME: 'Capitol Hill', GEOID: '0801234', STATE: 'CO' } }}
             onClose={vi.fn()}
         />);
-        expect(screen.getByText('Neighborhood')).toBeInTheDocument();
+        expect(screen.getByText('County')).toBeInTheDocument();
         expect(screen.getByText('Capitol Hill')).toBeInTheDocument();
         expect(screen.getByText('0801234')).toBeInTheDocument();
         expect(screen.getByText('CO')).toBeInTheDocument();
@@ -64,7 +64,7 @@ describe('InfoPanel', () => {
     it('calls onClose when close button is clicked', () => {
         const onClose = vi.fn();
         render(<InfoPanel
-            feature={{ layer: 'neighborhoods', properties: { NAME: 'Test', GEOID: '1', STUSAB: 'TX' } }}
+            feature={{ layer: 'counties', properties: { NAME: 'Test', GEOID: '1', STATE: 'TX' } }}
             onClose={onClose}
         />);
         fireEvent.click(screen.getByLabelText('Close'));

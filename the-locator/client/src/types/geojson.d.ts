@@ -1,7 +1,7 @@
-export interface NeighborhoodProperties {
+export interface CountyProperties {
     GEOID: string;
     NAME: string;
-    STUSAB: string;
+    STATE: string;
 }
 
 export interface SchoolDistrictProperties {
@@ -49,7 +49,7 @@ export interface TransitProperties {
     routes: string | null;
 }
 
-export type LayerName = 'neighborhoods' | 'schools' | 'cities' | 'superfund' | 'population' | 'walkscore' | 'transit';
+export type LayerName = 'counties' | 'schools' | 'cities' | 'superfund' | 'population' | 'walkscore' | 'transit';
 
 export interface EmbedCommand {
     action: 'flyTo' | 'setLayers' | 'toggleLayer';

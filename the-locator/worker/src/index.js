@@ -227,8 +227,8 @@ async function geocodeNominatim(q) {
     } catch { return null; }
 }
 
-const VALID_LAYERS = new Set(['neighborhoods', 'schools', 'superfund']);
-const LAYER_TTL    = { neighborhoods: 86_400, schools: 86_400, superfund: 21_600 };
+const VALID_LAYERS = new Set(['counties', 'schools', 'superfund']);
+const LAYER_TTL    = { counties: 86_400, schools: 86_400, superfund: 21_600 };
 
 async function handleLayer(layerName, request, env, ip) {
     if (!VALID_LAYERS.has(layerName)) return err('Unknown layer', 404);
@@ -306,17 +306,17 @@ async function handlePopulation(request, env, ip) {
 const CENSUS_LAYER_URLS = {
     // Layer 1 = County Subdivisions (complete US coverage, incl. rural).
     // Layer 0 is Estates — wrong. Layer uses STATE (FIPS) not STUSAB.
-    neighborhoods: 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/1/query',
+    counties: 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Places_CouSub_ConCity_SubMCD/MapServer/1/query',
     schools:       'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/School/MapServer/0/query',
 };
 const CENSUS_LAYER_FIELDS = {
-    neighborhoods: 'NAME,GEOID,STATE',
+    counties: 'NAME,GEOID,STATE',
     schools:       'NAME,GEOID,STATE',
 };
 
 async function fetchCensusLayer(name, [minLng, minLat, maxLng, maxLat]) {
-    const base   = CENSUS_LAYER_URLS[name]   || CENSUS_LAYER_URLS.neighborhoods;
-    const fields = CENSUS_LAYER_FIELDS[name] || CENSUS_LAYER_FIELDS.neighborhoods;
+    const base   = CENSUS_LAYER_URLS[name]   || CENSUS_LAYER_URLS.counties;
+    const fields = CENSUS_LAYER_FIELDS[name] || CENSUS_LAYER_FIELDS.counties;
     const url    = base
         + `?where=1%3D1&geometry=${minLng},${minLat},${maxLng},${maxLat}`
         + '&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects'

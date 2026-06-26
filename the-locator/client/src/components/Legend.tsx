@@ -5,7 +5,7 @@ interface Props {
 }
 
 const LAYER_COLORS: Record<LayerName, string> = {
-    neighborhoods: '#22c55e',
+    counties:      '#22c55e',
     schools:       '#3b82f6',
     cities:        '#f59e0b',
     superfund:     '#ef4444',
@@ -15,7 +15,7 @@ const LAYER_COLORS: Record<LayerName, string> = {
 };
 
 const LAYER_LABELS: Record<LayerName, string> = {
-    neighborhoods: 'Neighborhoods',
+    counties:      'Counties',
     schools:       'School Districts',
     cities:        'City Limits',
     superfund:     'Superfund Sites',
@@ -24,7 +24,7 @@ const LAYER_LABELS: Record<LayerName, string> = {
     transit:       'Transit Stops',
 };
 
-const RENDER_ORDER: LayerName[] = ['neighborhoods', 'schools', 'cities', 'superfund', 'population', 'walkscore', 'transit'];
+const RENDER_ORDER: LayerName[] = ['counties', 'schools', 'cities', 'superfund', 'population', 'walkscore', 'transit'];
 
 export default function Legend({ activeLayers }: Props) {
     const visible = RENDER_ORDER.filter(l => activeLayers.has(l));

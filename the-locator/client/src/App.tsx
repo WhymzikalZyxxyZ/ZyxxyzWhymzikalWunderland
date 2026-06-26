@@ -23,7 +23,7 @@ export interface ActiveFeature {
     properties: Record<string, unknown>;
 }
 
-const VALID_LAYERS = new Set<LayerName>(['neighborhoods', 'schools', 'cities', 'superfund', 'population', 'walkscore', 'transit']);
+const VALID_LAYERS = new Set<LayerName>(['counties', 'schools', 'cities', 'superfund', 'population', 'walkscore', 'transit']);
 
 export default function App() {
     const [city,           setCity]          = useState<CityResult | null>(null);

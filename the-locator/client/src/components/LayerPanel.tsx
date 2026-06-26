@@ -9,7 +9,7 @@ interface Props {
 }
 
 const LAYERS: { id: LayerName; label: string; color: string; desc: string }[] = [
-    { id: 'neighborhoods', label: 'Neighborhoods',    color: '#22c55e', desc: 'Census-designated district boundaries'                           },
+    { id: 'counties',      label: 'Counties',          color: '#22c55e', desc: 'County subdivision boundaries (Census TIGERweb)'               },
     { id: 'schools',       label: 'School Districts', color: '#3b82f6', desc: 'Unified school district boundaries'                              },
     { id: 'cities',        label: 'City Limits',      color: '#f59e0b', desc: 'Incorporated city and town boundaries with ACS population counts' },
     { id: 'superfund',     label: 'Superfund Sites',  color: '#ef4444', desc: 'EPA CERCLIS contamination sites'                                 },
