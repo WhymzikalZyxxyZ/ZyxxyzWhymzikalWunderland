@@ -680,86 +680,99 @@ async function handleHealth(request, env) {
 // ── Main Worker ───────────────────────────────────────────────────────────────
 export default {
     async fetch(request, env) {
-        const url    = new URL(request.url);
-        const path   = url.pathname;
-        const method = request.method;
-        const ip     = request.headers.get('CF-Connecting-IP') || '0.0.0.0';
-        const origin = request.headers.get('Origin') || '';
-        const cors   = corsHeaders(origin);
-
-        if (method === 'OPTIONS') {
-            return new Response(null, { status: 204, headers: cors });
+        try {
+            return await handleRequest(request, env);
+        } catch (e) {
+            log('error', 'unhandled_worker_exception', { message: String(e), stack: e?.stack?.slice(0, 500) });
+            const origin = request.headers.get('Origin') || '';
+            const cors   = corsHeaders(origin);
+            return err('Internal server error', 500, cors);
         }
-
-        if (method !== 'GET') return err('Method not allowed', 405, cors);
-
-        // ── L1 edge cache (Cloudflare Cache API) ─────────────────────────────
-        // Per-PoP in-memory cache that bypasses KV for repeat requests at the
-        // same edge node. Best-effort — failures fall through to KV + origin.
-        // CORS headers are stripped before storage and re-applied fresh on hit
-        // so a cached response never leaks one origin's ACAO to a different one.
-        const edgeCache = caches.default;
-        if (path.startsWith('/api/') && path !== '/api/health') {
-            const edgeCached = await edgeCache.match(request).catch(() => null);
-            if (edgeCached) {
-                const fresh = new Response(edgeCached.body, edgeCached);
-                for (const [k, v] of Object.entries(cors)) fresh.headers.set(k, v);
-                return fresh;
-            }
-        }
-
-        let response;
-
-        if (path === '/api/search') {
-            response = await handleSearch(request, env, ip);
-        } else if (path.startsWith('/api/layers/')) {
-            const layerName = path.slice('/api/layers/'.length);
-            if (!/^[a-z]+$/.test(layerName)) {
-                response = err('Invalid layer name', 400, cors);
-            } else {
-                response = await handleLayer(layerName, request, env, ip);
-            }
-        } else if (path === '/api/population') {
-            response = await handlePopulation(request, env, ip);
-        } else if (path === '/api/walkscore') {
-            response = await handleWalkscore(request, env, ip);
-        } else if (path === '/api/cities') {
-            response = await handleCities(request, env, ip);
-        } else if (path === '/api/transit') {
-            response = await handleTransit(request, env, ip);
-        } else if (path === '/api/health') {
-            response = await handleHealth(request, env);
-        } else if (path === '/favicon.ico') {
-            return new Response(null, { status: 204 });
-        } else {
-            // Serve the built React SPA for all other routes
-            response = await env.ASSETS.fetch(request);
-            // Strip X-Frame-Options so the app can be embedded via iframe
-            const r = new Response(response.body, response);
-            r.headers.delete('X-Frame-Options');
-            r.headers.set('Content-Security-Policy', "frame-ancestors 'self' https://zyxwonderland.xyz https://*.zyxwonderland.xyz");
-            return r;
-        }
-
-        // Attach CORS headers to every response
-        const r = new Response(response.body, response);
-        for (const [k, v] of Object.entries(cors)) r.headers.set(k, v);
-
-        // ── Store successful API data in edge cache ────────────────────────────
-        // Skip stale fallback responses — they carry no-store and must not be edge-cached.
-        if (r.status === 200 && path.startsWith('/api/') && path !== '/api/health'
-                && r.headers.get('X-Cache') !== 'stale') {
-            r.headers.set('Cache-Control', 'public, s-maxage=300, max-age=60');
-            // Cache a CORS-stripped copy — CORS headers are origin-specific and
-            // must be freshly applied per request (see cache-hit path above).
-            const toCache = r.clone();
-            for (const h of ['Access-Control-Allow-Origin', 'Access-Control-Allow-Methods',
-                              'Access-Control-Allow-Headers', 'Access-Control-Max-Age', 'Vary']) {
-                toCache.headers.delete(h);
-            }
-            edgeCache.put(request, toCache).catch(() => {});
-        }
-
-        return r;
     },
 };
+
+async function handleRequest(request, env) {
+    const url    = new URL(request.url);
+    const path   = url.pathname;
+    const method = request.method;
+    const ip     = request.headers.get('CF-Connecting-IP') || '0.0.0.0';
+    const origin = request.headers.get('Origin') || '';
+    const cors   = corsHeaders(origin);
+
+    if (method === 'OPTIONS') {
+        return new Response(null, { status: 204, headers: cors });
+    }
+
+    if (method !== 'GET') return err('Method not allowed', 405, cors);
+
+    // ── L1 edge cache (Cloudflare Cache API) ─────────────────────────────
+    // Per-PoP in-memory cache that bypasses KV for repeat requests at the
+    // same edge node. Best-effort — failures fall through to KV + origin.
+    // CORS headers are stripped before storage and re-applied fresh on hit
+    // so a cached response never leaks one origin's ACAO to a different one.
+    const edgeCache = caches.default;
+    if (path.startsWith('/api/') && path !== '/api/health') {
+        const edgeCached = await edgeCache.match(request).catch(() => null);
+        if (edgeCached) {
+            const fresh = new Response(edgeCached.body, edgeCached);
+            for (const [k, v] of Object.entries(cors)) fresh.headers.set(k, v);
+            return fresh;
+        }
+    }
+
+    let response;
+
+    if (path === '/api/search') {
+        response = await handleSearch(request, env, ip);
+    } else if (path.startsWith('/api/layers/')) {
+        const layerName = path.slice('/api/layers/'.length);
+        if (!/^[a-z]+$/.test(layerName)) {
+            response = err('Invalid layer name', 400, cors);
+        } else {
+            response = await handleLayer(layerName, request, env, ip);
+        }
+    } else if (path === '/api/population') {
+        response = await handlePopulation(request, env, ip);
+    } else if (path === '/api/walkscore') {
+        response = await handleWalkscore(request, env, ip);
+    } else if (path === '/api/cities') {
+        response = await handleCities(request, env, ip);
+    } else if (path === '/api/transit') {
+        response = await handleTransit(request, env, ip);
+    } else if (path === '/api/health') {
+        response = await handleHealth(request, env);
+    } else if (path === '/favicon.ico') {
+        return new Response(null, { status: 204 });
+    } else {
+        // Serve the built React SPA for all other routes.
+        // env.ASSETS.fetch can throw if the asset binding has a transient issue;
+        // the outer try/catch in fetch() will catch it and return 500 rather
+        // than letting it escape as a Cloudflare 1101.
+        response = await env.ASSETS.fetch(request);
+        const r = new Response(response.body, response);
+        r.headers.delete('X-Frame-Options');
+        r.headers.set('Content-Security-Policy', "frame-ancestors 'self' https://zyxwonderland.xyz https://*.zyxwonderland.xyz");
+        return r;
+    }
+
+    // Attach CORS headers to every response
+    const r = new Response(response.body, response);
+    for (const [k, v] of Object.entries(cors)) r.headers.set(k, v);
+
+    // ── Store successful API data in edge cache ────────────────────────────
+    // Skip stale fallback responses — they carry no-store and must not be edge-cached.
+    if (r.status === 200 && path.startsWith('/api/') && path !== '/api/health'
+            && r.headers.get('X-Cache') !== 'stale') {
+        r.headers.set('Cache-Control', 'public, s-maxage=300, max-age=60');
+        // Cache a CORS-stripped copy — CORS headers are origin-specific and
+        // must be freshly applied per request (see cache-hit path above).
+        const toCache = r.clone();
+        for (const h of ['Access-Control-Allow-Origin', 'Access-Control-Allow-Methods',
+                          'Access-Control-Allow-Headers', 'Access-Control-Max-Age', 'Vary']) {
+            toCache.headers.delete(h);
+        }
+        edgeCache.put(request, toCache).catch(() => {});
+    }
+
+    return r;
+}
