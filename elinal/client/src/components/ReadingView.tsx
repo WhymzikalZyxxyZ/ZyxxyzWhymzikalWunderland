@@ -3,7 +3,6 @@ import { useParams, Link }             from 'react-router-dom';
 import type { ReadingMaterials }        from '../types';
 import { postToParent }                 from '../hooks/usePostMessage';
 import { LoadingSpinner }               from './LoadingSpinner';
-import { ErrorBanner }                  from './ErrorBanner';
 import { TableOfContents }             from './TableOfContents';
 import { SectionBlock }                from './SectionBlock';
 import { GlossarySection }             from './GlossarySection';
@@ -13,12 +12,21 @@ import { ShareButton }                 from './ShareButton';
 
 type LoadState = 'loading' | 'polling' | 'ready' | 'error';
 
+const MAX_POLLS = 6;
+
+function readingMinutes(rm: ReadingMaterials): number {
+    const words = rm.sections.reduce((sum, s) => sum + s.body.split(/\s+/).length, 0);
+    return Math.max(1, Math.round(words / 200));
+}
+
 export function ReadingView() {
     const { docket } = useParams<{ docket: string }>();
-    const [rm,    setRm]    = useState<ReadingMaterials | null>(null);
-    const [state, setState] = useState<LoadState>('loading');
-    const [error, setError] = useState<string | null>(null);
-    const titleRef = useRef<HTMLHeadingElement>(null);
+    const [rm,          setRm]          = useState<ReadingMaterials | null>(null);
+    const [state,       setState]       = useState<LoadState>('loading');
+    const [error,       setError]       = useState<string | null>(null);
+    const [pollAttempt, setPollAttempt] = useState(0);
+    const [retryKey,    setRetryKey]    = useState(0);
+    const titleRef   = useRef<HTMLHeadingElement>(null);
     const mountedRef = useRef(true);
 
     useEffect(() => {
@@ -32,11 +40,11 @@ export function ReadingView() {
         setState('loading');
         setRm(null);
         setError(null);
+        setPollAttempt(0);
 
         const encodedDocket = encodeURIComponent(docket);
         let pollTimer: ReturnType<typeof setTimeout> | null = null;
         let pollCount = 0;
-        const MAX_POLLS = 6; // 1 minute max — cron retries stale opinions automatically
 
         async function load() {
             try {
@@ -52,6 +60,7 @@ export function ReadingView() {
                         setState('error');
                         return;
                     }
+                    setPollAttempt(pollCount);
                     setState('polling');
                     pollTimer = setTimeout(load, 10_000);
                     return;
@@ -77,7 +86,7 @@ export function ReadingView() {
 
         load();
         return () => { if (pollTimer) clearTimeout(pollTimer); };
-    }, [docket]);
+    }, [docket, retryKey]);
 
     // Update document title + notify parent frame when reading materials load
     useEffect(() => {
@@ -86,7 +95,7 @@ export function ReadingView() {
         postToParent({ type: 'elinal:view', docket: rm.docket, title: rm.title });
         // Move focus to the article heading for keyboard users after navigation
         titleRef.current?.focus();
-        return () => { document.title = "ELINAL — Explain Like I’m Not A Lawyer"; };
+        return () => { document.title = "ELINAL — Explain Like I'm Not A Lawyer"; };
     }, [state, rm]);
 
     if (state === 'loading') return <LoadingSpinner />;
@@ -98,12 +107,32 @@ export function ReadingView() {
                 <p className="processing-note">
                     Reading materials are being prepared — checking back shortly…
                 </p>
+                <p className="processing-attempt" aria-live="polite">
+                    Attempt {pollAttempt} of {MAX_POLLS}
+                </p>
             </div>
         );
     }
 
     if (state === 'error' || !rm) {
-        return <ErrorBanner message={error ?? 'Reading materials not found.'} />;
+        return (
+            <div className="reading-error" role="alert">
+                <p className="reading-error-msg">
+                    <strong>Could not load reading materials.</strong>{' '}
+                    {error ?? 'An unexpected error occurred.'}
+                </p>
+                <div className="reading-error-actions">
+                    <Link to="/" className="back-link">← All opinions</Link>
+                    <button
+                        className="retry-btn"
+                        type="button"
+                        onClick={() => setRetryKey(k => k + 1)}
+                    >
+                        ↺ Try again
+                    </button>
+                </div>
+            </div>
+        );
     }
 
     const date = rm.decided_date
@@ -111,6 +140,8 @@ export function ReadingView() {
               year: 'numeric', month: 'long', day: 'numeric',
           })
         : null;
+
+    const mins = readingMinutes(rm);
 
     return (
         <article className="reading-view">
@@ -130,11 +161,19 @@ export function ReadingView() {
                 >
                     {rm.title}
                 </h1>
-                {date && (
-                    <time className="reading-date" dateTime={rm.decided_date ?? ''}>
-                        {date}
-                    </time>
-                )}
+                <div className="reading-meta">
+                    {date && (
+                        <time className="reading-date" dateTime={rm.decided_date ?? ''}>
+                            {date}
+                        </time>
+                    )}
+                    <span
+                        className="reading-time"
+                        aria-label={`Estimated reading time: ${mins} minute${mins !== 1 ? 's' : ''}`}
+                    >
+                        ~{mins} min read
+                    </span>
+                </div>
             </header>
 
             <TableOfContents sections={rm.sections} />

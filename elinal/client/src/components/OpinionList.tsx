@@ -31,7 +31,7 @@ export function OpinionList() {
                 </p>
             ) : (
                 <>
-                    <h2 className="list-heading">Recent Opinions</h2>
+                    <h2 className="list-heading">Recent Opinions ({opinions.length})</h2>
                     <ul className="opinion-list" aria-label="SCOTUS opinions">
                         {opinions.map(op => <OpinionCard key={op.docket} opinion={op} />)}
                     </ul>

@@ -1,14 +1,28 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 interface Props { term: string; definition: string; }
 
 export function GlossaryTooltip({ term, definition }: Props) {
-    const [open, setOpen]   = useState(false);
-    const closeTimer        = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [open,    setOpen]    = useState(false);
+    const [offsetX, setOffsetX] = useState(0);
+    const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const cardRef    = useRef<HTMLSpanElement>(null);
 
     useEffect(() => {
         return () => { if (closeTimer.current) clearTimeout(closeTimer.current); };
     }, []);
+
+    // Clamp tooltip horizontally so it never clips outside the viewport
+    useLayoutEffect(() => {
+        if (!open || !cardRef.current) return;
+        const rect = cardRef.current.getBoundingClientRect();
+        const vw   = window.innerWidth;
+        const pad  = 12;
+        let dx = 0;
+        if (rect.left  < pad)      dx = pad - rect.left;
+        if (rect.right > vw - pad) dx = (vw - pad) - rect.right;
+        setOffsetX(dx);
+    }, [open]);
 
     function show() {
         if (closeTimer.current) clearTimeout(closeTimer.current);
@@ -19,6 +33,15 @@ export function GlossaryTooltip({ term, definition }: Props) {
         closeTimer.current = setTimeout(() => setOpen(false), 120);
     }
 
+    function handleKeyDown(e: React.KeyboardEvent) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open ? hide() : show(); }
+        if (e.key === 'Escape') { setOpen(false); }
+    }
+
+    const tooltipStyle = offsetX !== 0
+        ? { transform: `translateX(calc(-50% + ${offsetX}px))` }
+        : undefined;
+
     return (
         <span
             className="gtooltip-anchor"
@@ -26,6 +49,7 @@ export function GlossaryTooltip({ term, definition }: Props) {
             onMouseLeave={hide}
             onFocus={show}
             onBlur={hide}
+            onKeyDown={handleKeyDown}
             tabIndex={0}
             role="button"
             aria-label={`Definition of ${term}`}
@@ -34,8 +58,10 @@ export function GlossaryTooltip({ term, definition }: Props) {
             {term}
             {open && (
                 <span
+                    ref={cardRef}
                     className="gtooltip-card"
                     role="tooltip"
+                    style={tooltipStyle}
                     onMouseEnter={show}
                     onMouseLeave={hide}
                 >

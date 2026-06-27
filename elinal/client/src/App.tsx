@@ -14,6 +14,8 @@ function NotFound() {
     );
 }
 
+const isEmbedded = window.parent !== window;
+
 function App() {
     usePostMessage();
 
@@ -21,7 +23,7 @@ function App() {
         <>
             <a href="#main-content" className="skip-link">Skip to content</a>
 
-            <header className="app-header">
+            <header className={`app-header${isEmbedded ? ' app-header--embedded' : ''}`}>
                 <Link to="/" aria-label="ELINAL home">
                     <span className="header-glyph" aria-hidden="true">🏛️</span>
                     <span>
