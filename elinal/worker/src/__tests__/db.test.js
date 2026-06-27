@@ -116,10 +116,10 @@ describe('listPending', () => {
         expect(result).toHaveLength(1);
     });
 
-    it('uses default limit of 5', async () => {
+    it('uses default limit of 4', async () => {
         const db = makeDB({ allResults: [] });
         await listPending(db);
-        expect(db._stmt.bind).toHaveBeenCalledWith(5);
+        expect(db._stmt.bind).toHaveBeenCalledWith(4);
     });
 });
 
