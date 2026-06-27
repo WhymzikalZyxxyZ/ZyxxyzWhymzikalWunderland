@@ -21,25 +21,29 @@ export function currentTermStartDate() {
     return `${startYear}-10-01`;
 }
 
-// Returns array of opinion stubs for current-term SCOTUS combined opinions.
-// Filters to date_filed >= Oct 1 of the current term so re-running ingest
-// does not re-queue all-time historical opinions on every cron cycle.
+// Returns array of opinion stubs for current-term SCOTUS opinions.
+// Uses the /search/ endpoint because the v4 /opinions/ endpoint no longer
+// accepts court or date_filed filters — those live on the cluster relation.
+// Each search result represents one cluster (case); we take the first opinion
+// ID from the cluster's opinions array as the text source.
 export async function fetchRecentOpinions({ limit = 20, apiToken } = {}) {
     const since = currentTermStartDate();
-    const url = `${CL_BASE}/opinions/?court=scotus&type=010combined`
-        + `&date_filed__gte=${since}&order_by=-date_filed&page_size=${limit}&format=json`;
+    const url = `${CL_BASE}/search/?type=o&court=scotus`
+        + `&filed_after=${since}&order_by=dateFiled+desc&page_size=${limit}&format=json`;
     const r = await fetchWithTimeout(url, { headers: clHeaders(apiToken) }, 15_000);
-    if (!r.ok) throw new Error(`CourtListener opinions API ${r.status}`);
+    if (!r.ok) throw new Error(`CourtListener search API ${r.status}`);
     const data = await r.json();
 
-    return (data.results ?? []).map(op => ({
-        cl_opinion_id: op.id,
-        cl_cluster_id: extractLastId(op.cluster),
-        title:         op.cluster_title || op.case_name || 'Unknown',
-        decided_date:  op.date_filed ?? null,
-        term:          decidedTerm(op.date_filed),
-        docket:        normaliseDocket(op.docket_number) || `cl-${op.id}`,
-    }));
+    return (data.results ?? [])
+        .filter(r => r.opinions?.length > 0)
+        .map(r => ({
+            cl_opinion_id: r.opinions[0].id,
+            cl_cluster_id: r.cluster_id ?? null,
+            title:         r.caseName || r.caseNameFull || 'Unknown',
+            decided_date:  r.dateFiled ?? null,
+            term:          decidedTerm(r.dateFiled),
+            docket:        normaliseDocket(r.docketNumber) || `cl-${r.cluster_id}`,
+        }));
 }
 
 // Fetches the plain text of a single opinion from CourtListener
