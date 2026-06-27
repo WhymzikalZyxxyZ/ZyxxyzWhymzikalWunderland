@@ -1,9 +1,9 @@
 'use strict';
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
     fetchRecentOpinions, fetchOpinionText,
-    decidedTerm, normaliseDocket,
+    decidedTerm, normaliseDocket, currentTermStartDate,
 } from '../courtlistener.js';
 
 // ── fetch mock ────────────────────────────────────────────────────────────────
@@ -15,6 +15,30 @@ function mockFetch(body, { status = 200, ok = true } = {}) {
         json: vi.fn().mockResolvedValue(body),
     });
 }
+
+// ── currentTermStartDate ──────────────────────────────────────────────────────
+
+describe('currentTermStartDate', () => {
+    afterEach(() => { vi.useRealTimers(); });
+
+    it('returns prior-year Oct 1 when current month is before October', () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-06-27T12:00:00Z'));
+        expect(currentTermStartDate()).toBe('2025-10-01');
+    });
+
+    it('returns current-year Oct 1 when current month is October or later', () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2025-11-15T12:00:00Z'));
+        expect(currentTermStartDate()).toBe('2025-10-01');
+    });
+
+    it('returns current-year Oct 1 on Oct 1 itself', () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2025-10-01T00:00:00Z'));
+        expect(currentTermStartDate()).toBe('2025-10-01');
+    });
+});
 
 // ── fetchRecentOpinions ───────────────────────────────────────────────────────
 
@@ -59,6 +83,14 @@ describe('fetchRecentOpinions', () => {
     it('throws on non-ok response', async () => {
         mockFetch({}, { status: 500, ok: false });
         await expect(fetchRecentOpinions()).rejects.toThrow('500');
+    });
+
+    it('includes date_filed__gte term filter in the request URL', async () => {
+        mockFetch({ results: [] });
+        await fetchRecentOpinions();
+        const calledUrl = global.fetch.mock.calls[0][0];
+        expect(calledUrl).toContain('date_filed__gte=');
+        expect(calledUrl).toMatch(/date_filed__gte=\d{4}-10-01/);
     });
 });
 

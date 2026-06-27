@@ -64,9 +64,16 @@ async function handleHealth(env) {
     const dbProbe    = env.ELINAL_DB    ? env.ELINAL_DB.prepare('SELECT 1').first()   : null;
     const cacheProbe = env.ELINAL_CACHE ? env.ELINAL_CACHE.get('__health__')           : null;
 
+    // Slip-opinion year = 2-digit year of the term end (e.g. OT2025 → "26").
+    // Term ends in the calendar year AFTER it starts for Oct–Dec filings.
+    const now      = new Date();
+    const slipYear = String(
+        now.getUTCMonth() + 1 >= 10 ? now.getUTCFullYear() + 1 : now.getUTCFullYear()
+    ).slice(-2);
+
     const [scotusResult, courtlistenerResult, dbResult, cacheResult] = await Promise.allSettled([
         fetchWithTimeout(
-            'https://www.supremecourt.gov/opinions/slipopinion/25',
+            `https://www.supremecourt.gov/opinions/slipopinion/${slipYear}`,
             { method: 'HEAD' },
             8_000,
         ),

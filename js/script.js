@@ -129,6 +129,7 @@ const NAV_STRUCTURE = [
     {
         label: 'Technologist', href: '/technologist/apps',
         children: [
+            { label: 'ELINAL',               href: '/technologist/elinal' },
             { label: 'Apps',                 href: '/technologist/apps' },
             { label: 'BIOS / UEFI',          href: '/technologist/biosuefi' },
             { label: 'Computer Engineering', href: '/technologist/computerengineering' },
@@ -149,7 +150,6 @@ const NAV_STRUCTURE = [
             { label: 'Schema Diff',          href: '/technologist/schema-diff' },
             { label: 'The Calculator',       href: '/technologist/calculator' },
             { label: 'The Editor',           href: '/technologist/editor' },
-            { label: 'ELINAL',               href: '/technologist/elinal' },
         ],
     },
     { label: 'The Lawyer',  href: '/technologist/lawyer' },
