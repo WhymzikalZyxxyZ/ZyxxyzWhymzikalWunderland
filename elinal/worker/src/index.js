@@ -115,7 +115,8 @@ async function handleAdminIngest(request, env, cors) {
     if (!env.ELINAL_DB) {
         return err('Storage not provisioned — complete Phase 2 setup', 503, cors);
     }
-    const result = await runScraper(env);
+    const reset  = new URL(request.url).searchParams.get('reset') === 'true';
+    const result = await runScraper(env, { reset });
     return json({ ok: true, ...result }, 200, cors);
 }
 

@@ -3,15 +3,20 @@
 import { fetchRecentOpinions, fetchOpinionText } from './courtlistener.js';
 import { generateReadingMaterials }               from './pipeline.js';
 import {
-    upsertOpinion, listPending, setOpinionStatus, saveReadingMaterials,
+    upsertOpinion, listPending, resetErrors, setOpinionStatus, saveReadingMaterials,
 } from './db.js';
 import { log } from './logger.js';
 
 // Discovers and processes new SCOTUS opinions in two passes:
 //   1. Fetch recent opinion stubs from CourtListener → upsert into D1
 //   2. Process all pending opinions: fetch text → generate AI reading materials → cache in KV
-export async function runScraper(env) {
-    log('info', 'scraper_start');
+// Pass { reset: true } to first flip all errored opinions back to pending.
+export async function runScraper(env, { reset = false } = {}) {
+    log('info', 'scraper_start', { reset });
+    if (reset) {
+        const resetCount = await resetErrors(env.ELINAL_DB).catch(() => 0);
+        log('info', 'scraper_errors_reset', { resetCount });
+    }
 
     // Pass 1 — discover
     let opinions = [];

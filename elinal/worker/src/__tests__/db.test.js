@@ -3,7 +3,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
     listOpinions, countOpinions, getOpinion, getReadingMaterials,
-    listPending, upsertOpinion, setOpinionStatus, saveReadingMaterials,
+    listPending, upsertOpinion, resetErrors, setOpinionStatus, saveReadingMaterials,
 } from '../db.js';
 
 // ── Mock D1 builder ───────────────────────────────────────────────────────────
@@ -142,6 +142,22 @@ describe('upsertOpinion', () => {
         expect(db._stmt.bind).toHaveBeenCalledWith(
             '24-1', '24', 'Test', null, null, null,
         );
+    });
+});
+
+// ── resetErrors ───────────────────────────────────────────────────────────────
+
+describe('resetErrors', () => {
+    it('returns the number of rows reset', async () => {
+        const db = makeDB({ changes: 3 });
+        const count = await resetErrors(db);
+        expect(count).toBe(3);
+    });
+
+    it('issues an UPDATE targeting status = error', async () => {
+        const db = makeDB({ changes: 0 });
+        await resetErrors(db);
+        expect(db.prepare).toHaveBeenCalledWith(expect.stringContaining("status = 'error'"));
     });
 });
 

@@ -48,7 +48,7 @@ Produce 3–5 further reading items (canonical books, law review articles, or la
 titles and descriptions only, no URLs).
 Output nothing outside the JSON object.`;
 
-const MAX_OPINION_CHARS = 45_000;
+const MAX_OPINION_CHARS = 25_000;
 
 // Calls Workers AI and returns validated reading materials object
 export async function generateReadingMaterials(env, { title, docket, text }) {
