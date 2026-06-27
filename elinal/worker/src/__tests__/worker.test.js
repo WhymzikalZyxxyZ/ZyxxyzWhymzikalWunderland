@@ -46,6 +46,7 @@ function makeEnv(overrides = {}) {
         ELINAL_DB:      makeDB(),
         ELINAL_CACHE:   makeCache(),
         ADMIN_TOKEN:    'test-admin-token',
+        CL_API_TOKEN:   'test-cl-token',
         ELINAL_MODEL:   '@cf/meta/llama-3.3-70b-instruct',
         PROMPT_VERSION: 'v1',
         SITE_ORIGIN:    'https://zyxwonderland.xyz',
@@ -93,6 +94,15 @@ describe('/api/health', () => {
         expect(body.checks.cache).toBe(true);
         expect(body.checks.scotus).toBe(true);
         expect(body.checks.courtlistener).toBe(true);
+        expect(body.checks.cl_auth).toBe(true);
+    });
+
+    it('returns degraded when CL_API_TOKEN is absent', async () => {
+        global.fetch = mockFetch({ ok: true });
+        const res  = await worker.fetch(req('/api/health'), makeEnv({ CL_API_TOKEN: undefined }));
+        const body = await res.json();
+        expect(body.status).toBe('degraded');
+        expect(body.checks.cl_auth).toBe(false);
     });
 
     it('returns degraded when upstream fetch fails', async () => {

@@ -94,6 +94,7 @@ async function handleHealth(env) {
                            && (scotusResult.value.ok || scotusResult.value.status < 500),
         courtlistener: courtlistenerResult.status === 'fulfilled'
                            && courtlistenerResult.value.ok,
+        cl_auth:       !!env.CL_API_TOKEN,
     };
 
     const provisioned = Object.values(checks).filter(v => v !== null);
