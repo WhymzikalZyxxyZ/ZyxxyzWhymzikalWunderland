@@ -1,5 +1,6 @@
 import { Routes, Route, Link } from 'react-router-dom';
 import { OpinionList }         from './components/OpinionList';
+import { ReadingView }         from './components/ReadingView';
 import './App.css';
 
 function App() {
@@ -18,8 +19,7 @@ function App() {
             <main className="app-main">
                 <Routes>
                     <Route path="/" element={<OpinionList />} />
-                    {/* Phase 6: ReadingView replaces this placeholder */}
-                    <Route path="/:docket" element={<OpinionList />} />
+                    <Route path="/:docket" element={<ReadingView />} />
                 </Routes>
             </main>
 
