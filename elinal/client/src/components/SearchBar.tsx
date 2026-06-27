@@ -8,6 +8,7 @@ export function SearchBar() {
     const [results, setResults] = useState<SearchResponse | null>(null);
     const [loading, setLoading] = useState(false);
     const [open,    setOpen]    = useState(false);
+    const [fetchErr, setFetchErr] = useState<string | null>(null);
     const navigate     = useNavigate();
     const debounceRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -18,19 +19,24 @@ export function SearchBar() {
 
         if (query.length < 2) {
             setResults(null);
+            setFetchErr(null);
             setOpen(false);
             setLoading(false);
             return;
         }
 
         setLoading(true);
+        setFetchErr(null);
         debounceRef.current = setTimeout(async () => {
             try {
                 const r = await searchContent(query);
                 setResults(r);
+                setFetchErr(null);
                 setOpen(true);
-            } catch {
+            } catch (e) {
                 setResults(null);
+                setFetchErr(String((e as Error).message ?? 'Search unavailable'));
+                setOpen(true);
             } finally {
                 setLoading(false);
             }
@@ -61,7 +67,7 @@ export function SearchBar() {
 
     const hasOpinions = (results?.opinions.length ?? 0) > 0;
     const hasGlossary = (results?.glossary.length ?? 0) > 0;
-    const empty       = !hasOpinions && !hasGlossary && !loading;
+    const empty       = !hasOpinions && !hasGlossary && !loading && !fetchErr;
 
     return (
         <div className="search-wrap" ref={containerRef}>
@@ -102,6 +108,11 @@ export function SearchBar() {
                     role="listbox"
                     aria-label="Search results"
                 >
+                    {fetchErr && (
+                        <p className="search-empty search-empty--error">
+                            Search unavailable — {fetchErr}
+                        </p>
+                    )}
                     {empty && (
                         <p className="search-empty">
                             No results for <em>"{query}"</em>

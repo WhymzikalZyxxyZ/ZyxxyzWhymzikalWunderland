@@ -16,10 +16,7 @@ export async function listOpinions(db, { term, limit = 20, offset = 0 } = {}) {
     sql += ` ORDER BY decided_date DESC NULLS LAST, docket ASC LIMIT ? OFFSET ?`;
     params.push(limit, offset);
 
-    const stmt = params.length
-        ? db.prepare(sql).bind(...params)
-        : db.prepare(sql);
-    const { results } = await stmt.all();
+    const { results } = await db.prepare(sql).bind(...params).all();
     return results;
 }
 
@@ -52,8 +49,11 @@ export async function getReadingMaterials(db, docket) {
 
 export async function listPending(db, limit = 5) {
     const { results } = await db.prepare(
+        // Also recovers opinions stuck in 'processing' for > 1 hour (crash mid-pipeline).
         `SELECT docket, term, title, cl_opinion_id FROM opinions
-         WHERE status = 'pending' ORDER BY decided_date DESC LIMIT ?`,
+         WHERE status = 'pending'
+            OR (status = 'processing' AND updated_at < datetime('now', '-1 hour'))
+         ORDER BY decided_date DESC NULLS LAST LIMIT ?`,
     ).bind(limit).all();
     return results;
 }
@@ -80,15 +80,21 @@ export async function setOpinionStatus(db, docket, status, error_msg = null) {
     ).bind(status, error_msg, docket).run();
 }
 
+// Escapes SQLite LIKE wildcard characters so a literal search for "%" or "_"
+// doesn't accidentally match everything. Uses backslash as the escape character.
+function likeEscape(s) {
+    return s.replace(/[\\%_]/g, '\\$&');
+}
+
 // Full-text search across opinion titles/dockets and glossary term definitions.
-// Uses SQLite LIKE (case-insensitive via NOCASE columns) and json_each for glossary.
+// Uses SQLite LIKE (case-insensitive) and json_each for glossary.
 export async function searchOpinions(db, query, limit = 15) {
-    const like = `%${query}%`;
+    const like = `%${likeEscape(query)}%`;
     const { results } = await db.prepare(`
         SELECT docket, term, title, decided_date, status
         FROM opinions
         WHERE status = 'ready'
-          AND (title LIKE ? OR docket LIKE ?)
+          AND (title LIKE ? ESCAPE '\\' OR docket LIKE ? ESCAPE '\\')
         ORDER BY decided_date DESC NULLS LAST
         LIMIT ?
     `).bind(like, like, limit).all();
@@ -96,7 +102,7 @@ export async function searchOpinions(db, query, limit = 15) {
 }
 
 export async function searchGlossary(db, query, limit = 10) {
-    const like = `%${query}%`;
+    const like = `%${likeEscape(query)}%`;
     const { results } = await db.prepare(`
         SELECT o.docket,
                o.title,
@@ -107,8 +113,8 @@ export async function searchGlossary(db, query, limit = 10) {
         CROSS JOIN json_each(rm.glossary) j
         WHERE o.status = 'ready'
           AND (
-            json_extract(j.value, '$.term')       LIKE ?
-            OR json_extract(j.value, '$.definition') LIKE ?
+            json_extract(j.value, '$.term')       LIKE ? ESCAPE '\'
+            OR json_extract(j.value, '$.definition') LIKE ? ESCAPE '\'
           )
         ORDER BY o.decided_date DESC NULLS LAST
         LIMIT ?

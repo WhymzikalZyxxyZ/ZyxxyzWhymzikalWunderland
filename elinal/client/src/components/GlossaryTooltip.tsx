@@ -1,10 +1,14 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Props { term: string; definition: string; }
 
 export function GlossaryTooltip({ term, definition }: Props) {
-    const [open, setOpen] = useState(false);
-    const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [open, setOpen]   = useState(false);
+    const closeTimer        = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        return () => { if (closeTimer.current) clearTimeout(closeTimer.current); };
+    }, []);
 
     function show() {
         if (closeTimer.current) clearTimeout(closeTimer.current);

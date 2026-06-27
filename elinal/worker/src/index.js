@@ -11,8 +11,8 @@ function corsHeaders(origin) {
     if (!ALLOWED_ORIGIN_RE.test(origin)) return {};
     return {
         'Access-Control-Allow-Origin':  origin,
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Access-Control-Max-Age':       '86400',
         'Vary':                         'Origin',
     };
@@ -130,10 +130,12 @@ async function handleSearch(request, env, cors) {
 async function handleOpinionsList(request, env, cors) {
     if (!env.ELINAL_DB) return err('Storage not provisioned', 503, cors);
     const { listOpinions, countOpinions } = await import('./db.js');
-    const params = new URL(request.url).searchParams;
-    const term   = params.get('term') ?? undefined;
-    const limit  = Math.min(parseInt(params.get('limit') ?? '20', 10), 100);
-    const offset = Math.max(parseInt(params.get('offset') ?? '0', 10), 0);
+    const params    = new URL(request.url).searchParams;
+    const term      = params.get('term') ?? undefined;
+    const rawLimit  = parseInt(params.get('limit')  ?? '', 10);
+    const rawOffset = parseInt(params.get('offset') ?? '', 10);
+    const limit     = Math.min(Number.isFinite(rawLimit)  ? rawLimit  : 20, 100);
+    const offset    = Math.max(Number.isFinite(rawOffset) ? rawOffset : 0,  0);
 
     const [opinions, total] = await Promise.all([
         listOpinions(env.ELINAL_DB, { term, limit, offset }),
@@ -157,7 +159,12 @@ async function handleReadingMaterials(docket, env, cors) {
     if (env.ELINAL_CACHE) {
         const cached = await env.ELINAL_CACHE.get(`rm:${docket}`).catch(() => null);
         if (cached) {
-            return json(JSON.parse(cached), 200, { ...cors, 'X-Cache': 'hit' });
+            try {
+                return json(JSON.parse(cached), 200, { ...cors, 'X-Cache': 'hit' });
+            } catch {
+                // KV value corrupted — fall through to D1 for fresh data
+                log('warn', 'kv_parse_failed', { docket });
+            }
         }
     }
 
@@ -169,20 +176,32 @@ async function handleReadingMaterials(docket, env, cors) {
         return json({ status: opinion.status, docket }, 202, cors);
     }
     if (opinion.status === 'error') {
-        return err(`Opinion processing failed: ${opinion.error_msg}`, 502, cors);
+        log('warn', 'opinion_error_served', { docket, error_msg: opinion.error_msg });
+        return err('Opinion processing failed — the case will be retried automatically', 502, cors);
     }
 
     const rm = await getReadingMaterials(env.ELINAL_DB, docket);
     if (!rm) return err('Reading materials not yet available', 404, cors);
 
+    let sections, glossary, discussion_questions, further_reading;
+    try {
+        sections             = JSON.parse(rm.sections);
+        glossary             = JSON.parse(rm.glossary);
+        discussion_questions = JSON.parse(rm.discussion);
+        further_reading      = JSON.parse(rm.further_reading);
+    } catch (e) {
+        log('error', 'rm_parse_failed', { docket, message: String(e) });
+        return err('Reading materials are corrupted — please try again later', 502, cors);
+    }
+
     const payload = {
-        docket:               rm.docket,
+        docket,
         title:                opinion.title,
         decided_date:         opinion.decided_date,
-        sections:             JSON.parse(rm.sections),
-        glossary:             JSON.parse(rm.glossary),
-        discussion_questions: JSON.parse(rm.discussion),
-        further_reading:      JSON.parse(rm.further_reading),
+        sections,
+        glossary,
+        discussion_questions,
+        further_reading,
     };
 
     // Backfill KV cache for next request
@@ -266,7 +285,7 @@ async function handleRequest(request, env) {
                 if (cached) {
                     const { title } = JSON.parse(cached);
                     const metaTitle = `${title} — ELINAL`;
-                    const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+                    const metaDesc  = `Plain-language reading materials for ${title}`;
                     return new HTMLRewriter()
                         .on('title', {
                             element(el) { el.setInnerContent(metaTitle); },
@@ -275,7 +294,7 @@ async function handleRequest(request, env) {
                             element(el) { el.setAttribute('content', metaTitle); },
                         })
                         .on('meta[property="og:description"]', {
-                            element(el) { el.setAttribute('content', `Plain-language reading materials for ${esc(title)}`); },
+                            element(el) { el.setAttribute('content', metaDesc); },
                         })
                         .on('meta[property="og:type"]', {
                             element(el) { el.setAttribute('content', 'article'); },
@@ -284,7 +303,7 @@ async function handleRequest(request, env) {
                             element(el) { el.setAttribute('content', metaTitle); },
                         })
                         .on('meta[name="twitter:description"]', {
-                            element(el) { el.setAttribute('content', `Plain-language reading materials for ${esc(title)}`); },
+                            element(el) { el.setAttribute('content', metaDesc); },
                         })
                         .transform(r);
                 }

@@ -203,6 +203,8 @@ body {
     font-style:  italic;
 }
 
+.search-empty--error { color: #fca5a5; font-style: normal; }
+
 .search-group { padding: .6rem 0; }
 
 .search-group + .search-group { border-top: 1px solid var(--border); }
