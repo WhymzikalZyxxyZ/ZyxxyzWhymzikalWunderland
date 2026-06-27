@@ -1,0 +1,42 @@
+name               = "elinal"
+main               = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# ── AI binding — no provisioning required, uses account token ─────────────────
+[ai]
+binding = "AI"
+
+# ── Routes ────────────────────────────────────────────────────────────────────
+[[routes]]
+pattern   = "elinal.zyxwonderland.xyz/*"
+zone_name = "zyxwonderland.xyz"
+
+# ── Static assets (SPA) ───────────────────────────────────────────────────────
+[assets]
+directory          = "../client/dist"
+not_found_handling = "single-page-application"
+run_worker_first   = true
+binding            = "ASSETS"
+
+# ── Cron trigger — weekdays at 10:00 ET (15:00 UTC) during SCOTUS term ───────
+# Phase 3 will wire the scheduled handler. Declaring it now so the binding
+# exists in production before the handler is implemented.
+[triggers]
+crons = ["0 15 * * 1-5"]
+
+# ── Vars ──────────────────────────────────────────────────────────────────────
+[vars]
+ELINAL_MODEL   = "@cf/meta/llama-3.3-70b-instruct"
+PROMPT_VERSION = "v1"
+
+# ── D1 database ───────────────────────────────────────────────────────────────
+[[d1_databases]]
+binding       = "ELINAL_DB"
+database_name = "elinal-db"
+database_id   = "0e91e739-3306-4b92-92e2-9690f55e73f9"
+
+# ── KV namespace ──────────────────────────────────────────────────────────────
+[[kv_namespaces]]
+binding    = "ELINAL_CACHE"
+id         = "c062ec00ea3b4260b3ad84cedff112b4"
+preview_id = "c8499fc53d32488a8a60db3b996be090"

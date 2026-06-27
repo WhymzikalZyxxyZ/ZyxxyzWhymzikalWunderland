@@ -73,6 +73,53 @@ jobs:
           MAPBOX_TOKEN:      ${{ secrets.LOCATOR_MAPBOX_TOKEN }}
           CENSUS_API_KEY:    ${{ secrets.LOCATOR_CENSUS_API_KEY }}
 
+  # ── Deploy Cloudflare Worker (ELINAL) ────────────────────────────────────────
+  deploy-elinal-worker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Install ELINAL client dependencies
+        run: cd elinal/client && npm ci
+
+      - name: Build ELINAL client
+        run: cd elinal/client && npm run build
+
+      - name: Install ELINAL worker dependencies
+        run: cd elinal/worker && npm ci
+
+      - name: Test ELINAL worker
+        run: cd elinal/worker && npm test
+
+      - name: Deploy ELINAL Worker to Cloudflare
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken:         ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId:        ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: elinal/worker
+          secrets:          |
+            ADMIN_TOKEN
+        env:
+          ADMIN_TOKEN:      ${{ secrets.ELINAL_ADMIN_TOKEN }}
+
+      # Migration runs after the worker deploy, so new worker code is live first.
+      # Current migration uses IF NOT EXISTS — safe regardless of order.
+      # CAUTION: If a future migration adds or renames columns, deploy the worker
+      # AFTER the migration completes, not before, to avoid a schema mismatch window.
+      - name: Run ELINAL D1 migration
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken:         ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId:        ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: elinal/worker
+          command:          d1 execute elinal-db --remote --file=migrations/0001_initial.sql
+
   # ── Deploy static site to GitHub Pages ───────────────────────────────────────
   deploy:
     runs-on: ubuntu-latest
@@ -138,7 +185,7 @@ jobs:
   smoke-test:
     name: Smoke test deployed services
     runs-on: ubuntu-latest
-    needs: [deploy, deploy-worker, deploy-locator-worker, deploy-editor-service]
+    needs: [deploy, deploy-worker, deploy-locator-worker, deploy-editor-service, deploy-elinal-worker]
     steps:
       - name: Wait for propagation
         run: sleep 20
@@ -158,4 +205,16 @@ jobs:
           d = json.load(sys.stdin)
           assert d.get('status') == 'ok', f'unexpected health response: {d}'
           print('OK')
+          "
+
+      - name: Smoke test — ELINAL Worker health endpoint
+        run: |
+          BODY=$(curl -fsS https://elinal.zyxwonderland.xyz/api/health)
+          echo "ELINAL health: $BODY"
+          echo "$BODY" | python3 -c "
+          import sys, json
+          d = json.load(sys.stdin)
+          assert 'status' in d, f'missing status field: {d}'
+          assert 'checks' in d, f'missing checks field: {d}'
+          print('OK:', d.get('status'))
           "
