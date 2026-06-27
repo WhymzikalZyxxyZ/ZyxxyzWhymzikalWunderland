@@ -43,12 +43,12 @@ describe('currentTermStartDate', () => {
 // ── fetchRecentOpinions ───────────────────────────────────────────────────────
 
 describe('fetchRecentOpinions', () => {
-    it('maps CourtListener results to opinion stubs', async () => {
+    it('maps CourtListener search results to opinion stubs', async () => {
         mockFetch({
             results: [{
-                id: 12345, cluster: 'https://cl.example/clusters/99/',
-                cluster_title: 'Test v. State', case_name: null,
-                date_filed: '2025-04-15', docket_number: '24-1234',
+                cluster_id: 99, caseName: 'Test v. State', caseNameFull: '',
+                dateFiled: '2025-04-15', docketNumber: '24-1234',
+                opinions: [{ id: 12345 }],
             }],
         });
         const opinions = await fetchRecentOpinions({ limit: 5 });
@@ -63,14 +63,24 @@ describe('fetchRecentOpinions', () => {
         });
     });
 
-    it('falls back to case_name when cluster_title is absent', async () => {
-        mockFetch({ results: [{ id: 1, cluster_title: '', case_name: 'Fallback v. US', date_filed: '2025-01-01', docket_number: '24-1' }] });
+    it('falls back to caseNameFull when caseName is absent', async () => {
+        mockFetch({ results: [{ cluster_id: 1, caseName: '', caseNameFull: 'Fallback v. US', dateFiled: '2025-01-01', docketNumber: '24-1', opinions: [{ id: 1 }] }] });
         const [op] = await fetchRecentOpinions();
         expect(op.title).toBe('Fallback v. US');
     });
 
-    it('uses cl-{id} docket when docket_number is absent', async () => {
-        mockFetch({ results: [{ id: 777, cluster_title: 'T', date_filed: '2025-01-01', docket_number: null }] });
+    it('filters out results with no opinions', async () => {
+        mockFetch({ results: [
+            { cluster_id: 1, caseName: 'A', dateFiled: '2025-01-01', docketNumber: '24-1', opinions: [] },
+            { cluster_id: 2, caseName: 'B', dateFiled: '2025-01-02', docketNumber: '24-2', opinions: [{ id: 2 }] },
+        ]});
+        const ops = await fetchRecentOpinions();
+        expect(ops).toHaveLength(1);
+        expect(ops[0].cl_cluster_id).toBe(2);
+    });
+
+    it('uses cl-{cluster_id} docket when docketNumber is absent', async () => {
+        mockFetch({ results: [{ cluster_id: 777, caseName: 'T', dateFiled: '2025-01-01', docketNumber: null, opinions: [{ id: 1 }] }] });
         const [op] = await fetchRecentOpinions();
         expect(op.docket).toBe('cl-777');
     });
@@ -85,12 +95,13 @@ describe('fetchRecentOpinions', () => {
         await expect(fetchRecentOpinions()).rejects.toThrow('500');
     });
 
-    it('includes date_filed__gte term filter in the request URL', async () => {
+    it('uses the /search/ endpoint with filed_after term filter in the URL', async () => {
         mockFetch({ results: [] });
         await fetchRecentOpinions();
         const calledUrl = global.fetch.mock.calls[0][0];
-        expect(calledUrl).toContain('date_filed__gte=');
-        expect(calledUrl).toMatch(/date_filed__gte=\d{4}-10-01/);
+        expect(calledUrl).toContain('/search/');
+        expect(calledUrl).toContain('filed_after=');
+        expect(calledUrl).toMatch(/filed_after=\d{4}-10-01/);
     });
 
     it('sends Authorization header when apiToken is provided', async () => {
