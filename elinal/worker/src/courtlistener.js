@@ -5,10 +5,24 @@ import { fetchWithTimeout, stripHtml } from './utils.js';
 const CL_BASE    = 'https://www.courtlistener.com/api/rest/v4';
 const CL_HEADERS = { 'Accept': 'application/json', 'User-Agent': 'ELINAL/1.0 (elinal.zyxwonderland.xyz)' };
 
-// Returns array of opinion stubs for recent SCOTUS combined opinions
+// Returns the ISO date string (YYYY-MM-DD) for Oct 1 of the current SCOTUS term.
+// The term opens in October; opinions filed Oct–Dec belong to that year's term,
+// Jan–Sep belong to the prior year's term.
+export function currentTermStartDate() {
+    const now       = new Date();
+    const year      = now.getUTCFullYear();
+    const month     = now.getUTCMonth() + 1;
+    const startYear = month >= 10 ? year : year - 1;
+    return `${startYear}-10-01`;
+}
+
+// Returns array of opinion stubs for current-term SCOTUS combined opinions.
+// Filters to date_filed >= Oct 1 of the current term so re-running ingest
+// does not re-queue all-time historical opinions on every cron cycle.
 export async function fetchRecentOpinions({ limit = 20 } = {}) {
+    const since = currentTermStartDate();
     const url = `${CL_BASE}/opinions/?court=scotus&type=010combined`
-        + `&order_by=-date_filed&page_size=${limit}&format=json`;
+        + `&date_filed__gte=${since}&order_by=-date_filed&page_size=${limit}&format=json`;
     const r = await fetchWithTimeout(url, { headers: CL_HEADERS }, 15_000);
     if (!r.ok) throw new Error(`CourtListener opinions API ${r.status}`);
     const data = await r.json();
