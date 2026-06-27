@@ -92,6 +92,20 @@ describe('fetchRecentOpinions', () => {
         expect(calledUrl).toContain('date_filed__gte=');
         expect(calledUrl).toMatch(/date_filed__gte=\d{4}-10-01/);
     });
+
+    it('sends Authorization header when apiToken is provided', async () => {
+        mockFetch({ results: [] });
+        await fetchRecentOpinions({ apiToken: 'test-token' });
+        const calledOpts = global.fetch.mock.calls[0][1];
+        expect(calledOpts.headers['Authorization']).toBe('Token test-token');
+    });
+
+    it('omits Authorization header when apiToken is absent', async () => {
+        mockFetch({ results: [] });
+        await fetchRecentOpinions();
+        const calledOpts = global.fetch.mock.calls[0][1];
+        expect(calledOpts.headers['Authorization']).toBeUndefined();
+    });
 });
 
 // ── fetchOpinionText ──────────────────────────────────────────────────────────
@@ -125,6 +139,14 @@ describe('fetchOpinionText', () => {
 
     it('throws when cl_opinion_id is falsy', async () => {
         await expect(fetchOpinionText(null)).rejects.toThrow('required');
+    });
+
+    it('sends Authorization header when apiToken is provided', async () => {
+        const text = 'Opinion text here.'.repeat(20);
+        mockFetch({ plain_text: text });
+        await fetchOpinionText(12345, { apiToken: 'test-token' });
+        const calledOpts = global.fetch.mock.calls[0][1];
+        expect(calledOpts.headers['Authorization']).toBe('Token test-token');
     });
 });
 

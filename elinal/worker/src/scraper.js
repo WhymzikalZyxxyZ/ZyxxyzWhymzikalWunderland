@@ -16,7 +16,7 @@ export async function runScraper(env) {
     // Pass 1 — discover
     let opinions = [];
     try {
-        opinions = await fetchRecentOpinions({ limit: 20 });
+        opinions = await fetchRecentOpinions({ limit: 20, apiToken: env.CL_API_TOKEN });
     } catch (e) {
         log('error', 'scraper_discover_failed', { message: String(e) });
         return { fetched: 0, inserted: 0, processed: 0, errors: 0 };
@@ -58,7 +58,7 @@ async function processOpinion(env, op) {
 
     let text;
     try {
-        text = await fetchOpinionText(op.cl_opinion_id);
+        text = await fetchOpinionText(op.cl_opinion_id, { apiToken: env.CL_API_TOKEN });
     } catch (e) {
         await setOpinionStatus(env.ELINAL_DB, op.docket, 'error', `text_fetch: ${e.message}`);
         throw e;

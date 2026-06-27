@@ -2,8 +2,13 @@
 
 import { fetchWithTimeout, stripHtml } from './utils.js';
 
-const CL_BASE    = 'https://www.courtlistener.com/api/rest/v4';
-const CL_HEADERS = { 'Accept': 'application/json', 'User-Agent': 'ELINAL/1.0 (elinal.zyxwonderland.xyz)' };
+const CL_BASE = 'https://www.courtlistener.com/api/rest/v4';
+
+function clHeaders(apiToken) {
+    const h = { 'Accept': 'application/json', 'User-Agent': 'ELINAL/1.0 (elinal.zyxwonderland.xyz)' };
+    if (apiToken) h['Authorization'] = `Token ${apiToken}`;
+    return h;
+}
 
 // Returns the ISO date string (YYYY-MM-DD) for Oct 1 of the current SCOTUS term.
 // The term opens in October; opinions filed Oct–Dec belong to that year's term,
@@ -19,11 +24,11 @@ export function currentTermStartDate() {
 // Returns array of opinion stubs for current-term SCOTUS combined opinions.
 // Filters to date_filed >= Oct 1 of the current term so re-running ingest
 // does not re-queue all-time historical opinions on every cron cycle.
-export async function fetchRecentOpinions({ limit = 20 } = {}) {
+export async function fetchRecentOpinions({ limit = 20, apiToken } = {}) {
     const since = currentTermStartDate();
     const url = `${CL_BASE}/opinions/?court=scotus&type=010combined`
         + `&date_filed__gte=${since}&order_by=-date_filed&page_size=${limit}&format=json`;
-    const r = await fetchWithTimeout(url, { headers: CL_HEADERS }, 15_000);
+    const r = await fetchWithTimeout(url, { headers: clHeaders(apiToken) }, 15_000);
     if (!r.ok) throw new Error(`CourtListener opinions API ${r.status}`);
     const data = await r.json();
 
@@ -38,10 +43,10 @@ export async function fetchRecentOpinions({ limit = 20 } = {}) {
 }
 
 // Fetches the plain text of a single opinion from CourtListener
-export async function fetchOpinionText(cl_opinion_id) {
+export async function fetchOpinionText(cl_opinion_id, { apiToken } = {}) {
     if (!cl_opinion_id) throw new Error('cl_opinion_id is required');
     const url = `${CL_BASE}/opinions/${cl_opinion_id}/?format=json`;
-    const r   = await fetchWithTimeout(url, { headers: CL_HEADERS }, 20_000);
+    const r   = await fetchWithTimeout(url, { headers: clHeaders(apiToken) }, 20_000);
     if (!r.ok) throw new Error(`CourtListener opinion ${cl_opinion_id} returned ${r.status}`);
     const data = await r.json();
     const text = data.plain_text?.trim() || stripHtml(data.html_with_citations || '');
