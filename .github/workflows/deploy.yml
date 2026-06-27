@@ -80,8 +80,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Build ELINAL client placeholder
-        run: mkdir -p elinal/client/dist && cp elinal/client/index.html elinal/client/dist/index.html
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Install ELINAL client dependencies
+        run: cd elinal/client && npm ci
+
+      - name: Build ELINAL client
+        run: cd elinal/client && npm run build
 
       - name: Deploy ELINAL Worker to Cloudflare
         uses: cloudflare/wrangler-action@v4
