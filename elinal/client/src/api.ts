@@ -1,5 +1,18 @@
 import type { Opinion, ReadingMaterials } from './types';
 
+export interface GlossaryHit {
+    docket:     string;
+    title:      string;
+    term:       string;
+    definition: string;
+}
+
+export interface SearchResponse {
+    opinions: Opinion[];
+    glossary: GlossaryHit[];
+    query:    string;
+}
+
 export interface OpinionsResponse {
     opinions: Opinion[];
     total:    number;
@@ -33,4 +46,8 @@ export function fetchOpinion(docket: string): Promise<Opinion> {
 
 export function fetchReadingMaterials(docket: string): Promise<ReadingMaterials> {
     return apiFetch(`/api/opinions/${encodeURIComponent(docket)}/reading`);
+}
+
+export function searchContent(q: string): Promise<SearchResponse> {
+    return apiFetch(`/api/search?q=${encodeURIComponent(q)}`);
 }

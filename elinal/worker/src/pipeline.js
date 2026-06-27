@@ -26,7 +26,7 @@ Respond with a single valid JSON object matching this schema exactly:
     }
   ],
   "glossary": [
-    { "term": "string", "definition": "string — clear, precise, with a hint of wit" }
+    { "term": "string", "definition": "string — precise and literal, but written with an almost seductive clarity: the kind of definition that makes the reader feel the concept rather than just know it. Professional. Never florid." }
   ],
   "discussion_questions": ["string — open-ended, thought-provoking, 1–2 sentences"],
   "further_reading": [

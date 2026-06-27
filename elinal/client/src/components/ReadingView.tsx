@@ -133,7 +133,9 @@ export function ReadingView() {
             <TableOfContents sections={rm.sections} />
 
             <div className="reading-sections">
-                {rm.sections.map((s, i) => <SectionBlock key={i} section={s} index={i} />)}
+                {rm.sections.map((s, i) => (
+                    <SectionBlock key={i} section={s} index={i} glossary={rm.glossary} />
+                ))}
             </div>
 
             <GlossarySection     entries={rm.glossary} />

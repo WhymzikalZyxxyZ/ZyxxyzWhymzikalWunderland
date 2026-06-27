@@ -111,6 +111,21 @@ async function handleAdminIngest(request, env, cors) {
     return json({ ok: true, ...result }, 200, cors);
 }
 
+// ── Search ────────────────────────────────────────────────────────────────────
+async function handleSearch(request, env, cors) {
+    if (!env.ELINAL_DB) return err('Storage not provisioned', 503, cors);
+    const q = (new URL(request.url).searchParams.get('q') ?? '').trim();
+    if (q.length < 2)   return json({ opinions: [], glossary: [], query: q }, 200, cors);
+    if (q.length > 200) return err('Query too long', 400, cors);
+
+    const { searchOpinions, searchGlossary } = await import('./db.js');
+    const [opinions, glossary] = await Promise.all([
+        searchOpinions(env.ELINAL_DB, q),
+        searchGlossary(env.ELINAL_DB, q),
+    ]);
+    return json({ opinions, glossary, query: q }, 200, cors);
+}
+
 // ── Opinions API ──────────────────────────────────────────────────────────────
 async function handleOpinionsList(request, env, cors) {
     if (!env.ELINAL_DB) return err('Storage not provisioned', 503, cors);
@@ -210,6 +225,9 @@ async function handleRequest(request, env) {
 
     if (path === '/api/health') {
         response = await handleHealth(env);
+    } else if (path === '/api/search') {
+        if (!ipAllow(ip, 30)) return err('Too many requests', 429, cors);
+        response = await handleSearch(request, env, cors);
     } else if (path === '/api/admin/ingest' && method === 'POST') {
         if (!ipAllow(ip, 5)) return err('Too many requests', 429, cors);
         response = await handleAdminIngest(request, env, cors);

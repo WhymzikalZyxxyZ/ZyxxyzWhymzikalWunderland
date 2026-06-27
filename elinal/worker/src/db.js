@@ -80,6 +80,42 @@ export async function setOpinionStatus(db, docket, status, error_msg = null) {
     ).bind(status, error_msg, docket).run();
 }
 
+// Full-text search across opinion titles/dockets and glossary term definitions.
+// Uses SQLite LIKE (case-insensitive via NOCASE columns) and json_each for glossary.
+export async function searchOpinions(db, query, limit = 15) {
+    const like = `%${query}%`;
+    const { results } = await db.prepare(`
+        SELECT docket, term, title, decided_date, status
+        FROM opinions
+        WHERE status = 'ready'
+          AND (title LIKE ? OR docket LIKE ?)
+        ORDER BY decided_date DESC NULLS LAST
+        LIMIT ?
+    `).bind(like, like, limit).all();
+    return results;
+}
+
+export async function searchGlossary(db, query, limit = 10) {
+    const like = `%${query}%`;
+    const { results } = await db.prepare(`
+        SELECT o.docket,
+               o.title,
+               json_extract(j.value, '$.term')       AS term,
+               json_extract(j.value, '$.definition') AS definition
+        FROM reading_materials rm
+        JOIN opinions o ON o.docket = rm.docket
+        CROSS JOIN json_each(rm.glossary) j
+        WHERE o.status = 'ready'
+          AND (
+            json_extract(j.value, '$.term')       LIKE ?
+            OR json_extract(j.value, '$.definition') LIKE ?
+          )
+        ORDER BY o.decided_date DESC NULLS LAST
+        LIMIT ?
+    `).bind(like, like, limit).all();
+    return results;
+}
+
 export async function saveReadingMaterials(db, docket, rm, model, promptVersion) {
     await db.prepare(`
         INSERT INTO reading_materials

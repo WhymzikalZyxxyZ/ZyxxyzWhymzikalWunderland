@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { fetchOpinions } from '../api';
-import type { Opinion } from '../types';
-import { OpinionCard }    from './OpinionCard';
-import { LoadingSpinner } from './LoadingSpinner';
-import { ErrorBanner }    from './ErrorBanner';
+import { fetchOpinions }       from '../api';
+import type { Opinion }        from '../types';
+import { OpinionCard }         from './OpinionCard';
+import { SearchBar }           from './SearchBar';
+import { LoadingSpinner }      from './LoadingSpinner';
+import { ErrorBanner }         from './ErrorBanner';
 
 export function OpinionList() {
     const [opinions, setOpinions] = useState<Opinion[]>([]);
@@ -19,21 +20,23 @@ export function OpinionList() {
     if (loading) return <LoadingSpinner />;
     if (error)   return <ErrorBanner message={error} />;
 
-    if (opinions.length === 0) {
-        return (
-            <p className="list-empty">
-                The reading room is being prepared.<br />
-                New opinions are ingested on weekday mornings.
-            </p>
-        );
-    }
-
     return (
         <>
-            <h2 className="list-heading">Recent Opinions</h2>
-            <ul className="opinion-list" aria-label="SCOTUS opinions">
-                {opinions.map(op => <OpinionCard key={op.docket} opinion={op} />)}
-            </ul>
+            <SearchBar />
+
+            {opinions.length === 0 ? (
+                <p className="list-empty">
+                    The reading room is being prepared.<br />
+                    New opinions are ingested on weekday mornings.
+                </p>
+            ) : (
+                <>
+                    <h2 className="list-heading">Recent Opinions</h2>
+                    <ul className="opinion-list" aria-label="SCOTUS opinions">
+                        {opinions.map(op => <OpinionCard key={op.docket} opinion={op} />)}
+                    </ul>
+                </>
+            )}
         </>
     );
 }
