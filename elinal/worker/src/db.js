@@ -77,6 +77,15 @@ export async function upsertOpinion(db, opinion) {
     return result.meta.changes === 1;
 }
 
+// Resets all errored opinions back to pending so the next ingest can retry them.
+export async function resetErrors(db) {
+    const result = await db.prepare(
+        `UPDATE opinions SET status = 'pending', error_msg = NULL, updated_at = datetime('now')
+         WHERE status = 'error'`,
+    ).run();
+    return result.meta.changes;
+}
+
 export async function setOpinionStatus(db, docket, status, error_msg = null) {
     await db.prepare(
         `UPDATE opinions SET status = ?, error_msg = ?, updated_at = datetime('now')
