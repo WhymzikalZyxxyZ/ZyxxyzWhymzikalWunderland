@@ -288,3 +288,156 @@ describe('error handling', () => {
         await expect(worker.fetch(req('/'), env)).resolves.toBeDefined();
     });
 });
+
+// ── Admin ingest ──────────────────────────────────────────────────────────────
+
+// Mock scraper so the integration test doesn't call real CourtListener
+vi.mock('../scraper.js', () => ({
+    runScraper: vi.fn().mockResolvedValue({ fetched: 0, inserted: 0, processed: 0, errors: 0 }),
+}));
+
+describe('POST /api/admin/ingest', () => {
+    function postReq(token) {
+        return new Request('https://elinal.zyxwonderland.xyz/api/admin/ingest', {
+            method: 'POST',
+            headers: {
+                'CF-Connecting-IP': uniqueIp(),
+                'Authorization':    token ? `Bearer ${token}` : '',
+            },
+        });
+    }
+
+    it('returns 401 with no token', async () => {
+        const res = await worker.fetch(postReq(''), makeEnv());
+        expect(res.status).toBe(401);
+    });
+
+    it('returns 401 with wrong token', async () => {
+        const res = await worker.fetch(postReq('wrong-token'), makeEnv());
+        expect(res.status).toBe(401);
+    });
+
+    it('returns 200 with correct token', async () => {
+        const res = await worker.fetch(postReq('test-admin-token'), makeEnv());
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.ok).toBe(true);
+    });
+
+    it('returns 503 when ELINAL_DB is unprovisioned', async () => {
+        const res = await worker.fetch(
+            postReq('test-admin-token'),
+            makeEnv({ ELINAL_DB: undefined }),
+        );
+        expect(res.status).toBe(503);
+    });
+});
+
+// ── Opinions API ──────────────────────────────────────────────────────────────
+
+const OPINION_ROW = {
+    docket: '24-1234', term: '24', title: 'Test v. State',
+    decided_date: '2025-04-15', status: 'ready', error_msg: null,
+    created_at: '2025-04-15T12:00:00Z', updated_at: '2025-04-15T12:00:00Z',
+};
+
+const RM_ROW = {
+    docket:         '24-1234',
+    sections:       JSON.stringify([{ heading: 'H', body: 'B', key_terms: [], pull_quote: 'Q' }]),
+    glossary:       JSON.stringify([]),
+    discussion:     JSON.stringify([]),
+    further_reading: JSON.stringify([]),
+};
+
+describe('GET /api/opinions', () => {
+    it('returns 503 when DB is unprovisioned', async () => {
+        const res = await worker.fetch(req('/api/opinions'), makeEnv({ ELINAL_DB: undefined }));
+        expect(res.status).toBe(503);
+    });
+
+    it('returns opinion list when DB is provisioned', async () => {
+        const env = makeEnv();
+        // listOpinions → all() returns one row; countOpinions → first() returns total
+        env.ELINAL_DB.prepare.mockImplementation(() => ({
+            bind: vi.fn().mockReturnThis(),
+            all:  vi.fn().mockResolvedValue({ results: [OPINION_ROW] }),
+            first: vi.fn().mockResolvedValue({ total: 1 }),
+        }));
+        const res  = await worker.fetch(req('/api/opinions'), env);
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(Array.isArray(body.opinions)).toBe(true);
+    });
+});
+
+describe('GET /api/opinions/:docket', () => {
+    it('returns 404 when opinion not found', async () => {
+        const env = makeEnv();
+        env.ELINAL_DB.prepare.mockReturnValue({
+            bind: vi.fn().mockReturnThis(),
+            first: vi.fn().mockResolvedValue(null),
+        });
+        const res = await worker.fetch(req('/api/opinions/99-9999'), env);
+        expect(res.status).toBe(404);
+    });
+
+    it('returns 200 with opinion data when found', async () => {
+        const env = makeEnv();
+        env.ELINAL_DB.prepare.mockReturnValue({
+            bind: vi.fn().mockReturnThis(),
+            first: vi.fn().mockResolvedValue(OPINION_ROW),
+        });
+        const res  = await worker.fetch(req('/api/opinions/24-1234'), env);
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.docket).toBe('24-1234');
+    });
+});
+
+describe('GET /api/opinions/:docket/reading', () => {
+    it('returns 200 from KV cache when cached', async () => {
+        const env = makeEnv();
+        const cached = JSON.stringify({ docket: '24-1234', title: 'T', sections: [], glossary: [], discussion_questions: [], further_reading: [] });
+        env.ELINAL_CACHE.get.mockResolvedValue(cached);
+        const res = await worker.fetch(req('/api/opinions/24-1234/reading'), env);
+        expect(res.status).toBe(200);
+        expect(res.headers.get('X-Cache')).toBe('hit');
+    });
+
+    it('falls back to D1 when KV misses', async () => {
+        const env = makeEnv();
+        env.ELINAL_CACHE.get.mockResolvedValue(null);
+        // First prepare call is getOpinion, second is getReadingMaterials
+        let callCount = 0;
+        env.ELINAL_DB.prepare.mockImplementation(() => ({
+            bind: vi.fn().mockReturnThis(),
+            first: vi.fn().mockImplementation(() =>
+                callCount++ === 0 ? Promise.resolve(OPINION_ROW) : Promise.resolve(RM_ROW),
+            ),
+        }));
+        const res = await worker.fetch(req('/api/opinions/24-1234/reading'), env);
+        expect(res.status).toBe(200);
+    });
+
+    it('returns 202 when opinion is still processing', async () => {
+        const env = makeEnv();
+        env.ELINAL_CACHE.get.mockResolvedValue(null);
+        env.ELINAL_DB.prepare.mockReturnValue({
+            bind:  vi.fn().mockReturnThis(),
+            first: vi.fn().mockResolvedValue({ ...OPINION_ROW, status: 'processing' }),
+        });
+        const res = await worker.fetch(req('/api/opinions/24-1234/reading'), env);
+        expect(res.status).toBe(202);
+    });
+
+    it('returns 404 when opinion not found', async () => {
+        const env = makeEnv();
+        env.ELINAL_CACHE.get.mockResolvedValue(null);
+        env.ELINAL_DB.prepare.mockReturnValue({
+            bind:  vi.fn().mockReturnThis(),
+            first: vi.fn().mockResolvedValue(null),
+        });
+        const res = await worker.fetch(req('/api/opinions/99-9999/reading'), env);
+        expect(res.status).toBe(404);
+    });
+});

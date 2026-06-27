@@ -89,6 +89,10 @@ jobs:
           apiToken:         ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId:        ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: elinal/worker
+          secrets:          |
+            ADMIN_TOKEN
+        env:
+          ADMIN_TOKEN:      ${{ secrets.ELINAL_ADMIN_TOKEN }}
 
       # ── D1 migration (uncomment after Phase 2 provisioning) ────────────────
       # Requires elinal/worker/wrangler.toml [[d1_databases]] to be uncommented
