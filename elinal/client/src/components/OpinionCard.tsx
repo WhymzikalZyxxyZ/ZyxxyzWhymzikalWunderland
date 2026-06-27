@@ -9,6 +9,12 @@ const BADGE: Partial<Record<Opinion['status'], { label: string; cls: string }>> 
     error:      { label: 'Error',     cls: 'badge-error' },
 };
 
+const HINT: Partial<Record<Opinion['status'], string>> = {
+    pending:    'Queued for processing — check back soon.',
+    processing: 'Reading materials are being prepared.',
+    error:      'Processing failed — will be reprocessed on next manual ingest.',
+};
+
 export function OpinionCard({ opinion }: Props) {
     const date = opinion.decided_date
         ? new Date(opinion.decided_date).toLocaleDateString('en-US', {
@@ -16,6 +22,7 @@ export function OpinionCard({ opinion }: Props) {
           })
         : null;
     const badge = BADGE[opinion.status];
+    const hint  = HINT[opinion.status];
 
     return (
         <li>
@@ -30,6 +37,7 @@ export function OpinionCard({ opinion }: Props) {
                 </div>
                 <h2 className="card-title">{opinion.title}</h2>
                 {date && <time className="card-date" dateTime={opinion.decided_date ?? ''}>{date}</time>}
+                {hint && <p className="card-hint">{hint}</p>}
             </Link>
         </li>
     );

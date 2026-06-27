@@ -1,8 +1,6 @@
-interface Props { term: string; }
+import { termSlug } from '../utils/termSlug';
 
-function termSlug(t: string) {
-    return 'glossary-' + t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-}
+interface Props { term: string; }
 
 export function KeyTermCard({ term }: Props) {
     return (

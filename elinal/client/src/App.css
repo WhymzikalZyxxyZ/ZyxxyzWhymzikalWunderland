@@ -994,3 +994,173 @@ button:focus-visible {
     margin-top:  .25rem;
     font-style:  normal;
 }
+
+/* ── Error boundary (render crash fallback) ───────────────────────────────── */
+
+.error-boundary {
+    display:        flex;
+    flex-direction: column;
+    align-items:    center;
+    justify-content: center;
+    gap:            16px;
+    padding:        4rem 2rem;
+    text-align:     center;
+    min-height:     40vh;
+}
+
+.error-boundary-icon  { font-size: 2.5rem; }
+
+.error-boundary-title {
+    font-family: Papyrus, fantasy;
+    font-size:   1.3rem;
+    color:       var(--text);
+    letter-spacing: .04em;
+}
+
+.error-boundary-msg {
+    font-family: var(--font-sans);
+    font-size:   .88rem;
+    color:       #fca5a5;
+    max-width:   400px;
+    line-height: 1.55;
+}
+
+.error-boundary-actions {
+    display:     flex;
+    gap:         1rem;
+    align-items: center;
+    flex-wrap:   wrap;
+    justify-content: center;
+}
+
+.error-boundary-actions .back-link { margin-bottom: 0; }
+
+/* ── Opinion card hint text ───────────────────────────────────────────────── */
+
+.card-hint {
+    font-size:   .73rem;
+    color:       #475569;
+    font-style:  italic;
+    font-family: var(--font-sans);
+    margin-top:  .35rem;
+    line-height: 1.4;
+}
+
+/* ── Load more ────────────────────────────────────────────────────────────── */
+
+.load-more-wrap {
+    display:         flex;
+    flex-direction:  column;
+    align-items:     center;
+    gap:             .6rem;
+    margin-top:      1.5rem;
+}
+
+.load-more-btn {
+    background:    transparent;
+    border:        1px solid var(--border);
+    border-radius: var(--radius);
+    color:         var(--muted);
+    font-family:   var(--font-sans);
+    font-size:     .84rem;
+    padding:       .55rem 1.5rem;
+    cursor:        pointer;
+    transition:    border-color .15s, color .15s, background .15s;
+}
+
+.load-more-btn:not(:disabled):hover {
+    border-color: var(--indigo);
+    color:        var(--indigo);
+}
+
+.load-more-btn:disabled {
+    opacity: .5;
+    cursor:  not-allowed;
+}
+
+.load-more-btn:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
+
+.load-more-err {
+    font-size:   .78rem;
+    color:       #fca5a5;
+    font-family: var(--font-sans);
+}
+
+/* ── Search result keyboard focus ─────────────────────────────────────────── */
+
+.search-item[aria-selected="true"] { background: var(--card); }
+
+/* ── Scroll-to-top button ─────────────────────────────────────────────────── */
+
+.scroll-top-btn {
+    position:       fixed;
+    bottom:         2rem;
+    right:          1.75rem;
+    width:          42px;
+    height:         42px;
+    background:     var(--indigo);
+    color:          #0f0f1a;
+    border:         none;
+    border-radius:  50%;
+    font-size:      1.15rem;
+    font-weight:    700;
+    cursor:         pointer;
+    display:        flex;
+    align-items:    center;
+    justify-content: center;
+    opacity:        0;
+    transform:      translateY(10px);
+    transition:     opacity .2s, transform .2s, background .15s;
+    pointer-events: none;
+    z-index:        20;
+    line-height:    1;
+}
+
+.scroll-top-btn--visible {
+    opacity:        1;
+    transform:      translateY(0);
+    pointer-events: auto;
+}
+
+.scroll-top-btn:hover { background: var(--indigo-dark); }
+.scroll-top-btn:focus-visible { outline: 2px solid var(--indigo); outline-offset: 3px; }
+
+/* ── Sticky TOC sidebar on wide screens ───────────────────────────────────── */
+
+@media (min-width: 1100px) {
+    .app-main { max-width: 1060px; }
+
+    .reading-view {
+        display:               grid;
+        grid-template-columns: 210px 1fr;
+        grid-template-areas:
+            "toc actions"
+            "toc header"
+            "toc sections"
+            "toc glossary"
+            "toc discussion"
+            "toc further"
+            "toc disclaimer";
+        gap:      0 2.5rem;
+        max-width: none;
+        align-items: start;
+    }
+
+    .toc {
+        grid-area:  toc;
+        position:   sticky;
+        top:        calc(56px + 1.25rem);
+        align-self: start;
+        max-height: calc(100vh - 90px);
+        overflow-y: auto;
+        margin-bottom: 0;
+    }
+
+    .reading-actions    { grid-area: actions; }
+    .reading-header     { grid-area: header; }
+    .reading-sections   { grid-area: sections; }
+    .glossary           { grid-area: glossary; }
+    .discussion         { grid-area: discussion; }
+    .further-reading    { grid-area: further; }
+    .reading-disclaimer { grid-area: disclaimer; }
+}

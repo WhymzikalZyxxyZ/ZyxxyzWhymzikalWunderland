@@ -1,10 +1,7 @@
 import type { GlossaryEntry } from '../types';
+import { termSlug }           from '../utils/termSlug';
 
 interface Props { entries: GlossaryEntry[]; }
-
-export function termSlug(t: string) {
-    return 'glossary-' + t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-}
 
 export function GlossarySection({ entries }: Props) {
     if (entries.length === 0) return null;

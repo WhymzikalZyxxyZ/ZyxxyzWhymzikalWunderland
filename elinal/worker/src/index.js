@@ -177,7 +177,7 @@ async function handleReadingMaterials(docket, env, cors) {
     }
     if (opinion.status === 'error') {
         log('warn', 'opinion_error_served', { docket, error_msg: opinion.error_msg });
-        return err('Opinion processing failed — the case will be retried automatically', 502, cors);
+        return err('Opinion processing failed — a manual ingest is required to retry this case', 502, cors);
     }
 
     const rm = await getReadingMaterials(env.ELINAL_DB, docket);
