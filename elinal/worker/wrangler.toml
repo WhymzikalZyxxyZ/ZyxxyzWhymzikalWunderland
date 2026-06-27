@@ -30,21 +30,14 @@ SITE_ORIGIN    = "https://zyxwonderland.xyz"
 ELINAL_MODEL   = "@cf/meta/llama-3.3-70b-instruct"
 PROMPT_VERSION = "v1"
 
-# ── D1 database ──────────────────────────────────────────────────────────────
-# Phase 2 provisioning:
-#   wrangler d1 create elinal-db
-# Then uncomment below and fill in database_id from the output.
-# [[d1_databases]]
-# binding       = "ELINAL_DB"
-# database_name = "elinal-db"
-# database_id   = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+# ── D1 database ───────────────────────────────────────────────────────────────
+[[d1_databases]]
+binding       = "ELINAL_DB"
+database_name = "elinal-db"
+database_id   = "0e91e739-3306-4b92-92e2-9690f55e73f9"
 
-# ── KV namespace ─────────────────────────────────────────────────────────────
-# Phase 2 provisioning:
-#   wrangler kv namespace create elinal-cache
-#   wrangler kv namespace create elinal-cache --preview
-# Then uncomment below and fill in id and preview_id from the output.
-# [[kv_namespaces]]
-# binding    = "ELINAL_CACHE"
-# id         = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-# preview_id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+# ── KV namespace ──────────────────────────────────────────────────────────────
+[[kv_namespaces]]
+binding    = "ELINAL_CACHE"
+id         = "c062ec00ea3b4260b3ad84cedff112b4"
+preview_id = "c8499fc53d32488a8a60db3b996be090"
