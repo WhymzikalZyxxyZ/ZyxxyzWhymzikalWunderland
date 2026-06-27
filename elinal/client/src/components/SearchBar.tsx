@@ -165,7 +165,7 @@ export function SearchBar() {
                     spellCheck={false}
                 />
                 {loading && <span className="search-spinner" aria-label="Searching" />}
-                {query && !loading && (
+                {query && (
                     <button
                         className="search-clear"
                         tabIndex={-1}

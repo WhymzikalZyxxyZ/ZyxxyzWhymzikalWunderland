@@ -168,7 +168,7 @@ export function ReadingView() {
     }
 
     const date = rm.decided_date
-        ? new Date(rm.decided_date).toLocaleDateString('en-US', {
+        ? new Date(rm.decided_date + 'T12:00:00').toLocaleDateString('en-US', {
               year: 'numeric', month: 'long', day: 'numeric',
           })
         : null;

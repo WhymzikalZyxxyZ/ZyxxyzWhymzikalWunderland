@@ -19,7 +19,11 @@
     --content-pad:  1.5rem;
 }
 
-html { scroll-behavior: smooth; }
+html {
+    scroll-behavior:    smooth;
+    /* Offset scroll targets so they clear the sticky header (~56px content + buffer) */
+    scroll-padding-top: calc(56px + 1.25rem);
+}
 
 body {
     font-family:      var(--font-serif);
@@ -321,7 +325,7 @@ body {
     content:        '';
     position:       absolute;
     top:            100%;
-    left:           50%;
+    left:           var(--gtooltip-caret, 50%);
     transform:      translateX(-50%);
     border:         6px solid transparent;
     border-top-color: var(--indigo);

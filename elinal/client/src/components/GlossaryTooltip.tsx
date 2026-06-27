@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 
 interface Props { term: string; definition: string; }
 
@@ -7,6 +7,7 @@ export function GlossaryTooltip({ term, definition }: Props) {
     const [offsetX, setOffsetX] = useState(0);
     const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const cardRef    = useRef<HTMLSpanElement>(null);
+    const tooltipId  = useId();
 
     useEffect(() => {
         return () => { if (closeTimer.current) clearTimeout(closeTimer.current); };
@@ -38,8 +39,13 @@ export function GlossaryTooltip({ term, definition }: Props) {
         if (e.key === 'Escape') { setOpen(false); }
     }
 
+    // When the card is shifted horizontally to avoid clipping, the caret must
+    // shift the opposite direction so it stays visually above the anchor word.
     const tooltipStyle = offsetX !== 0
-        ? { transform: `translateX(calc(-50% + ${offsetX}px))` }
+        ? {
+              transform:          `translateX(calc(-50% + ${offsetX}px))`,
+              '--gtooltip-caret': `calc(50% - ${offsetX}px)`,
+          } as React.CSSProperties
         : undefined;
 
     return (
@@ -54,10 +60,12 @@ export function GlossaryTooltip({ term, definition }: Props) {
             role="button"
             aria-label={`Definition of ${term}`}
             aria-expanded={open}
+            aria-describedby={open ? tooltipId : undefined}
         >
             {term}
             {open && (
                 <span
+                    id={tooltipId}
                     ref={cardRef}
                     className="gtooltip-card"
                     role="tooltip"

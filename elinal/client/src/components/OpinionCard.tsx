@@ -17,7 +17,7 @@ const HINT: Partial<Record<Opinion['status'], string>> = {
 
 export function OpinionCard({ opinion }: Props) {
     const date = opinion.decided_date
-        ? new Date(opinion.decided_date).toLocaleDateString('en-US', {
+        ? new Date(opinion.decided_date + 'T12:00:00').toLocaleDateString('en-US', {
               year: 'numeric', month: 'long', day: 'numeric',
           })
         : null;
