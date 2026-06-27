@@ -35,6 +35,8 @@ export function ReadingView() {
 
         const encodedDocket = encodeURIComponent(docket);
         let pollTimer: ReturnType<typeof setTimeout> | null = null;
+        let pollCount = 0;
+        const MAX_POLLS = 6; // 1 minute max — cron retries stale opinions automatically
 
         async function load() {
             try {
@@ -45,6 +47,11 @@ export function ReadingView() {
                 if (!mountedRef.current) return;
 
                 if (r.status === 202) {
+                    if (pollCount++ >= MAX_POLLS) {
+                        setError('Reading materials are taking longer than expected. The case will be retried automatically — check back soon.');
+                        setState('error');
+                        return;
+                    }
                     setState('polling');
                     pollTimer = setTimeout(load, 10_000);
                     return;
