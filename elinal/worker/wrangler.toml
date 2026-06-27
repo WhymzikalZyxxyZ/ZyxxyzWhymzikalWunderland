@@ -1,0 +1,33 @@
+name               = "elinal"
+main               = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# ── AI binding — no provisioning required, uses account token ─────────────────
+[ai]
+binding = "AI"
+
+# ── Routes ────────────────────────────────────────────────────────────────────
+[[routes]]
+pattern   = "elinal.zyxwonderland.xyz/*"
+zone_name = "zyxwonderland.xyz"
+
+# ── Static assets (SPA) ───────────────────────────────────────────────────────
+[assets]
+directory          = "../client/dist"
+not_found_handling = "single-page-application"
+run_worker_first   = true
+binding            = "ASSETS"
+
+# ── Cron trigger — weekdays at 10:00 ET (15:00 UTC) during SCOTUS term ───────
+# Phase 3 will wire the scheduled handler. Declaring it now so the binding
+# exists in production before the handler is implemented.
+[triggers]
+crons = ["0 15 * * 1-5"]
+
+# ── Vars ──────────────────────────────────────────────────────────────────────
+[vars]
+SITE_ORIGIN    = "https://zyxwonderland.xyz"
+ELINAL_MODEL   = "@cf/meta/llama-3.3-70b-instruct"
+PROMPT_VERSION = "v1"
+
+# ── D1 and KV bindings added in Phase 2 after provisioning ───────────────────
