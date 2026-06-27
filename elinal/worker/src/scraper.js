@@ -36,6 +36,7 @@ export async function runScraper(env) {
     const pending = await listPending(env.ELINAL_DB).catch(() => []);
     let processed = 0;
     let errors    = 0;
+    const errorLog = [];
 
     for (const op of pending) {
         try {
@@ -43,12 +44,13 @@ export async function runScraper(env) {
             processed++;
         } catch (e) {
             errors++;
+            errorLog.push({ docket: op.docket, error: String(e) });
             log('error', 'scraper_process_failed', { docket: op.docket, message: String(e) });
         }
     }
 
     log('info', 'scraper_done', { fetched: opinions.length, inserted, processed, errors });
-    return { fetched: opinions.length, inserted, processed, errors };
+    return { fetched: opinions.length, inserted, processed, errors, errorLog };
 }
 
 // Fetches opinion text, generates reading materials, stores in D1 + KV cache
