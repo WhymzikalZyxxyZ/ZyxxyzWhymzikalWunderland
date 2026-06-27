@@ -68,6 +68,13 @@ describe('generateReadingMaterials', () => {
         expect(rm.sections).toBeDefined();
     });
 
+    it('handles pre-parsed object in response.response (Llama 4 / json_object mode)', async () => {
+        const env = makeEnv();
+        env.AI.run = vi.fn().mockResolvedValue({ response: VALID_RM });
+        const rm = await generateReadingMaterials(env, { title: 'T', docket: '1', text: 'x'.repeat(300) });
+        expect(rm.sections).toBeDefined();
+    });
+
     it('truncates long opinions before sending to AI', async () => {
         const env = makeEnv();
         const longText = 'x'.repeat(50_000);

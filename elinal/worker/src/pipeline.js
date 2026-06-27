@@ -76,6 +76,8 @@ export async function generateReadingMaterials(env, { title, docket, text }) {
 function extractText(response) {
     if (typeof response === 'string') return response;
     if (typeof response?.response === 'string') return response.response;
+    // Llama 4 / JSON-mode models may return response.response as an already-parsed object
+    if (response?.response !== null && typeof response?.response === 'object') return JSON.stringify(response.response);
     if (typeof response?.result?.response === 'string') return response.result.response;
     throw new Error(`Unexpected AI response shape: ${JSON.stringify(response).slice(0, 200)}`);
 }
