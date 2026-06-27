@@ -90,6 +90,18 @@ jobs:
           accountId:        ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: elinal/worker
 
+      # ── D1 migration (uncomment after Phase 2 provisioning) ────────────────
+      # Requires elinal/worker/wrangler.toml [[d1_databases]] to be uncommented
+      # and database_id filled in. Run once per schema change; IF NOT EXISTS
+      # guards make it safe to run on every deploy.
+      # - name: Run ELINAL D1 migration
+      #   uses: cloudflare/wrangler-action@v4
+      #   with:
+      #     apiToken:         ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      #     accountId:        ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      #     workingDirectory: elinal/worker
+      #     command:          d1 execute elinal-db --remote --file=migrations/0001_initial.sql
+
   # ── Deploy static site to GitHub Pages ───────────────────────────────────────
   deploy:
     runs-on: ubuntu-latest

@@ -15,6 +15,23 @@ beforeAll(() => {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+function makeDB() {
+    const stmt = {
+        bind:  vi.fn().mockReturnThis(),
+        first: vi.fn().mockResolvedValue({ '1': 1 }),
+        all:   vi.fn().mockResolvedValue({ results: [] }),
+        run:   vi.fn().mockResolvedValue({ meta: { changes: 1 } }),
+    };
+    return { prepare: vi.fn().mockReturnValue(stmt) };
+}
+
+function makeCache() {
+    return {
+        get: vi.fn().mockResolvedValue(null),
+        put: vi.fn().mockResolvedValue(undefined),
+    };
+}
+
 function makeEnv(overrides = {}) {
     return {
         AI: { run: vi.fn().mockResolvedValue({ response: '{}' }) },
@@ -26,6 +43,9 @@ function makeEnv(overrides = {}) {
                 }),
             ),
         },
+        ELINAL_DB:      makeDB(),
+        ELINAL_CACHE:   makeCache(),
+        ADMIN_TOKEN:    'test-admin-token',
         ELINAL_MODEL:   '@cf/meta/llama-3.3-70b-instruct',
         PROMPT_VERSION: 'v1',
         SITE_ORIGIN:    'https://zyxwonderland.xyz',
@@ -69,6 +89,8 @@ describe('/api/health', () => {
         const body = await res.json();
         expect(body.status).toBe('ok');
         expect(body.checks.ai).toBe(true);
+        expect(body.checks.db).toBe(true);
+        expect(body.checks.cache).toBe(true);
         expect(body.checks.scotus).toBe(true);
         expect(body.checks.courtlistener).toBe(true);
     });
@@ -88,6 +110,32 @@ describe('/api/health', () => {
         const body = await res.json();
         expect(body.status).toBe('degraded');
         expect(body.checks.ai).toBe(false);
+    });
+
+    it('reports db and cache as null when bindings are unprovisioned', async () => {
+        global.fetch = mockFetch({ ok: true });
+        const res  = await worker.fetch(
+            req('/api/health'),
+            makeEnv({ ELINAL_DB: undefined, ELINAL_CACHE: undefined }),
+        );
+        const body = await res.json();
+        expect(body.checks.db).toBeNull();
+        expect(body.checks.cache).toBeNull();
+        // Status is still ok because unprovisioned checks are excluded
+        expect(body.status).toBe('ok');
+    });
+
+    it('returns degraded when D1 probe fails', async () => {
+        global.fetch = mockFetch({ ok: true });
+        const brokenDB = {
+            prepare: vi.fn().mockReturnValue({
+                first: vi.fn().mockRejectedValue(new Error('D1 error')),
+            }),
+        };
+        const res  = await worker.fetch(req('/api/health'), makeEnv({ ELINAL_DB: brokenDB }));
+        const body = await res.json();
+        expect(body.status).toBe('degraded');
+        expect(body.checks.db).toBe(false);
     });
 
     it('marks scotus ok on non-500 status codes (e.g. redirect)', async () => {

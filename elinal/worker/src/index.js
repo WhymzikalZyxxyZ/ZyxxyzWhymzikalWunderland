@@ -73,7 +73,10 @@ function ipAllow(ip, max, windowMs = 60_000) {
 
 // ── Health ────────────────────────────────────────────────────────────────────
 async function handleHealth(env) {
-    const [scotusResult, courtlistenerResult] = await Promise.allSettled([
+    const dbProbe    = env.ELINAL_DB    ? env.ELINAL_DB.prepare('SELECT 1').first()   : null;
+    const cacheProbe = env.ELINAL_CACHE ? env.ELINAL_CACHE.get('__health__')           : null;
+
+    const [scotusResult, courtlistenerResult, dbResult, cacheResult] = await Promise.allSettled([
         fetchWithTimeout(
             'https://www.supremecourt.gov/opinions/slipopinion/25',
             { method: 'HEAD' },
@@ -84,17 +87,24 @@ async function handleHealth(env) {
             { headers: { 'Accept': 'application/json', 'User-Agent': 'ELINAL/1.0 (elinal.zyxwonderland.xyz)' } },
             8_000,
         ),
+        dbProbe    ?? Promise.resolve(null),
+        cacheProbe ?? Promise.resolve(null),
     ]);
 
     const checks = {
         ai:            typeof env.AI?.run === 'function',
+        // null = not yet provisioned (Phase 2 setup pending) — excluded from status calc
+        db:            env.ELINAL_DB    ? dbResult.status === 'fulfilled'    : null,
+        cache:         env.ELINAL_CACHE ? cacheResult.status === 'fulfilled' : null,
         scotus:        scotusResult.status === 'fulfilled'
                            && (scotusResult.value.ok || scotusResult.value.status < 500),
         courtlistener: courtlistenerResult.status === 'fulfilled'
                            && courtlistenerResult.value.ok,
     };
 
-    const status = Object.values(checks).every(Boolean) ? 'ok' : 'degraded';
+    // Null (unprovisioned) entries don't count as failures — only provisioned checks matter
+    const provisioned = Object.values(checks).filter(v => v !== null);
+    const status      = provisioned.every(Boolean) ? 'ok' : 'degraded';
     log('info', 'health_check', { status, ...checks });
     return json({ status, checks });
 }
