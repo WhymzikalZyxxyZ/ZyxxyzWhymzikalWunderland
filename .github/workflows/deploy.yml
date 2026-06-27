@@ -91,6 +91,12 @@ jobs:
       - name: Build ELINAL client
         run: cd elinal/client && npm run build
 
+      - name: Install ELINAL worker dependencies
+        run: cd elinal/worker && npm ci
+
+      - name: Test ELINAL worker
+        run: cd elinal/worker && npm test
+
       - name: Deploy ELINAL Worker to Cloudflare
         uses: cloudflare/wrangler-action@v4
         with:
@@ -102,6 +108,10 @@ jobs:
         env:
           ADMIN_TOKEN:      ${{ secrets.ELINAL_ADMIN_TOKEN }}
 
+      # Migration runs after the worker deploy, so new worker code is live first.
+      # Current migration uses IF NOT EXISTS — safe regardless of order.
+      # CAUTION: If a future migration adds or renames columns, deploy the worker
+      # AFTER the migration completes, not before, to avoid a schema mismatch window.
       - name: Run ELINAL D1 migration
         uses: cloudflare/wrangler-action@v4
         with:

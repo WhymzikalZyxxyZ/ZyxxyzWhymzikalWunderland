@@ -1,4 +1,4 @@
-import type { Opinion, ReadingMaterials } from './types';
+import type { Opinion } from './types';
 
 export interface GlossaryHit {
     docket:     string;
@@ -38,14 +38,6 @@ export function fetchOpinions(
     if (params.offset != null) q.set('offset', String(params.offset));
     const qs = q.toString();
     return apiFetch(`/api/opinions${qs ? `?${qs}` : ''}`);
-}
-
-export function fetchOpinion(docket: string): Promise<Opinion> {
-    return apiFetch(`/api/opinions/${encodeURIComponent(docket)}`);
-}
-
-export function fetchReadingMaterials(docket: string): Promise<ReadingMaterials> {
-    return apiFetch(`/api/opinions/${encodeURIComponent(docket)}/reading`);
 }
 
 export function searchContent(q: string): Promise<SearchResponse> {

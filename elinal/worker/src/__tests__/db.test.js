@@ -49,7 +49,7 @@ describe('listOpinions', () => {
     it('respects limit and offset', async () => {
         const db = makeDB({ allResults: [] });
         await listOpinions(db, { limit: 5, offset: 10 });
-        expect(db._stmt.bind).toHaveBeenCalledWith('24' !== undefined ? expect.anything() : 5, 10);
+        expect(db._stmt.bind).toHaveBeenCalledWith(5, 10);
     });
 });
 

@@ -26,7 +26,6 @@ crons = ["0 15 * * 1-5"]
 
 # ── Vars ──────────────────────────────────────────────────────────────────────
 [vars]
-SITE_ORIGIN    = "https://zyxwonderland.xyz"
 ELINAL_MODEL   = "@cf/meta/llama-3.3-70b-instruct"
 PROMPT_VERSION = "v1"
 

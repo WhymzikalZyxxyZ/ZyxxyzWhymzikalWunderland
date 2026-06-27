@@ -47,6 +47,9 @@ export async function getReadingMaterials(db, docket) {
     ).bind(docket).first();
 }
 
+// Processes at most 5 opinions per cron run to stay within AI binding CPU limits.
+// A fresh deploy with a large backlog will take multiple cron cycles (days) to clear.
+// Trigger POST /api/admin/ingest manually to drain the queue faster.
 export async function listPending(db, limit = 5) {
     const { results } = await db.prepare(
         // Also recovers opinions stuck in 'processing' for > 1 hour (crash mid-pipeline).
