@@ -1,26 +1,40 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link }    from 'react-router-dom';
-import type { ReadingMaterials } from '../types';
-import { LoadingSpinner }         from './LoadingSpinner';
-import { ErrorBanner }            from './ErrorBanner';
-import { TableOfContents }        from './TableOfContents';
-import { SectionBlock }           from './SectionBlock';
-import { GlossarySection }        from './GlossarySection';
-import { DiscussionQuestions }    from './DiscussionQuestions';
-import { FurtherReading }         from './FurtherReading';
+import { useEffect, useRef, useState } from 'react';
+import { useParams, Link }             from 'react-router-dom';
+import type { ReadingMaterials }        from '../types';
+import { postToParent }                 from '../hooks/usePostMessage';
+import { LoadingSpinner }               from './LoadingSpinner';
+import { ErrorBanner }                  from './ErrorBanner';
+import { TableOfContents }             from './TableOfContents';
+import { SectionBlock }                from './SectionBlock';
+import { GlossarySection }             from './GlossarySection';
+import { DiscussionQuestions }         from './DiscussionQuestions';
+import { FurtherReading }              from './FurtherReading';
+import { ShareButton }                 from './ShareButton';
+
+type LoadState = 'loading' | 'polling' | 'ready' | 'error';
 
 export function ReadingView() {
     const { docket } = useParams<{ docket: string }>();
-    const [rm,      setRm]      = useState<ReadingMaterials | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error,   setError]   = useState<string | null>(null);
-    const [polling, setPolling] = useState(false);
+    const [rm,    setRm]    = useState<ReadingMaterials | null>(null);
+    const [state, setState] = useState<LoadState>('loading');
+    const [error, setError] = useState<string | null>(null);
+    const titleRef = useRef<HTMLHeadingElement>(null);
+    const mountedRef = useRef(true);
+
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => { mountedRef.current = false; };
+    }, []);
 
     useEffect(() => {
         if (!docket) return;
 
-        let cancelled = false;
+        setState('loading');
+        setRm(null);
+        setError(null);
+
         const encodedDocket = encodeURIComponent(docket);
+        let pollTimer: ReturnType<typeof setTimeout> | null = null;
 
         async function load() {
             try {
@@ -28,47 +42,62 @@ export function ReadingView() {
                     `/api/opinions/${encodedDocket}/reading`,
                     { headers: { Accept: 'application/json' } },
                 );
-
-                if (cancelled) return;
+                if (!mountedRef.current) return;
 
                 if (r.status === 202) {
-                    // Opinion is being processed — poll every 10 s
-                    setLoading(false);
-                    setPolling(true);
-                    setTimeout(() => { if (!cancelled) { setPolling(false); setLoading(true); load(); } }, 10_000);
+                    setState('polling');
+                    pollTimer = setTimeout(load, 10_000);
                     return;
                 }
 
                 if (!r.ok) {
                     const body = await r.json().catch(() => ({})) as { error?: string };
                     setError(body.error ?? `HTTP ${r.status}`);
-                    setLoading(false);
+                    setState('error');
                     return;
                 }
 
                 const data = await r.json() as ReadingMaterials;
                 setRm(data);
-                setLoading(false);
+                setState('ready');
             } catch (e) {
-                if (!cancelled) { setError(String((e as Error).message)); setLoading(false); }
+                if (mountedRef.current) {
+                    setError(String((e as Error).message));
+                    setState('error');
+                }
             }
         }
 
         load();
-        return () => { cancelled = true; };
+        return () => { if (pollTimer) clearTimeout(pollTimer); };
     }, [docket]);
 
-    if (loading) return <LoadingSpinner />;
-    if (polling) {
+    // Update document title + notify parent frame when reading materials load
+    useEffect(() => {
+        if (state !== 'ready' || !rm) return;
+        document.title = `${rm.title} — ELINAL`;
+        postToParent({ type: 'elinal:view', docket: rm.docket, title: rm.title });
+        // Move focus to the article heading for keyboard users after navigation
+        titleRef.current?.focus();
+        return () => { document.title = "ELINAL — Explain Like I’m Not A Lawyer"; };
+    }, [state, rm]);
+
+    if (state === 'loading') return <LoadingSpinner />;
+
+    if (state === 'polling') {
         return (
-            <div className="reading-processing">
+            <div className="reading-processing" role="status">
                 <LoadingSpinner />
-                <p className="processing-note">Reading materials are being prepared — checking back shortly…</p>
+                <p className="processing-note">
+                    Reading materials are being prepared — checking back shortly…
+                </p>
             </div>
         );
     }
-    if (error) return <ErrorBanner message={error} />;
-    if (!rm)   return <ErrorBanner message="Reading materials not found." />;
+
+    if (state === 'error' || !rm) {
+        return <ErrorBanner message={error ?? 'Reading materials not found.'} />;
+    }
 
     const date = rm.decided_date
         ? new Date(rm.decided_date).toLocaleDateString('en-US', {
@@ -78,14 +107,27 @@ export function ReadingView() {
 
     return (
         <article className="reading-view">
-            <Link to="/" className="back-link" aria-label="Back to opinion list">
-                ← All opinions
-            </Link>
+            <div className="reading-actions">
+                <Link to="/" className="back-link" aria-label="Back to all opinions">
+                    ← All opinions
+                </Link>
+                <ShareButton title={rm.title} />
+            </div>
 
             <header className="reading-header">
-                <div className="reading-docket">{rm.docket}</div>
-                <h1 className="reading-title">{rm.title}</h1>
-                {date && <time className="reading-date">{date}</time>}
+                <div className="reading-docket" aria-label="Docket number">{rm.docket}</div>
+                <h1
+                    className="reading-title"
+                    ref={titleRef}
+                    tabIndex={-1}
+                >
+                    {rm.title}
+                </h1>
+                {date && (
+                    <time className="reading-date" dateTime={rm.decided_date ?? ''}>
+                        {date}
+                    </time>
+                )}
             </header>
 
             <TableOfContents sections={rm.sections} />
@@ -94,9 +136,9 @@ export function ReadingView() {
                 {rm.sections.map((s, i) => <SectionBlock key={i} section={s} index={i} />)}
             </div>
 
-            <GlossarySection       entries={rm.glossary} />
-            <DiscussionQuestions   questions={rm.discussion_questions} />
-            <FurtherReading        entries={rm.further_reading} />
+            <GlossarySection     entries={rm.glossary} />
+            <DiscussionQuestions questions={rm.discussion_questions} />
+            <FurtherReading      entries={rm.further_reading} />
 
             <p className="reading-disclaimer">
                 These reading materials are generated by AI for educational purposes only

@@ -32,6 +32,26 @@ body {
 
 #root { display: flex; flex-direction: column; min-height: 100dvh; }
 
+/* ── Skip link (a11y) ────────────────────────────────────────────────────── */
+
+.skip-link {
+    position:        absolute;
+    top:             -100%;
+    left:            1rem;
+    background:      var(--indigo);
+    color:           #0f0f1a;
+    font-family:     var(--font-sans);
+    font-size:       .85rem;
+    font-weight:     700;
+    padding:         .5rem 1rem;
+    border-radius:   0 0 var(--radius) var(--radius);
+    text-decoration: none;
+    z-index:         100;
+    transition:      top .1s;
+}
+
+.skip-link:focus { top: 0; outline: 2px solid var(--indigo-dark); outline-offset: 2px; }
+
 /* ── App shell ────────────────────────────────────────────────────────────── */
 
 .app-header {
@@ -148,6 +168,28 @@ body {
     font-family: var(--font-sans);
 }
 
+/* ── 404 page ─────────────────────────────────────────────────────────────── */
+
+.not-found {
+    text-align:  center;
+    padding:     5rem 1rem;
+    font-family: var(--font-sans);
+}
+
+.not-found-code {
+    font-size:     4rem;
+    font-weight:   700;
+    color:         var(--border);
+    margin-bottom: .5rem;
+    font-family:   var(--font-mono);
+}
+
+.not-found-msg {
+    color:         var(--muted);
+    font-size:     1.1rem;
+    margin-bottom: 2rem;
+}
+
 /* ── Utilities ────────────────────────────────────────────────────────────── */
 
 .spinner {
@@ -191,6 +233,45 @@ body {
 }
 
 .back-link:hover { color: var(--indigo); }
+
+/* ── Share button ────────────────────────────────────────────────────────── */
+
+.reading-actions {
+    display:         flex;
+    align-items:     center;
+    justify-content: space-between;
+    margin-bottom:   1.5rem;
+    gap:             1rem;
+}
+
+.share-btn {
+    background:     transparent;
+    border:         1px solid var(--border);
+    border-radius:  var(--radius);
+    color:          var(--muted);
+    font-family:    var(--font-sans);
+    font-size:      .8rem;
+    padding:        .35rem .85rem;
+    cursor:         pointer;
+    transition:     border-color .15s, color .15s, background .15s;
+    white-space:    nowrap;
+    flex-shrink:    0;
+}
+
+.share-btn:hover {
+    border-color: var(--indigo);
+    color:        var(--indigo);
+}
+
+.share-btn--done {
+    border-color: #4ade80;
+    color:        #4ade80;
+}
+
+.share-btn:focus-visible {
+    outline:        2px solid var(--indigo);
+    outline-offset: 2px;
+}
 
 /* ── Reading view ─────────────────────────────────────────────────────────── */
 
@@ -461,13 +542,35 @@ body {
     font-size:   .9rem;
 }
 
+/* ── Focus management ────────────────────────────────────────────────────── */
+
+/* Programmatic focus (tabIndex=-1) should not show an outline */
+.reading-title:focus { outline: none; }
+
+/* Interactive elements get a clear ring */
+a:focus-visible,
+button:focus-visible {
+    outline:        2px solid var(--indigo);
+    outline-offset: 3px;
+    border-radius:  2px;
+}
+
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 
 @media (max-width: 600px) {
     :root { --content-pad: 1rem; }
-    .reading-title    { font-size: 1.4rem; }
-    .section-block    { padding: 1.25rem 1.25rem; }
-    .discussion-item  { padding-left: 2.5rem; }
+
+    .reading-title   { font-size: 1.4rem; }
+    .section-block   { padding: 1.25rem 1.25rem; }
+    .discussion-item { padding-left: 2.5rem; }
+
+    /* Ensure tap targets meet 44 × 44 px minimum */
+    .share-btn   { padding: .5rem 1rem; min-height: 44px; }
+    .toc-link    { padding: .2rem 0; display: inline-block; min-height: 44px; line-height: 44px; }
+    .opinion-card { padding: 1.25rem 1rem; }
+
+    /* Reading actions stack on very small screens */
+    .reading-actions { flex-wrap: wrap; }
 }
 
 /* ── Print ───────────────────────────────────────────────────────────────── */

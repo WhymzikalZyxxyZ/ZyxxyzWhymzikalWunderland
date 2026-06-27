@@ -11,7 +11,7 @@ export interface Section {
     heading:    string;
     body:       string;
     key_terms:  string[];
-    pull_quote: string;
+    pull_quote?: string | null;
 }
 
 export interface GlossaryEntry {

@@ -13,7 +13,7 @@ export async function listOpinions(db, { term, limit = 20, offset = 0 } = {}) {
         sql += ` AND term = ?`;
         params.push(term);
     }
-    sql += ` ORDER BY decided_date DESC, docket ASC LIMIT ? OFFSET ?`;
+    sql += ` ORDER BY decided_date DESC NULLS LAST, docket ASC LIMIT ? OFFSET ?`;
     params.push(limit, offset);
 
     const stmt = params.length

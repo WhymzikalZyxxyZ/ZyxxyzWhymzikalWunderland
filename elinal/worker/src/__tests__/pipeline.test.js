@@ -5,8 +5,20 @@ import { generateReadingMaterials, validateReadingMaterials } from '../pipeline.
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+const SECTION = (heading) => ({
+    heading,
+    body: 'This is a sufficiently long body paragraph for testing purposes. '.repeat(3),
+    key_terms:  [],
+    pull_quote: 'A compelling sentence.',
+});
+
 const VALID_RM = {
-    sections:             [{ heading: 'Background', body: 'Text.', key_terms: [], pull_quote: 'Quote.' }],
+    sections: [
+        SECTION('Background & Context'),
+        SECTION('The Question Before the Court'),
+        SECTION('What the Court Decided'),
+        SECTION('The Reasoning'),
+    ],
     glossary:             [{ term: 'Habeas corpus', definition: 'Latin: "you shall have the body."' }],
     discussion_questions: ['What was at stake?'],
     further_reading:      [{ title: 'The Constitution', description: 'A foundational document.' }],
@@ -29,7 +41,7 @@ describe('generateReadingMaterials', () => {
             title: 'Test v. State', docket: '24-1', text: 'Opinion text '.repeat(30),
         });
         expect(rm).toMatchObject({
-            sections:             expect.arrayContaining([expect.objectContaining({ heading: 'Background' })]),
+            sections:             expect.arrayContaining([expect.objectContaining({ heading: 'Background & Context' })]),
             glossary:             expect.any(Array),
             discussion_questions: expect.any(Array),
             further_reading:      expect.any(Array),
@@ -79,7 +91,7 @@ describe('generateReadingMaterials', () => {
         env.AI.run = vi.fn().mockResolvedValue({ response: '{"sections": []}' });
         await expect(
             generateReadingMaterials(env, { title: 'T', docket: '1', text: 'x'.repeat(300) }),
-        ).rejects.toThrow('missing sections');
+        ).rejects.toThrow('sections');
     });
 });
 
@@ -91,7 +103,11 @@ describe('validateReadingMaterials', () => {
     });
 
     it('throws when sections is empty', () => {
-        expect(() => validateReadingMaterials({ ...VALID_RM, sections: [] })).toThrow('sections');
+        expect(() => validateReadingMaterials({ ...VALID_RM, sections: [] })).toThrow();
+    });
+
+    it('throws when sections has fewer than 4 entries', () => {
+        expect(() => validateReadingMaterials({ ...VALID_RM, sections: [SECTION('Only')] })).toThrow('too few sections');
     });
 
     it('throws when glossary is missing', () => {

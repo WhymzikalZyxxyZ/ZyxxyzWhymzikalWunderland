@@ -10,7 +10,10 @@ that makes constitutional law genuinely irresistible.
 
 Voice: scholarly but never stiff, precise but never sterile. \
 Definitions carry an edge of wit and clarity. Body paragraphs unfold like good prose — \
-never jargon for its own sake, always earning every technical term they use.
+never jargon for its own sake, always earning every technical term they use. \
+Each section's body must run 2–4 full paragraphs (separated by \\n\\n), each at least 3 sentences. \
+Pull quotes must be a single memorable sentence drawn directly from the reasoning — \
+specific enough to be surprising, short enough to scan at a glance.
 
 Respond with a single valid JSON object matching this schema exactly:
 {
@@ -19,28 +22,30 @@ Respond with a single valid JSON object matching this schema exactly:
       "heading": "string",
       "body": "string — 2 to 4 rich paragraphs separated by \\n\\n",
       "key_terms": ["string"],
-      "pull_quote": "string — one compelling sentence that captures the section's essence"
+      "pull_quote": "string — one compelling sentence, 15–30 words"
     }
   ],
   "glossary": [
     { "term": "string", "definition": "string — clear, precise, with a hint of wit" }
   ],
-  "discussion_questions": ["string"],
+  "discussion_questions": ["string — open-ended, thought-provoking, 1–2 sentences"],
   "further_reading": [
-    { "title": "string", "description": "string — what this resource offers and why it matters" }
+    { "title": "string", "description": "string — what this resource offers and why it matters here" }
   ]
 }
 
 Required sections in order:
-1. "Background & Context"
-2. "The Question Before the Court"
-3. "What the Court Decided"
-4. "The Reasoning"
-5. "The Dissent" (include only if a dissent appears in the opinion text)
-6. "Why It Matters"
+1. "Background & Context" — the legal landscape and why this case exists
+2. "The Question Before the Court" — the precise legal question, stripped of jargon
+3. "What the Court Decided" — the holding and its immediate scope
+4. "The Reasoning" — the majority's analytical chain, step by step
+5. "The Dissent" — include only if a dissent appears in the opinion text; \
+   if no dissent, omit this section entirely
+6. "Why It Matters" — downstream effects: precedent, real-world stakes, open questions
 
 Produce 5–8 glossary terms. Produce 4–6 discussion questions. \
-Produce 3–5 further reading items (titles and descriptions only — no URLs).
+Produce 3–5 further reading items (canonical books, law review articles, or landmark cases — \
+titles and descriptions only, no URLs).
 Output nothing outside the JSON object.`;
 
 const MAX_OPINION_CHARS = 45_000;
@@ -87,8 +92,14 @@ function parseJson(raw) {
 }
 
 export function validateReadingMaterials(rm) {
-    if (!Array.isArray(rm?.sections) || rm.sections.length === 0)
-        throw new Error('AI response missing sections array');
+    if (!Array.isArray(rm?.sections) || rm.sections.length < 4)
+        throw new Error(`AI response has too few sections (got ${rm?.sections?.length ?? 0}, need ≥4)`);
+    for (const s of rm.sections) {
+        if (typeof s.heading !== 'string' || !s.heading.trim())
+            throw new Error('Section missing heading');
+        if (typeof s.body !== 'string' || s.body.length < 100)
+            throw new Error(`Section "${s.heading}" body too short`);
+    }
     if (!Array.isArray(rm?.glossary))
         throw new Error('AI response missing glossary array');
     if (!Array.isArray(rm?.discussion_questions))

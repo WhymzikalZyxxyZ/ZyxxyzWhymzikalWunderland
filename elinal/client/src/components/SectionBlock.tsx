@@ -17,7 +17,7 @@ export function SectionBlock({ section, index }: Props) {
 
             {section.pull_quote && <PullQuote text={section.pull_quote} />}
 
-            {section.key_terms.length > 0 && (
+            {(section.key_terms?.length ?? 0) > 0 && (
                 <div className="key-terms" aria-label="Key terms">
                     {section.key_terms.map(t => <KeyTermCard key={t} term={t} />)}
                 </div>

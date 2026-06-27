@@ -229,13 +229,52 @@ async function handleRequest(request, env) {
         // Serve the SPA for all other routes.
         // Strips X-Frame-Options so the app can be embedded on zyxwonderland.xyz;
         // replaces it with a CSP frame-ancestors directive limited to our domain.
-        response = await env.ASSETS.fetch(request);
-        const r  = new Response(response.body, response);
+        const assetRes = await env.ASSETS.fetch(request);
+        const r = new Response(assetRes.body, assetRes);
         r.headers.delete('X-Frame-Options');
         r.headers.set(
             'Content-Security-Policy',
             "frame-ancestors 'self' https://zyxwonderland.xyz https://*.zyxwonderland.xyz",
         );
+
+        // Per-opinion OG meta injection for social crawlers.
+        // Detects /:docket paths (single path segment, not /api/* or /),
+        // looks up reading materials in KV, and rewrites <title> + OG <meta> tags.
+        const isOpinionPath = /^\/[^/]+$/.test(path) && path.length > 1;
+        if (isOpinionPath && env.ELINAL_CACHE) {
+            try {
+                const docket = decodeURIComponent(path.slice(1));
+                const cached = await env.ELINAL_CACHE.get(`rm:${docket}`);
+                if (cached) {
+                    const { title } = JSON.parse(cached);
+                    const metaTitle = `${title} — ELINAL`;
+                    const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+                    return new HTMLRewriter()
+                        .on('title', {
+                            element(el) { el.setInnerContent(metaTitle); },
+                        })
+                        .on('meta[property="og:title"]', {
+                            element(el) { el.setAttribute('content', metaTitle); },
+                        })
+                        .on('meta[property="og:description"]', {
+                            element(el) { el.setAttribute('content', `Plain-language reading materials for ${esc(title)}`); },
+                        })
+                        .on('meta[property="og:type"]', {
+                            element(el) { el.setAttribute('content', 'article'); },
+                        })
+                        .on('meta[name="twitter:title"]', {
+                            element(el) { el.setAttribute('content', metaTitle); },
+                        })
+                        .on('meta[name="twitter:description"]', {
+                            element(el) { el.setAttribute('content', `Plain-language reading materials for ${esc(title)}`); },
+                        })
+                        .transform(r);
+                }
+            } catch {
+                // KV read or parse failed — serve with default meta
+            }
+        }
+
         return r;
     }
 
