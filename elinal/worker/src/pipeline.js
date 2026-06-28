@@ -75,6 +75,7 @@ export async function generateReadingMaterials(env, { title, docket, text }) {
                     `---\n\n${truncated}`,
             },
         ],
+        response_format: { type: 'json_object' },
         max_tokens: 8192,
     });
 
