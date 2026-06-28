@@ -217,7 +217,8 @@ async function handleReadingMaterials(docket, env, cors) {
 
     // Backfill KV cache for next request
     if (env.ELINAL_CACHE) {
-        env.ELINAL_CACHE.put(`rm:${docket}`, JSON.stringify(payload)).catch(() => {});
+        env.ELINAL_CACHE.put(`rm:${docket}`, JSON.stringify(payload))
+            .catch(e => log('warn', 'kv_backfill_failed', { docket, message: String(e) }));
     }
 
     return json(payload, 200, cors);
@@ -318,8 +319,8 @@ async function handleRequest(request, env) {
                         })
                         .transform(r);
                 }
-            } catch {
-                // KV read or parse failed — serve with default meta
+            } catch (e) {
+                log('warn', 'og_meta_inject_failed', { docket: path.slice(1), message: String(e) });
             }
         }
 
@@ -338,7 +339,8 @@ async function handleRequest(request, env) {
                           'Access-Control-Allow-Headers', 'Access-Control-Max-Age', 'Vary']) {
             toCache.headers.delete(h);
         }
-        edgeCache.put(request, toCache).catch(() => {});
+        edgeCache.put(request, toCache)
+            .catch(e => log('warn', 'edge_cache_write_failed', { path, message: String(e) }));
     }
 
     return r;

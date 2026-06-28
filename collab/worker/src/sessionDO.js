@@ -21,8 +21,12 @@ export class SessionDO {
     }
 
     async #load() {
-        const saved = await this.state.storage.get('diagram');
-        if (saved) this.diagram = saved;
+        try {
+            const saved = await this.state.storage.get('diagram');
+            if (saved) this.diagram = saved;
+        } catch (e) {
+            console.error('session_load_failed', String(e));
+        }
     }
 
     #send(ws, msg) {
@@ -79,7 +83,11 @@ export class SessionDO {
                 const edges  = (Array.isArray(msg.edges)  ? msg.edges  : []).slice(0, MAX_EDGES);
                 const nextId = typeof msg.nextId === 'number' ? msg.nextId : 1;
                 this.diagram = { nodes, edges, nextId };
-                await this.state.storage.put('diagram', this.diagram);
+                try {
+                    await this.state.storage.put('diagram', this.diagram);
+                } catch (e) {
+                    console.error('session_save_failed', String(e));
+                }
                 this.#broadcast({ type: 'state', ...this.diagram }, server);
             } else if (msg.type === 'cursor') {
                 const sess = this.sessions.get(server);
