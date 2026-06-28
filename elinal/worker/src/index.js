@@ -116,7 +116,9 @@ async function handleAdminIngest(request, env, cors) {
         return err('Storage not provisioned — complete Phase 2 setup', 503, cors);
     }
     const reset  = new URL(request.url).searchParams.get('reset') === 'true';
-    const result = await runScraper(env, { reset });
+    // HTTP handler has a 120s wall-clock budget; process 1 opinion at a time.
+    // The cron scheduled handler has a much longer budget and uses the default of 4.
+    const result = await runScraper(env, { reset, limit: 1 });
     return json({ ok: true, ...result }, 200, cors);
 }
 

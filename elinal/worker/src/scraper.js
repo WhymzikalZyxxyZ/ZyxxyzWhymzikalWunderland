@@ -11,7 +11,8 @@ import { log } from './logger.js';
 //   1. Fetch recent opinion stubs from CourtListener → upsert into D1
 //   2. Process all pending opinions: fetch text → generate AI reading materials → cache in KV
 // Pass { reset: true } to first flip all errored opinions back to pending.
-export async function runScraper(env, { reset = false } = {}) {
+// Pass { limit } to override how many pending opinions are processed in Pass 2.
+export async function runScraper(env, { reset = false, limit } = {}) {
     log('info', 'scraper_start', { reset });
     if (reset) {
         const resetCount = await resetErrors(env.ELINAL_DB).catch(() => 0);
@@ -38,7 +39,7 @@ export async function runScraper(env, { reset = false } = {}) {
     }
 
     // Pass 2 — process pending
-    const pending = await listPending(env.ELINAL_DB).catch(() => []);
+    const pending = await listPending(env.ELINAL_DB, limit).catch(() => []);
     let processed = 0;
     let errors    = 0;
     const errorLog = [];

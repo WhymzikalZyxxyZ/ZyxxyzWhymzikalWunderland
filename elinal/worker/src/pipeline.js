@@ -62,7 +62,7 @@ export async function generateReadingMaterials(env, { title, docket, text }) {
             { role: 'user',   content: `Case: ${title} (Docket ${docket})\n\n---\n\n${truncated}` },
         ],
         response_format: { type: 'json_object' },
-        max_tokens: 4096,
+        max_tokens: 6144,
     });
 
     const raw = extractText(aiResponse);
