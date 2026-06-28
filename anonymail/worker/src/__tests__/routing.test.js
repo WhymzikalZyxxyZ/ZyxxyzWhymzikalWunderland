@@ -65,6 +65,7 @@ function makeEnv({ registryAddress = VALID_ADDR, mailboxBody = { ok: true } } = 
         TTL_MS:          '3600000',
         MAX_MAILBOXES:   '500',
         DEV_RATE_BYPASS: 'true',
+        ASSETS:          { fetch: vi.fn(async () => new Response('<html></html>', { status: 200, headers: { 'Content-Type': 'text/html' } })) },
         _registry: registryStub,
         _mailbox:  mailboxStub,
     };
@@ -117,10 +118,12 @@ describe('Worker routing', () => {
             expect(res.headers.get('X-Content-Type-Options')).toBe('nosniff');
         });
 
-        it('every response has X-Frame-Options: DENY', async () => {
+        it('every response has frame-ancestors CSP allowing zyxwonderland.xyz', async () => {
             const env = makeEnv();
             const res = await worker.fetch(req('/health'), env);
-            expect(res.headers.get('X-Frame-Options')).toBe('DENY');
+            const csp = res.headers.get('Content-Security-Policy') || '';
+            expect(csp).toContain('frame-ancestors');
+            expect(csp).toContain('https://zyxwonderland.xyz');
         });
 
         it('every response has X-Request-Id', async () => {
@@ -151,10 +154,11 @@ describe('Worker routing', () => {
 
     // ── Unknown paths ─────────────────────────────────────────────────────────
     describe('Unknown paths', () => {
-        it('non-/api path returns 404', async () => {
+        it('non-/api path serves SPA via ASSETS binding', async () => {
             const env = makeEnv();
             const res = await worker.fetch(req('/nope'), env);
-            expect(res.status).toBe(404);
+            expect(res.status).toBe(200);
+            expect(env.ASSETS.fetch).toHaveBeenCalled();
         });
 
         it('/api/unknown authenticated route returns 404', async () => {
