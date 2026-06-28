@@ -69,7 +69,19 @@ export async function generateReadingMaterials(env, { title, docket, text }) {
 
     const raw = extractText(aiResponse);
     const parsed = parseJson(raw);
-    validateReadingMaterials(parsed);
+    try {
+        validateReadingMaterials(parsed);
+    } catch (e) {
+        // Append a diagnostic snapshot of the parsed response so the error_msg
+        // stored in D1 reveals exactly what the model returned.
+        const snap = {
+            keys:           Object.keys(parsed ?? {}),
+            sections_count: parsed?.sections?.length ?? 'missing',
+            sections_heads: (parsed?.sections ?? []).map(s => s?.heading ?? '?').slice(0, 6),
+            s0_body_len:    parsed?.sections?.[0]?.body?.length ?? 0,
+        };
+        throw new Error(`${e.message} | snap: ${JSON.stringify(snap)}`);
+    }
     return parsed;
 }
 
