@@ -140,7 +140,8 @@ export default {
         if (route) {
             try {
                 response = await route.handler(request);
-            } catch {
+            } catch (e) {
+                console.error('route_handler_failed', { path, message: String(e) });
                 response = json({ error: 'Handler error', code: 'INTERNAL_ERROR' }, 500);
             }
         } else {
@@ -160,7 +161,7 @@ export default {
             method: 'POST',
             body: JSON.stringify({ method, path: safePath, status: response.status, latency_ms: latency, key_id: safeKeyId, ts: Date.now() }),
             headers: { 'Content-Type': 'application/json' },
-        }));
+        })).catch(e => console.error('analytics_record_failed', String(e)));
 
         return response;
     },

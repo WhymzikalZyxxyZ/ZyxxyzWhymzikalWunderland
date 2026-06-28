@@ -26,7 +26,11 @@ async function probe(url) {
 
 export default {
     async scheduled(event, env) {
-        const services = JSON.parse(env.SERVICES);
+        let services;
+        try { services = JSON.parse(env.SERVICES); } catch (e) {
+            console.error('status_services_parse_failed', String(e));
+            return;
+        }
         const results  = await Promise.all(services.map(async svc => {
             const { ok, latency_ms } = await probe(svc.url);
             return { id: svc.id, ok, latency_ms, ts: Date.now() };
@@ -34,10 +38,14 @@ export default {
 
         const id  = env.STATUS_DO.idFromName('singleton');
         const stub = env.STATUS_DO.get(id);
-        await stub.fetch(new Request(
-            `https://do/record?retention=${env.RETENTION_DAYS}`,
-            { method: 'POST', body: JSON.stringify(results), headers: { 'Content-Type': 'application/json' } }
-        ));
+        try {
+            await stub.fetch(new Request(
+                `https://do/record?retention=${env.RETENTION_DAYS}`,
+                { method: 'POST', body: JSON.stringify(results), headers: { 'Content-Type': 'application/json' } }
+            ));
+        } catch (e) {
+            console.error('status_record_failed', String(e));
+        }
     },
 
     async fetch(request, env) {
@@ -52,7 +60,12 @@ export default {
         const stub = env.STATUS_DO.get(id);
 
         if (path === '/api/status') {
-            const services = JSON.parse(env.SERVICES);
+            let services;
+            try { services = JSON.parse(env.SERVICES); } catch {
+                return new Response(JSON.stringify({ error: 'Service config unavailable' }), {
+                    status: 503, headers: { ...CORS, 'Content-Type': 'application/json' },
+                });
+            }
             const res = await stub.fetch(new Request(
                 `https://do/current?services=${encodeURIComponent(JSON.stringify(services))}`
             ));
@@ -60,7 +73,12 @@ export default {
         }
 
         if (path === '/api/sparkline') {
-            const services   = JSON.parse(env.SERVICES);
+            let services;
+            try { services = JSON.parse(env.SERVICES); } catch {
+                return new Response(JSON.stringify({ error: 'Service config unavailable' }), {
+                    status: 503, headers: { ...CORS, 'Content-Type': 'application/json' },
+                });
+            }
             const validIds   = new Set(services.map(s => s.id));
             const svc        = url.searchParams.get('svc') || '';
             if (!validIds.has(svc)) {

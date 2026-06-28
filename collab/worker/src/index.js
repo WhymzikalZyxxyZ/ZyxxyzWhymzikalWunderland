@@ -15,27 +15,32 @@ function uid8() {
 
 export default {
     async fetch(request, env) {
-        const url  = new URL(request.url);
-        const path = url.pathname;
+        try {
+            const url  = new URL(request.url);
+            const path = url.pathname;
 
-        if (request.method === 'OPTIONS') {
-            return new Response(null, { status: 204, headers: CORS });
-        }
-
-        if (path === '/api/session' && request.method === 'POST') {
-            return Response.json({ id: uid8() }, { headers: CORS });
-        }
-
-        if (path === '/ws') {
-            const sessionId = url.searchParams.get('session');
-            if (!sessionId) return new Response('missing session', { status: 400 });
-            if (request.headers.get('Upgrade') !== 'websocket') {
-                return new Response('expected websocket', { status: 426 });
+            if (request.method === 'OPTIONS') {
+                return new Response(null, { status: 204, headers: CORS });
             }
-            const stub = env.SESSION_DO.get(env.SESSION_DO.idFromName(sessionId));
-            return stub.fetch(request);
-        }
 
-        return new Response('not found', { status: 404 });
+            if (path === '/api/session' && request.method === 'POST') {
+                return Response.json({ id: uid8() }, { headers: CORS });
+            }
+
+            if (path === '/ws') {
+                const sessionId = url.searchParams.get('session');
+                if (!sessionId) return new Response('missing session', { status: 400 });
+                if (request.headers.get('Upgrade') !== 'websocket') {
+                    return new Response('expected websocket', { status: 426 });
+                }
+                const stub = env.SESSION_DO.get(env.SESSION_DO.idFromName(sessionId));
+                return stub.fetch(request);
+            }
+
+            return new Response('not found', { status: 404 });
+        } catch (e) {
+            console.error('collab_unhandled', String(e));
+            return new Response('internal server error', { status: 500 });
+        }
     },
 };

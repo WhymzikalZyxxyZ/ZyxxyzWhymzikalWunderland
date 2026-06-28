@@ -110,4 +110,9 @@ app.get('/api/status', (_req, res) => {
 
 app.get('/health', (_req, res) => res.json({status:'ok'}));
 
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+    console.error('unhandled_error', err.message, err.stack);
+    res.status(500).json({ error: 'Internal server error' });
+});
+
 app.listen(PORT, () => console.log(`TypeScript API running on :${PORT}`));

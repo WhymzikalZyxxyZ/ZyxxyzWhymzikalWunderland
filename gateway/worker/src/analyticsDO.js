@@ -47,7 +47,8 @@ export class AnalyticsDO {
         const path = url.pathname;
 
         if (path === '/rate-check' && request.method === 'POST') {
-            const body = await request.json();
+            let body;
+            try { body = await request.json(); } catch { return new Response('bad request', { status: 400 }); }
             const identity = String(body.identity ?? '').slice(0, 128);
             const limit    = Math.max(1, Math.min(10000, parseInt(body.limit, 10) || 20));
             const result   = await this.#checkRate(identity, limit);
@@ -55,7 +56,8 @@ export class AnalyticsDO {
         }
 
         if (path === '/record' && request.method === 'POST') {
-            const row       = await request.json();
+            let row;
+            try { row = await request.json(); } catch { return new Response('bad request', { status: 400 }); }
             const retention = Math.max(1, Math.min(90, parseInt(url.searchParams.get('retention') || '7', 10)));
             const method    = String(row.method  ?? 'GET').slice(0, 10).toUpperCase();
             const rowPath   = String(row.path    ?? '/').slice(0, 256);
@@ -63,12 +65,16 @@ export class AnalyticsDO {
             const latency   = Math.max(0, Math.min(60000, parseInt(row.latency_ms, 10) || 0));
             const keyId     = String(row.key_id  ?? '').slice(0, 32);
             const ts        = typeof row.ts === 'number' ? row.ts : Date.now();
-            this.sql.exec(
-                `INSERT INTO requests (method, path, status, latency_ms, key_id, ts)
-                 VALUES (?, ?, ?, ?, ?, ?)`,
-                method, rowPath, status, latency, keyId, ts
-            );
-            this.#purge(retention);
+            try {
+                this.sql.exec(
+                    `INSERT INTO requests (method, path, status, latency_ms, key_id, ts)
+                     VALUES (?, ?, ?, ?, ?, ?)`,
+                    method, rowPath, status, latency, keyId, ts
+                );
+                this.#purge(retention);
+            } catch (e) {
+                console.error('analytics_insert_failed', String(e));
+            }
             return new Response('ok');
         }
 
