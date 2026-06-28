@@ -22,7 +22,7 @@ Respond with a single valid JSON object matching this schema exactly:
   "sections": [
     {
       "heading": "string",
-      "body": "string — 2 to 4 rich paragraphs separated by \\n\\n",
+      "body": "string — exactly 2 paragraphs separated by \\n\\n, 2–3 sentences each",
       "key_terms": ["string"],
       "pull_quote": "string — one compelling sentence, 15–30 words"
     }
@@ -41,8 +41,8 @@ Required sections in order:
 2. "The Question Before the Court" — the precise legal question, stripped of jargon
 3. "What the Court Decided" — the holding and its immediate scope
 4. "The Reasoning" — the majority's analytical chain, step by step
-5. "The Dissent" — include only if a dissent appears in the opinion text; \
-   if no dissent, omit this section entirely
+5. "The Dissent" — include ONLY if dissent text explicitly appears in the opinion excerpt. \
+   If no dissent is present, DO NOT include this section at all — not even a placeholder.
 6. "Why It Matters" — downstream effects: precedent, real-world stakes, open questions
 
 Produce exactly 4 glossary terms. Produce exactly 3 discussion questions. \
@@ -101,7 +101,8 @@ export function validateReadingMaterials(rm) {
     for (const s of rm.sections) {
         if (typeof s.heading !== 'string' || !s.heading.trim())
             throw new Error('Section missing heading');
-        if (typeof s.body !== 'string' || s.body.length < 100)
+        const minBody = s.heading === 'The Dissent' ? 20 : 100;
+        if (typeof s.body !== 'string' || s.body.length < minBody)
             throw new Error(`Section "${s.heading}" body too short`);
     }
     if (!Array.isArray(rm?.glossary))
