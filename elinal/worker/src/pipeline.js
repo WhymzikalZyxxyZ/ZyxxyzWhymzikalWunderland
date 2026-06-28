@@ -61,9 +61,20 @@ export async function generateReadingMaterials(env, { title, docket, text }) {
     const aiResponse = await env.AI.run(env.ELINAL_MODEL, {
         messages: [
             { role: 'system', content: SYSTEM_PROMPT },
-            { role: 'user',   content: `Case: ${title} (Docket ${docket})\n\n---\n\n${truncated}` },
+            {
+                role:    'user',
+                content: `Case: ${title} (Docket ${docket})\n\n` +
+                    `YOU MUST write all 5 sections in order:\n` +
+                    `1. Background & Context\n` +
+                    `2. The Question Before the Court\n` +
+                    `3. What the Court Decided\n` +
+                    `4. The Reasoning\n` +
+                    `5. Why It Matters\n` +
+                    `(Plus "The Dissent" only if the text contains dissent.)\n` +
+                    `Even if the opinion excerpt is brief, complete all sections using legal context and analysis.\n\n` +
+                    `---\n\n${truncated}`,
+            },
         ],
-        response_format: { type: 'json_object' },
         max_tokens: 8192,
     });
 
