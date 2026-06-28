@@ -10,10 +10,12 @@ that makes constitutional law genuinely irresistible.
 
 Voice: scholarly but never stiff, precise but never sterile. \
 Definitions carry an edge of wit and clarity. Body paragraphs unfold like good prose — \
-never jargon for its own sake, always earning every technical term they use. \
-Each section's body must run 2–4 full paragraphs (separated by \\n\\n), each at least 3 sentences. \
-Pull quotes must be a single memorable sentence drawn directly from the reasoning — \
-specific enough to be surprising, short enough to scan at a glance.
+never jargon for its own sake, always earning every technical term they use.
+
+CRITICAL OUTPUT RULES (follow these exactly):
+- Each section body must be exactly 2 paragraphs separated by \\n\\n. Each paragraph is 2–3 sentences. No more.
+- You MUST complete ALL required sections before writing the glossary. Do not expand any section beyond 2 paragraphs.
+- Pull quotes must be a single memorable sentence drawn directly from the reasoning — 15–30 words exactly.
 
 Respond with a single valid JSON object matching this schema exactly:
 {
@@ -43,8 +45,8 @@ Required sections in order:
    if no dissent, omit this section entirely
 6. "Why It Matters" — downstream effects: precedent, real-world stakes, open questions
 
-Produce 5–8 glossary terms. Produce 4–6 discussion questions. \
-Produce 3–5 further reading items (canonical books, law review articles, or landmark cases — \
+Produce exactly 4 glossary terms. Produce exactly 3 discussion questions. \
+Produce exactly 3 further reading items (canonical books, law review articles, or landmark cases — \
 titles and descriptions only, no URLs).
 Output nothing outside the JSON object.`;
 
