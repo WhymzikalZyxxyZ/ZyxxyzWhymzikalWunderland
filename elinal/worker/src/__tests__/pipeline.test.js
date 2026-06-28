@@ -48,7 +48,7 @@ describe('generateReadingMaterials', () => {
         });
         expect(env.AI.run).toHaveBeenCalledWith(
             '@cf/meta/llama-3.3-70b-instruct',
-            expect.objectContaining({ response_format: { type: 'json_object' } }),
+            expect.objectContaining({ max_tokens: 8192 }),
         );
     });
 
