@@ -53,7 +53,7 @@
         }
     },
     "dependencies": {
-        "postal-mime": "^2.3.7",
+        "postal-mime": "^2.7.5",
         "qrcode": "^1.5.4"
     },
     "devDependencies": {
