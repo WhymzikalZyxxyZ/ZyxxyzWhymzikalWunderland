@@ -1,0 +1,314 @@
+/*
+ * embed.css — shared iframe embed page layout and component styles
+ *
+ * Each embed page sets its brand tokens by overriding --ea-* properties
+ * in a small <style> block. Every structural class is prefixed ea- to avoid
+ * collisions with the main styles.css.
+ *
+ * State model (driven by js/embed.js):
+ *   loading  → .ea-loading visible, .ea-frame hidden, .ea-error hidden
+ *   frame    → .ea-loading hidden, .ea-frame visible, .ea-error hidden
+ *   error    → .ea-loading hidden, .ea-frame hidden, .ea-error visible
+ * Visibility is managed via the HTML `hidden` attribute (all browsers honour
+ * [hidden] { display: none }).
+ */
+
+/* ── Brand tokens (defaults — each page overrides these) ─────────────────── */
+:root {
+    --ea-accent:          #818cf8;
+    --ea-accent-dark:     #6366f1;
+    --ea-accent-dim:      rgb(129 140 248 / 0.08);
+    --ea-accent-dim-hover:rgb(129 140 248 / 0.2);
+    --ea-accent-fg:       #0f0f1a;
+    --ea-border:          rgb(129 140 248 / 0.18);
+    --ea-border-btn:      rgb(129 140 248 / 0.38);
+    --ea-border-ghost:    rgb(129 140 248 / 0.15);
+    --ea-border-pill:     rgb(129 140 248 / 0.2);
+    --ea-border-code:     rgb(129 140 248 / 0.1);
+    --ea-spinner-track:   rgb(129 140 248 / 0.12);
+    --ea-bg:              #0f0f1a;
+    --ea-surface:         #1e1e2e;
+}
+
+/* ── Page layout ──────────────────────────────────────────────────────────── */
+.ea-page {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - var(--navbar-height, 56px));
+}
+
+/* ── Top bar ──────────────────────────────────────────────────────────────── */
+.ea-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 20px;
+    background: var(--ea-surface);
+    border-bottom: 1px solid var(--ea-border);
+    flex-shrink: 0;
+    gap: 12px;
+    min-height: 48px;
+}
+
+.ea-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    flex: 1;
+}
+
+.ea-bar-title {
+    font-family: Papyrus, fantasy;
+    font-size: 0.95em;
+    font-weight: 700;
+    color: var(--ea-accent);
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+.ea-bar-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
+/* ── Breadcrumb (optional — visible once an app navigation occurs) ─────────── */
+.ea-breadcrumb {
+    font-size: 0.78em;
+    color: #475569;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'Courier New', monospace;
+    transition: color 0.2s;
+    min-width: 0;
+}
+.ea-breadcrumb.ea-visible { color: #94a3b8; }
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+.ea-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.82em;
+    font-family: 'Courier New', monospace;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+    border: none;
+    background: none;
+}
+
+.ea-btn-outline {
+    border: 1px solid var(--ea-border-btn);
+    color: var(--ea-accent);
+}
+.ea-btn-outline:hover        { background: var(--ea-accent-dim); border-color: var(--ea-accent); }
+.ea-btn-outline:focus-visible { outline: 2px solid var(--ea-accent); outline-offset: 2px; }
+
+.ea-btn-fill {
+    background: var(--ea-accent);
+    color: var(--ea-accent-fg);
+    border: 1px solid var(--ea-accent);
+    font-weight: bold;
+}
+.ea-btn-fill:hover        { background: var(--ea-accent-dark); border-color: var(--ea-accent-dark); }
+.ea-btn-fill:focus-visible { outline: 2px solid var(--ea-accent); outline-offset: 2px; }
+
+.ea-btn-ghost {
+    border: 1px solid var(--ea-border-ghost);
+    color: #475569;
+    font-size: 0.78em;
+    padding: 5px 10px;
+}
+.ea-btn-ghost:hover { color: var(--ea-accent); border-color: var(--ea-border-btn); }
+
+/* ── iframe ───────────────────────────────────────────────────────────────── */
+.ea-frame {
+    flex: 1;
+    width: 100%;
+    border: none;
+    background: var(--ea-bg);
+    display: block;
+}
+
+/* ── Loading spinner ──────────────────────────────────────────────────────── */
+.ea-loading {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: var(--ea-bg);
+}
+
+.ea-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--ea-spinner-track);
+    border-top-color: var(--ea-accent);
+    border-radius: 50%;
+    animation: ea-spin 0.75s linear infinite;
+}
+
+@keyframes ea-spin { to { transform: rotate(360deg); } }
+
+.ea-loading p {
+    font-size: 0.83em;
+    color: #334155;
+    font-family: 'Courier New', monospace;
+    margin: 0;
+}
+
+/* ── Error / offline state ────────────────────────────────────────────────── */
+.ea-error {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 48px 32px;
+    text-align: center;
+    background: var(--ea-bg);
+}
+
+.ea-error-icon  { font-size: 2.4em; }
+
+.ea-error-title {
+    font-size: 1.1em;
+    font-weight: 700;
+    color: #e2e8f0;
+    font-family: Papyrus, fantasy;
+    letter-spacing: 1px;
+}
+
+.ea-error-body {
+    font-size: 0.85em;
+    color: #475569;
+    max-width: 440px;
+    line-height: 1.7;
+}
+.ea-error-body a       { color: var(--ea-accent); }
+.ea-error-body a:hover { text-decoration: underline; }
+
+/* Stack pills — show what powers the app */
+.ea-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 4px;
+}
+
+.ea-stack-pill {
+    font-family: 'Courier New', monospace;
+    font-size: 0.71em;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--ea-accent-dim);
+    border: 1px solid var(--ea-border-pill);
+    color: var(--ea-accent);
+}
+
+/* ── Error actions ────────────────────────────────────────────────────────── */
+.ea-error-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.ea-retry-btn {
+    padding: 8px 20px;
+    background: var(--ea-accent-dim);
+    border: 1px solid var(--ea-border-btn);
+    border-radius: 6px;
+    color: var(--ea-accent);
+    font-size: 0.84em;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    transition: background 0.15s;
+}
+.ea-retry-btn:hover { background: var(--ea-accent-dim-hover); }
+
+.ea-disclaimer {
+    font-size: 0.72em;
+    color: #334155;
+    font-style: italic;
+}
+
+/* ── Embed snippet panel ──────────────────────────────────────────────────── */
+.ea-snippet-wrap { position: relative; }
+
+.ea-snippet {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 200;
+    background: #1a1a2e;
+    border: 1px solid var(--ea-border-btn);
+    border-radius: 8px;
+    padding: 16px;
+    width: 400px;
+    max-width: 90vw;
+    box-shadow: 0 10px 32px rgb(0 0 0 / 0.55);
+}
+.ea-snippet.ea-open { display: block; }
+
+.ea-snippet-title {
+    font-size: 0.82em;
+    color: var(--ea-accent);
+    font-family: Papyrus, fantasy;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.ea-snippet p {
+    font-size: 0.78em;
+    color: #64748b;
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.ea-snippet code {
+    display: block;
+    background: rgb(0 0 0 / 0.35);
+    border: 1px solid var(--ea-border-code);
+    border-radius: 5px;
+    padding: 10px 12px;
+    font-size: 0.76em;
+    color: #c9d1d9;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin-bottom: 10px;
+    cursor: text;
+    user-select: all;
+}
+
+.ea-copy-btn {
+    padding: 5px 12px;
+    background: var(--ea-accent-dim);
+    border: 1px solid var(--ea-border-btn);
+    border-radius: 5px;
+    color: var(--ea-accent);
+    font-size: 0.79em;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    transition: background 0.15s;
+}
+.ea-copy-btn:hover { background: var(--ea-accent-dim-hover); }
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+    .ea-breadcrumb                  { display: none; }
+    .ea-snippet                     { width: calc(100vw - 32px); right: -10px; }
+}

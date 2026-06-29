@@ -3,27 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Locator — ZYXXYZ's Whymzykal Wunderland</title>
+    <title>Anonymail — ZYXXYZ's Whymzykal Wunderland</title>
+    <meta name="description" content="Instant disposable email — generate a throwaway address, receive messages in real time, and let it expire automatically. No sign-up. No trace.">
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/embed.css">
     <script src="/js/script.js" defer></script>
     <script src="/js/embed.js" defer></script>
     <style>
-        /* Locator brand tokens */
+        /* Anonymail brand tokens */
         :root {
-            --ea-accent:           #f4a261;
-            --ea-accent-dark:      #e76f51;
-            --ea-accent-dim:       rgb(244 162 97 / 0.08);
-            --ea-accent-dim-hover: rgb(244 162 97 / 0.2);
-            --ea-accent-fg:        #111;
-            --ea-border:           rgb(244 162 97 / 0.15);
-            --ea-border-btn:       rgb(244 162 97 / 0.4);
-            --ea-border-ghost:     rgb(244 162 97 / 0.15);
-            --ea-border-pill:      rgb(244 162 97 / 0.2);
-            --ea-border-code:      rgb(244 162 97 / 0.1);
-            --ea-spinner-track:    rgb(244 162 97 / 0.12);
-            --ea-surface:          #1e1e2e;
-            --ea-bg:               #0d1117;
+            --ea-accent:           #38bdf8;
+            --ea-accent-dark:      #0ea5e9;
+            --ea-accent-dim:       rgb(56 189 248 / 0.08);
+            --ea-accent-dim-hover: rgb(56 189 248 / 0.2);
+            --ea-accent-fg:        #0c1a26;
+            --ea-border:           rgb(56 189 248 / 0.15);
+            --ea-border-btn:       rgb(56 189 248 / 0.38);
+            --ea-border-ghost:     rgb(56 189 248 / 0.15);
+            --ea-border-pill:      rgb(56 189 248 / 0.2);
+            --ea-border-code:      rgb(56 189 248 / 0.1);
+            --ea-spinner-track:    rgb(56 189 248 / 0.12);
+            --ea-surface:          #0d1b2a;
+            --ea-bg:               #060e18;
         }
     </style>
 </head>
@@ -35,7 +36,7 @@
     <!-- ── Top bar ────────────────────────────────────────────────────── -->
     <div class="ea-bar">
         <div class="ea-bar-left">
-            <span class="ea-bar-title">📍 The Locator</span>
+            <span class="ea-bar-title">✉️ Anonymail</span>
         </div>
 
         <div class="ea-bar-actions">
@@ -52,17 +53,16 @@
                     class="ea-snippet"
                     id="ea-snippet"
                     role="dialog"
-                    aria-label="Embed The Locator">
-                    <div class="ea-snippet-title">Embed The Locator</div>
-                    <p>Paste this snippet to embed The Locator on any webpage.</p>
+                    aria-label="Embed Anonymail">
+                    <div class="ea-snippet-title">Embed Anonymail</div>
+                    <p>Paste this snippet to embed Anonymail on any webpage.</p>
                     <code id="ea-code">&lt;iframe
-  src="https://locator.zyxwonderland.xyz?embed=1"
+  src="https://mail.zyxwonderland.xyz"
   width="100%"
-  height="600"
+  height="700"
   style="border:none;border-radius:8px;"
-  title="The Locator"
-  loading="lazy"
-  allow="geolocation"&gt;
+  title="Anonymail — disposable email"
+  loading="lazy"&gt;
 &lt;/iframe&gt;</code>
                     <button
                         class="ea-copy-btn"
@@ -74,7 +74,7 @@
             </div>
 
             <a
-                href="https://locator.zyxwonderland.xyz"
+                href="https://mail.zyxwonderland.xyz"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="ea-btn ea-btn-fill">
@@ -88,18 +88,17 @@
         class="ea-loading"
         id="ea-loading"
         aria-live="polite"
-        aria-label="Loading The Locator">
+        aria-label="Loading Anonymail">
         <div class="ea-spinner" aria-hidden="true"></div>
-        <p>Loading the map…</p>
+        <p>Generating your inbox…</p>
     </div>
 
-    <!-- ── The Locator app ────────────────────────────────────────────── -->
+    <!-- ── The Anonymail app ──────────────────────────────────────────── -->
     <iframe
         id="ea-frame"
         class="ea-frame"
-        title="The Locator — interactive geospatial explorer"
-        allow="geolocation"
-        loading="lazy"
+        title="Anonymail — instant disposable email"
+        loading="eager"
         hidden>
     </iframe>
 
@@ -110,22 +109,22 @@
         role="alert"
         aria-live="assertive"
         hidden>
-        <div class="ea-error-icon" aria-hidden="true">📍</div>
-        <div class="ea-error-title">The Locator could not be reached</div>
+        <div class="ea-error-icon" aria-hidden="true">✉️</div>
+        <div class="ea-error-title">Anonymail could not be reached</div>
         <p class="ea-error-body">
-            The map failed to load. This may be a temporary network issue or
-            the worker is still warming up.<br><br>
-            Try again below, or open The Locator directly at
-            <a href="https://locator.zyxwonderland.xyz" target="_blank" rel="noopener noreferrer">
-                locator.zyxwonderland.xyz
+            The mail client failed to load. This typically means the worker is
+            cold-starting or there's a network issue.<br><br>
+            Try again below, or open Anonymail directly at
+            <a href="https://mail.zyxwonderland.xyz" target="_blank" rel="noopener noreferrer">
+                mail.zyxwonderland.xyz
             </a>.
         </p>
 
         <div class="ea-stack" aria-label="Technology stack">
             <span class="ea-stack-pill">Cloudflare Workers</span>
-            <span class="ea-stack-pill">Cloudflare KV</span>
-            <span class="ea-stack-pill">OpenStreetMap · Overpass</span>
-            <span class="ea-stack-pill">Leaflet.js</span>
+            <span class="ea-stack-pill">Durable Objects</span>
+            <span class="ea-stack-pill">Email Routing</span>
+            <span class="ea-stack-pill">WebSocket</span>
         </div>
 
         <div class="ea-error-actions">
@@ -136,13 +135,15 @@
                 ↺ Try again
             </button>
             <a
-                href="https://locator.zyxwonderland.xyz"
+                href="https://mail.zyxwonderland.xyz"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="ea-btn ea-btn-fill">
                 Open full app ↗
             </a>
         </div>
+
+        <p class="ea-disclaimer">Ephemeral by design. Do not use for sensitive communications.</p>
     </div>
 
 </div>
@@ -155,8 +156,8 @@
         frameId:   'ea-frame',
         loadingId: 'ea-loading',
         errorId:   'ea-error',
-        appUrl:    'https://locator.zyxwonderland.xyz?embed=1',
-        timeoutMs: 12000,
+        appUrl:    'https://mail.zyxwonderland.xyz',
+        timeoutMs: 15000,
     });
 
     app.bindRetry('ea-retry-btn');
@@ -167,8 +168,8 @@
         codeId:   'ea-code',
     });
 
-    // The Locator does not implement the postMessage ready protocol —
-    // mark ready on iframe load event (fires when the map HTML responds).
+    // Anonymail does not implement the postMessage ready protocol —
+    // mark ready on iframe load event.
     app.frame.addEventListener('load', function () { app.markReady(); });
 
     app.start();

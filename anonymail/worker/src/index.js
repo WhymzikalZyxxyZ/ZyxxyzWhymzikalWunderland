@@ -25,10 +25,13 @@ function corsHeaders(origin) {
     };
 }
 
-// ── Security headers injected on every response ───────────────────────────────
+// ── Security headers injected on API responses ────────────────────────────────
+// frame-ancestors allows embedding from zyxwonderland.xyz and its subdomains.
+// X-Frame-Options is intentionally omitted — CSP frame-ancestors is the modern
+// standard and is more precise. The SPA is served via env.ASSETS with these
+// same headers applied so the embedded iframe on zyxwonderland.xyz is permitted.
 const SEC_HEADERS = {
     'X-Content-Type-Options':    'nosniff',
-    'X-Frame-Options':           'DENY',
     'Referrer-Policy':           'no-referrer',
     'Permissions-Policy':        'camera=(), microphone=(), geolocation=()',
     // 2 years; includeSubDomains so mail.* inherits the policy
@@ -42,7 +45,7 @@ const SEC_HEADERS = {
         "img-src 'self' data: blob:; " +
         "font-src 'self'; " +
         "object-src 'none'; " +
-        "frame-ancestors 'none'; " +
+        "frame-ancestors 'self' https://zyxwonderland.xyz https://*.zyxwonderland.xyz; " +
         "frame-src 'self';",
 };
 
@@ -155,9 +158,15 @@ async function _handleRequest(request, env, url, path, method, ip, requestId) {
         return mb.fetch(request);
     }
 
-    // ── API routes ────────────────────────────────────────────────────────────
+    // ── SPA fallback ──────────────────────────────────────────────────────────
+    // Non-API, non-WebSocket, non-health paths are served by the static asset
+    // binding. We apply security headers so frame-ancestors is set correctly
+    // for embedded use on zyxwonderland.xyz.
     if (!path.startsWith('/api/')) {
-        return addSecHeaders(new Response('Not Found', { status: 404 }));
+        const assetRes = await env.ASSETS.fetch(request);
+        const r = new Response(assetRes.body, assetRes);
+        for (const [k, v] of Object.entries(SEC_HEADERS)) r.headers.set(k, v);
+        return r;
     }
 
     const apiPath = path.slice(4); // strip /api
