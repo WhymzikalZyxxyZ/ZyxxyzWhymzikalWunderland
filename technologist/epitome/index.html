@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPITOME — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ep-amber:      #e8a87c;
+            --ep-terracotta: #c0624d;
+            --ep-surface:    #1a1a1a;
+            --ep-border:     #2a2a2a;
+            --ep-muted:      #9e9080;
+            --ep-text-dim:   #b8b0a0;
+        }
+
+        .ep-page {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 0 24px 80px;
+        }
+
+        /* ── Hero ─────────────────────────────────────────────────── */
+        .ep-hero {
+            text-align: center;
+            padding: 72px 24px 56px;
+        }
+
+        .ep-wordmark {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: clamp(3rem, 10vw, 6rem);
+            font-weight: 900;
+            letter-spacing: 0.35em;
+            line-height: 1;
+            margin-bottom: 24px;
+            display: block;
+        }
+        .ep-wordmark .epi  { color: var(--ep-text-dim, #b8b0a0); }
+        .ep-wordmark .tome { color: var(--ep-amber); }
+
+        .ep-tagline {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-style: italic;
+            font-size: 1.15rem;
+            color: var(--ep-muted);
+            margin-bottom: 40px;
+            letter-spacing: 0.02em;
+        }
+
+        .ep-launch {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--ep-terracotta);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            padding: 14px 32px;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: background 0.18s, transform 0.12s, box-shadow 0.18s;
+            box-shadow: 0 4px 20px rgba(192,98,77,0.35);
+        }
+        .ep-launch:hover {
+            background: #a8503c;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(192,98,77,0.45);
+        }
+        .ep-launch svg { flex-shrink: 0; }
+
+        /* ── Feature grid ─────────────────────────────────────────── */
+        .ep-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-top: 64px;
+        }
+
+        .ep-feature {
+            background: var(--ep-surface);
+            border: 1px solid var(--ep-border);
+            border-radius: 14px;
+            padding: 24px;
+        }
+
+        .ep-feature-icon {
+            font-size: 1.6rem;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .ep-feature h3 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--ep-amber);
+            margin: 0 0 8px;
+        }
+
+        .ep-feature p {
+            font-size: 0.85rem;
+            color: var(--ep-muted);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* ── Stack note ───────────────────────────────────────────── */
+        .ep-stack {
+            margin-top: 56px;
+            text-align: center;
+            border-top: 1px solid var(--ep-border);
+            padding-top: 32px;
+        }
+
+        .ep-stack p {
+            font-size: 0.8rem;
+            color: var(--ep-muted);
+            letter-spacing: 0.05em;
+            margin: 0;
+        }
+
+        .ep-pills {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .ep-pill {
+            background: var(--ep-surface);
+            border: 1px solid var(--ep-border);
+            color: var(--ep-text-dim, #b8b0a0);
+            font-size: 0.75rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+            letter-spacing: 0.04em;
+        }
+    </style>
+</head>
+<body class="wunderBody">
+<div class="navbar"></div>
+
+<div class="ep-page">
+
+    <div class="ep-hero">
+        <span class="ep-wordmark">
+            <span class="epi">EPI</span><span class="tome">TOME</span>
+        </span>
+        <p class="ep-tagline">An author's command center — from first draft to published work.</p>
+        <a href="https://epitome.zyxwonderland.xyz" target="_blank" rel="noopener noreferrer" class="ep-launch">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+            Open EPITOME
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 17L17 7M17 7H7M17 7v10"/>
+            </svg>
+        </a>
+    </div>
+
+    <div class="ep-features">
+        <div class="ep-feature">
+            <span class="ep-feature-icon">📖</span>
+            <h3>Projects</h3>
+            <p>Track every manuscript — title, series, genre, type, and status. Running word count updates live as you write each chapter.</p>
+        </div>
+        <div class="ep-feature">
+            <span class="ep-feature-icon">✍️</span>
+            <h3>Drafting</h3>
+            <p>Chapter editor with per-chapter word counts, blurb writing, brainstorming space, and cover upload with alt cover options.</p>
+        </div>
+        <div class="ep-feature">
+            <span class="ep-feature-icon">👥</span>
+            <h3>Character Sheets</h3>
+            <p>Name, age, physical description, notes, and image gallery for every character — attached to the project they live in.</p>
+        </div>
+        <div class="ep-feature">
+            <span class="ep-feature-icon">🖼️</span>
+            <h3>Mood Board</h3>
+            <p>Upload reference art, inspiration images, and commission pieces. Your visual world, pinned to the project.</p>
+        </div>
+        <div class="ep-feature">
+            <span class="ep-feature-icon">📣</span>
+            <h3>Marketing</h3>
+            <p>Comp titles, publishing records, ISBN, distribution channels, inventory tracking, events, and social links.</p>
+        </div>
+        <div class="ep-feature">
+            <span class="ep-feature-icon">🤖</span>
+            <h3>AI Blurb Check</h3>
+            <p>Paste your blurb — Workers AI returns a searchability score, missing keywords, tropes, and a suggested revision.</p>
+        </div>
+    </div>
+
+    <div class="ep-stack">
+        <p>BUILT WITH</p>
+        <div class="ep-pills">
+            <span class="ep-pill">Hono · TypeScript</span>
+            <span class="ep-pill">Cloudflare Workers</span>
+            <span class="ep-pill">Cloudflare D1</span>
+            <span class="ep-pill">Cloudflare R2</span>
+            <span class="ep-pill">Workers AI</span>
+            <span class="ep-pill">React · TanStack Query</span>
+            <span class="ep-pill">Drizzle ORM</span>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

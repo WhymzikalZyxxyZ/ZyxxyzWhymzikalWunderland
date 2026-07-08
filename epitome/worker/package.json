@@ -1,0 +1,24 @@
+{
+    "name": "epitome-worker",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "dev": "wrangler dev --port 8787",
+        "deploy": "wrangler deploy",
+        "lint": "tsc --noEmit",
+        "migrate": "wrangler d1 execute epitome --local --file=drizzle/0001_initial.sql",
+        "migrate:prod": "wrangler d1 execute epitome --remote --file=drizzle/0001_initial.sql"
+    },
+    "dependencies": {
+        "@hono/zod-validator": "^0.8.0",
+        "drizzle-orm": "^0.45.2",
+        "hono": "^4.7.0",
+        "zod": "^3.25.0"
+    },
+    "devDependencies": {
+        "@cloudflare/workers-types": "^4.20250620.0",
+        "drizzle-kit": "^0.31.0",
+        "typescript": "^5.8.0",
+        "wrangler": "^4.0.0"
+    }
+}
