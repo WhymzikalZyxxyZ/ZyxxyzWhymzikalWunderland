@@ -120,6 +120,42 @@ jobs:
           workingDirectory: elinal/worker
           command:          d1 execute elinal-db --remote --file=migrations/0001_initial.sql
 
+  # ── Deploy Cloudflare Worker (Epitome) ───────────────────────────────────────
+  deploy-epitome-worker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Build Epitome client
+        run: |
+          cd epitome/client
+          npm ci
+          npm run build
+
+      - name: Install Epitome worker dependencies
+        run: cd epitome/worker && npm ci
+
+      - name: Deploy Epitome Worker to Cloudflare
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken:         ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId:        ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: epitome/worker
+
+      - name: Run Epitome D1 migration
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken:         ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId:        ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: epitome/worker
+          command:          d1 execute epitome --remote --file=drizzle/0001_initial.sql
+
   # ── Deploy static site to GitHub Pages ───────────────────────────────────────
   deploy:
     runs-on: ubuntu-latest
@@ -185,7 +221,7 @@ jobs:
   smoke-test:
     name: Smoke test deployed services
     runs-on: ubuntu-latest
-    needs: [deploy, deploy-worker, deploy-locator-worker, deploy-editor-service, deploy-elinal-worker]
+    needs: [deploy, deploy-worker, deploy-locator-worker, deploy-editor-service, deploy-elinal-worker, deploy-epitome-worker]
     steps:
       - name: Wait for propagation
         run: sleep 20
@@ -217,4 +253,15 @@ jobs:
           assert 'status' in d, f'missing status field: {d}'
           assert 'checks' in d, f'missing checks field: {d}'
           print('OK:', d.get('status'))
+          "
+
+      - name: Smoke test — Epitome Worker health endpoint
+        run: |
+          BODY=$(curl -fsS https://epitome.zyxwonderland.xyz/api/health)
+          echo "Epitome health: $BODY"
+          echo "$BODY" | python3 -c "
+          import sys, json
+          d = json.load(sys.stdin)
+          assert d.get('ok') == True, f'unexpected health response: {d}'
+          print('OK')
           "
