@@ -1,7 +1,7 @@
 import { Hono }      from 'hono';
 import { z }          from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { eq }         from 'drizzle-orm';
+import { and, eq }    from 'drizzle-orm';
 import { getDb }      from '../db/client';
 import { commissions }     from '../db/schema';
 import { authMiddleware }  from '../middleware/auth';
@@ -22,7 +22,9 @@ const patchSchema = createSchema.partial();
 
 app.get('/', async (c) => {
     const db = getDb(c.env.DB);
-    return c.json(await db.select().from(commissions).where(eq(commissions.projectId, c.req.param('projectId')!)).all());
+    return c.json(await db.select().from(commissions)
+        .where(and(eq(commissions.projectId, c.req.param('projectId')!), eq(commissions.userId, c.get('userId'))))
+        .all());
 });
 
 app.post('/', zValidator('json', createSchema), async (c) => {
@@ -35,14 +37,17 @@ app.post('/', zValidator('json', createSchema), async (c) => {
 
 app.patch('/:id', zValidator('json', patchSchema), async (c) => {
     const db    = getDb(c.env.DB);
-    const [row] = await db.update(commissions).set(c.req.valid('json')).where(eq(commissions.id, c.req.param('id')!)).returning();
+    const [row] = await db.update(commissions).set(c.req.valid('json'))
+        .where(and(eq(commissions.id, c.req.param('id')!), eq(commissions.userId, c.get('userId'))))
+        .returning();
     if (!row) return c.notFound();
     return c.json(row);
 });
 
 app.delete('/:id', async (c) => {
     const db = getDb(c.env.DB);
-    await db.delete(commissions).where(eq(commissions.id, c.req.param('id')!));
+    await db.delete(commissions)
+        .where(and(eq(commissions.id, c.req.param('id')!), eq(commissions.userId, c.get('userId'))));
     return c.body(null, 204);
 });
 

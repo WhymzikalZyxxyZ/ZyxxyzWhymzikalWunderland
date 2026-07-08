@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import { sql }                        from 'drizzle-orm';
 import type { ProjectType, ProjectStatus, PubType, ManufacturerType } from '../types';
 
@@ -78,7 +78,9 @@ export const pages = sqliteTable('pages', {
     wordCount: integer('word_count').notNull().default(0),
     createdAt: text('created_at').notNull().default(now),
     updatedAt: text('updated_at').notNull().default(now),
-});
+}, (t) => ({
+    uniqueProjectDate: uniqueIndex('pages_project_date_uniq').on(t.projectId, t.pageDate),
+}));
 
 // ── Characters ────────────────────────────────────────────────────────────────
 

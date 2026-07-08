@@ -1,7 +1,7 @@
 import { Hono }      from 'hono';
 import { z }          from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { eq, asc }    from 'drizzle-orm';
+import { and, eq, asc } from 'drizzle-orm';
 import { getDb }      from '../db/client';
 import { characters, characterImages } from '../db/schema';
 import { authMiddleware }              from '../middleware/auth';
@@ -21,10 +21,11 @@ const createSchema = z.object({
 const patchSchema = createSchema.partial();
 
 app.get('/', async (c) => {
-    const db = getDb(c.env.DB);
-    const rows = await db
+    const db     = getDb(c.env.DB);
+    const userId = c.get('userId');
+    const rows   = await db
         .select().from(characters)
-        .where(eq(characters.projectId, c.req.param('projectId')!))
+        .where(and(eq(characters.projectId, c.req.param('projectId')!), eq(characters.userId, userId)))
         .orderBy(asc(characters.sortOrder)).all();
     return c.json(rows);
 });
@@ -38,8 +39,10 @@ app.post('/', zValidator('json', createSchema), async (c) => {
 });
 
 app.get('/:characterId', async (c) => {
-    const db  = getDb(c.env.DB);
-    const row = await db.select().from(characters).where(eq(characters.id, c.req.param('characterId')!)).get();
+    const db     = getDb(c.env.DB);
+    const userId = c.get('userId');
+    const row    = await db.select().from(characters)
+        .where(and(eq(characters.id, c.req.param('characterId')!), eq(characters.userId, userId))).get();
     if (!row) return c.notFound();
     const images = await db.select().from(characterImages)
         .where(eq(characterImages.characterId, row.id))
@@ -48,18 +51,21 @@ app.get('/:characterId', async (c) => {
 });
 
 app.patch('/:characterId', zValidator('json', patchSchema), async (c) => {
-    const db    = getDb(c.env.DB);
-    const [row] = await db.update(characters)
+    const db     = getDb(c.env.DB);
+    const userId = c.get('userId');
+    const [row]  = await db.update(characters)
         .set({ ...c.req.valid('json'), updatedAt: new Date().toISOString() })
-        .where(eq(characters.id, c.req.param('characterId')!))
+        .where(and(eq(characters.id, c.req.param('characterId')!), eq(characters.userId, userId)))
         .returning();
     if (!row) return c.notFound();
     return c.json(row);
 });
 
 app.delete('/:characterId', async (c) => {
-    const db = getDb(c.env.DB);
-    await db.delete(characters).where(eq(characters.id, c.req.param('characterId')!));
+    const db     = getDb(c.env.DB);
+    const userId = c.get('userId');
+    await db.delete(characters)
+        .where(and(eq(characters.id, c.req.param('characterId')!), eq(characters.userId, userId)));
     return c.body(null, 204);
 });
 

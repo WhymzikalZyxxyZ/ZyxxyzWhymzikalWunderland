@@ -37,7 +37,7 @@ export interface Character {
 }
 
 export interface Commission {
-    id: string; projectId: string; who: string;
+    id: string; projectId: string; userId: string; who: string;
     amountCents: number | null; description: string;
     deadline: string | null; done: boolean; createdAt: string;
 }

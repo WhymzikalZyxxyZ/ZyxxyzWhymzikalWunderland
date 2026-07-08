@@ -17,7 +17,10 @@ export const authMiddleware = createMiddleware<{ Bindings: Bindings; Variables: 
             .where(eq(sessions.sessionId, sessionId))
             .get();
 
-        if (!session || session.expiresAt < new Date().toISOString()) {
+        if (!session) return c.json({ error: 'Unauthorized' }, 401);
+
+        if (session.expiresAt < new Date().toISOString()) {
+            await db.delete(sessions).where(eq(sessions.sessionId, sessionId));
             return c.json({ error: 'Unauthorized' }, 401);
         }
 

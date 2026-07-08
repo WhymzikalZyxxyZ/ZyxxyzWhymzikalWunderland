@@ -1,9 +1,11 @@
 import { Hono }      from 'hono';
 import { z }          from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import type { Bindings } from '../types';
+import { authMiddleware } from '../middleware/auth';
+import type { Bindings, Variables } from '../types';
 
-const app = new Hono<{ Bindings: Bindings }>();
+const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+app.use('*', authMiddleware);
 
 const analyzeSchema = z.object({
     blurb:  z.string().min(10).max(2000),

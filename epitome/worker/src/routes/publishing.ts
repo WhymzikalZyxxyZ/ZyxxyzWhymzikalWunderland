@@ -1,14 +1,26 @@
 import { Hono }      from 'hono';
 import { z }          from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { eq }         from 'drizzle-orm';
+import { and, eq }    from 'drizzle-orm';
 import { getDb }      from '../db/client';
-import { publishing, compTitles, publishingSizes, distribution, events, manufacturers, socialLinks } from '../db/schema';
+import { publishing, compTitles, publishingSizes, distribution, events, manufacturers, socialLinks, projects } from '../db/schema';
 import { authMiddleware }  from '../middleware/auth';
 import type { Bindings, Variables } from '../types';
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+
+// Auth + project ownership verified once for every sub-route
 app.use('*', authMiddleware);
+app.use('*', async (c, next) => {
+    const projectId = c.req.param('projectId');
+    if (projectId) {
+        const db = getDb(c.env.DB);
+        const p  = await db.select({ id: projects.id }).from(projects)
+            .where(and(eq(projects.id, projectId), eq(projects.userId, c.get('userId')))).get();
+        if (!p) return c.notFound();
+    }
+    await next();
+});
 
 // ── Publishing record ─────────────────────────────────────────────────────────
 
@@ -27,18 +39,20 @@ app.get('/', async (c) => {
     return c.json(row ?? null);
 });
 
+// Upsert — eliminates the check-then-insert race condition; projectId is UNIQUE
 app.put('/', zValidator('json', pubSchema), async (c) => {
     const db        = getDb(c.env.DB);
     const projectId = c.req.param('projectId')!;
     const userId    = c.get('userId');
     const body      = c.req.valid('json');
-    const existing  = await db.select().from(publishing).where(eq(publishing.projectId, projectId)).get();
-    if (existing) {
-        const [row] = await db.update(publishing).set({ ...body, updatedAt: new Date().toISOString() }).where(eq(publishing.projectId, projectId)).returning();
-        return c.json(row);
-    }
-    const [row] = await db.insert(publishing).values({ ...body, projectId, userId }).returning();
-    return c.json(row, 201);
+    const [row]     = await db.insert(publishing)
+        .values({ ...body, projectId, userId })
+        .onConflictDoUpdate({
+            target: publishing.projectId,
+            set:    { ...body, updatedAt: new Date().toISOString() },
+        })
+        .returning();
+    return c.json(row);
 });
 
 // ── Comp titles ───────────────────────────────────────────────────────────────
@@ -63,14 +77,17 @@ app.post('/comps', zValidator('json', compSchema), async (c) => {
 
 app.patch('/comps/:id', zValidator('json', compSchema.partial()), async (c) => {
     const db    = getDb(c.env.DB);
-    const [row] = await db.update(compTitles).set(c.req.valid('json')).where(eq(compTitles.id, c.req.param('id')!)).returning();
+    const [row] = await db.update(compTitles).set(c.req.valid('json'))
+        .where(and(eq(compTitles.id, c.req.param('id')!), eq(compTitles.projectId, c.req.param('projectId')!)))
+        .returning();
     if (!row) return c.notFound();
     return c.json(row);
 });
 
 app.delete('/comps/:id', async (c) => {
     const db = getDb(c.env.DB);
-    await db.delete(compTitles).where(eq(compTitles.id, c.req.param('id')!));
+    await db.delete(compTitles)
+        .where(and(eq(compTitles.id, c.req.param('id')!), eq(compTitles.projectId, c.req.param('projectId')!)));
     return c.body(null, 204);
 });
 
@@ -94,7 +111,8 @@ app.post('/sizes', zValidator('json', sizeSchema), async (c) => {
 
 app.delete('/sizes/:id', async (c) => {
     const db = getDb(c.env.DB);
-    await db.delete(publishingSizes).where(eq(publishingSizes.id, c.req.param('id')!));
+    await db.delete(publishingSizes)
+        .where(and(eq(publishingSizes.id, c.req.param('id')!), eq(publishingSizes.projectId, c.req.param('projectId')!)));
     return c.body(null, 204);
 });
 
@@ -122,14 +140,17 @@ app.post('/distribution', zValidator('json', distSchema), async (c) => {
 
 app.patch('/distribution/:id', zValidator('json', distSchema.partial()), async (c) => {
     const db    = getDb(c.env.DB);
-    const [row] = await db.update(distribution).set(c.req.valid('json')).where(eq(distribution.id, c.req.param('id')!)).returning();
+    const [row] = await db.update(distribution).set(c.req.valid('json'))
+        .where(and(eq(distribution.id, c.req.param('id')!), eq(distribution.projectId, c.req.param('projectId')!)))
+        .returning();
     if (!row) return c.notFound();
     return c.json(row);
 });
 
 app.delete('/distribution/:id', async (c) => {
     const db = getDb(c.env.DB);
-    await db.delete(distribution).where(eq(distribution.id, c.req.param('id')!));
+    await db.delete(distribution)
+        .where(and(eq(distribution.id, c.req.param('id')!), eq(distribution.projectId, c.req.param('projectId')!)));
     return c.body(null, 204);
 });
 
@@ -155,14 +176,17 @@ app.post('/events', zValidator('json', eventSchema), async (c) => {
 
 app.patch('/events/:id', zValidator('json', eventSchema.partial()), async (c) => {
     const db    = getDb(c.env.DB);
-    const [row] = await db.update(events).set(c.req.valid('json')).where(eq(events.id, c.req.param('id')!)).returning();
+    const [row] = await db.update(events).set(c.req.valid('json'))
+        .where(and(eq(events.id, c.req.param('id')!), eq(events.projectId, c.req.param('projectId')!)))
+        .returning();
     if (!row) return c.notFound();
     return c.json(row);
 });
 
 app.delete('/events/:id', async (c) => {
     const db = getDb(c.env.DB);
-    await db.delete(events).where(eq(events.id, c.req.param('id')!));
+    await db.delete(events)
+        .where(and(eq(events.id, c.req.param('id')!), eq(events.projectId, c.req.param('projectId')!)));
     return c.body(null, 204);
 });
 
@@ -188,14 +212,17 @@ app.post('/manufacturers', zValidator('json', mfgSchema), async (c) => {
 
 app.patch('/manufacturers/:id', zValidator('json', mfgSchema.partial()), async (c) => {
     const db    = getDb(c.env.DB);
-    const [row] = await db.update(manufacturers).set(c.req.valid('json')).where(eq(manufacturers.id, c.req.param('id')!)).returning();
+    const [row] = await db.update(manufacturers).set(c.req.valid('json'))
+        .where(and(eq(manufacturers.id, c.req.param('id')!), eq(manufacturers.projectId, c.req.param('projectId')!)))
+        .returning();
     if (!row) return c.notFound();
     return c.json(row);
 });
 
 app.delete('/manufacturers/:id', async (c) => {
     const db = getDb(c.env.DB);
-    await db.delete(manufacturers).where(eq(manufacturers.id, c.req.param('id')!));
+    await db.delete(manufacturers)
+        .where(and(eq(manufacturers.id, c.req.param('id')!), eq(manufacturers.projectId, c.req.param('projectId')!)));
     return c.body(null, 204);
 });
 
@@ -220,7 +247,8 @@ app.post('/social', zValidator('json', socialSchema), async (c) => {
 
 app.delete('/social/:id', async (c) => {
     const db = getDb(c.env.DB);
-    await db.delete(socialLinks).where(eq(socialLinks.id, c.req.param('id')!));
+    await db.delete(socialLinks)
+        .where(and(eq(socialLinks.id, c.req.param('id')!), eq(socialLinks.projectId, c.req.param('projectId')!)));
     return c.body(null, 204);
 });
 

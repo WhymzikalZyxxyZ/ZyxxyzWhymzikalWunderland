@@ -1,7 +1,7 @@
 import { Hono }       from 'hono';
 import { z }           from 'zod';
 import { zValidator }  from '@hono/zod-validator';
-import { eq, asc, sql } from 'drizzle-orm';
+import { and, eq, asc, sql } from 'drizzle-orm';
 import { getDb }       from '../db/client';
 import { pages, projects } from '../db/schema';
 import { authMiddleware }  from '../middleware/auth';
@@ -35,11 +35,12 @@ const patchSchema = z.object({
 // ── List pages for a project ──────────────────────────────────────────────────
 
 app.get('/', async (c) => {
-    const db   = getDb(c.env.DB);
-    const rows = await db
+    const db     = getDb(c.env.DB);
+    const userId = c.get('userId');
+    const rows   = await db
         .select()
         .from(pages)
-        .where(eq(pages.projectId, c.req.param('projectId')!))
+        .where(and(eq(pages.projectId, c.req.param('projectId')!), eq(pages.userId, userId)))
         .orderBy(asc(pages.pageDate))
         .all();
     return c.json(rows);
@@ -52,15 +53,13 @@ app.post('/today', async (c) => {
     const userId    = c.get('userId');
     const projectId = c.req.param('projectId')!;
 
-    const project = await db.select().from(projects).where(eq(projects.id, projectId)).get();
-    if (!project || project.userId !== userId) return c.notFound();
+    const project = await db.select().from(projects)
+        .where(and(eq(projects.id, projectId), eq(projects.userId, userId))).get();
+    if (!project) return c.notFound();
 
     const today    = new Date().toISOString().slice(0, 10);
-    const existing = await db
-        .select()
-        .from(pages)
-        .where(eq(pages.projectId, projectId))
-        .all();
+    const existing = await db.select().from(pages)
+        .where(and(eq(pages.projectId, projectId), eq(pages.userId, userId))).all();
 
     const todayPage = existing.find(p => p.pageDate === today);
     if (todayPage) return c.json(todayPage);
@@ -77,8 +76,9 @@ app.post('/today', async (c) => {
 app.get('/:pageId', async (c) => {
     const db     = getDb(c.env.DB);
     const userId = c.get('userId');
-    const page   = await db.select().from(pages).where(eq(pages.id, c.req.param('pageId')!)).get();
-    if (!page || page.userId !== userId) return c.notFound();
+    const page   = await db.select().from(pages)
+        .where(and(eq(pages.id, c.req.param('pageId')!), eq(pages.userId, userId))).get();
+    if (!page) return c.notFound();
     return c.json(page);
 });
 
@@ -90,8 +90,9 @@ app.patch('/:pageId', zValidator('json', patchSchema), async (c) => {
     const projectId = c.req.param('projectId')!;
     const body      = c.req.valid('json');
 
-    const existing = await db.select().from(pages).where(eq(pages.id, c.req.param('pageId')!)).get();
-    if (!existing || existing.userId !== userId) return c.notFound();
+    const existing = await db.select().from(pages)
+        .where(and(eq(pages.id, c.req.param('pageId')!), eq(pages.userId, userId))).get();
+    if (!existing) return c.notFound();
 
     const updates: Record<string, unknown> = { ...body, updatedAt: new Date().toISOString() };
     if (body.content !== undefined) updates['wordCount'] = wordCount(body.content);
@@ -113,8 +114,9 @@ app.delete('/:pageId', async (c) => {
     const userId    = c.get('userId');
     const projectId = c.req.param('projectId')!;
 
-    const existing = await db.select().from(pages).where(eq(pages.id, c.req.param('pageId')!)).get();
-    if (!existing || existing.userId !== userId) return c.notFound();
+    const existing = await db.select().from(pages)
+        .where(and(eq(pages.id, c.req.param('pageId')!), eq(pages.userId, userId))).get();
+    if (!existing) return c.notFound();
 
     await db.delete(pages).where(eq(pages.id, c.req.param('pageId')!));
     await syncProjectWords(db, projectId);

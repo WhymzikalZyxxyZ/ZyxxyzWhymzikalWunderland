@@ -1,7 +1,7 @@
 import { Hono }      from 'hono';
 import { z }          from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { eq }         from 'drizzle-orm';
+import { and, eq }    from 'drizzle-orm';
 import { getDb }      from '../db/client';
 import { series }          from '../db/schema';
 import { authMiddleware }  from '../middleware/auth';
@@ -30,8 +30,9 @@ app.post('/', zValidator('json', createSchema), async (c) => {
 
 app.get('/:id', async (c) => {
     const db  = getDb(c.env.DB);
-    const row = await db.select().from(series).where(eq(series.id, c.req.param('id')!)).get();
-    if (!row || row.userId !== c.get('userId')) return c.notFound();
+    const row = await db.select().from(series)
+        .where(and(eq(series.id, c.req.param('id')!), eq(series.userId, c.get('userId')))).get();
+    if (!row) return c.notFound();
     return c.json(row);
 });
 
@@ -39,7 +40,7 @@ app.patch('/:id', zValidator('json', patchSchema), async (c) => {
     const db    = getDb(c.env.DB);
     const [row] = await db.update(series)
         .set({ ...c.req.valid('json'), updatedAt: new Date().toISOString() })
-        .where(eq(series.id, c.req.param('id')!))
+        .where(and(eq(series.id, c.req.param('id')!), eq(series.userId, c.get('userId'))))
         .returning();
     if (!row) return c.notFound();
     return c.json(row);
@@ -47,7 +48,8 @@ app.patch('/:id', zValidator('json', patchSchema), async (c) => {
 
 app.delete('/:id', async (c) => {
     const db = getDb(c.env.DB);
-    await db.delete(series).where(eq(series.id, c.req.param('id')!));
+    await db.delete(series)
+        .where(and(eq(series.id, c.req.param('id')!), eq(series.userId, c.get('userId'))));
     return c.body(null, 204);
 });
 
