@@ -19,14 +19,14 @@ interface Props {
 }
 
 export function ProjectCard({ project, seriesName, genreName }: Props) {
-    const coverUrl = project.coverStorageKey
-        ? `/api/files/${project.coverStorageKey}`
+    const coverUrl = project.coverKey
+        ? `/api/files/${project.coverKey}`
         : null;
 
     return (
         <Link
             to={`/projects/${project.id}`}
-            className="group flex items-stretch gap-4 bg-ep-surface border border-ep-border rounded-xl p-4 hover:border-ep-amber/40 transition-all duration-200 hover:shadow-lg hover:shadow-ep-amber/5"
+            className="group flex items-stretch gap-4 bg-ep-surface border border-ep-border rounded-xl p-4 hover:border-ep-border-hi transition-all duration-200 hover:shadow-lg"
         >
             {/* Cover thumbnail */}
             <div className="w-16 flex-shrink-0">
@@ -46,7 +46,7 @@ export function ProjectCard({ project, seriesName, genreName }: Props) {
             {/* Meta */}
             <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2 mb-1">
-                    <h3 className="font-display font-bold text-ep-text text-lg leading-tight truncate group-hover:text-ep-amber transition-colors">
+                    <h3 className="font-display font-bold text-ep-text text-lg leading-tight truncate group-hover:text-ep-rose transition-colors">
                         {project.title}
                     </h3>
                     <StatusBadge status={project.status} />
@@ -70,7 +70,7 @@ export function ProjectCard({ project, seriesName, genreName }: Props) {
                 )}
 
                 <WordCountBar
-                    current={project.wordCount}
+                    current={project.totalWords}
                     target={project.targetWordCount ?? 50000}
                     compact
                 />
