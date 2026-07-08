@@ -97,11 +97,13 @@ app.patch('/:pageId', zValidator('json', patchSchema), async (c) => {
     const updates: Record<string, unknown> = { ...body, updatedAt: new Date().toISOString() };
     if (body.content !== undefined) updates['wordCount'] = wordCount(body.content);
 
-    const [page] = await db
+    const pageResult = await db
         .update(pages)
         .set(updates)
         .where(eq(pages.id, c.req.param('pageId')!))
         .returning();
+    const page = pageResult[0];
+    if (!page) return c.json({ error: 'Failed to save page' }, 500);
 
     await syncProjectWords(db, projectId);
     return c.json(page);

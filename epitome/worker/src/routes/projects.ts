@@ -72,16 +72,14 @@ app.post('/', zValidator('json', createSchema), async (c) => {
     const userId = c.get('userId');
     const body   = c.req.valid('json');
 
-    const [project] = await db
-        .insert(projects)
-        .values({ ...body, userId })
-        .returning();
+    const projectResult = await db.insert(projects).values({ ...body, userId }).returning();
+    const project       = projectResult[0];
+    if (!project) return c.json({ error: 'Failed to create project' }, 500);
 
-    const today  = new Date().toISOString().slice(0, 10);
-    const [page] = await db
-        .insert(pages)
-        .values({ projectId: project.id, userId, pageDate: today })
-        .returning();
+    const today      = new Date().toISOString().slice(0, 10);
+    const pageResult = await db.insert(pages).values({ projectId: project.id, userId, pageDate: today }).returning();
+    const page       = pageResult[0];
+    if (!page) return c.json({ error: 'Failed to create today\'s page' }, 500);
 
     return c.json({ project, page }, 201);
 });

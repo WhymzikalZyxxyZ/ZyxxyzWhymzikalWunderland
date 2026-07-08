@@ -39,8 +39,12 @@ export function ProjectDetail() {
     });
 
     async function openToday() {
-        const page = await api.post<Page>(`/projects/${id}/pages/today`, {});
-        navigate(`/write/${id}/${page.id}`);
+        try {
+            const page = await api.post<Page>(`/projects/${id}/pages/today`, {});
+            navigate(`/write/${id}/${page.id}`);
+        } catch (err) {
+            alert((err as Error).message ?? 'Could not open today\'s page. Please try again.');
+        }
     }
 
     const fmtDate = (d: string) =>

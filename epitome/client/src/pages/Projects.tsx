@@ -49,8 +49,12 @@ export function Projects() {
     });
 
     async function handleEdit(projectId: string) {
-        const page = await api.post<Page>(`/projects/${projectId}/pages/today`, {});
-        navigate(`/write/${projectId}/${page.id}`);
+        try {
+            const page = await api.post<Page>(`/projects/${projectId}/pages/today`, {});
+            navigate(`/write/${projectId}/${page.id}`);
+        } catch (err) {
+            alert((err as Error).message ?? 'Could not open today\'s page. Please try again.');
+        }
     }
 
     const fmtWords = (n: number) =>
