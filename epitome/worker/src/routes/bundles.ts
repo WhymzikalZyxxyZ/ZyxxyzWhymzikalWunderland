@@ -54,22 +54,34 @@ app.delete('/:id', async (c) => {
 });
 
 app.get('/:id/items', async (c) => {
-    const db   = getDb(c.env.DB);
+    const db       = getDb(c.env.DB);
+    const bundleId = c.req.param('id')!;
+    const bundle   = await db.select({ id: bundles.id }).from(bundles)
+        .where(and(eq(bundles.id, bundleId), eq(bundles.userId, c.get('userId')))).get();
+    if (!bundle) return c.notFound();
     const rows = await db.select().from(bundleItems)
-        .where(eq(bundleItems.bundleId, c.req.param('id')!)).all();
+        .where(eq(bundleItems.bundleId, bundleId)).all();
     return c.json(rows);
 });
 
 app.post('/:id/items', zValidator('json', itemSchema), async (c) => {
-    const db    = getDb(c.env.DB);
+    const db       = getDb(c.env.DB);
+    const bundleId = c.req.param('id')!;
+    const bundle   = await db.select({ id: bundles.id }).from(bundles)
+        .where(and(eq(bundles.id, bundleId), eq(bundles.userId, c.get('userId')))).get();
+    if (!bundle) return c.notFound();
     const [row] = await db.insert(bundleItems)
-        .values({ ...c.req.valid('json'), bundleId: c.req.param('id')! })
+        .values({ ...c.req.valid('json'), bundleId })
         .returning();
     return c.json(row, 201);
 });
 
 app.delete('/:id/items/:itemId', async (c) => {
-    const db = getDb(c.env.DB);
+    const db       = getDb(c.env.DB);
+    const bundleId = c.req.param('id')!;
+    const bundle   = await db.select({ id: bundles.id }).from(bundles)
+        .where(and(eq(bundles.id, bundleId), eq(bundles.userId, c.get('userId')))).get();
+    if (!bundle) return c.notFound();
     await db.delete(bundleItems).where(eq(bundleItems.id, c.req.param('itemId')!));
     return c.body(null, 204);
 });

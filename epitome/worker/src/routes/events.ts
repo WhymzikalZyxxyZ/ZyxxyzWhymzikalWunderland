@@ -93,10 +93,15 @@ app.get('/:id/sales', async (c) => {
 });
 
 app.post('/:id/sales', zValidator('json', saleSchema), async (c) => {
-    const db    = getDb(c.env.DB);
+    const db      = getDb(c.env.DB);
+    const userId  = c.get('userId');
+    const eventId = c.req.param('id')!;
+    const owner   = await db.select({ id: events.id }).from(events)
+        .where(and(eq(events.id, eventId), eq(events.userId, userId))).get();
+    if (!owner) return c.notFound();
     const body  = c.req.valid('json');
     const [row] = await db.insert(eventSales)
-        .values({ ...body, eventId: c.req.param('id')!, userId: c.get('userId') })
+        .values({ ...body, eventId, userId })
         .returning();
     return c.json(row, 201);
 });

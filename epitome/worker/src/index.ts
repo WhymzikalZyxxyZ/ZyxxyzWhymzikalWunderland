@@ -22,6 +22,15 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 // ── Middleware ────────────────────────────────────────────────────────────────
 
 app.use('*', logger());
+app.use('/api/*', async (c, next) => {
+    await next();
+    c.res.headers.set('X-Content-Type-Options', 'nosniff');
+    c.res.headers.set('X-Frame-Options', 'DENY');
+    c.res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    if (c.env.ENVIRONMENT === 'production') {
+        c.res.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
+    }
+});
 app.use('/api/*', cors({
     origin: (origin, c) => {
         const allowed = [c.env.SITE_ORIGIN, 'https://epitome.zyxwonderland.xyz', 'http://localhost:5173'];
@@ -42,10 +51,14 @@ app.get('/api/files/*', async (c) => {
     const key = c.req.path.replace('/api/files/', '');
     const { value, metadata } = await c.env.STORAGE.getWithMetadata<{ contentType: string }>(key, { type: 'arrayBuffer' });
     if (!value) return c.notFound();
+    const ct          = metadata?.contentType ?? 'application/octet-stream';
+    const disposition = ct.startsWith('image/') ? 'inline' : 'attachment';
     return new Response(value, {
         headers: {
-            'Content-Type':  metadata?.contentType ?? 'application/octet-stream',
-            'Cache-Control': 'public, max-age=31536000, immutable',
+            'Content-Type':           ct,
+            'Cache-Control':          'public, max-age=31536000, immutable',
+            'Content-Disposition':    disposition,
+            'X-Content-Type-Options': 'nosniff',
         },
     });
 });
@@ -76,7 +89,7 @@ app.get('/api/health', (c) => c.json({ ok: true, ts: new Date().toISOString() })
 
 app.onError((err, c) => {
     console.error('[epitome]', err);
-    return c.json({ error: err.message }, 500);
+    return c.json({ error: 'Internal server error' }, 500);
 });
 
 app.notFound((c) => {

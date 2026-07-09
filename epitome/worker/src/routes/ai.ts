@@ -9,11 +9,14 @@ app.use('*', authMiddleware);
 
 const analyzeSchema = z.object({
     blurb:  z.string().min(10).max(2000),
-    genre:  z.string().optional(),
-    type:   z.string().optional(),
+    genre:  z.string().max(100).optional(),
+    type:   z.string().max(100).optional(),
 });
 
 const SYSTEM_PROMPT = `You are an expert in book retail discoverability on Amazon, Barnes & Noble, and independent retailers. Analyze blurbs for genre signals, tropes, and search-term density. Return ONLY valid JSON — no markdown, no explanation.`;
+
+const AI_RATE_LIMIT     = 20;
+const AI_RATE_LIMIT_TTL = 86_400; // 24 hours in seconds
 
 function buildPrompt(blurb: string, genre?: string, type?: string): string {
     const context = [genre && `Genre: ${genre}`, type && `Type: ${type}`].filter(Boolean).join(', ');
@@ -21,6 +24,16 @@ function buildPrompt(blurb: string, genre?: string, type?: string): string {
 }
 
 app.post('/blurb', zValidator('json', analyzeSchema), async (c) => {
+    const userId        = c.get('userId');
+    const today         = new Date().toISOString().slice(0, 10);
+    const rateLimitKey  = `rate:ai:${userId}:${today}`;
+    const currentStr    = await c.env.STORAGE.get(rateLimitKey);
+    const current       = parseInt(currentStr ?? '0', 10);
+    if (current >= AI_RATE_LIMIT) {
+        return c.json({ error: 'Daily analysis limit reached — return tomorrow.' }, 429);
+    }
+    await c.env.STORAGE.put(rateLimitKey, String(current + 1), { expirationTtl: AI_RATE_LIMIT_TTL });
+
     const { blurb, genre, type } = c.req.valid('json');
 
     const result = await c.env.AI.run(
