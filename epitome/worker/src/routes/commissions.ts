@@ -1,11 +1,23 @@
 import { Hono }      from 'hono';
 import { z }          from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import { and, eq }    from 'drizzle-orm';
+import { and, eq, desc } from 'drizzle-orm';
 import { getDb }      from '../db/client';
 import { commissions }     from '../db/schema';
 import { authMiddleware }  from '../middleware/auth';
 import type { Bindings, Variables } from '../types';
+
+// ── Global router (all user commissions, for Dashboard Sales tab) ─────────────
+
+export const commissionsGlobalRouter = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+commissionsGlobalRouter.use('*', authMiddleware);
+commissionsGlobalRouter.get('/', async (c) => {
+    const db = getDb(c.env.DB);
+    return c.json(await db.select().from(commissions)
+        .where(eq(commissions.userId, c.get('userId')))
+        .orderBy(desc(commissions.createdAt))
+        .all());
+});
 
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 app.use('*', authMiddleware);

@@ -61,6 +61,7 @@ export const projects = sqliteTable('projects', {
     totalWords:      integer('total_words').notNull().default(0),
     coverKey:        text('cover_key'),
     altCoverKeys:    text('alt_cover_keys').notNull().default('[]'),
+    mainCoverKey:    text('main_cover_key'),
     pubType:         text('pub_type').$type<PubType>(),
     createdAt:       text('created_at').notNull().default(now),
     updatedAt:       text('updated_at').notNull().default(now),
@@ -80,6 +81,22 @@ export const pages = sqliteTable('pages', {
     updatedAt: text('updated_at').notNull().default(now),
 }, (t) => ({
     uniqueProjectDate: uniqueIndex('pages_project_date_uniq').on(t.projectId, t.pageDate),
+}));
+
+// ── Chapters (writing pad — numbered per project) ──────────────────────────────
+
+export const chapters = sqliteTable('chapters', {
+    id:            text('id').primaryKey().$defaultFn(uuid),
+    projectId:     text('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+    userId:        text('user_id').notNull().references(() => users.userId, { onDelete: 'cascade' }),
+    chapterNumber: integer('chapter_number').notNull(),
+    title:         text('title'),
+    content:       text('content').notNull().default(''),
+    wordCount:     integer('word_count').notNull().default(0),
+    createdAt:     text('created_at').notNull().default(now),
+    updatedAt:     text('updated_at').notNull().default(now),
+}, (t) => ({
+    uniqueProjectChapter: uniqueIndex('chapters_project_number_uniq').on(t.projectId, t.chapterNumber),
 }));
 
 // ── Characters ────────────────────────────────────────────────────────────────

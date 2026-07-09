@@ -14,8 +14,8 @@ import {
     AlignLeft, AlignCenter, AlignRight,
     Undo2, Redo2, Save, Trash2, ArrowLeft, Clock, Type,
 } from 'lucide-react';
-import { api }                      from '@/lib/api';
-import type { Page, Project }       from '@/lib/types';
+import { api }            from '@/lib/api';
+import type { Chapter, Project } from '@/lib/types';
 
 const AUTO_SAVE_MS = 30_000;
 
@@ -32,12 +32,17 @@ function useTimer() {
 }
 
 export function WritingPad() {
-    const { projectId, pageId } = useParams<{ projectId: string; pageId: string }>();
+    const { projectId, chapterId } = useParams<{ projectId: string; chapterId: string }>();
     const navigate              = useNavigate();
     const qc                    = useQueryClient();
     const timer                 = useTimer();
     const savedContentRef       = useRef('');
-    const [saveStatus, setSaveStatus] = useState<'saved' | 'unsaved' | 'saving'>('saved');
+    const [saveStatus,  setSaveStatus]  = useState<'saved' | 'unsaved' | 'saving'>('saved');
+    const [chapterTitle, setChapterTitle] = useState('');
+    const [editingTitle, setEditingTitle] = useState(false);
+    const [showDelete,   setShowDelete]   = useState(false);
+
+    const isSummary = chapterId === 'summary';
 
     const { data: project } = useQuery<Project>({
         queryKey: ['project', projectId],
@@ -45,30 +50,51 @@ export function WritingPad() {
         enabled:  !!projectId,
     });
 
-    const { data: page, isLoading } = useQuery<Page>({
-        queryKey: ['page', pageId],
-        queryFn:  () => api.get(`/projects/${projectId}/pages/${pageId}`),
-        enabled:  !!projectId && !!pageId,
+    const { data: chapter, isLoading } = useQuery<Chapter>({
+        queryKey: ['chapter', chapterId],
+        queryFn:  () => api.get(`/projects/${projectId}/chapters/${chapterId}`),
+        enabled:  !!projectId && !!chapterId && !isSummary,
     });
 
-    const saveMut = useMutation({
-        mutationFn: (content: string) =>
-            api.patch<Page>(`/projects/${projectId}/pages/${pageId}`, { content }),
-        onMutate: () => setSaveStatus('saving'),
-        onSuccess: (saved) => {
-            savedContentRef.current = saved.content;
+    const saveMut = useMutation<Project | Chapter, Error, string>({
+        mutationFn: (content: string) => isSummary
+            ? api.patch<Project>(`/projects/${projectId}`, { summary: content })
+            : api.patch<Chapter>(`/projects/${projectId}/chapters/${chapterId}`, { content }),
+        onMutate:  () => setSaveStatus('saving'),
+        onSuccess: (result) => {
+            savedContentRef.current = isSummary
+                ? ((result as Project).summary ?? '')
+                : (result as Chapter).content;
             setSaveStatus('saved');
-            qc.setQueryData(['page', pageId], saved);
-            qc.invalidateQueries({ queryKey: ['projects'] });
+            if (!isSummary) {
+                qc.setQueryData(['chapter', chapterId], result);
+                qc.invalidateQueries({ queryKey: ['chapters', projectId] });
+                qc.invalidateQueries({ queryKey: ['all-chapters'] });
+            } else {
+                qc.setQueryData(['project', projectId], result);
+            }
             qc.invalidateQueries({ queryKey: ['project-stats'] });
         },
         onError: () => setSaveStatus('unsaved'),
     });
 
+    const saveTitleMut = useMutation({
+        mutationFn: (title: string) =>
+            api.patch<Chapter>(`/projects/${projectId}/chapters/${chapterId}`, { title }),
+        onSuccess: (updated) => {
+            qc.setQueryData(['chapter', chapterId], updated);
+            qc.invalidateQueries({ queryKey: ['chapters', projectId] });
+            qc.invalidateQueries({ queryKey: ['all-chapters'] });
+        },
+    });
+
     const deleteMut = useMutation({
-        mutationFn: () => api.delete(`/projects/${projectId}/pages/${pageId}`),
+        mutationFn: () => isSummary
+            ? api.patch(`/projects/${projectId}`, { summary: '' })
+            : api.delete(`/projects/${projectId}/chapters/${chapterId}`),
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['projects'] });
+            qc.invalidateQueries({ queryKey: ['chapters', projectId] });
+            qc.invalidateQueries({ queryKey: ['project-stats'] });
             navigate(`/projects/${projectId}`);
         },
     });
@@ -78,7 +104,7 @@ export function WritingPad() {
             StarterKit,
             Underline,
             TextAlign.configure({ types: ['heading', 'paragraph'] }),
-            Placeholder.configure({ placeholder: 'Begin your story…' }),
+            Placeholder.configure({ placeholder: isSummary ? 'Write your project summary…' : 'Begin your chapter…' }),
             CharacterCount,
         ],
         content: '',
@@ -86,22 +112,23 @@ export function WritingPad() {
     });
 
     useEffect(() => {
-        if (page && editor && !editor.isDestroyed) {
-            editor.commands.setContent(page.content ?? '');
-            savedContentRef.current = page.content ?? '';
-        }
-    }, [page, editor]);
-
-    const save = useCallback(() => {
-        if (!editor || !pageId) return;
-        const content = editor.getHTML();
-        saveMut.mutate(content);
-    }, [editor, pageId, saveMut]);
+        if (!editor || editor.isDestroyed) return;
+        const content = isSummary ? (project?.summary ?? '') : (chapter?.content ?? '');
+        editor.commands.setContent(content);
+        savedContentRef.current = content;
+    }, [chapter, project, editor, isSummary]);
 
     useEffect(() => {
-        const id = setInterval(() => {
-            if (saveStatus === 'unsaved') save();
-        }, AUTO_SAVE_MS);
+        if (chapter) setChapterTitle(chapter.title ?? '');
+    }, [chapter]);
+
+    const save = useCallback(() => {
+        if (!editor || !projectId) return;
+        saveMut.mutate(editor.getHTML());
+    }, [editor, projectId, saveMut]);
+
+    useEffect(() => {
+        const id = setInterval(() => { if (saveStatus === 'unsaved') save(); }, AUTO_SAVE_MS);
         return () => clearInterval(id);
     }, [save, saveStatus]);
 
@@ -113,35 +140,30 @@ export function WritingPad() {
         return () => window.removeEventListener('keydown', handler);
     }, [save]);
 
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    function handleTitleBlur() {
+        setEditingTitle(false);
+        if (!isSummary && chapterTitle !== (chapter?.title ?? '')) {
+            saveTitleMut.mutate(chapterTitle);
+        }
+    }
 
-    if (isLoading) return (
-        <div className="min-h-screen bg-ep-bg flex items-center justify-center text-ep-muted">
-            Loading…
-        </div>
+    if (isLoading && !isSummary) return (
+        <div className="min-h-screen bg-ep-bg flex items-center justify-center text-ep-muted">Loading…</div>
     );
 
-    const dateLabel = page?.pageDate
-        ? new Date(page.pageDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
-        : '';
     const wc = editor?.storage.characterCount?.words() ?? 0;
 
-    function ToolBtn({ onClick, active, title, children }: {
-        onClick: () => void; active?: boolean; title: string; children: React.ReactNode;
-    }) {
-        return (
-            <button onClick={onClick} title={title} className={`toolbar-btn ${active ? 'active' : ''}`}>
-                {children}
-            </button>
-        );
-    }
+    const headerLabel = isSummary
+        ? 'Project Summary'
+        : chapter
+            ? `Chapter ${chapter.chapterNumber}`
+            : '';
 
     return (
         <div className="min-h-screen bg-ep-bg flex flex-col">
             {/* Toolbar */}
             <div className="sticky top-0 z-40 bg-ep-surface border-b border-ep-border shadow-md">
                 <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-1">
-                    {/* Back */}
                     <button
                         onClick={() => navigate(`/projects/${projectId}`)}
                         className="toolbar-btn mr-2 flex items-center gap-1.5"
@@ -151,91 +173,70 @@ export function WritingPad() {
                     </button>
                     <div className="toolbar-divider" />
 
-                    {/* Undo / Redo */}
-                    <ToolBtn onClick={() => editor?.chain().focus().undo().run()} title="Undo (Ctrl+Z)">
-                        <Undo2 size={15} />
-                    </ToolBtn>
-                    <ToolBtn onClick={() => editor?.chain().focus().redo().run()} title="Redo (Ctrl+Shift+Z)">
-                        <Redo2 size={15} />
-                    </ToolBtn>
+                    <ToolBtn onClick={() => editor?.chain().focus().undo().run()} title="Undo"><Undo2 size={15} /></ToolBtn>
+                    <ToolBtn onClick={() => editor?.chain().focus().redo().run()} title="Redo"><Redo2 size={15} /></ToolBtn>
                     <div className="toolbar-divider" />
-
-                    {/* Inline */}
-                    <ToolBtn onClick={() => editor?.chain().focus().toggleBold().run()} active={editor?.isActive('bold')} title="Bold">
-                        <Bold size={15} />
-                    </ToolBtn>
-                    <ToolBtn onClick={() => editor?.chain().focus().toggleItalic().run()} active={editor?.isActive('italic')} title="Italic">
-                        <Italic size={15} />
-                    </ToolBtn>
-                    <ToolBtn onClick={() => editor?.chain().focus().toggleUnderline().run()} active={editor?.isActive('underline')} title="Underline">
-                        <UnderlineIcon size={15} />
-                    </ToolBtn>
-                    <ToolBtn onClick={() => editor?.chain().focus().toggleStrike().run()} active={editor?.isActive('strike')} title="Strikethrough">
-                        <Strikethrough size={15} />
-                    </ToolBtn>
+                    <ToolBtn onClick={() => editor?.chain().focus().toggleBold().run()}      active={editor?.isActive('bold')}      title="Bold"><Bold size={15} /></ToolBtn>
+                    <ToolBtn onClick={() => editor?.chain().focus().toggleItalic().run()}    active={editor?.isActive('italic')}    title="Italic"><Italic size={15} /></ToolBtn>
+                    <ToolBtn onClick={() => editor?.chain().focus().toggleUnderline().run()} active={editor?.isActive('underline')} title="Underline"><UnderlineIcon size={15} /></ToolBtn>
+                    <ToolBtn onClick={() => editor?.chain().focus().toggleStrike().run()}    active={editor?.isActive('strike')}    title="Strikethrough"><Strikethrough size={15} /></ToolBtn>
                     <div className="toolbar-divider" />
-
-                    {/* Headings */}
-                    <ToolBtn onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()} active={editor?.isActive('heading', { level: 1 })} title="Heading 1">
-                        <Heading1 size={15} />
-                    </ToolBtn>
-                    <ToolBtn onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} active={editor?.isActive('heading', { level: 2 })} title="Heading 2">
-                        <Heading2 size={15} />
-                    </ToolBtn>
-                    <ToolBtn onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()} active={editor?.isActive('heading', { level: 3 })} title="Heading 3">
-                        <Heading3 size={15} />
-                    </ToolBtn>
+                    <ToolBtn onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()} active={editor?.isActive('heading', { level: 1 })} title="Heading 1"><Heading1 size={15} /></ToolBtn>
+                    <ToolBtn onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} active={editor?.isActive('heading', { level: 2 })} title="Heading 2"><Heading2 size={15} /></ToolBtn>
+                    <ToolBtn onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()} active={editor?.isActive('heading', { level: 3 })} title="Heading 3"><Heading3 size={15} /></ToolBtn>
                     <div className="toolbar-divider" />
-
-                    {/* Lists & quote */}
-                    <ToolBtn onClick={() => editor?.chain().focus().toggleBulletList().run()} active={editor?.isActive('bulletList')} title="Bullet list">
-                        <List size={15} />
-                    </ToolBtn>
-                    <ToolBtn onClick={() => editor?.chain().focus().toggleOrderedList().run()} active={editor?.isActive('orderedList')} title="Numbered list">
-                        <ListOrdered size={15} />
-                    </ToolBtn>
-                    <ToolBtn onClick={() => editor?.chain().focus().toggleBlockquote().run()} active={editor?.isActive('blockquote')} title="Blockquote">
-                        <Quote size={15} />
-                    </ToolBtn>
+                    <ToolBtn onClick={() => editor?.chain().focus().toggleBulletList().run()}  active={editor?.isActive('bulletList')}  title="Bullet list"><List size={15} /></ToolBtn>
+                    <ToolBtn onClick={() => editor?.chain().focus().toggleOrderedList().run()} active={editor?.isActive('orderedList')} title="Numbered list"><ListOrdered size={15} /></ToolBtn>
+                    <ToolBtn onClick={() => editor?.chain().focus().toggleBlockquote().run()}  active={editor?.isActive('blockquote')}  title="Blockquote"><Quote size={15} /></ToolBtn>
                     <div className="toolbar-divider" />
-
-                    {/* Alignment */}
-                    <ToolBtn onClick={() => editor?.chain().focus().setTextAlign('left').run()} active={editor?.isActive({ textAlign: 'left' })} title="Align left">
-                        <AlignLeft size={15} />
-                    </ToolBtn>
-                    <ToolBtn onClick={() => editor?.chain().focus().setTextAlign('center').run()} active={editor?.isActive({ textAlign: 'center' })} title="Align center">
-                        <AlignCenter size={15} />
-                    </ToolBtn>
-                    <ToolBtn onClick={() => editor?.chain().focus().setTextAlign('right').run()} active={editor?.isActive({ textAlign: 'right' })} title="Align right">
-                        <AlignRight size={15} />
-                    </ToolBtn>
+                    <ToolBtn onClick={() => editor?.chain().focus().setTextAlign('left').run()}   active={editor?.isActive({ textAlign: 'left' })}   title="Align left"><AlignLeft size={15} /></ToolBtn>
+                    <ToolBtn onClick={() => editor?.chain().focus().setTextAlign('center').run()} active={editor?.isActive({ textAlign: 'center' })} title="Align center"><AlignCenter size={15} /></ToolBtn>
+                    <ToolBtn onClick={() => editor?.chain().focus().setTextAlign('right').run()}  active={editor?.isActive({ textAlign: 'right' })}  title="Align right"><AlignRight size={15} /></ToolBtn>
 
                     <div className="flex-1" />
 
-                    {/* Save status + delete */}
                     <span className={`text-xs mr-2 ${
-                        saveStatus === 'saved'   ? 'text-ep-muted'     :
-                        saveStatus === 'saving'  ? 'text-ep-champagne' : 'text-ep-rose'
+                        saveStatus === 'saved'  ? 'text-ep-muted'     :
+                        saveStatus === 'saving' ? 'text-ep-champagne' : 'text-ep-rose'
                     }`}>
                         {saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving…' : 'Unsaved'}
                     </span>
-
                     <button onClick={save} className="btn-primary py-1.5 px-3 text-xs" disabled={saveMut.isPending}>
                         <Save size={13} /> Save
                     </button>
-
-                    <button onClick={() => setShowDeleteConfirm(true)} className="btn-danger py-1.5 px-3 text-xs ml-1">
-                        <Trash2 size={13} /> Delete
-                    </button>
+                    {!isSummary && (
+                        <button onClick={() => setShowDelete(true)} className="btn-danger py-1.5 px-3 text-xs ml-1">
+                            <Trash2 size={13} />
+                        </button>
+                    )}
                 </div>
             </div>
 
-            {/* Project + date header */}
+            {/* Chapter header */}
             <div className="max-w-3xl mx-auto w-full px-4 pt-8 pb-2 text-center">
-                <p className="text-ep-muted text-xs uppercase tracking-widest mb-1">
-                    {project?.title}
-                </p>
-                <h2 className="font-display font-black text-2xl text-ep-text">{dateLabel}</h2>
+                <p className="text-ep-muted text-xs uppercase tracking-widest mb-2">{project?.title}</p>
+                <p className="text-ep-rose text-xs font-semibold uppercase tracking-widest mb-1">{headerLabel}</p>
+                {isSummary ? (
+                    <h2 className="font-display font-black text-2xl text-ep-text">Summary</h2>
+                ) : editingTitle ? (
+                    <input
+                        autoFocus
+                        className="font-display font-black text-2xl text-ep-text bg-transparent border-b border-ep-rose text-center w-full outline-none pb-1"
+                        value={chapterTitle}
+                        onChange={e => setChapterTitle(e.target.value)}
+                        onBlur={handleTitleBlur}
+                        onKeyDown={e => e.key === 'Enter' && handleTitleBlur()}
+                        placeholder="Chapter Title"
+                    />
+                ) : (
+                    <h2
+                        className="font-display font-black text-2xl text-ep-text cursor-text hover:text-ep-rose transition-colors"
+                        onClick={() => setEditingTitle(true)}
+                        title="Click to edit title"
+                    >
+                        {chapterTitle || <span className="text-ep-muted italic font-normal text-xl">Untitled — click to add title</span>}
+                    </h2>
+                )}
             </div>
 
             {/* Paper */}
@@ -250,7 +251,12 @@ export function WritingPad() {
                 <div className="max-w-5xl mx-auto px-4 h-10 flex items-center justify-between text-xs text-ep-muted">
                     <div className="flex items-center gap-1.5">
                         <Type size={12} />
-                        <span><span className="text-ep-rose font-semibold">{wc}</span> words</span>
+                        <span><span className="text-ep-rose font-semibold">{wc.toLocaleString()}</span> words</span>
+                        {!isSummary && project?.targetWordCount && (
+                            <span className="text-ep-muted ml-2">
+                                · project total <span className="text-ep-text-dim">{project.totalWords.toLocaleString()} / {project.targetWordCount.toLocaleString()}</span>
+                            </span>
+                        )}
                     </div>
                     <div className="flex items-center gap-1.5">
                         <Clock size={12} />
@@ -260,26 +266,36 @@ export function WritingPad() {
             </div>
 
             {/* Delete confirm */}
-            {showDeleteConfirm && (
+            {showDelete && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-ep-surface border border-ep-border rounded-2xl p-6 w-full max-w-sm">
-                        <h3 className="font-display font-bold text-lg text-ep-text mb-2">Delete This Page?</h3>
+                        <h3 className="font-display font-bold text-lg text-ep-text mb-2">Delete Chapter?</h3>
                         <p className="text-ep-muted text-sm mb-6">
-                            <strong className="text-ep-text">{dateLabel}</strong> will be permanently deleted. This cannot be undone.
+                            <strong className="text-ep-text">{headerLabel}{chapterTitle ? `: ${chapterTitle}` : ''}</strong> will be permanently deleted. This cannot be undone.
                         </p>
                         <div className="flex gap-3">
-                            <button className="btn-ghost flex-1" onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
+                            <button className="btn-ghost flex-1" onClick={() => setShowDelete(false)}>Cancel</button>
                             <button
                                 className="btn-danger flex-1"
                                 onClick={() => deleteMut.mutate()}
                                 disabled={deleteMut.isPending}
                             >
-                                {deleteMut.isPending ? 'Deleting…' : 'Delete Page'}
+                                {deleteMut.isPending ? 'Deleting…' : 'Delete'}
                             </button>
                         </div>
                     </div>
                 </div>
             )}
         </div>
+    );
+}
+
+function ToolBtn({ onClick, active, title, children }: {
+    onClick: () => void; active?: boolean; title: string; children: React.ReactNode;
+}) {
+    return (
+        <button onClick={onClick} title={title} className={`toolbar-btn ${active ? 'active' : ''}`}>
+            {children}
+        </button>
     );
 }

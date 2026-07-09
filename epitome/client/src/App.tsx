@@ -43,7 +43,7 @@ function AppRoutes() {
     return (
         <Routes>
             {/* Full-screen writing pad — no nav chrome */}
-            <Route path="/write/:projectId/:pageId" element={<WritingPad />} />
+            <Route path="/write/:projectId/:chapterId" element={<WritingPad />} />
 
             {/* Shell with nav */}
             <Route element={<Layout />}>

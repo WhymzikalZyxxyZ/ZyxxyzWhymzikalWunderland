@@ -3,7 +3,7 @@ import { z }           from 'zod';
 import { zValidator }  from '@hono/zod-validator';
 import { eq, desc, sql } from 'drizzle-orm';
 import { getDb }       from '../db/client';
-import { projects, pages } from '../db/schema';
+import { projects } from '../db/schema';
 import { authMiddleware }  from '../middleware/auth';
 import type { Bindings, Variables } from '../types';
 
@@ -26,7 +26,9 @@ const createSchema = z.object({
     pubType:         z.enum(['traditional', 'self']).optional(),
 });
 
-const patchSchema = createSchema.partial();
+const patchSchema = createSchema.extend({
+    mainCoverKey: z.string().nullable().optional(),
+}).partial();
 
 // ── Dashboard aggregates ──────────────────────────────────────────────────────
 
@@ -76,12 +78,7 @@ app.post('/', zValidator('json', createSchema), async (c) => {
     const project       = projectResult[0];
     if (!project) return c.json({ error: 'Failed to create project' }, 500);
 
-    const today      = new Date().toISOString().slice(0, 10);
-    const pageResult = await db.insert(pages).values({ projectId: project.id, userId, pageDate: today }).returning();
-    const page       = pageResult[0];
-    if (!page) return c.json({ error: 'Failed to create today\'s page' }, 500);
-
-    return c.json({ project, page }, 201);
+    return c.json({ project }, 201);
 });
 
 // ── Single ────────────────────────────────────────────────────────────────────
