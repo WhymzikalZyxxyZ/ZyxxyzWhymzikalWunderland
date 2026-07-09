@@ -136,10 +136,14 @@ jobs:
         run: |
           cd epitome/client
           npm ci
+          npm test
           npm run build
 
       - name: Install Epitome worker dependencies
         run: cd epitome/worker && npm ci
+
+      - name: Test Epitome worker
+        run: cd epitome/worker && npm test
 
       - name: Deploy Epitome Worker to Cloudflare
         uses: cloudflare/wrangler-action@v4

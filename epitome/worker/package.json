@@ -6,6 +6,8 @@
         "dev": "wrangler dev --port 8787",
         "deploy": "wrangler deploy",
         "lint": "tsc --noEmit",
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
         "migrate": "wrangler d1 execute epitome --local --file=drizzle/0001_initial.sql",
         "migrate:prod": "wrangler d1 execute epitome --remote --file=drizzle/0001_initial.sql"
     },
@@ -17,8 +19,10 @@
     },
     "devDependencies": {
         "@cloudflare/workers-types": "^4.20250620.0",
+        "@vitest/coverage-v8": "^4.1.10",
         "drizzle-kit": "^0.31.0",
         "typescript": "^5.8.0",
+        "vitest": "^4.1.10",
         "wrangler": "^4.0.0"
     }
 }
