@@ -694,7 +694,7 @@ describe('GET /api/chapters — authenticated', () => {
 
         let getCount = 0;
         const q: Record<string, AnyFn> = {};
-        for (const m of ['select','from','where','orderBy','insert','values','update','set','delete']) q[m] = vi.fn().mockReturnValue(q);
+        for (const m of ['select','from','where','orderBy','limit','insert','values','update','set','delete']) q[m] = vi.fn().mockReturnValue(q);
         q['all'] = vi.fn().mockResolvedValue([]); q['returning'] = vi.fn().mockResolvedValue([]); q['run'] = vi.fn().mockResolvedValue({});
         q['get'] = vi.fn().mockImplementation(() => { getCount++; return Promise.resolve(getCount === 1 ? session : null); });
         mockGetDb({ select: vi.fn().mockReturnValue(q), insert: vi.fn().mockReturnValue(q), update: vi.fn().mockReturnValue(q), delete: vi.fn().mockReturnValue(q) } as unknown as ReturnType<typeof makeDb>);
