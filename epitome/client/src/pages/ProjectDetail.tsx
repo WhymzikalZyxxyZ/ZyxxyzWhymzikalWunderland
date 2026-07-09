@@ -42,6 +42,21 @@ export function ProjectDetail() {
     const initialTab        = (searchParams.get('tab') as Tab | null) ?? 'overview';
     const [tab, setTab]     = useState<Tab>(initialTab);
     const [showCommissions, setShowCommissions] = useState(false);
+    const headerCoverRef    = useRef<HTMLInputElement>(null);
+    const [headerUploading, setHeaderUploading] = useState(false);
+
+    async function uploadHeaderCover(file: File) {
+        setHeaderUploading(true);
+        try {
+            const fd  = new FormData(); fd.append('file', file);
+            const res = await fetch(`/api/uploads/projects/${id}/cover`, { method: 'POST', body: fd, credentials: 'include' });
+            if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? `Upload failed (${res.status})`);
+            qc.invalidateQueries({ queryKey: ['project', id] });
+        } finally {
+            setHeaderUploading(false);
+            if (headerCoverRef.current) headerCoverRef.current.value = '';
+        }
+    }
 
     const { data: project, isLoading } = useQuery<Project>({
         queryKey: ['project', id],
@@ -64,13 +79,31 @@ export function ProjectDetail() {
             {/* Project header */}
             <div className="bg-ep-surface border border-ep-border rounded-2xl p-6 mb-6 shadow-ep-card">
                 <div className="flex items-start gap-5">
-                    {/* Cover thumbnail */}
-                    <div className="w-20 h-28 rounded-xl bg-ep-border flex items-center justify-center shrink-0 overflow-hidden shadow-md">
+                    {/* Cover thumbnail — click to upload */}
+                    <input
+                        ref={headerCoverRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={e => e.target.files?.[0] && uploadHeaderCover(e.target.files[0])}
+                    />
+                    <button
+                        onClick={() => headerCoverRef.current?.click()}
+                        disabled={headerUploading}
+                        title="Upload cover"
+                        className="w-20 h-28 rounded-xl bg-ep-border flex items-center justify-center shrink-0 overflow-hidden shadow-md relative group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ep-rose"
+                    >
                         {coverUrl
                             ? <img src={coverUrl} alt={project.title} className="w-full h-full object-cover" />
                             : <BookOpen size={24} className="text-ep-muted" />
                         }
-                    </div>
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl">
+                            {headerUploading
+                                ? <span className="text-white text-xs font-semibold">…</span>
+                                : <Upload size={18} className="text-white" />
+                            }
+                        </div>
+                    </button>
 
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -328,7 +361,16 @@ function OverviewTab({ project, id, qc }: { project: Project; id: string; qc: Re
                 )}
 
                 {art.length === 0 && !project.coverKey ? (
-                    <p className="text-ep-muted text-sm text-center py-6">No artwork yet — give your project a face that commands attention.</p>
+                    <button
+                        onClick={() => artInputRef.current?.click()}
+                        disabled={uploading}
+                        className="w-full border-2 border-dashed border-ep-border hover:border-ep-rose rounded-2xl py-10 flex flex-col items-center gap-2 transition-colors group"
+                    >
+                        <Image size={28} className="text-ep-border group-hover:text-ep-rose transition-colors" />
+                        <p className="text-ep-muted text-sm group-hover:text-ep-text transition-colors">
+                            {uploading ? 'Uploading…' : 'No artwork yet — click to give your project a face that commands attention.'}
+                        </p>
+                    </button>
                 ) : (
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
                         {project.coverKey && (
