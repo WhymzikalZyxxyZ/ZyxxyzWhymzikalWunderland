@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, Link }     from 'react-router-dom';
 import {
     BookOpen, PenLine, Award, Clock, Plus, ArrowRight,
-    BarChart3, DollarSign, CheckCircle2, Circle, X,
+    BarChart3, DollarSign, CheckCircle2, Circle, X, Download,
 } from 'lucide-react';
 import { api }          from '@/lib/api';
 import { useAuth }      from '@/contexts/AuthContext';
@@ -73,8 +73,22 @@ export function Dashboard() {
                     <div className="absolute -top-16 -right-16 w-64 h-64 bg-ep-rose opacity-5 rounded-full blur-3xl" />
                     <div className="absolute -bottom-12 -left-12 w-56 h-56 bg-ep-plum opacity-5 rounded-full blur-3xl" />
                 </div>
-                <p className="text-ep-text-dim text-xs uppercase tracking-widest font-semibold mb-1.5">Welcome back</p>
-                <h1 className="font-display font-black text-4xl text-ep-text">{user?.username}</h1>
+                <div className="flex items-end justify-between gap-6 relative">
+                    <div>
+                        <p className="text-ep-text-dim text-xs uppercase tracking-widest font-semibold mb-1.5">Welcome back</p>
+                        <h1 className="font-display font-black text-4xl text-ep-text">{user?.username}</h1>
+                    </div>
+                    <a
+                        href="https://github.com/WhymzikalZyxxyZ/epitome-desktop/releases"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 flex items-center gap-2.5 px-5 py-3 rounded-xl border border-ep-rose/40 bg-ep-rose/8 text-ep-rose hover:bg-ep-rose/15 hover:border-ep-rose/70 transition-all text-sm font-semibold group"
+                    >
+                        <Download size={16} className="group-hover:-translate-y-0.5 transition-transform" />
+                        <span className="hidden sm:inline">Download Desktop</span>
+                        <span className="sm:hidden">Desktop</span>
+                    </a>
+                </div>
             </div>
 
             {/* Stats */}
