@@ -104,7 +104,7 @@ export function WritingPad() {
             StarterKit,
             Underline,
             TextAlign.configure({ types: ['heading', 'paragraph'] }),
-            Placeholder.configure({ placeholder: isSummary ? 'Write your project summary…' : 'Begin your chapter…' }),
+            Placeholder.configure({ placeholder: isSummary ? 'Draw your reader in from the first breath…' : 'Let the words seduce the page…' }),
             CharacterCount,
         ],
         content: '',
@@ -148,7 +148,7 @@ export function WritingPad() {
     }
 
     if (isLoading && !isSummary) return (
-        <div className="min-h-screen bg-ep-bg flex items-center justify-center text-ep-muted">Loading…</div>
+        <div className="min-h-screen bg-ep-bg flex items-center justify-center text-ep-muted">Pulling up your chapter…</div>
     );
 
     const wc = editor?.storage.characterCount?.words() ?? 0;
@@ -199,7 +199,7 @@ export function WritingPad() {
                         saveStatus === 'saved'  ? 'text-ep-muted'     :
                         saveStatus === 'saving' ? 'text-ep-champagne' : 'text-ep-rose'
                     }`}>
-                        {saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving…' : 'Unsaved'}
+                        {saveStatus === 'saved' ? 'All caught up' : saveStatus === 'saving' ? 'Committing…' : 'Unsaved changes'}
                     </span>
                     <button onClick={save} className="btn-primary py-1.5 px-3 text-xs" disabled={saveMut.isPending}>
                         <Save size={13} /> Save
@@ -234,7 +234,7 @@ export function WritingPad() {
                         onClick={() => setEditingTitle(true)}
                         title="Click to edit title"
                     >
-                        {chapterTitle || <span className="text-ep-muted italic font-normal text-xl">Untitled — click to add title</span>}
+                        {chapterTitle || <span className="text-ep-muted italic font-normal text-xl">Nameless — click to give it an identity</span>}
                     </h2>
                 )}
             </div>
@@ -269,9 +269,9 @@ export function WritingPad() {
             {showDelete && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-ep-surface border border-ep-border rounded-2xl p-6 w-full max-w-sm">
-                        <h3 className="font-display font-bold text-lg text-ep-text mb-2">Delete Chapter?</h3>
+                        <h3 className="font-display font-bold text-lg text-ep-text mb-2">Erase this chapter?</h3>
                         <p className="text-ep-muted text-sm mb-6">
-                            <strong className="text-ep-text">{headerLabel}{chapterTitle ? `: ${chapterTitle}` : ''}</strong> will be permanently deleted. This cannot be undone.
+                            <strong className="text-ep-text">{headerLabel}{chapterTitle ? `: ${chapterTitle}` : ''}</strong> will be gone permanently — every word, every scene, every secret. There is no undoing this.
                         </p>
                         <div className="flex gap-3">
                             <button className="btn-ghost flex-1" onClick={() => setShowDelete(false)}>Cancel</button>

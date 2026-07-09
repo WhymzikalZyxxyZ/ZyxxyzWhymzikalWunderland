@@ -16,3 +16,4 @@ CREATE TABLE IF NOT EXISTS chapters (
 );
 
 CREATE INDEX IF NOT EXISTS idx_chapters_project ON chapters(project_id, chapter_number);
+CREATE INDEX IF NOT EXISTS idx_chapters_user    ON chapters(user_id, updated_at DESC);

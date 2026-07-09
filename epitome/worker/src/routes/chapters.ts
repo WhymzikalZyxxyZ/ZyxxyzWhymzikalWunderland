@@ -19,9 +19,20 @@ chaptersGlobalRouter.use('*', authMiddleware);
 
 chaptersGlobalRouter.get('/', async (c) => {
     const db = getDb(c.env.DB);
-    const rows = await db.select().from(chapters)
+    const rows = await db
+        .select({
+            id:            chapters.id,
+            projectId:     chapters.projectId,
+            chapterNumber: chapters.chapterNumber,
+            title:         chapters.title,
+            wordCount:     chapters.wordCount,
+            updatedAt:     chapters.updatedAt,
+            createdAt:     chapters.createdAt,
+        })
+        .from(chapters)
         .where(eq(chapters.userId, c.get('userId')))
         .orderBy(desc(chapters.updatedAt))
+        .limit(200)
         .all();
     return c.json(rows);
 });
@@ -29,7 +40,12 @@ chaptersGlobalRouter.get('/', async (c) => {
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
 function countWords(html: string): number {
-    const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    const text = html
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&[a-z#0-9]+;/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim();
     return text.length > 0 ? text.split(' ').length : 0;
 }
 

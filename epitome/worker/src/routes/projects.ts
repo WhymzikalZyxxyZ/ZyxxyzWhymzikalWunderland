@@ -1,9 +1,9 @@
 import { Hono }       from 'hono';
 import { z }           from 'zod';
 import { zValidator }  from '@hono/zod-validator';
-import { eq, desc, sql } from 'drizzle-orm';
+import { and, eq, desc, sql } from 'drizzle-orm';
 import { getDb }       from '../db/client';
-import { projects } from '../db/schema';
+import { projects, projectArt } from '../db/schema';
 import { authMiddleware }  from '../middleware/auth';
 import type { Bindings, Variables } from '../types';
 
@@ -103,6 +103,21 @@ app.patch('/:id', zValidator('json', patchSchema), async (c) => {
 
     const existing = await db.select().from(projects).where(eq(projects.id, c.req.param('id'))).get();
     if (!existing || existing.userId !== userId) return c.notFound();
+
+    // Validate that mainCoverKey belongs to this project, if provided
+    if (body.mainCoverKey != null) {
+        const isProjectCover = existing.coverKey === body.mainCoverKey;
+        const artRow = isProjectCover
+            ? true
+            : await db.select({ id: projectArt.id }).from(projectArt)
+                .where(and(
+                    eq(projectArt.storageKey, body.mainCoverKey),
+                    eq(projectArt.projectId, c.req.param('id')!),
+                    eq(projectArt.userId, userId),
+                ))
+                .get();
+        if (!artRow) return c.json({ error: 'mainCoverKey does not belong to this project' }, 422);
+    }
 
     const [row] = await db
         .update(projects)

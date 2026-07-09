@@ -1,4 +1,4 @@
-import { useState, useRef, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import {
@@ -48,8 +48,8 @@ export function ProjectDetail() {
         enabled:  !!id,
     });
 
-    if (isLoading) return <div className="text-ep-muted text-center py-20">Loading…</div>;
-    if (!project)  return <div className="text-ep-muted text-center py-20">Project not found.</div>;
+    if (isLoading) return <div className="text-ep-muted text-center py-20">Fetching your project…</div>;
+    if (!project)  return <div className="text-ep-muted text-center py-20">This project slipped away — or never existed.</div>;
 
     const coverKey = project.mainCoverKey ?? project.coverKey;
     const coverUrl = coverKey ? `/api/files/${coverKey}` : null;
@@ -160,27 +160,35 @@ function OverviewTab({ project, id, qc }: { project: Project; id: string; qc: Re
         },
     });
 
+    const [uploadError, setUploadError] = useState<string | null>(null);
+
     async function uploadCover(file: File) {
-        setUploading(true);
+        setUploading(true); setUploadError(null);
         try {
-            const fd = new FormData(); fd.append('file', file);
-            await fetch(`/api/uploads/projects/${id}/cover`, { method: 'POST', body: fd, credentials: 'include' });
+            const fd  = new FormData(); fd.append('file', file);
+            const res = await fetch(`/api/uploads/projects/${id}/cover`, { method: 'POST', body: fd, credentials: 'include' });
+            if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? `Upload failed (${res.status})`);
             qc.invalidateQueries({ queryKey: ['project', id] });
+        } catch (e) {
+            setUploadError(e instanceof Error ? e.message : "The upload didn't make it through — please try again.");
         } finally { setUploading(false); }
     }
 
     async function uploadArt(file: File) {
-        setUploading(true);
+        setUploading(true); setUploadError(null);
         try {
-            const fd = new FormData(); fd.append('file', file);
-            await fetch(`/api/uploads/projects/${id}/art`, { method: 'POST', body: fd, credentials: 'include' });
+            const fd  = new FormData(); fd.append('file', file);
+            const res = await fetch(`/api/uploads/projects/${id}/art`, { method: 'POST', body: fd, credentials: 'include' });
+            if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? `Upload failed (${res.status})`);
             qc.invalidateQueries({ queryKey: ['art', id] });
+        } catch (e) {
+            setUploadError(e instanceof Error ? e.message : "The upload didn't make it through — please try again.");
         } finally { setUploading(false); }
     }
 
     async function deleteArt(artId: string) {
-        await fetch(`/api/uploads/projects/${id}/art/${artId}`, { method: 'DELETE', credentials: 'include' });
-        qc.invalidateQueries({ queryKey: ['art', id] });
+        const res = await fetch(`/api/uploads/projects/${id}/art/${artId}`, { method: 'DELETE', credentials: 'include' });
+        if (res.ok) qc.invalidateQueries({ queryKey: ['art', id] });
     }
 
     function useAsMainCover(storageKey: string) {
@@ -264,8 +272,12 @@ function OverviewTab({ project, id, qc }: { project: Project; id: string; qc: Re
                     </div>
                 </div>
 
+                {uploadError && (
+                    <p className="text-ep-danger text-xs bg-ep-danger/10 border border-ep-danger/25 rounded-lg px-3 py-2 mb-3">✕ {uploadError}</p>
+                )}
+
                 {art.length === 0 && !project.coverKey ? (
-                    <p className="text-ep-muted text-sm text-center py-6">No images yet. Upload a cover to get started.</p>
+                    <p className="text-ep-muted text-sm text-center py-6">No artwork yet — give your project a face that commands attention.</p>
                 ) : (
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
                         {project.coverKey && (
@@ -401,7 +413,7 @@ function DraftingTab({ project, id, navigate, qc }: {
                 {chapters.length === 0 ? (
                     <div className="text-center py-10">
                         <PenLine size={36} className="text-ep-border mx-auto mb-3" />
-                        <p className="text-ep-muted text-sm mb-4">No chapters yet. Start your first one.</p>
+                        <p className="text-ep-muted text-sm mb-4">No chapters yet — every story needs a first sentence.</p>
                     </div>
                 ) : (
                     <div className="space-y-2 mb-5">
@@ -452,8 +464,8 @@ function DraftingTab({ project, id, navigate, qc }: {
             </div>
 
             {delChapter && (
-                <Modal title="Delete Chapter?" onClose={() => setDelChapter(null)}>
-                    <p className="text-ep-muted text-sm mb-6">This chapter and all its content will be permanently deleted.</p>
+                <Modal title="Erase this chapter?" onClose={() => setDelChapter(null)}>
+                    <p className="text-ep-muted text-sm mb-6">Every word in this chapter will be gone — permanently. Consider exporting a copy first if you have any second thoughts.</p>
                     <div className="flex gap-3">
                         <button className="btn-ghost flex-1" onClick={() => setDelChapter(null)}>Cancel</button>
                         <button className="btn-danger flex-1" disabled={deleteMut.isPending} onClick={() => deleteMut.mutate(delChapter)}>
@@ -519,7 +531,7 @@ function CharactersTab({ id, qc }: { id: string; qc: ReturnType<typeof useQueryC
             {characters.length === 0 ? (
                 <div className="text-center py-10">
                     <Users size={36} className="text-ep-border mx-auto mb-3" />
-                    <p className="text-ep-muted text-sm">No characters yet.</p>
+                    <p className="text-ep-muted text-sm">No characters yet — every story has people waiting to be written into existence.</p>
                 </div>
             ) : (
                 <div className="space-y-2">
@@ -538,8 +550,8 @@ function CharactersTab({ id, qc }: { id: string; qc: ReturnType<typeof useQueryC
             )}
 
             {delChar && (
-                <Modal title="Delete Character?" onClose={() => setDelChar(null)}>
-                    <p className="text-ep-muted text-sm mb-6">This character and all their images will be permanently deleted.</p>
+                <Modal title="Remove this character?" onClose={() => setDelChar(null)}>
+                    <p className="text-ep-muted text-sm mb-6">This character — their story, their images, everything that makes them real — will be permanently removed. There is no recovery.</p>
                     <div className="flex gap-3">
                         <button className="btn-ghost flex-1" onClick={() => setDelChar(null)}>Cancel</button>
                         <button className="btn-danger flex-1" disabled={deleteMut.isPending} onClick={() => deleteMut.mutate(delChar)}>
@@ -635,7 +647,7 @@ function CharacterCard({ character, projectId, expanded, onToggle, onDelete, qc 
                             {full?.physicalDescription && <InfoRow label="Physical Description" value={full.physicalDescription} multiline />}
                             {full?.notes && <InfoRow label="Notes" value={full.notes} multiline />}
                             {!full?.age && !full?.physicalDescription && !full?.notes && (
-                                <p className="text-ep-muted text-xs">No details yet.</p>
+                                <p className="text-ep-muted text-xs">No details yet — expand to give this character their depth.</p>
                             )}
                             <button className="btn-ghost py-1.5 px-3 text-xs mt-1" onClick={() => setEditing(true)}>Edit Details</button>
                         </div>
@@ -663,7 +675,7 @@ function CharacterCard({ character, projectId, expanded, onToggle, onDelete, qc 
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-ep-muted text-xs">No images yet.</p>
+                            <p className="text-ep-muted text-xs">No images yet — put a face to the name.</p>
                         )}
                     </div>
                 </div>
@@ -735,7 +747,7 @@ function MarketingTab({ id, qc }: { id: string; qc: ReturnType<typeof useQueryCl
 
             {/* Comp list */}
             {comps.length === 0 ? (
-                <p className="text-ep-muted text-sm text-center py-6">No comparable titles yet.</p>
+                <p className="text-ep-muted text-sm text-center py-6">No comp titles yet — name the books yours will share shelf space with.</p>
             ) : (
                 <div className="space-y-2">
                     {comps.map(c => (
@@ -811,7 +823,7 @@ function EventsTab({ id, qc }: { id: string; qc: ReturnType<typeof useQueryClien
             </div>
 
             {events.length === 0 ? (
-                <p className="text-ep-muted text-sm text-center py-6">No events yet.</p>
+                <p className="text-ep-muted text-sm text-center py-6">No events yet — signings, launches, readings. Every milestone deserves a date.</p>
             ) : (
                 <div className="space-y-2">
                     {events.map(e => (
@@ -878,8 +890,8 @@ function PublishingTab({ project, id, qc }: { project: Project; id: string; qc: 
         onSuccess: () => qc.invalidateQueries({ queryKey: ['distribution', id] }),
     });
 
-    // Sync form from fetched data
-    useState(() => {
+    // Sync form from fetched data once the async query resolves
+    useEffect(() => {
         if (pub) {
             setPubType(pub.pubType);
             setPubForm({
@@ -889,7 +901,7 @@ function PublishingTab({ project, id, qc }: { project: Project; id: string; qc: 
                 dealDetails:   pub.dealDetails ?? '',
             });
         }
-    });
+    }, [pub]);
 
     const SIZE_FORMATS = ['paperback', 'hardcover', 'ebook', 'audio'] as const;
 
@@ -1059,7 +1071,7 @@ function CommissionsModal({ id, qc, onClose }: { id: string; qc: ReturnType<type
 
                 <div className="flex-1 overflow-y-auto p-6 space-y-4">
                     {commissions.length === 0 ? (
-                        <p className="text-ep-muted text-sm text-center py-4">No commissions yet.</p>
+                        <p className="text-ep-muted text-sm text-center py-4">No commissions yet — track the artists and editors who help bring your vision to life.</p>
                     ) : (
                         <div className="space-y-2">
                             {commissions.map(c => (

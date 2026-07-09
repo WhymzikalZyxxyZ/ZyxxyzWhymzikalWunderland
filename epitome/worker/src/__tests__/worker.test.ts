@@ -9,6 +9,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { Bindings } from '../types';
 
 // ── Mock the DB module before importing the worker ────────────────────────────
 //
@@ -159,7 +160,7 @@ beforeEach(() => {
 
 describe('GET /api/health', () => {
     it('returns 200 with ok:true and a timestamp', async () => {
-        const res = await worker.fetch(req('/api/health'), makeEnv() as unknown as Env, CTX);
+        const res = await worker.fetch(req('/api/health'), makeEnv() as unknown as Bindings, CTX);
         expect(res.status).toBe(200);
         const body = await res.json() as { ok: boolean; ts: string };
         expect(body.ok).toBe(true);
@@ -167,7 +168,7 @@ describe('GET /api/health', () => {
     });
 
     it('returns JSON content-type', async () => {
-        const res = await worker.fetch(req('/api/health'), makeEnv() as unknown as Env, CTX);
+        const res = await worker.fetch(req('/api/health'), makeEnv() as unknown as Bindings, CTX);
         expect(res.headers.get('Content-Type')).toMatch(/application\/json/);
     });
 });
@@ -180,7 +181,7 @@ describe('CORS', () => {
     it('reflects the canonical Epitome origin in ACAO header', async () => {
         const res = await worker.fetch(
             req('/api/health', { origin: 'https://epitome.zyxwonderland.xyz' }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.headers.get('Access-Control-Allow-Origin')).toBe('https://epitome.zyxwonderland.xyz');
     });
@@ -188,7 +189,7 @@ describe('CORS', () => {
     it('reflects localhost:5173 in ACAO header (dev)', async () => {
         const res = await worker.fetch(
             req('/api/health', { origin: 'http://localhost:5173' }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:5173');
     });
@@ -196,7 +197,7 @@ describe('CORS', () => {
     it('returns empty or null ACAO for disallowed origins', async () => {
         const res = await worker.fetch(
             req('/api/health', { origin: 'https://evil.example.com' }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         const acao = res.headers.get('Access-Control-Allow-Origin');
         expect(acao === null || acao === '').toBe(true);
@@ -211,7 +212,7 @@ describe('POST /api/auth/signup — input validation', () => {
     it('returns 400 when body is missing entirely', async () => {
         const res = await worker.fetch(
             new Request('https://epitome.zyxwonderland.xyz/api/auth/signup', { method: 'POST' }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(400);
     });
@@ -220,7 +221,7 @@ describe('POST /api/auth/signup — input validation', () => {
         mockGetDb(makeDb());
         const res = await worker.fetch(
             req('/api/auth/signup', { method: 'POST', body: { username: 'x', password: 'password123' } }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(400);
     });
@@ -228,7 +229,7 @@ describe('POST /api/auth/signup — input validation', () => {
     it('returns 400 when password is too short (< 8 chars)', async () => {
         const res = await worker.fetch(
             req('/api/auth/signup', { method: 'POST', body: { username: 'validuser', password: 'short' } }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(400);
     });
@@ -236,7 +237,7 @@ describe('POST /api/auth/signup — input validation', () => {
     it('returns 400 when username contains disallowed characters (space, !)', async () => {
         const res = await worker.fetch(
             req('/api/auth/signup', { method: 'POST', body: { username: 'bad user!', password: 'password123' } }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(400);
     });
@@ -254,7 +255,7 @@ describe('POST /api/auth/signup — DB paths', () => {
 
         const res = await worker.fetch(
             req('/api/auth/signup', { method: 'POST', body: { username: 'takenname', password: 'password123' } }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(409);
         const body = await res.json() as { error: string };
@@ -290,7 +291,7 @@ describe('POST /api/auth/signup — DB paths', () => {
 
         const res = await worker.fetch(
             req('/api/auth/signup', { method: 'POST', body: { username: 'newwriter', password: 'password123' } }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(201);
         expect(res.headers.get('Set-Cookie')).toMatch(/ep_session/);
@@ -305,7 +306,7 @@ describe('POST /api/auth/login — 401 paths', () => {
     it('returns 400 when body is missing', async () => {
         const res = await worker.fetch(
             new Request('https://epitome.zyxwonderland.xyz/api/auth/login', { method: 'POST' }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(400);
     });
@@ -314,7 +315,7 @@ describe('POST /api/auth/login — 401 paths', () => {
         mockGetDb(makeDb({ single: null }));
         const res = await worker.fetch(
             req('/api/auth/login', { method: 'POST', body: { username: 'nobody', password: 'password123' } }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(401);
     });
@@ -324,7 +325,7 @@ describe('POST /api/auth/login — 401 paths', () => {
         mockGetDb(makeDb({ single: inactiveUser }));
         const res = await worker.fetch(
             req('/api/auth/login', { method: 'POST', body: { username: 'frozen', password: 'password123' } }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(401);
     });
@@ -347,7 +348,7 @@ describe('auth-protected routes — no session cookie', () => {
         it(`${method} ${path} returns 401`, async () => {
             // Session query returns null — no valid session
             mockGetDb(makeDb({ single: null }));
-            const res = await worker.fetch(req(path, { method }), makeEnv() as unknown as Env, CTX);
+            const res = await worker.fetch(req(path, { method }), makeEnv() as unknown as Bindings, CTX);
             expect(res.status).toBe(401);
         });
     }
@@ -369,7 +370,7 @@ describe('auth-protected routes — expired session', () => {
 
         const res = await worker.fetch(
             req('/api/projects', { cookie: 'ep_session=expired-sid' }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(401);
     });
@@ -382,7 +383,7 @@ describe('auth-protected routes — expired session', () => {
 describe('GET /api/auth/me', () => {
     it('returns 401 without a session cookie', async () => {
         mockGetDb(makeDb({ single: null }));
-        const res = await worker.fetch(req('/api/auth/me'), makeEnv() as unknown as Env, CTX);
+        const res = await worker.fetch(req('/api/auth/me'), makeEnv() as unknown as Bindings, CTX);
         expect(res.status).toBe(401);
     });
 
@@ -410,7 +411,7 @@ describe('GET /api/auth/me', () => {
 
         const res = await worker.fetch(
             req('/api/auth/me', { cookie: `ep_session=${sessionId}` }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(200);
         const body = await res.json() as { username: string };
@@ -427,7 +428,7 @@ describe('POST /api/auth/logout', () => {
         mockGetDb(makeDb({ single: null }));
         const res = await worker.fetch(
             req('/api/auth/logout', { method: 'POST' }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(401);
     });
@@ -441,7 +442,7 @@ describe('POST /api/auth/logout', () => {
 
         const res = await worker.fetch(
             req('/api/auth/logout', { method: 'POST', cookie: `ep_session=${sessionId}` }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(200);
         const body = await res.json() as { ok: boolean };
@@ -477,7 +478,7 @@ describe('GET /api/projects — authenticated', () => {
 
         const res = await worker.fetch(
             req('/api/projects', { cookie: `ep_session=${sessionId}` }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(200);
         const body = await res.json();
@@ -498,7 +499,7 @@ describe('POST /api/projects — validation', () => {
 
         const res = await worker.fetch(
             req('/api/projects', { method: 'POST', cookie: `ep_session=${sessionId}`, body: { type: 'novel' } }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(400);
     });
@@ -511,7 +512,7 @@ describe('POST /api/projects — validation', () => {
 
         const res = await worker.fetch(
             req('/api/projects', { method: 'POST', cookie: `ep_session=${sessionId}`, body: { title: 'A Book', type: 'screenplay' } }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(400);
     });
@@ -553,7 +554,7 @@ describe('POST /api/projects — validation', () => {
                 cookie: `ep_session=${sessionId}`,
                 body:   { title: 'The Velvet Manuscript', type: 'novel' },
             }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(201);
         const body = await res.json() as { project: { title: string } };
@@ -581,7 +582,7 @@ describe('GET /api/projects/:id — authenticated', () => {
 
         const res = await worker.fetch(
             req(`/api/projects/${crypto.randomUUID()}`, { cookie: `ep_session=${sessionId}` }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(404);
     });
@@ -603,7 +604,7 @@ describe('GET /api/projects/:id — authenticated', () => {
 
         const res = await worker.fetch(
             req(`/api/projects/${projectId}`, { cookie: `ep_session=${sessionId}` }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(404);
     });
@@ -626,7 +627,7 @@ describe('PATCH /api/projects/:id — validation', () => {
                 cookie: `ep_session=${sessionId}`,
                 body:   { status: 'NOT_A_REAL_STATUS' },
             }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(400);
     });
@@ -653,7 +654,7 @@ describe('DELETE /api/projects/:id', () => {
 
         const res = await worker.fetch(
             req(`/api/projects/${projectId}`, { method: 'DELETE', cookie: `ep_session=${sessionId}` }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(204);
     });
@@ -675,7 +676,7 @@ describe('DELETE /api/projects/:id', () => {
 
         const res = await worker.fetch(
             req(`/api/projects/${projectId}`, { method: 'DELETE', cookie: `ep_session=${sessionId}` }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(404);
     });
@@ -700,7 +701,7 @@ describe('GET /api/chapters — authenticated', () => {
 
         const res = await worker.fetch(
             req('/api/chapters', { cookie: `ep_session=${sessionId}` }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(200);
         const body = await res.json();
@@ -735,7 +736,7 @@ describe('GET /api/projects/:pid/chapters', () => {
 
         const res = await worker.fetch(
             req(`/api/projects/${projectId}/chapters`, { cookie: `ep_session=${sessionId}` }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(404);
     });
@@ -760,7 +761,7 @@ describe('GET /api/projects/:pid/chapters', () => {
 
         const res = await worker.fetch(
             req(`/api/projects/${projectId}/chapters`, { cookie: `ep_session=${sessionId}` }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(200);
         const body = await res.json();
@@ -793,7 +794,7 @@ describe('PATCH chapter — validation', () => {
                 cookie: `ep_session=${sessionId}`,
                 body:   { title: 42 },
             }),
-            makeEnv() as unknown as Env, CTX,
+            makeEnv() as unknown as Bindings, CTX,
         );
         expect(res.status).toBe(400);
     });
@@ -805,7 +806,7 @@ describe('PATCH chapter — validation', () => {
 
 describe('Error handling', () => {
     it('returns 404 JSON for unknown API routes', async () => {
-        const res = await worker.fetch(req('/api/does-not-exist'), makeEnv() as unknown as Env, CTX);
+        const res = await worker.fetch(req('/api/does-not-exist'), makeEnv() as unknown as Bindings, CTX);
         expect(res.status).toBe(404);
         const body = await res.json() as { error: string };
         expect(body).toHaveProperty('error');
@@ -813,7 +814,7 @@ describe('Error handling', () => {
 
     it('falls through to ASSETS binding for non-API paths', async () => {
         const env = makeEnv();
-        await worker.fetch(req('/some-spa-page'), env as unknown as Env, CTX);
+        await worker.fetch(req('/some-spa-page'), env as unknown as Bindings, CTX);
         expect((env.ASSETS as { fetch: ReturnType<typeof vi.fn> }).fetch).toHaveBeenCalled();
     });
 
@@ -821,7 +822,7 @@ describe('Error handling', () => {
         const env = makeEnv({
             ASSETS: { fetch: vi.fn().mockRejectedValue(new Error('asset failure')) },
         });
-        const res = await worker.fetch(req('/some-page'), env as unknown as Env, CTX);
+        const res = await worker.fetch(req('/some-page'), env as unknown as Bindings, CTX);
         expect(res.status).toBe(500);
         const body = await res.json() as { error: string };
         expect(body).toHaveProperty('error');
