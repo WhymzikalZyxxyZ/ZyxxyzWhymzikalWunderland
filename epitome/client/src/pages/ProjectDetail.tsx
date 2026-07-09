@@ -11,18 +11,19 @@ import { WordCountBar } from '@/components/WordCountBar';
 import { api }          from '@/lib/api';
 import type {
     Project, Chapter, Character, CharacterImage, Commission,
-    CompTitle, Publishing, PublishingSize, Distribution, ProjectEvent, ProjectArt, Series,
+    CompTitle, Publishing, PublishingSize, Distribution, ProjectArt, Series,
+    InventoryListing, SalesRecord,
 } from '@/lib/types';
 
-type Tab = 'overview' | 'drafting' | 'characters' | 'marketing' | 'events' | 'publishing';
+type Tab = 'overview' | 'drafting' | 'characters' | 'marketing' | 'inventory' | 'publishing';
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'overview',    label: 'Overview',    icon: <BookOpen   size={14} /> },
-    { id: 'drafting',    label: 'Drafting',    icon: <PenLine    size={14} /> },
-    { id: 'characters',  label: 'Characters',  icon: <Users      size={14} /> },
-    { id: 'marketing',   label: 'Marketing',   icon: <BarChart3  size={14} /> },
-    { id: 'events',      label: 'Events',      icon: <Calendar   size={14} /> },
-    { id: 'publishing',  label: 'Publishing',  icon: <BookMarked size={14} /> },
+    { id: 'overview',   label: 'Overview',   icon: <BookOpen   size={14} /> },
+    { id: 'drafting',   label: 'Drafting',   icon: <PenLine    size={14} /> },
+    { id: 'characters', label: 'Characters', icon: <Users      size={14} /> },
+    { id: 'marketing',  label: 'Marketing',  icon: <BarChart3  size={14} /> },
+    { id: 'inventory',  label: 'Inventory',  icon: <Calendar   size={14} /> },
+    { id: 'publishing', label: 'Publishing', icon: <BookMarked size={14} /> },
 ];
 
 const STATUS_LABEL: Record<string, string> = {
@@ -121,7 +122,7 @@ export function ProjectDetail() {
                 {tab === 'drafting'   && <DraftingTab   project={project} id={id!} navigate={navigate} qc={qc} />}
                 {tab === 'characters' && <CharactersTab id={id!} qc={qc} />}
                 {tab === 'marketing'  && <MarketingTab  id={id!} qc={qc} />}
-                {tab === 'events'     && <EventsTab     id={id!} qc={qc} />}
+                {tab === 'inventory'  && <InventoryTab  project={project} id={id!} qc={qc} />}
                 {tab === 'publishing' && <PublishingTab project={project} id={id!} qc={qc} />}
             </div>
 
@@ -414,37 +415,55 @@ function DraftingTab({ project, id, navigate, qc }: {
 
     return (
         <div className="space-y-4">
-            {/* Quick actions */}
-            <div className="bg-ep-surface border border-ep-border rounded-2xl p-6">
-                <div className="flex flex-wrap gap-3">
-                    <button
-                        onClick={() => navigate(`/write/${id}/summary`)}
-                        className="btn-ghost"
-                    >
-                        <FileText size={15} /> Create Summary
-                    </button>
-                    <button onClick={() => setShowBlurb(!showBlurb)} className="btn-ghost">
-                        <PenLine size={15} /> {showBlurb ? 'Close Blurb' : 'Edit Blurb'}
-                    </button>
+            {/* Summary & Blurb */}
+            <div className="bg-ep-surface border border-ep-border rounded-2xl p-6 space-y-4">
+                {/* Summary */}
+                <div>
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-xs font-semibold text-ep-text-dim uppercase tracking-widest">Summary</h3>
+                        <button onClick={() => navigate(`/write/${id}/summary`)} className="btn-ghost py-1 px-2.5 text-xs">
+                            <FileText size={12} /> {project.summary ? 'Edit Summary' : 'Create Summary'}
+                        </button>
+                    </div>
+                    {project.summary ? (
+                        <p className="text-ep-text-dim text-sm leading-relaxed whitespace-pre-line line-clamp-6">{project.summary.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&[a-z#0-9]+;/gi, '').trim()}</p>
+                    ) : (
+                        <p className="text-ep-muted text-sm italic">No summary yet — let the story introduce itself.</p>
+                    )}
                 </div>
 
-                {showBlurb && (
-                    <div className="mt-4 space-y-3">
-                        <label className="block text-xs font-semibold text-ep-text-dim uppercase tracking-widest">Blurb <span className="text-ep-muted font-normal normal-case">— the back-cover pitch</span></label>
-                        <textarea
-                            className="input-base min-h-28 resize-y"
-                            value={blurb}
-                            onChange={e => setBlurb(e.target.value)}
-                            placeholder="A gripping one-paragraph description of your work…"
-                        />
-                        <div className="flex gap-2">
-                            <button className="btn-ghost" onClick={() => setShowBlurb(false)}>Cancel</button>
-                            <button className="btn-primary" disabled={saveBlurbMut.isPending} onClick={() => saveBlurbMut.mutate(blurb)}>
-                                {saveBlurbMut.isPending ? 'Saving…' : 'Save Blurb'}
-                            </button>
-                        </div>
+                <div className="border-t border-ep-border" />
+
+                {/* Blurb */}
+                <div>
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-xs font-semibold text-ep-text-dim uppercase tracking-widest">Blurb <span className="text-ep-muted font-normal normal-case text-xs">— back-cover pitch</span></h3>
+                        <button onClick={() => setShowBlurb(!showBlurb)} className="btn-ghost py-1 px-2.5 text-xs">
+                            <PenLine size={12} /> {showBlurb ? 'Close' : (project.blurb ? 'Edit' : 'Add Blurb')}
+                        </button>
                     </div>
-                )}
+                    {!showBlurb && (
+                        project.blurb
+                            ? <p className="text-ep-text-dim text-sm leading-relaxed">{project.blurb}</p>
+                            : <p className="text-ep-muted text-sm italic">No blurb yet — seduce your readers before they open the cover.</p>
+                    )}
+                    {showBlurb && (
+                        <div className="space-y-3">
+                            <textarea
+                                className="input-base min-h-28 resize-y"
+                                value={blurb}
+                                onChange={e => setBlurb(e.target.value)}
+                                placeholder="A gripping one-paragraph description of your work…"
+                            />
+                            <div className="flex gap-2">
+                                <button className="btn-ghost" onClick={() => setShowBlurb(false)}>Cancel</button>
+                                <button className="btn-primary" disabled={saveBlurbMut.isPending} onClick={() => saveBlurbMut.mutate(blurb)}>
+                                    {saveBlurbMut.isPending ? 'Saving…' : 'Save Blurb'}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Chapter list */}
@@ -476,11 +495,12 @@ function DraftingTab({ project, id, navigate, qc }: {
                                     </p>
                                     <p className="text-ep-muted text-xs">{ch.wordCount.toLocaleString()} words</p>
                                 </div>
-                                {project.targetWordCount > 0 && (
-                                    <div className="w-16 hidden sm:block">
+                                {ch.targetWordCount > 0 && (
+                                    <div className="w-16 hidden sm:block" title={`${ch.wordCount.toLocaleString()} / ${ch.targetWordCount.toLocaleString()} words`}>
                                         <div className="wc-bar">
-                                            <div className="wc-bar-fill" style={{ width: `${Math.min(100, (ch.wordCount / (project.targetWordCount / Math.max(1, chapters.length))) * 100)}%` }} />
+                                            <div className="wc-bar-fill" style={{ width: `${Math.min(100, (ch.wordCount / ch.targetWordCount) * 100)}%` }} />
                                         </div>
+                                        <p className="text-ep-muted text-xs mt-0.5 text-right">{Math.min(100, Math.round(ch.wordCount / ch.targetWordCount * 100))}%</p>
                                     </div>
                                 )}
                                 <button onClick={() => navigate(`/write/${id}/${ch.id}`)} className="btn-ghost py-1 px-2.5 text-xs opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
@@ -817,82 +837,277 @@ function MarketingTab({ id, qc }: { id: string; qc: ReturnType<typeof useQueryCl
     );
 }
 
-// ── Events tab ────────────────────────────────────────────────────────────────
+// ── Inventory & Sales tab ─────────────────────────────────────────────────────
 
-function EventsTab({ id, qc }: { id: string; qc: ReturnType<typeof useQueryClient> }) {
-    const [form, setForm] = useState({ name: '', date: '', location: '', notes: '' });
+const CHANNEL_LABELS: Record<string, string> = {
+    inperson: 'In Person', online: 'Online', kdp: 'KDP',
+};
 
-    const { data: events = [] } = useQuery<ProjectEvent[]>({
-        queryKey: ['events', id],
-        queryFn:  () => api.get(`/projects/${id}/publishing/events`),
-    });
+function centsToDisplay(cents: number) {
+    return `$${(cents / 100).toFixed(2)}`;
+}
 
-    const createMut = useMutation({
-        mutationFn: () => api.post<ProjectEvent>(`/projects/${id}/publishing/events`, {
-            name: form.name, date: form.date || undefined,
-            location: form.location || undefined, notes: form.notes || undefined,
+type ItemFormShape = { channel: 'inperson' | 'online' | 'kdp'; platform: string; label: string; costCents: number; priceCents: number; stockCount: number; stockOnOrder: number; available: boolean; availableUrl: string };
+type SaleFormShape = { inventoryId: string; channel: 'inperson' | 'online' | 'kdp'; quantity: number; revenueCents: number; saleDate: string; notes: string };
+const blankItem: ItemFormShape = { channel: 'inperson', platform: '', label: '', costCents: 0, priceCents: 0, stockCount: 0, stockOnOrder: 0, available: true, availableUrl: '' };
+
+function InventoryTab({ project, id, qc }: {
+    project: Project; id: string;
+    qc: ReturnType<typeof useQueryClient>;
+}) {
+    const [addingItem, setAddingItem] = useState(false);
+    const [itemForm, setItemForm]     = useState<ItemFormShape>(blankItem);
+    const [addingSale, setAddingSale] = useState(false);
+    const [saleForm, setSaleForm]     = useState<SaleFormShape>({ inventoryId: '', channel: 'inperson', quantity: 1, revenueCents: 0, saleDate: '', notes: '' });
+
+    const { data: items = [] }  = useQuery<InventoryListing[]>({ queryKey: ['inventory', id], queryFn: () => api.get(`/projects/${id}/inventory`) });
+    const { data: sales = [] }  = useQuery<SalesRecord[]>({ queryKey: ['sales', id], queryFn: () => api.get(`/projects/${id}/inventory/sales`) });
+
+    const createItemMut = useMutation({
+        mutationFn: () => api.post<InventoryListing>(`/projects/${id}/inventory`, {
+            ...itemForm,
+            costCents:  Math.round(Number(itemForm.costCents)  * 100),
+            priceCents: Math.round(Number(itemForm.priceCents) * 100),
+            platform:   itemForm.platform  || null,
+            availableUrl: itemForm.availableUrl || null,
         }),
-        onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['events', id] });
-            setForm({ name: '', date: '', location: '', notes: '' });
-        },
+        onSuccess: () => { qc.invalidateQueries({ queryKey: ['inventory', id] }); setAddingItem(false); setItemForm(blankItem); },
     });
 
-    const deleteMut = useMutation({
-        mutationFn: (eId: string) => api.delete(`/projects/${id}/publishing/events/${eId}`),
-        onSuccess: () => qc.invalidateQueries({ queryKey: ['events', id] }),
+    const deleteItemMut = useMutation({
+        mutationFn: (itemId: string) => api.delete(`/projects/${id}/inventory/${itemId}`),
+        onSuccess:  () => qc.invalidateQueries({ queryKey: ['inventory', id] }),
     });
+
+    const createSaleMut = useMutation({
+        mutationFn: () => api.post<SalesRecord>(`/projects/${id}/inventory/sales`, {
+            ...saleForm,
+            inventoryId:  saleForm.inventoryId || null,
+            revenueCents: Math.round(Number(saleForm.revenueCents) * 100),
+            saleDate:     saleForm.saleDate || null,
+            notes:        saleForm.notes || null,
+        }),
+        onSuccess: () => { qc.invalidateQueries({ queryKey: ['sales', id] }); setAddingSale(false); setSaleForm({ inventoryId: '', channel: 'inperson', quantity: 1, revenueCents: 0, saleDate: '', notes: '' }); },
+    });
+
+    const deleteSaleMut = useMutation({
+        mutationFn: (saleId: string) => api.delete(`/projects/${id}/inventory/sales/${saleId}`),
+        onSuccess:  () => qc.invalidateQueries({ queryKey: ['sales', id] }),
+    });
+
+    const totalRevenue = sales.reduce((s, r) => s + r.revenueCents, 0);
 
     return (
-        <div className="bg-ep-surface border border-ep-border rounded-2xl p-6 space-y-5">
-            <h2 className="font-display font-bold text-lg text-ep-text">Events</h2>
-
-            <div className="p-4 bg-ep-bg border border-ep-border rounded-xl space-y-3">
-                <p className="text-xs font-semibold text-ep-text-dim uppercase tracking-widest">Add Event</p>
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="col-span-2">
-                        <label className="block text-xs text-ep-muted mb-1">Event Name *</label>
-                        <input className="input-base" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Book signing, launch party…" />
-                    </div>
+        <div className="space-y-5">
+            {/* Inventory listings */}
+            <div className="bg-ep-surface border border-ep-border rounded-2xl p-6 space-y-4">
+                <div className="flex items-center justify-between">
                     <div>
-                        <label className="block text-xs text-ep-muted mb-1">Date</label>
-                        <input className="input-base" type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
+                        <h2 className="font-display font-bold text-lg text-ep-text">Inventory</h2>
+                        <p className="text-ep-muted text-xs mt-0.5">Editions, formats, and where they're sold.</p>
                     </div>
-                    <div>
-                        <label className="block text-xs text-ep-muted mb-1">Location</label>
-                        <input className="input-base" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="City, venue, or online" />
-                    </div>
-                    <div className="col-span-2">
-                        <label className="block text-xs text-ep-muted mb-1">Notes</label>
-                        <textarea className="input-base" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Details, links, contact info…" rows={2} />
-                    </div>
+                    {!addingItem && (
+                        <button className="btn-ghost py-1.5 px-3 text-xs" onClick={() => setAddingItem(true)}>
+                            <Plus size={13} /> Add Listing
+                        </button>
+                    )}
                 </div>
-                <button className="btn-primary text-sm" disabled={!form.name || createMut.isPending} onClick={() => createMut.mutate()}>
-                    <Plus size={14} /> {createMut.isPending ? 'Adding…' : 'Add Event'}
-                </button>
-            </div>
 
-            {events.length === 0 ? (
-                <p className="text-ep-muted text-sm text-center py-6">No events yet — signings, launches, readings. Every milestone deserves a date.</p>
-            ) : (
-                <div className="space-y-2">
-                    {events.map(e => (
-                        <div key={e.id} className="flex items-start justify-between gap-3 p-4 bg-ep-bg border border-ep-border rounded-xl">
+                {addingItem && (
+                    <div className="p-4 bg-ep-bg border border-ep-rose/30 rounded-xl space-y-3">
+                        <p className="text-xs font-semibold text-ep-text-dim uppercase tracking-widest">New Listing</p>
+                        <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <p className="text-ep-text font-medium text-sm">{e.name}</p>
-                                <div className="flex gap-3 mt-0.5">
-                                    {e.date && <span className="text-ep-rose text-xs">{e.date}</span>}
-                                    {e.location && <span className="text-ep-muted text-xs">{e.location}</span>}
-                                </div>
-                                {e.notes && <p className="text-ep-text-dim text-xs mt-1">{e.notes}</p>}
+                                <label className="block text-xs text-ep-muted mb-1">Channel</label>
+                                <select className="input-base" value={itemForm.channel} onChange={e => setItemForm(f => ({ ...f, channel: e.target.value as 'inperson' | 'online' | 'kdp' }))}>
+                                    <option value="inperson">In Person</option>
+                                    <option value="online">Online</option>
+                                    <option value="kdp">KDP</option>
+                                </select>
                             </div>
-                            <button onClick={() => deleteMut.mutate(e.id)} className="btn-danger py-1 px-2 text-xs shrink-0">
-                                <Trash2 size={12} />
+                            <div>
+                                <label className="block text-xs text-ep-muted mb-1">Platform <span className="text-ep-muted/60 font-normal">(optional)</span></label>
+                                <input className="input-base" value={itemForm.platform} onChange={e => setItemForm(f => ({ ...f, platform: e.target.value }))} placeholder="Square, Shopify, Amazon…" />
+                            </div>
+                            <div className="col-span-2">
+                                <label className="block text-xs text-ep-muted mb-1">Label *</label>
+                                <input className="input-base" value={itemForm.label} onChange={e => setItemForm(f => ({ ...f, label: e.target.value }))} placeholder="Signed Paperback, Hardcover, eBook…" />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-ep-muted mb-1">Cost ($)</label>
+                                <input className="input-base" type="number" min="0" step="0.01" value={itemForm.costCents} onChange={e => setItemForm(f => ({ ...f, costCents: Number(e.target.value) }))} />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-ep-muted mb-1">Sale Price ($)</label>
+                                <input className="input-base" type="number" min="0" step="0.01" value={itemForm.priceCents} onChange={e => setItemForm(f => ({ ...f, priceCents: Number(e.target.value) }))} />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-ep-muted mb-1">In Stock</label>
+                                <input className="input-base" type="number" min="0" value={itemForm.stockCount} onChange={e => setItemForm(f => ({ ...f, stockCount: Number(e.target.value) }))} />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-ep-muted mb-1">On Order</label>
+                                <input className="input-base" type="number" min="0" value={itemForm.stockOnOrder} onChange={e => setItemForm(f => ({ ...f, stockOnOrder: Number(e.target.value) }))} />
+                            </div>
+                            {itemForm.channel === 'online' && (
+                                <div className="col-span-2">
+                                    <label className="block text-xs text-ep-muted mb-1">Listing URL</label>
+                                    <input className="input-base" type="url" value={itemForm.availableUrl} onChange={e => setItemForm(f => ({ ...f, availableUrl: e.target.value }))} placeholder="https://…" />
+                                </div>
+                            )}
+                            <div className="col-span-2 flex items-center gap-2">
+                                <input type="checkbox" id="avail" checked={itemForm.available} onChange={e => setItemForm(f => ({ ...f, available: e.target.checked }))} className="accent-ep-rose" />
+                                <label htmlFor="avail" className="text-xs text-ep-text-dim cursor-pointer">Available for purchase</label>
+                            </div>
+                        </div>
+                        <div className="flex gap-2 pt-1">
+                            <button className="btn-ghost flex-1" onClick={() => { setAddingItem(false); setItemForm(blankItem); }}>Cancel</button>
+                            <button className="btn-primary flex-1" disabled={!itemForm.label || createItemMut.isPending} onClick={() => createItemMut.mutate()}>
+                                {createItemMut.isPending ? 'Saving…' : 'Add Listing'}
                             </button>
                         </div>
-                    ))}
+                    </div>
+                )}
+
+                {items.length === 0 && !addingItem ? (
+                    <p className="text-ep-muted text-sm text-center py-6">No inventory yet — define how your work reaches the world.</p>
+                ) : (
+                    <div className="space-y-2">
+                        {['inperson', 'online', 'kdp'].map(ch => {
+                            const group = items.filter(i => i.channel === ch);
+                            if (!group.length) return null;
+                            return (
+                                <div key={ch}>
+                                    <p className="text-xs font-semibold text-ep-text-dim uppercase tracking-widest mb-2">{CHANNEL_LABELS[ch]}</p>
+                                    <div className="space-y-2">
+                                        {group.map(item => (
+                                            <div key={item.id} className="flex items-center gap-3 p-3 bg-ep-bg border border-ep-border rounded-xl">
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-ep-text text-sm font-medium truncate">{item.label}</p>
+                                                    <div className="flex flex-wrap gap-x-3 text-xs text-ep-muted mt-0.5">
+                                                        {item.platform && <span>{item.platform}</span>}
+                                                        <span>Cost {centsToDisplay(item.costCents)} · Price {centsToDisplay(item.priceCents)}</span>
+                                                        <span>{item.stockCount} in stock{item.stockOnOrder > 0 ? `, ${item.stockOnOrder} on order` : ''}</span>
+                                                        {!item.available && <span className="text-ep-muted/60">Unavailable</span>}
+                                                    </div>
+                                                </div>
+                                                {item.availableUrl && (
+                                                    <a href={item.availableUrl} target="_blank" rel="noreferrer" className="text-ep-rose text-xs hover:underline shrink-0">View</a>
+                                                )}
+                                                <button onClick={() => deleteItemMut.mutate(item.id)} className="btn-danger py-1 px-2 text-xs shrink-0">
+                                                    <Trash2 size={12} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+
+            {/* Sales records */}
+            <div className="bg-ep-surface border border-ep-border rounded-2xl p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="font-display font-bold text-lg text-ep-text">Sales</h2>
+                        {sales.length > 0 && (
+                            <p className="text-ep-muted text-xs mt-0.5">Total revenue: <span className="text-ep-rose font-semibold">{centsToDisplay(totalRevenue)}</span></p>
+                        )}
+                    </div>
+                    {!addingSale && (
+                        <button className="btn-ghost py-1.5 px-3 text-xs" onClick={() => setAddingSale(true)}>
+                            <Plus size={13} /> Log Sale
+                        </button>
+                    )}
                 </div>
-            )}
+
+                {addingSale && (
+                    <div className="p-4 bg-ep-bg border border-ep-rose/30 rounded-xl space-y-3">
+                        <p className="text-xs font-semibold text-ep-text-dim uppercase tracking-widest">Log a Sale</p>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-xs text-ep-muted mb-1">Channel</label>
+                                <select className="input-base" value={saleForm.channel} onChange={e => setSaleForm(f => ({ ...f, channel: e.target.value as 'inperson' | 'online' | 'kdp' }))}>
+                                    <option value="inperson">In Person</option>
+                                    <option value="online">Online</option>
+                                    <option value="kdp">KDP</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs text-ep-muted mb-1">Listing <span className="text-ep-muted/60 font-normal">(optional)</span></label>
+                                <select className="input-base" value={saleForm.inventoryId} onChange={e => setSaleForm(f => ({ ...f, inventoryId: e.target.value }))}>
+                                    <option value="">— none —</option>
+                                    {items.map(i => <option key={i.id} value={i.id}>{i.label}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs text-ep-muted mb-1">Qty</label>
+                                <input className="input-base" type="number" min="1" value={saleForm.quantity} onChange={e => setSaleForm(f => ({ ...f, quantity: Number(e.target.value) }))} />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-ep-muted mb-1">Revenue ($)</label>
+                                <input className="input-base" type="number" min="0" step="0.01" value={saleForm.revenueCents} onChange={e => setSaleForm(f => ({ ...f, revenueCents: Number(e.target.value) }))} />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-ep-muted mb-1">Date</label>
+                                <input className="input-base" type="date" value={saleForm.saleDate} onChange={e => setSaleForm(f => ({ ...f, saleDate: e.target.value }))} />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-ep-muted mb-1">Notes</label>
+                                <input className="input-base" value={saleForm.notes} onChange={e => setSaleForm(f => ({ ...f, notes: e.target.value }))} placeholder="Cash, Square, convention…" />
+                            </div>
+                        </div>
+                        <div className="flex gap-2 pt-1">
+                            <button className="btn-ghost flex-1" onClick={() => setAddingSale(false)}>Cancel</button>
+                            <button className="btn-primary flex-1" disabled={createSaleMut.isPending} onClick={() => createSaleMut.mutate()}>
+                                {createSaleMut.isPending ? 'Logging…' : 'Log Sale'}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {sales.length === 0 && !addingSale ? (
+                    <p className="text-ep-muted text-sm text-center py-6">No sales logged yet — every transaction tells a story.</p>
+                ) : (
+                    <div className="space-y-2">
+                        {sales.map(s => {
+                            const listing = items.find(i => i.id === s.inventoryId);
+                            return (
+                                <div key={s.id} className="flex items-center gap-3 p-3 bg-ep-bg border border-ep-border rounded-xl">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex gap-2 items-center">
+                                            <span className="text-ep-rose text-sm font-semibold">{centsToDisplay(s.revenueCents)}</span>
+                                            <span className="text-ep-text-dim text-xs">× {s.quantity}</span>
+                                            {listing && <span className="text-ep-text text-xs truncate">{listing.label}</span>}
+                                        </div>
+                                        <div className="flex gap-3 text-xs text-ep-muted mt-0.5">
+                                            <span>{CHANNEL_LABELS[s.channel]}</span>
+                                            {s.saleDate && <span>{s.saleDate}</span>}
+                                            {s.notes && <span>{s.notes}</span>}
+                                        </div>
+                                    </div>
+                                    <button onClick={() => deleteSaleMut.mutate(s.id)} className="btn-danger py-1 px-2 text-xs shrink-0">
+                                        <Trash2 size={12} />
+                                    </button>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+
+            {/* Link to Events */}
+            <div className="bg-ep-surface border border-ep-border rounded-2xl p-5 flex items-center justify-between">
+                <div>
+                    <p className="text-ep-text text-sm font-medium">Track in-person events</p>
+                    <p className="text-ep-muted text-xs mt-0.5">Log signings, conventions, and markets — with full P&L tracking.</p>
+                </div>
+                <Link to="/events" className="btn-ghost py-1.5 px-3 text-xs shrink-0">
+                    <Calendar size={13} /> View Events
+                </Link>
+            </div>
         </div>
     );
 }

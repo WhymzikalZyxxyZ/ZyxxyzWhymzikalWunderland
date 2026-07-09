@@ -86,15 +86,16 @@ export const pages = sqliteTable('pages', {
 // ── Chapters (writing pad — numbered per project) ──────────────────────────────
 
 export const chapters = sqliteTable('chapters', {
-    id:            text('id').primaryKey().$defaultFn(uuid),
-    projectId:     text('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
-    userId:        text('user_id').notNull().references(() => users.userId, { onDelete: 'cascade' }),
-    chapterNumber: integer('chapter_number').notNull(),
-    title:         text('title'),
-    content:       text('content').notNull().default(''),
-    wordCount:     integer('word_count').notNull().default(0),
-    createdAt:     text('created_at').notNull().default(now),
-    updatedAt:     text('updated_at').notNull().default(now),
+    id:              text('id').primaryKey().$defaultFn(uuid),
+    projectId:       text('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+    userId:          text('user_id').notNull().references(() => users.userId, { onDelete: 'cascade' }),
+    chapterNumber:   integer('chapter_number').notNull(),
+    title:           text('title'),
+    content:         text('content').notNull().default(''),
+    wordCount:       integer('word_count').notNull().default(0),
+    targetWordCount: integer('target_word_count').notNull().default(0),
+    createdAt:       text('created_at').notNull().default(now),
+    updatedAt:       text('updated_at').notNull().default(now),
 }, (t) => ({
     uniqueProjectChapter: uniqueIndex('chapters_project_number_uniq').on(t.projectId, t.chapterNumber),
 }));
@@ -198,13 +199,92 @@ export const projectArt = sqliteTable('project_art', {
 // ── Events ────────────────────────────────────────────────────────────────────
 
 export const events = sqliteTable('events', {
+    id:                    text('id').primaryKey().$defaultFn(uuid),
+    userId:                text('user_id').notNull().references(() => users.userId, { onDelete: 'cascade' }),
+    projectId:             text('project_id').references(() => projects.id, { onDelete: 'set null' }),
+    name:                  text('name').notNull(),
+    date:                  text('date'),
+    endDate:               text('end_date'),
+    startTime:             text('start_time'),
+    endTime:               text('end_time'),
+    location:              text('location'),
+    address:               text('address'),
+    attendanceExpected:    integer('attendance_expected'),
+    attendanceActual:      integer('attendance_actual'),
+    notes:                 text('notes'),
+    costTableCents:        integer('cost_table_cents').notNull().default(0),
+    costHotelCents:        integer('cost_hotel_cents').notNull().default(0),
+    costGasCents:          integer('cost_gas_cents').notNull().default(0),
+    costOtherCents:        integer('cost_other_cents').notNull().default(0),
+    costOtherDescription:  text('cost_other_description'),
+});
+
+export const eventSales = sqliteTable('event_sales', {
+    id:               text('id').primaryKey().$defaultFn(uuid),
+    eventId:          text('event_id').notNull().references(() => events.id, { onDelete: 'cascade' }),
+    projectId:        text('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+    userId:           text('user_id').notNull().references(() => users.userId, { onDelete: 'cascade' }),
+    quantityBrought:  integer('quantity_brought').notNull().default(0),
+    quantitySold:     integer('quantity_sold').notNull().default(0),
+    priceCents:       integer('price_cents').notNull().default(0),
+    notes:            text('notes'),
+});
+
+// ── Inventory ──────────────────────────────────────────────────────────────────
+
+export const inventory = sqliteTable('inventory', {
+    id:            text('id').primaryKey().$defaultFn(uuid),
+    projectId:     text('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+    userId:        text('user_id').notNull().references(() => users.userId, { onDelete: 'cascade' }),
+    channel:       text('channel').notNull().$type<'inperson' | 'online' | 'kdp'>(),
+    platform:      text('platform'),
+    label:         text('label').notNull(),
+    costCents:     integer('cost_cents').notNull().default(0),
+    priceCents:    integer('price_cents').notNull().default(0),
+    stockCount:    integer('stock_count').notNull().default(0),
+    stockOnOrder:  integer('stock_on_order').notNull().default(0),
+    available:     integer('available', { mode: 'boolean' }).notNull().default(true),
+    availableUrl:  text('available_url'),
+    createdAt:     text('created_at').notNull().default(now),
+    updatedAt:     text('updated_at').notNull().default(now),
+});
+
+// ── Sales Records ──────────────────────────────────────────────────────────────
+
+export const salesRecords = sqliteTable('sales_records', {
+    id:            text('id').primaryKey().$defaultFn(uuid),
+    projectId:     text('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+    userId:        text('user_id').notNull().references(() => users.userId, { onDelete: 'cascade' }),
+    inventoryId:   text('inventory_id').references(() => inventory.id, { onDelete: 'set null' }),
+    channel:       text('channel').notNull().$type<'inperson' | 'online' | 'kdp'>(),
+    platform:      text('platform'),
+    quantity:      integer('quantity').notNull().default(1),
+    revenueCents:  integer('revenue_cents').notNull().default(0),
+    royaltyCents:  integer('royalty_cents'),
+    pagesRead:     integer('pages_read'),
+    saleDate:      text('sale_date'),
+    notes:         text('notes'),
+    source:        text('source').notNull().default('manual'),
+    createdAt:     text('created_at').notNull().default(now),
+});
+
+// ── Bundles ────────────────────────────────────────────────────────────────────
+
+export const bundles = sqliteTable('bundles', {
+    id:          text('id').primaryKey().$defaultFn(uuid),
+    userId:      text('user_id').notNull().references(() => users.userId, { onDelete: 'cascade' }),
+    name:        text('name').notNull(),
+    description: text('description'),
+    priceCents:  integer('price_cents').notNull().default(0),
+    createdAt:   text('created_at').notNull().default(now),
+    updatedAt:   text('updated_at').notNull().default(now),
+});
+
+export const bundleItems = sqliteTable('bundle_items', {
     id:        text('id').primaryKey().$defaultFn(uuid),
+    bundleId:  text('bundle_id').notNull().references(() => bundles.id, { onDelete: 'cascade' }),
     projectId: text('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
-    userId:    text('user_id').notNull().references(() => users.userId, { onDelete: 'cascade' }),
-    name:      text('name').notNull(),
-    date:      text('date'),
-    location:  text('location'),
-    notes:     text('notes'),
+    quantity:  integer('quantity').notNull().default(1),
 });
 
 // ── Manufacturers / Printers ──────────────────────────────────────────────────

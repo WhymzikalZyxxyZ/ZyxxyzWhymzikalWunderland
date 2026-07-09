@@ -17,7 +17,7 @@ const TABS: { id: Tab; label: string }[] = [
     { id: 'drafting',    label: 'Drafting'      },
     { id: 'new-chapter', label: '+ New Chapter' },
     { id: 'marketing',   label: 'Marketing'     },
-    { id: 'sales',       label: 'Sales'         },
+    { id: 'sales',       label: 'Production'    },
 ];
 
 const PROJECT_TYPES    = ['novel', 'novella', 'short_story', 'essay', 'poetry'] as const;

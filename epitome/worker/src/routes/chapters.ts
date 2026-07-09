@@ -66,8 +66,9 @@ async function verifyOwnership(db: ReturnType<typeof getDb>, projectId: string, 
 }
 
 const patchSchema = z.object({
-    title:   z.string().nullable().optional(),
-    content: z.string().optional(),
+    title:           z.string().nullable().optional(),
+    content:         z.string().optional(),
+    targetWordCount: z.number().int().nonnegative().optional(),
 });
 
 // ── List chapters for a project ───────────────────────────────────────────────
