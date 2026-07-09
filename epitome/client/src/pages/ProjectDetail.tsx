@@ -122,7 +122,7 @@ export function ProjectDetail() {
                 {tab === 'drafting'   && <DraftingTab   project={project} id={id!} navigate={navigate} qc={qc} />}
                 {tab === 'characters' && <CharactersTab id={id!} qc={qc} />}
                 {tab === 'marketing'  && <MarketingTab  id={id!} qc={qc} />}
-                {tab === 'inventory'  && <InventoryTab  project={project} id={id!} qc={qc} navigate={navigate} />}
+                {tab === 'inventory'  && <InventoryTab  project={project} id={id!} qc={qc} />}
                 {tab === 'publishing' && <PublishingTab project={project} id={id!} qc={qc} />}
             </div>
 
@@ -851,10 +851,9 @@ type ItemFormShape = { channel: 'inperson' | 'online' | 'kdp'; platform: string;
 type SaleFormShape = { inventoryId: string; channel: 'inperson' | 'online' | 'kdp'; quantity: number; revenueCents: number; saleDate: string; notes: string };
 const blankItem: ItemFormShape = { channel: 'inperson', platform: '', label: '', costCents: 0, priceCents: 0, stockCount: 0, stockOnOrder: 0, available: true, availableUrl: '' };
 
-function InventoryTab({ project, id, qc, navigate }: {
+function InventoryTab({ project, id, qc }: {
     project: Project; id: string;
     qc: ReturnType<typeof useQueryClient>;
-    navigate: ReturnType<typeof useNavigate>;
 }) {
     const [addingItem, setAddingItem] = useState(false);
     const [itemForm, setItemForm]     = useState<ItemFormShape>(blankItem);

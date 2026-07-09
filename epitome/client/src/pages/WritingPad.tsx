@@ -43,6 +43,7 @@ export function WritingPad() {
     const [showDelete,    setShowDelete]    = useState(false);
     const [editingTarget, setEditingTarget] = useState(false);
     const [targetInput,   setTargetInput]   = useState('');
+    const [targetError,   setTargetError]   = useState<string | null>(null);
 
     const isSummary = chapterId === 'summary';
 
@@ -128,11 +129,18 @@ export function WritingPad() {
     }, [chapter]);
 
     function saveTarget() {
-        setEditingTarget(false);
         const val = parseInt(targetInput) || 0;
         if (!isSummary && chapter && val !== chapter.targetWordCount) {
-            api.patch(`/projects/${projectId}/chapters/${chapterId}`, { targetWordCount: val })
-                .then(() => qc.invalidateQueries({ queryKey: ['chapters', projectId] }));
+            setTargetError(null);
+            api.patch<Chapter>(`/projects/${projectId}/chapters/${chapterId}`, { targetWordCount: val })
+                .then(updated => {
+                    qc.setQueryData(['chapter', chapterId], updated);
+                    qc.invalidateQueries({ queryKey: ['chapters', projectId] });
+                    setEditingTarget(false);
+                })
+                .catch((e: Error) => setTargetError(e.message));
+        } else {
+            setEditingTarget(false);
         }
     }
 
@@ -302,22 +310,23 @@ export function WritingPad() {
 
             {/* Chapter target modal */}
             {editingTarget && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                    <div className="bg-ep-surface border border-ep-border rounded-2xl p-6 w-full max-w-xs">
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => { setEditingTarget(false); setTargetError(null); }}>
+                    <div className="bg-ep-surface border border-ep-border rounded-2xl p-6 w-full max-w-xs" onClick={e => e.stopPropagation()}>
                         <h3 className="font-display font-bold text-lg text-ep-text mb-1">Chapter word target</h3>
-                        <p className="text-ep-muted text-xs mb-4">Set the word count this chapter is reaching for. Leave blank to clear.</p>
+                        <p className="text-ep-muted text-xs mb-4">Set the word count this chapter is reaching for. Leave blank or enter 0 to clear.</p>
                         <input
                             autoFocus
                             type="number"
                             min="0"
-                            className="input-base mb-4"
+                            className="input-base mb-3"
                             placeholder="e.g. 3000"
                             value={targetInput}
                             onChange={e => setTargetInput(e.target.value)}
-                            onKeyDown={e => { if (e.key === 'Enter') saveTarget(); if (e.key === 'Escape') setEditingTarget(false); }}
+                            onKeyDown={e => { if (e.key === 'Enter') saveTarget(); if (e.key === 'Escape') { setEditingTarget(false); setTargetError(null); } }}
                         />
+                        {targetError && <p className="text-ep-danger text-xs mb-3">✕ {targetError}</p>}
                         <div className="flex gap-2">
-                            <button className="btn-ghost flex-1" onClick={() => setEditingTarget(false)}>Cancel</button>
+                            <button className="btn-ghost flex-1" onClick={() => { setEditingTarget(false); setTargetError(null); }}>Cancel</button>
                             <button className="btn-primary flex-1" onClick={saveTarget}>Set Target</button>
                         </div>
                     </div>

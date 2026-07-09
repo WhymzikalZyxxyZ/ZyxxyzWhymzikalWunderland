@@ -55,24 +55,7 @@ app.post('/', zValidator('json', inventorySchema), async (c) => {
     return c.json(row, 201);
 });
 
-app.patch('/:itemId', zValidator('json', inventorySchema.partial()), async (c) => {
-    const db    = getDb(c.env.DB);
-    const body  = { ...c.req.valid('json'), updatedAt: new Date().toISOString() };
-    const [row] = await db.update(inventory).set(body)
-        .where(and(eq(inventory.id, c.req.param('itemId')!), eq(inventory.userId, c.get('userId'))))
-        .returning();
-    if (!row) return c.notFound();
-    return c.json(row);
-});
-
-app.delete('/:itemId', async (c) => {
-    const db = getDb(c.env.DB);
-    await db.delete(inventory)
-        .where(and(eq(inventory.id, c.req.param('itemId')!), eq(inventory.userId, c.get('userId'))));
-    return c.body(null, 204);
-});
-
-// ── Sales records ─────────────────────────────────────────────────────────────
+// ── Sales records (declared before /:itemId to avoid Hono dynamic-segment shadowing) ────
 
 app.get('/sales', async (c) => {
     const db   = getDb(c.env.DB);
@@ -95,6 +78,25 @@ app.delete('/sales/:saleId', async (c) => {
     const db = getDb(c.env.DB);
     await db.delete(salesRecords)
         .where(and(eq(salesRecords.id, c.req.param('saleId')!), eq(salesRecords.userId, c.get('userId'))));
+    return c.body(null, 204);
+});
+
+// ── Inventory item CRUD (dynamic segment — after all static /sales routes) ────
+
+app.patch('/:itemId', zValidator('json', inventorySchema.partial()), async (c) => {
+    const db    = getDb(c.env.DB);
+    const body  = { ...c.req.valid('json'), updatedAt: new Date().toISOString() };
+    const [row] = await db.update(inventory).set(body)
+        .where(and(eq(inventory.id, c.req.param('itemId')!), eq(inventory.userId, c.get('userId'))))
+        .returning();
+    if (!row) return c.notFound();
+    return c.json(row);
+});
+
+app.delete('/:itemId', async (c) => {
+    const db = getDb(c.env.DB);
+    await db.delete(inventory)
+        .where(and(eq(inventory.id, c.req.param('itemId')!), eq(inventory.userId, c.get('userId'))));
     return c.body(null, 204);
 });
 
