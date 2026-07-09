@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, Library, CalendarDays, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Library, CalendarDays, Settings, LogOut, Download } from 'lucide-react';
 import { AppLogo }  from './AppLogo';
 import { useAuth }  from '@/contexts/AuthContext';
 
@@ -29,7 +29,17 @@ export function Layout() {
                         <NavLink to="/settings" label="Atelier"   icon={<Settings size={16} />}         active={pathname.startsWith('/settings')} />
                     </nav>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                        <a
+                            href="https://github.com/WhymzikalZyxxyZ/epitome-desktop/releases"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-ghost py-1.5 px-3 text-xs hidden sm:inline-flex"
+                            title="Download EPITOME Desktop"
+                        >
+                            <Download size={13} /> Desktop
+                        </a>
+                        <span className="text-ep-border hidden sm:block">|</span>
                         <span className="text-ep-text-dim text-xs hidden sm:block">{user?.username}</span>
                         <button onClick={handleLogout} className="btn-ghost py-1.5 px-3 text-xs" title="Sign out">
                             <LogOut size={13} /> <span className="hidden sm:inline">Sign Out</span>
