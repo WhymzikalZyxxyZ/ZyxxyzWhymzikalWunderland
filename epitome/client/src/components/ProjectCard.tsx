@@ -19,9 +19,8 @@ interface Props {
 }
 
 export function ProjectCard({ project, seriesName, genreName }: Props) {
-    const coverUrl = project.coverKey
-        ? `/api/files/${project.coverKey}`
-        : null;
+    const coverKey = project.mainCoverKey ?? project.coverKey;
+    const coverUrl = coverKey ? `/api/files/${coverKey}` : null;
 
     return (
         <Link

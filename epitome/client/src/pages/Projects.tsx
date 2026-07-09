@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate }           from 'react-router-dom';
 import { Plus, Eye, Pencil, Trash2, X, BookOpen } from 'lucide-react';
 import { api }                   from '@/lib/api';
-import type { Project, Page }    from '@/lib/types';
+import type { Project }          from '@/lib/types';
 
 const PROJECT_TYPES    = ['novel', 'novella', 'short_story', 'essay', 'poetry'] as const;
 const PROJECT_STATUSES = ['concept', 'drafting', 'revising', 'querying', 'on_hold', 'published'] as const;
@@ -30,12 +30,12 @@ export function Projects() {
     });
 
     const createMut = useMutation({
-        mutationFn: (body: object) => api.post<{ project: Project; page: Page }>('/projects', body),
+        mutationFn: (body: object) => api.post<{ project: Project }>('/projects', body),
         onSuccess: (data) => {
             qc.invalidateQueries({ queryKey: ['projects'] });
             qc.invalidateQueries({ queryKey: ['project-stats'] });
             setModal(false);
-            navigate(`/write/${data.project.id}/${data.page.id}`);
+            navigate(`/projects/${data.project.id}`);
         },
     });
 
@@ -48,13 +48,8 @@ export function Projects() {
         },
     });
 
-    async function handleEdit(projectId: string) {
-        try {
-            const page = await api.post<Page>(`/projects/${projectId}/pages/today`, {});
-            navigate(`/write/${projectId}/${page.id}`);
-        } catch (err) {
-            alert((err as Error).message ?? 'Could not open today\'s page. Please try again.');
-        }
+    function handleEdit(projectId: string) {
+        navigate(`/projects/${projectId}`);
     }
 
     const fmtWords = (n: number) =>
