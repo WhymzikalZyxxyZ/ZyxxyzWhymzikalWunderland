@@ -15,16 +15,16 @@ function wordCount(html: string): number {
     return text.length > 0 ? text.split(' ').length : 0;
 }
 
-async function syncProjectWords(db: ReturnType<typeof getDb>, projectId: string) {
+async function syncProjectWords(db: ReturnType<typeof getDb>, projectId: string, userId: string) {
     const res = await db
         .select({ total: sql<number>`sum(${pages.wordCount})` })
         .from(pages)
-        .where(eq(pages.projectId, projectId))
+        .where(and(eq(pages.projectId, projectId), eq(pages.userId, userId)))
         .get();
     await db
         .update(projects)
         .set({ totalWords: res?.total ?? 0, updatedAt: new Date().toISOString() })
-        .where(eq(projects.id, projectId));
+        .where(and(eq(projects.id, projectId), eq(projects.userId, userId)));
 }
 
 const patchSchema = z.object({
@@ -57,11 +57,10 @@ app.post('/today', async (c) => {
         .where(and(eq(projects.id, projectId), eq(projects.userId, userId))).get();
     if (!project) return c.notFound();
 
-    const today    = new Date().toISOString().slice(0, 10);
-    const existing = await db.select().from(pages)
-        .where(and(eq(pages.projectId, projectId), eq(pages.userId, userId))).all();
-
-    const todayPage = existing.find(p => p.pageDate === today);
+    const today     = new Date().toISOString().slice(0, 10);
+    const todayPage = await db.select().from(pages)
+        .where(and(eq(pages.projectId, projectId), eq(pages.userId, userId), eq(pages.pageDate, today)))
+        .get();
     if (todayPage) return c.json(todayPage);
 
     const [page] = await db
@@ -105,7 +104,7 @@ app.patch('/:pageId', zValidator('json', patchSchema), async (c) => {
     const page = pageResult[0];
     if (!page) return c.json({ error: 'Failed to save page' }, 500);
 
-    await syncProjectWords(db, projectId);
+    await syncProjectWords(db, projectId, userId);
     return c.json(page);
 });
 
@@ -121,7 +120,7 @@ app.delete('/:pageId', async (c) => {
     if (!existing) return c.notFound();
 
     await db.delete(pages).where(eq(pages.id, c.req.param('pageId')!));
-    await syncProjectWords(db, projectId);
+    await syncProjectWords(db, projectId, userId);
     return c.body(null, 204);
 });
 

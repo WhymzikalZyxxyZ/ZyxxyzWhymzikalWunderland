@@ -14,6 +14,24 @@ const ALLOWED_DOC_TYPES   = new Set(['application/pdf']);
 const MAX_IMAGE_BYTES      = 10 * 1024 * 1024;  // 10 MB
 const MAX_DOC_BYTES        = 25 * 1024 * 1024;  // 25 MB
 
+// Magic byte signatures: [declaredMimeType, byteSequence, byteOffset]
+const MAGIC_SIGS: [string, number[], number][] = [
+    ['image/jpeg',       [0xFF, 0xD8, 0xFF],             0],
+    ['image/png',        [0x89, 0x50, 0x4E, 0x47],        0],
+    ['image/webp',       [0x52, 0x49, 0x46, 0x46],        0], // RIFF container
+    ['image/gif',        [0x47, 0x49, 0x46, 0x38],        0], // GIF8
+    ['application/pdf',  [0x25, 0x50, 0x44, 0x46],        0], // %PDF
+];
+
+function validateMagicBytes(buffer: ArrayBuffer, declaredType: string): boolean {
+    const view = new Uint8Array(buffer, 0, Math.min(buffer.byteLength, 12));
+    for (const [type, sig, offset] of MAGIC_SIGS) {
+        if (type !== declaredType) continue;
+        return sig.every((b, i) => view[offset + i] === b);
+    }
+    return false;
+}
+
 async function storeFile(
     kv: KVNamespace,
     prefix: string,
@@ -27,26 +45,15 @@ async function storeFile(
     if (file.size > maxBytes) {
         throw new Error(`File exceeds ${maxBytes / 1024 / 1024} MB limit`);
     }
+    const buffer = await file.arrayBuffer();
+    if (!validateMagicBytes(buffer, file.type)) {
+        throw new Error('File content does not match declared type');
+    }
     const key      = `${prefix}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-    const buffer   = await file.arrayBuffer();
     const metadata: FileMeta = { contentType: file.type };
     await kv.put(key, buffer, { metadata });
     return key;
 }
-
-// ── Serve stored files (public, no auth) ─────────────────────────────────────
-
-app.get('/files/*', async (c) => {
-    const key = c.req.path.replace('/api/files/', '');
-    const { value, metadata } = await c.env.STORAGE.getWithMetadata<FileMeta>(key, { type: 'arrayBuffer' });
-    if (!value) return c.notFound();
-    return new Response(value, {
-        headers: {
-            'Content-Type':  metadata?.contentType ?? 'application/octet-stream',
-            'Cache-Control': 'public, max-age=31536000, immutable',
-        },
-    });
-});
 
 // All upload mutations require auth
 app.use('/projects/*',   authMiddleware);
@@ -96,8 +103,13 @@ app.post('/projects/:projectId/alt-covers', async (c) => {
     if (!file) return c.json({ error: 'No file provided' }, 400);
 
     try {
-        const key      = await storeFile(c.env.STORAGE, 'covers/alt', file, ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES);
-        const existing = JSON.parse(project.altCoverKeys) as string[];
+        const key = await storeFile(c.env.STORAGE, 'covers/alt', file, ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES);
+        let existing: string[] = [];
+        try {
+            existing = JSON.parse(project.altCoverKeys) as string[];
+        } catch {
+            existing = [];
+        }
         await db.update(projects)
             .set({ altCoverKeys: JSON.stringify([...existing, key]), updatedAt: new Date().toISOString() })
             .where(eq(projects.id, projectId));

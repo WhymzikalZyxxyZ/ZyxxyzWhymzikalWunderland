@@ -49,15 +49,15 @@ function countWords(html: string): number {
     return text.length > 0 ? text.split(' ').length : 0;
 }
 
-async function syncProjectWords(db: ReturnType<typeof getDb>, projectId: string) {
+async function syncProjectWords(db: ReturnType<typeof getDb>, projectId: string, userId: string) {
     const res = await db
         .select({ total: sql<number>`coalesce(sum(${chapters.wordCount}), 0)` })
         .from(chapters)
-        .where(eq(chapters.projectId, projectId))
+        .where(and(eq(chapters.projectId, projectId), eq(chapters.userId, userId)))
         .get();
     await db.update(projects)
         .set({ totalWords: res?.total ?? 0, updatedAt: new Date().toISOString() })
-        .where(eq(projects.id, projectId));
+        .where(and(eq(projects.id, projectId), eq(projects.userId, userId)));
 }
 
 async function verifyOwnership(db: ReturnType<typeof getDb>, projectId: string, userId: string) {
@@ -141,7 +141,7 @@ app.patch('/:chapterId', zValidator('json', patchSchema), async (c) => {
         .returning();
     if (!row) return c.json({ error: 'Failed to save chapter' }, 500);
 
-    await syncProjectWords(db, projectId);
+    await syncProjectWords(db, projectId, userId);
     return c.json(row);
 });
 
@@ -157,7 +157,7 @@ app.delete('/:chapterId', async (c) => {
     if (!existing) return c.notFound();
 
     await db.delete(chapters).where(eq(chapters.id, c.req.param('chapterId')!));
-    await syncProjectWords(db, projectId);
+    await syncProjectWords(db, projectId, userId);
     return c.body(null, 204);
 });
 
