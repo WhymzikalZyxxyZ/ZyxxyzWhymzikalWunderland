@@ -40,7 +40,9 @@ export function WritingPad() {
     const [saveStatus,  setSaveStatus]  = useState<'saved' | 'unsaved' | 'saving'>('saved');
     const [chapterTitle, setChapterTitle] = useState('');
     const [editingTitle, setEditingTitle] = useState(false);
-    const [showDelete,   setShowDelete]   = useState(false);
+    const [showDelete,    setShowDelete]    = useState(false);
+    const [editingTarget, setEditingTarget] = useState(false);
+    const [targetInput,   setTargetInput]   = useState('');
 
     const isSummary = chapterId === 'summary';
 
@@ -119,8 +121,20 @@ export function WritingPad() {
     }, [chapter, project, editor, isSummary]);
 
     useEffect(() => {
-        if (chapter) setChapterTitle(chapter.title ?? '');
+        if (chapter) {
+            setChapterTitle(chapter.title ?? '');
+            setTargetInput(chapter.targetWordCount > 0 ? String(chapter.targetWordCount) : '');
+        }
     }, [chapter]);
+
+    function saveTarget() {
+        setEditingTarget(false);
+        const val = parseInt(targetInput) || 0;
+        if (!isSummary && chapter && val !== chapter.targetWordCount) {
+            api.patch(`/projects/${projectId}/chapters/${chapterId}`, { targetWordCount: val })
+                .then(() => qc.invalidateQueries({ queryKey: ['chapters', projectId] }));
+        }
+    }
 
     const save = useCallback(() => {
         if (!editor || !projectId) return;
@@ -249,12 +263,33 @@ export function WritingPad() {
             {/* Status bar */}
             <div className="fixed bottom-0 left-0 right-0 bg-ep-surface/90 backdrop-blur border-t border-ep-border">
                 <div className="max-w-5xl mx-auto px-4 h-10 flex items-center justify-between text-xs text-ep-muted">
-                    <div className="flex items-center gap-1.5">
-                        <Type size={12} />
-                        <span><span className="text-ep-rose font-semibold">{wc.toLocaleString()}</span> words</span>
-                        {!isSummary && project?.targetWordCount && (
-                            <span className="text-ep-muted ml-2">
-                                · project total <span className="text-ep-text-dim">{project.totalWords.toLocaleString()} / {project.targetWordCount.toLocaleString()}</span>
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5">
+                            <Type size={12} />
+                            <span><span className="text-ep-rose font-semibold">{wc.toLocaleString()}</span> words</span>
+                        </div>
+                        {!isSummary && chapter && (
+                            chapter.targetWordCount > 0 ? (
+                                <span
+                                    className="text-ep-muted cursor-pointer hover:text-ep-text transition-colors"
+                                    title="Click to change chapter target"
+                                    onClick={() => setEditingTarget(true)}
+                                >
+                                    · <span className="text-ep-text-dim">{Math.min(100, Math.round(wc / chapter.targetWordCount * 100))}%</span> of {chapter.targetWordCount.toLocaleString()} goal
+                                </span>
+                            ) : (
+                                <span
+                                    className="text-ep-muted cursor-pointer hover:text-ep-champagne transition-colors"
+                                    title="Set a word count target for this chapter"
+                                    onClick={() => setEditingTarget(true)}
+                                >
+                                    · set chapter target
+                                </span>
+                            )
+                        )}
+                        {!isSummary && project?.targetWordCount && project.targetWordCount > 0 && (
+                            <span className="text-ep-muted hidden sm:inline">
+                                · book <span className="text-ep-text-dim">{project.totalWords.toLocaleString()} / {project.targetWordCount.toLocaleString()}</span>
                             </span>
                         )}
                     </div>
@@ -264,6 +299,30 @@ export function WritingPad() {
                     </div>
                 </div>
             </div>
+
+            {/* Chapter target modal */}
+            {editingTarget && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                    <div className="bg-ep-surface border border-ep-border rounded-2xl p-6 w-full max-w-xs">
+                        <h3 className="font-display font-bold text-lg text-ep-text mb-1">Chapter word target</h3>
+                        <p className="text-ep-muted text-xs mb-4">Set the word count this chapter is reaching for. Leave blank to clear.</p>
+                        <input
+                            autoFocus
+                            type="number"
+                            min="0"
+                            className="input-base mb-4"
+                            placeholder="e.g. 3000"
+                            value={targetInput}
+                            onChange={e => setTargetInput(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') saveTarget(); if (e.key === 'Escape') setEditingTarget(false); }}
+                        />
+                        <div className="flex gap-2">
+                            <button className="btn-ghost flex-1" onClick={() => setEditingTarget(false)}>Cancel</button>
+                            <button className="btn-primary flex-1" onClick={saveTarget}>Set Target</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Delete confirm */}
             {showDelete && (

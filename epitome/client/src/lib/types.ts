@@ -18,7 +18,7 @@ export interface Project {
 export interface Chapter {
     id: string; projectId: string; userId: string;
     chapterNumber: number; title: string | null;
-    content: string; wordCount: number;
+    content: string; wordCount: number; targetWordCount: number;
     createdAt: string; updatedAt: string;
 }
 
@@ -69,8 +69,52 @@ export interface Distribution {
 }
 
 export interface ProjectEvent {
+    id: string; userId: string; projectId: string | null;
+    name: string;
+    date: string | null; endDate: string | null;
+    startTime: string | null; endTime: string | null;
+    location: string | null; address: string | null;
+    attendanceExpected: number | null; attendanceActual: number | null;
+    notes: string | null;
+    costTableCents: number; costHotelCents: number;
+    costGasCents: number; costOtherCents: number;
+    costOtherDescription: string | null;
+}
+
+export interface EventSale {
+    id: string; eventId: string; projectId: string; userId: string;
+    quantityBrought: number; quantitySold: number;
+    priceCents: number; notes: string | null;
+}
+
+export type InventoryChannel = 'inperson' | 'online' | 'kdp';
+
+export interface InventoryListing {
     id: string; projectId: string; userId: string;
-    name: string; date: string | null; location: string | null; notes: string | null;
+    channel: InventoryChannel; platform: string | null; label: string;
+    costCents: number; priceCents: number;
+    stockCount: number; stockOnOrder: number;
+    available: boolean; availableUrl: string | null;
+    createdAt: string; updatedAt: string;
+}
+
+export interface SalesRecord {
+    id: string; projectId: string; userId: string;
+    inventoryId: string | null; channel: InventoryChannel; platform: string | null;
+    quantity: number; revenueCents: number;
+    royaltyCents: number | null; pagesRead: number | null;
+    saleDate: string | null; notes: string | null; source: string;
+    createdAt: string;
+}
+
+export interface Bundle {
+    id: string; userId: string;
+    name: string; description: string | null;
+    priceCents: number; createdAt: string; updatedAt: string;
+}
+
+export interface BundleItem {
+    id: string; bundleId: string; projectId: string; quantity: number;
 }
 
 export interface ProjectArt {

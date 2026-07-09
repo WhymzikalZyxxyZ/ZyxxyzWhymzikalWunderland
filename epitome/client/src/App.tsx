@@ -7,6 +7,7 @@ import { Dashboard }              from '@/pages/Dashboard';
 import { Projects }               from '@/pages/Projects';
 import { ProjectDetail }          from '@/pages/ProjectDetail';
 import { SeriesPage }             from '@/pages/SeriesPage';
+import { EventsPage }             from '@/pages/EventsPage';
 import { WritingPad }             from '@/pages/WritingPad';
 
 const qc = new QueryClient({
@@ -52,6 +53,7 @@ function AppRoutes() {
                 <Route path="/projects"      element={<Projects />} />
                 <Route path="/projects/:id"  element={<ProjectDetail />} />
                 <Route path="/series"        element={<SeriesPage />} />
+                <Route path="/events"        element={<EventsPage />} />
                 <Route path="/auth"          element={<Navigate to="/" replace />} />
                 <Route path="*"              element={<NotFound />} />
             </Route>

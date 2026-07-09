@@ -168,6 +168,14 @@ jobs:
           workingDirectory: epitome/worker
           command:          d1 execute epitome --remote --file=drizzle/0002_chapters.sql
 
+      - name: Run Epitome D1 migration 0003 (events P&L, inventory, sales, bundles)
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken:         ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId:        ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: epitome/worker
+          command:          d1 execute epitome --remote --file=drizzle/0003_events_inventory_sales.sql
+
   # ── Deploy static site to GitHub Pages ───────────────────────────────────────
   deploy:
     runs-on: ubuntu-latest
