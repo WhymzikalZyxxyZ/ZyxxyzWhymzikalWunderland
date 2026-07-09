@@ -11,7 +11,7 @@ import { WordCountBar } from '@/components/WordCountBar';
 import { api }          from '@/lib/api';
 import type {
     Project, Chapter, Character, CharacterImage, Commission,
-    CompTitle, Publishing, PublishingSize, Distribution, ProjectEvent, ProjectArt,
+    CompTitle, Publishing, PublishingSize, Distribution, ProjectEvent, ProjectArt, Series,
 } from '@/lib/types';
 
 type Tab = 'overview' | 'drafting' | 'characters' | 'marketing' | 'events' | 'publishing';
@@ -142,6 +142,8 @@ function OverviewTab({ project, id, qc }: { project: Project; id: string; qc: Re
         status:          project.status,
         blurb:           project.blurb ?? '',
         targetWordCount: project.targetWordCount ?? 50000,
+        seriesId:        project.seriesId ?? '',
+        seriesNumber:    project.seriesNumber ?? ('' as number | ''),
     });
     const coverInputRef    = useRef<HTMLInputElement>(null);
     const artInputRef      = useRef<HTMLInputElement>(null);
@@ -150,6 +152,11 @@ function OverviewTab({ project, id, qc }: { project: Project; id: string; qc: Re
     const { data: art = [] } = useQuery<ProjectArt[]>({
         queryKey: ['art', id],
         queryFn:  () => api.get(`/uploads/projects/${id}/art`),
+    });
+
+    const { data: seriesList = [] } = useQuery<Series[]>({
+        queryKey: ['series'],
+        queryFn:  () => api.get('/series'),
     });
 
     const patchMut = useMutation({
@@ -237,9 +244,43 @@ function OverviewTab({ project, id, qc }: { project: Project; id: string; qc: Re
                             <label className="block text-xs font-semibold text-ep-text-dim uppercase tracking-widest mb-1">Blurb</label>
                             <textarea className="input-base min-h-20 resize-y" value={form.blurb} onChange={e => setForm(f => ({ ...f, blurb: e.target.value }))} placeholder="A short marketing description…" />
                         </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-xs font-semibold text-ep-text-dim uppercase tracking-widest mb-1">Series</label>
+                                <select
+                                    className="input-base"
+                                    value={form.seriesId}
+                                    onChange={e => setForm(f => ({ ...f, seriesId: e.target.value, seriesNumber: e.target.value ? f.seriesNumber : '' }))}
+                                >
+                                    <option value="">— None —</option>
+                                    {seriesList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                </select>
+                            </div>
+                            {form.seriesId && (
+                                <div>
+                                    <label className="block text-xs font-semibold text-ep-text-dim uppercase tracking-widest mb-1">Book #</label>
+                                    <input
+                                        className="input-base"
+                                        type="number"
+                                        min="1"
+                                        placeholder="e.g. 1"
+                                        value={form.seriesNumber}
+                                        onChange={e => setForm(f => ({ ...f, seriesNumber: parseInt(e.target.value) || '' }))}
+                                    />
+                                </div>
+                            )}
+                        </div>
                         <div className="flex gap-2 pt-1">
                             <button className="btn-ghost flex-1" onClick={() => setEditing(false)}>Cancel</button>
-                            <button className="btn-primary flex-1" disabled={patchMut.isPending} onClick={() => patchMut.mutate(form)}>
+                            <button
+                                className="btn-primary flex-1"
+                                disabled={patchMut.isPending}
+                                onClick={() => patchMut.mutate({
+                                    ...form,
+                                    seriesId:     form.seriesId     || null,
+                                    seriesNumber: form.seriesNumber !== '' ? Number(form.seriesNumber) : null,
+                                })}
+                            >
                                 {patchMut.isPending ? 'Saving…' : 'Save Changes'}
                             </button>
                         </div>
@@ -249,6 +290,15 @@ function OverviewTab({ project, id, qc }: { project: Project; id: string; qc: Re
                         <InfoRow label="Type"   value={TYPE_LABEL[project.type] ?? project.type} />
                         <InfoRow label="Status" value={STATUS_LABEL[project.status] ?? project.status} />
                         {project.targetWordCount > 0 && <InfoRow label="Word Goal" value={project.targetWordCount.toLocaleString()} />}
+                        {project.seriesId && (() => {
+                            const s = seriesList.find(x => x.id === project.seriesId);
+                            return s ? (
+                                <InfoRow
+                                    label="Series"
+                                    value={project.seriesNumber != null ? `${s.name} #${project.seriesNumber}` : s.name}
+                                />
+                            ) : null;
+                        })()}
                         {project.blurb && <InfoRow label="Blurb" value={project.blurb} multiline />}
                     </dl>
                 )}

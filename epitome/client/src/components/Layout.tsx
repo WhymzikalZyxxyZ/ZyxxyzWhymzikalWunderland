@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, LogOut }        from 'lucide-react';
+import { LayoutDashboard, BookOpen, Library, LogOut } from 'lucide-react';
 import { AppLogo }  from './AppLogo';
 import { useAuth }  from '@/contexts/AuthContext';
 
@@ -24,6 +24,7 @@ export function Layout() {
                     <nav className="flex items-center gap-1">
                         <NavLink to="/"         label="Dashboard" icon={<LayoutDashboard size={16} />} active={pathname === '/'} />
                         <NavLink to="/projects" label="Projects"  icon={<BookOpen size={16} />}        active={pathname.startsWith('/projects')} />
+                        <NavLink to="/series"   label="Series"    icon={<Library size={16} />}         active={pathname.startsWith('/series')} />
                     </nav>
 
                     <div className="flex items-center gap-3">
