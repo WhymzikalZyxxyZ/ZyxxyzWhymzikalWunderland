@@ -77,3 +77,9 @@ export interface ProjectArt {
     id: string; projectId: string; userId: string;
     storageKey: string; label: string | null; sortOrder: number;
 }
+
+export interface Series {
+    id: string; userId: string;
+    name: string; description: string | null;
+    createdAt: string; updatedAt: string;
+}
