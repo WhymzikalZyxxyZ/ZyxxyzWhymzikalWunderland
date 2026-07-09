@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider }                from '@tanstack/react-query';
-import { AuthProvider, useAuth }  from '@/contexts/AuthContext';
-import { Layout }                 from '@/components/Layout';
+import { AuthProvider, useAuth }    from '@/contexts/AuthContext';
+import { SettingsProvider }         from '@/contexts/SettingsContext';
+import { Layout }                   from '@/components/Layout';
 import { Auth }                   from '@/pages/Auth';
 import { Dashboard }              from '@/pages/Dashboard';
 import { Projects }               from '@/pages/Projects';
@@ -9,6 +10,7 @@ import { ProjectDetail }          from '@/pages/ProjectDetail';
 import { SeriesPage }             from '@/pages/SeriesPage';
 import { EventsPage }             from '@/pages/EventsPage';
 import { WritingPad }             from '@/pages/WritingPad';
+import { Settings }               from '@/pages/Settings';
 
 const qc = new QueryClient({
     defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -18,9 +20,11 @@ export default function App() {
     return (
         <QueryClientProvider client={qc}>
             <AuthProvider>
-                <BrowserRouter>
-                    <AppRoutes />
-                </BrowserRouter>
+                <SettingsProvider>
+                    <BrowserRouter>
+                        <AppRoutes />
+                    </BrowserRouter>
+                </SettingsProvider>
             </AuthProvider>
         </QueryClientProvider>
     );
@@ -54,6 +58,7 @@ function AppRoutes() {
                 <Route path="/projects/:id"  element={<ProjectDetail />} />
                 <Route path="/series"        element={<SeriesPage />} />
                 <Route path="/events"        element={<EventsPage />} />
+                <Route path="/settings"      element={<Settings />} />
                 <Route path="/auth"          element={<Navigate to="/" replace />} />
                 <Route path="*"              element={<NotFound />} />
             </Route>
