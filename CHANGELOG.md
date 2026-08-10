@@ -2,6 +2,12 @@
 
 All notable changes follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [4.9.4] — 2026-08-10
+
+### New Features
+
+- feat: unveil MEND — a dietary-restriction meal planning app takes root behind Technologist's door, design docs and repo live now, Android download to follow
+
 ## [4.9.3] — 2026-08-10
 
 ### New Features
