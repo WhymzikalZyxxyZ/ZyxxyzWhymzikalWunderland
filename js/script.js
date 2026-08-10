@@ -150,6 +150,7 @@ const NAV_STRUCTURE = [
             { label: 'Schema Diff',          href: '/technologist/schema-diff' },
             { label: 'The Calculator',       href: '/technologist/calculator' },
             { label: 'The Editor',           href: '/technologist/editor' },
+            { label: 'The Warden',           href: 'https://github.com/WhymzikalZyxxyZ/the-warden/releases', target: '_blank' },
         ],
     },
     { label: 'The Lawyer',  href: '/technologist/lawyer' },
@@ -254,6 +255,7 @@ function buildNavbar() {
             const a = document.createElement('a');
             a.href = child.href;
             a.textContent = child.label;
+            if (child.target) { a.target = child.target; a.rel = 'noopener noreferrer'; }
             if (path === child.href || path.endsWith(child.href)) a.classList.add('nav-active');
             menu.appendChild(a);
         });
