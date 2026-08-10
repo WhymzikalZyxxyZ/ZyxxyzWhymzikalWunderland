@@ -1,0 +1,486 @@
+# Changelog
+
+All notable changes follow [Conventional Commits](https://www.conventionalcommits.org/).
+
+## [4.9.3] — 2026-08-10
+
+### New Features
+
+- feat: unveil The Warden — a new download waits behind Technologist's door
+- feat(elinal): error boundary, search keyboard nav, pagination, scroll-to-top, sticky TOC
+- feat(elinal): implement 11 UI/UX improvements across the client SPA
+- feat(elinal): provision D1 + KV and enable migration step in CI
+- feat: wire ELINAL into site nav, apps page, and embed shell
+- feat: rename neighborhoods layer to counties across client, worker, and tests (#142)
+- feat: nine portfolio-strengthening improvements for senior SWE signal
+
+### Bug Fixes
+
+- fix(elinal): cap poll loop, add og:url, add vite dev proxy, add ADR-001
+- fix: add missing assets binding to wrangler.toml — env.ASSETS was undefined at runtime (#141)
+- fix: use correct secret name LOCATOR_CENSUS_API_KEY for Census API key injection (#140)
+- fix: remove stale root wrangler.jsonc that shadowed deploy-locator-worker
+- fix: correct Rust WASM bindings and API clippy errors; add desktop bin path
+- fix: resolve remaining CI failures — Rust API manifest + SwiftLint rules
+- fix: resolve five CI failures introduced by portfolio improvements PR
+- Fix: clone response before async cache.put to prevent body-already-used error in sw.js
+- Fix: use cloudflare/wrangler-action@v3 for worker deployment instead of manual wrangler invocation
+- Fix: replace wrangler.jsonc with wrangler.toml to resolve Durable Object deploy error
+- Fix: set working-directory on wrangler deploy step so wrangler.jsonc is found
+- Fix: upgrade wrangler to v4 to resolve new_sqlite_classes Durable Object deployment error
+- Fix: use new_sqlite_classes migration for Durable Objects (required on free plan)
+- Fix: remove wrangler build cache from tracking, gitignore worker/.wrangler/
+- Fix: hoist initKeyboard and initTheme outside try block
+- Fix: correct DO path forwarding for /box/ and /draft/ routes
+
+### CI / Build
+
+- CI: add workflow_dispatch so deploy can be triggered manually from GitHub Actions
+- CI: remove invalid --yes flag from wrangler deploy
+- CI: remove invalid --yes flag from wrangler deploy
+- CI: remove debug step (dry-run confirmed config is valid locally)
+- CI: add debug step and use explicit wrangler binary path
+- CI: replace wrangler-action with direct wrangler run step
+- CI: add --yes to wrangler deploy to auto-accept Durable Object migrations
+- CI: remove file deletion step from deploy job
+- CI: add Cloudflare Worker deploy job for Anonymail
+- CI: add Docker support for local dev and reproducible builds
+
+### Other
+
+- Beckon the reader closer: surface the Desktop download, two touchpoints, one irresistible pull
+- CLICK: Cover Lifts Into Kinetic — thumbnail awakens to receive your art
+- SEALS: Security Enhancements Across Layered Surfaces — close every gap the risk assessment exposed
+- ATELIER: Authorize The Environment — Let Intimacy Emanate Richly
+- PHASES: Pursue Hallmark Achievements — Sculpt Epitome's Signature (#172)
+- SUITE: Series UI Illuminates The Entire arc — full series management with project binding
+- Fix the chapter feed test's incomplete mock — add limit to the inline query chain
+- Realign Node version to match the lock file's desires — bump Epitome deploy job to Node 24
+- Fortify, Seduce, and Silence the Failures: security, data, and voice tightened across Epitome
+- GATE: Guard Against Test Errors — exclude epitome/ from root Jest discovery so Vitest-based tests don't break the site test suite
+- TEST: Thorough Examination of Specifications Tool — bootstrap Vitest + 152 passing tests across Epitome worker and client
+- CROWN: Chapter-Rooted Organization Welcomes Novel — replace date-keyed pages with numbered chapters, full ProjectDetail tab system, and Dashboard workspace
+- BLIT: Build-Lint In Time — fix client type errors breaking CI deploy
+- CRAVE: Catch Returns And Verify Existence — guard null dereferences and unhandled rejections
+- GASPS: Guard All Sub-resource Paths and Seal ownership gaps across Epitome routes
+- EUPAW: Epitome User-Powered Author Workstation — full auth, writing pad, user-scoped data
+- Fix CSS lint and HTML lint in embed files
+- ﻿Standardize embed pattern and unlock Anonymail for iframe embedding
+- ﻿Close silent error handling gaps across all workers and the TypeScript API (#160)
+- ﻿Restore response_format json_object alongside user-turn section reminder (#159)
+- ﻿Force all 5 sections via user-turn reminder and remove JSON-mode constraint (#158)
+- ﻿Add diagnostic snapshot to validation errors for post-mortem analysis (#157)
+- ﻿Fix dissent-body validation and align JSON schema comment with output rules (#156)
+- ﻿Constrain prompt output so all sections complete before token budget runs out (#155)
+- ﻿Tighten input window and raise output ceiling to fix section truncation (#154)
+- ﻿Widen output budget and limit HTTP ingest to one opinion per call (#153)
+- ﻿Handle pre-parsed JSON object from Llama 4 inference response (#152)
+- Switch AI model to Llama 4 Scout to resolve persistent inference timeouts (#151)
+- Halve AI context window and add error-reset pathway to unblock stalled ingest (#150)
+- Fix deprecated AI model name and reduce pending limit to respect CourtListener rate cap (#149)
+- Expose per-opinion error details in admin ingest response for diagnostics (#148)
+- Switch opinion discovery from deprecated /opinions/ filters to /search/ endpoint (#147)
+- Wire CourtListener API token through all fetch calls and surface auth in health check (#146)
+- Scope ELINAL opinion discovery to the live SCOTUS term and surface it at the top of navigation (#145)
+- Add ELINAL card to home page (#144)
+- UI/UX polish: scroll padding, date timezone, tooltip accessibility, search clear
+- Code quality sweep: CI tests, dead code removal, and documentation
+- Rewrite technologist/elinal/index.html: live postMessage bridge, loading spinner, breadcrumb, retry
+- Security + error-handling + formatting sweep: 12 issues found and fixed
+- Search + inline glossary tooltips: find any case or legal term, hover to define
+- Remove committed dist/ from tracking; add elinal/client/.gitignore
+- Phases 7+8 + code survey: sharing, postMessage, OG meta, a11y, prompt quality, bug fixes
+- Phase 6: Reading materials UI — full opinion deep-dive view with dark ink-on-night prose
+- Phase 5: React + Vite + TypeScript client foundation — opinion list, routing, indigo design system
+- Phase 3: opinion pipeline — CourtListener ingest, Workers AI explainer, scheduled cron, admin endpoint
+- Phase 2: D1 schema, KV namespace, storage layer — graceful until provisioned
+- Exclude elinal/ from root Jest runner — worker tests use vitest (ESM), not Jest
+- Phase 1: scaffold ELINAL Cloudflare Worker — routing, CORS, rate limiting, health endpoint, CI deploy job
+- Fix six code-review findings: Overpass cancellation, cache poisoning, CENSUS_API_KEY, and minor guards (#139)
+- Eliminate all remaining 1101 paths: top-level try/catch + log unhandled exceptions (#138)
+- Fix Worker 1101: uncaught AbortError in geocoders; fix stale STUSAB ref and health probe (#137)
+- Fix all failing Locator data layers: wrong field names, retired endpoints, wrong layer IDs, and sequential Overpass timeouts (#136)
+- ci-local: add path-aware skipping to pre-push script
+- ci-cd: gate promote on CI, add path filters, caching, smoke tests, rollback
+- Fix four remaining pre-existing CI failures: Swift build, SwiftLint, Rust clippy, Dart coverage
+- Fix two pre-existing CI failures: TypeScript shared tsc and Swift SwiftLint
+- Plug remaining 502 gaps: ArcGIS truncation warnings + consistent client-side retry
+- Upgrade ESLint 8→10 with flat config migration; bump vitest 2→4 in anonymail/worker
+- Harden Locator Worker against 502s: timeouts, bbox guards, ACS 2024, Overpass fallback
+- Upgrade ESLint 8→10 with flat config migration; bump vitest 2→4 in anonymail/worker
+- Add stale-cache fallback to Locator Worker: serve 30-day KV data when upstream fails
+- Fix CORS header pollution in the Locator edge cache (security patch v4.0.1)
+- Fix beacon attribute quotes to pass HTML linter (double-quote attributes, &quot; for JSON)
+- Add Cloudflare Web Analytics beacon manually to all public HTML files
+- Permit Cloudflare Web Analytics beacon in anonymail CSP (v1.0.1)
+- Add v4.0.0: transit stops, share link, saved views, mobile sidebar, edge caching, health endpoint, and error retry
+- Add City Limits layer with ACS population, and dismissible limitations banner
+- Fix ArcGIS where clause and neighborhoods layer index to resurrect all broken Locator layers
+- Add ACS year selector to population layer (v3.9.3)
+- Fix worker routing, Census null handling, and stale tests in v3.9.2
+- Fix locator layer coverage and default population active on load
+- Fix lint errors in js/about.js: declare hi, remove unused gradFn
+- Add four Locator updates: walkability layer, map legend, embed bridge, search keyboard nav
+- Add idle personality animations to ZYXXYZ character on about page
+- ﻿v3.8.0: Rebuild about page character fills with 2D Riemann sums and gradient shading
+- ﻿v3.7.9: Fix three confirmed bugs in the-locator client
+- ﻿v3.7.8: Rewrite js/about.js with Riemann sum fills, polygon outlines, and layered scene
+- ﻿v3.7.7: Make the 404 page flirtatious and sultry
+- Bump wrangler from 4.96.0 to 4.100.0 in /anonymail/worker
+- ﻿v3.7.6: Turn the About page flirtatious -- it leans in now
+- ﻿v3.7.5: Rewrite About page with sultry, succinct, and spicy welcome
+- ﻿v3.7.4: Convert all flat .html pages to directory/index.html for clean extensionless URLs
+- v3.7.3: Service worker precache repairs, Go buffer pooling, CSS media-query consolidation
+- Recolor locator layers: neighborhoods green, Superfund red (v3.7.2)
+- Fix locator layers to work independently; enrich popup data (v3.7.1)
+- Add multi-watermark support to PDF editor (v3.7.0)
+- Convert technologist pages to directory/index.html for clean URLs (v3.6.5)
+- Fix technologist extensionless URLs by removing index.html (v3.6.4)
+- Add multi-edit chaining to PDF editor (v3.6.3)
+- Add extensionless URL support via SW rewrite and 404 redirect (v3.6.2)
+- Fix CI failures in Swift, Rust, .NET, C++, and SwiftLint (v3.6.1)
+- Add PDF editing: watermark, page numbers, reorder pages (v3.6.0)
+- Fix editor-service deployment and /technologist 404s
+- Fix population Census key wipe and multi-layer z-ordering
+- Add HelpPanel with usage instructions
+- Bump version to 3.5.0
+- Add address search with street-level zoom
+- Add layer error reporting for population unavailable state
+- Fix schools bad field and population zero caching
+- Fix schools 502 and favicon 500
+- Fix MapLibre zoom expression, schools 502, and superfund 502
+- Fix population data always zero; add density/population labels on map
+- Bump stylelint from 17.12.0 to 17.13.0
+- Fix locator layers: viewport refresh, visible colors, map popups with stats
+- Add full Docker Compose stack with one-command startup scripts
+- Security hardening: scrypt passwords, no hardcoded secrets, CORS regex, input validation
+- Bump version to 3.4.0
+- Add custom lat/lon entry to CityPicker
+- Add ESLint to anonymail and the-locator/worker
+- Fix locator layers not appearing on map
+- Add CityPicker: preset city quick-select with map zoom
+- Fix TS2304 global errors in SearchBar.test.tsx
+- Fix undefined pdfcpu API calls in editor-service
+- Fix ktlint and golangci-lint CI failures
+- Bump actions/setup-go from 5 to 6
+- Fix Kotlin max-line-length and Go lint CI failures
+- Add local CI script and pre-push hook
+- Fix .NET build errors and Python ruff violations found in CI
+- Fix Rust clippy, Swift SwiftLint, and C++ clang-tidy violations
+- Add tsconfig.json for TypeScript API
+- Fix Ruff linting violations in all Python files
+- Fix Go golangci-lint violations in editor-service
+- Fix Kotlin ktlint violations across all source files
+- Bump actions/setup-node from 4 to 6
+- Bump cloudflare/wrangler-action from 3 to 4
+- Fix The Locator deployment, 404 caching, and add embed support
+- Add The Locator to technologist apps page
+- Update script.js
+- Fix Go and Kotlin lint failures in CI
+- Bump version to 3.2.2
+- Add npm run check and install:all scripts for consistent local workflow
+- Optimize: rate limiter pruning, parseFloat dedup, _purge throttle, regex precompile, chunked btoa
+- Fix two CI failures: vitest suites picked up by root Jest, username-gen uses sessionStorage
+- Bump version to 3.2.1
+- The Locator: add test suite with 90%+ coverage for worker and client
+- gitignore: exclude .wrangler/ local dev cache
+- The Locator: full React client + localhost dev environment
+- The Locator: set LOCATOR_CACHE KV namespace ID
+- The Locator: replace Node.js/Express server with Cloudflare Worker
+- The Locator: scaffold project structure + architecture documentation
+- Bump version to 3.1.0 — The Locator feature
+- Bump actions/setup-python from 5 to 6
+- Bump actions/cache from 4 to 5
+- Anonymail: persist registry tokens to durable storage; add routing tests
+- Add full CI pipeline: linting + tests + 90% coverage for all 11 languages
+- Add promote workflow: development → test → main auto-promotion
+- v3.0.0 — Multiplatform chess suite across 11 languages + interactive language dashboard
+- Add TypeScript, Rust, Swift, Dart, C++ — multiplatform implementations + dashboard
+- Language dashboard: hoverable dots with detailed tooltips on all strength/limit items
+- Language dashboard: add tab nav, per-language profiles, decision matrix, summary
+- Add Python multiplatform suite (shared engine, Tkinter desktop, Flask API)
+- Add Java multiplatform suite (shared engine, JavaFX desktop, Android)
+- Redesign language dashboard with sultry selector + add Python and Java
+- Add Language Dashboard — interactive comparison of JS, Go, Kotlin, C#
+- Add language comparison architecture doc (JS, Go, Kotlin, C#)
+- Optimize .NET portfolio codebase
+- Add combined solution file and dotnet CI workflow
+- Add architecture docs and ADR-006 for .NET C# portfolio
+- Bump version to 2.13.0
+- Add Blazor WebAssembly chess app sharing dotnet/shared engine
+- Add SignalR real-time chat server with room management
+- Add ASP.NET Core Web API with JWT auth and leaderboard endpoints
+- Add .NET MAUI cross-platform app with shared chess/status library
+- Add Kotlin and Go linting; EditorConfig for all languages
+- Enforce session-scoped identity — no persistent username tracking
+- Add Kotlin Multiplatform shared module and Android app
+- Bump version to 2.12.0
+- Ensure 90%+ test coverage — fix suite failures and fill coverage gaps
+- Bump version to 2.11.1
+- Add Worker feature tests with 90%+ coverage and fix HTML lint error
+- Harden security across all three portfolio features
+- Add architecture documentation to all three portfolio features
+- Add API Gateway + Analytics Dashboard (Feature #2)
+- Add real-time collaborative diagramming (Feature #3)
+- Add real-time system status page (Feature #1)
+- Bump version to 2.11.0
+- Lawyer: brighten all body text to near-white for readability
+- Daedalus: expand level 1 intro cutscene to ~25s with two new acts
+- Add bump-version script — syncs package.json version from branch name
+- Bump version to 2.10.19
+- Architect: shape picker on canvas click, movable labels, color picker
+- Architect: fix click-and-drag — move nodes cleanly in select mode
+- Architect: drag-to-connect, edge line/arrow style options
+- Architect: click-and-draw, sidebar drag-to-canvas, auto-connect
+- Architect: draw.io-like interaction overhaul
+- Wire mail.zyxwonderland.xyz custom domain to worker
+- Disable dev rate bypass in production wrangler config
+- Update api.js
+- Add Anonymail frontend at /mail/ (Option B)
+- Anonymail: unregister stale service workers and caches on load
+- Lint: fix CSS — convert rgba() to rgb() and replace deprecated word-break: break-word
+- Changes
+- Dev: bump stylelint to ^17 to satisfy stylelint-config-standard@40 peer dep
+- gitignore: add *.sqlite-shm and *.sqlite-wal
+- gitignore: add SQLite database file extensions
+- Anonymail: fix session recovery loop, modal visibility, 401 handling; expand .gitignore
+- Dev: bypass mailbox creation rate limit when DEV_RATE_BYPASS=true
+- Anonymail: auto-generate address on load, remove landing page
+- Nav: link Anonymail logo back to main site
+- Lint: fix 2 Stylelint errors in Anonymail app.css
+- Lint: fix no-inner-declarations in forum.js
+- Bump jest from 29.7.0 to 30.4.2
+- Deploy: extend lint scripts and minifier to cover Anonymail
+- Lint: zero stylelint and htmlhint problems across all CSS/HTML
+- Lint: zero ESLint warnings and errors across all JS
+- Infrastructure: extend minifier to Anonymail, fix ESLint path
+- Anonymail: keyboard star shortcut and auto-extend banner
+- Forum: add pagination, delete, and session-based authorship
+- Accessibility: lang attributes, ARIA labels, and live regions across game pages
+- Games: add mobile touch controls for Tetris, Snake, and Pong
+- Anonymail: dark/light theme, email starring, WebSocket polling fallback
+- Bump stylelint-config-standard from 36.0.1 to 40.0.0
+- Quick wins: Dependabot, gitignore, attachment size guard, Anonymail share button
+- Update app.css
+- Add postal-mime and qrcode to root package.json
+- Fix deploy: add root wrangler.jsonc so Cloudflare auto-deploy finds config
+- Fix wrangler assets path: move public/ into worker/ and use ./public
+- Fix Cloudflare deploy: convert to wrangler.jsonc and add lockfile
+- Security: add HSTS header and tighten CSP connect-src
+- Fix Cloudflare Worker deploy: install worker deps + remove incorrect ASSETS binding
+- Anonymail: burn mailbox on tab close via sendBeacon + beacon/burn route
+- Fix wrangler deploy: add ASSETS binding required by wrangler 3.90
+- Fix wrangler deploy: remove unsupported not_found_handling from [assets]
+- Architecture improvements: ADRs, OpenAPI, observability, circuit breaker, events, caching, quota, hexagonal
+- Fix Cloudflare Worker deploy: remove invalid [[email]] wrangler.toml directive
+- Add Distributed Systems tool and expand DESIGN.md with distributed architecture
+- Add DESIGN.md — architecture and design document for the full project
+- Fix WebSocket reconnect missing address parameter
+- Fix CSS and HTML lint errors
+- Fix all lint errors and CI test failures
+- Replace Node.js SMTP server with Cloudflare Worker + Durable Objects
+- Fix service worker precache paths and remove dead back button
+- Anonymail: fix all security gaps identified in audit
+- Add Anonymail to site navigation and homepage (mail.zyxwonderland.xyz)
+- Reorganize folder structure: js/engines, js/config, anonymail/src
+- Anonymail: multi-session UI, loading phrases, security hardening
+- Add Anonymail — ephemeral encrypted temporary email app
+- Security: hash admin PIN, rate-guard writes, safeUrl, remove inline handlers
+- Improve UX, accessibility, SEO, and code quality across the site
+- Refactor: centralize shared utilities, CSS tokens, and build tooling
+- Site: add Blog, Guestbook, Search, PWA support, and UX improvements
+- Doodles: full Paint.NET-style rewrite
+- Puzzle: rewrite as jigsaw with interlocking bezier pieces
+- Modularize project: extract all inline scripts into external JS files
+- UI/UX: global improvements — focus styles, nav, mobile dropdowns, responsive canvases
+- Home: redesign welcome screen for a more welcoming first impression
+- Home: replace logo image background with gradient on welcome screen
+- Daedalus: add opening cutscene before level 1
+- Gamer: show global Daedalus fastest time with username on games hub
+- About: redesign Zyxxyz as Japanese Macaque in mauve suit with bucket hat and banana cane
+- Add level 5 and level 6 intro cutscenes in Daedalus
+- Daedalus: Icarus falls to ground and sprawls at exit in end cutscene
+- Gamer: reorganize games hub into categories with Daedalus featured at top
+- Daedalus: redesign end cutscene — Minotaur charge, Icarus melt, camera shake
+- Fix all lint errors, unused code, and Go error-handling gap from code review
+- Daedalus: update all comments to reflect current behavior
+- Daedalus: raise classic enemy pathfind chance to 69%
+- Daedalus: per-level pathfinding algos, remove selector UI, patrol-to-start
+- Daedalus: add enemy pathfinding algorithm selector (BFS / A* / DFS / Greedy)
+- Daedalus: smart enemies on L10, fix L6 no-enemies, L9 braid 0.69
+- Upgrade Daedalus: hold-to-move, click-to-pathfind, braided mazes, random exit, enemies L5+
+- Add The Editor — Go-backed PDF/file tool with Fly.io deployment config
+- Add suggestions box to gamer hub — floating FAB opens modal with Firebase-backed feed
+- Reorganize apps page into clean categories with icons (v1.5.2)
+- Improve page load speed and add smooth enter/exit transitions
+- Fix remaining .html paths in navigateToPage() calls
+- Remove .html from all internal URLs site-wide
+- Add persistent disclaimer bar and optimize render loop (v1.5.2)
+- Fix JS syntax errors preventing stocks from rendering
+- Add 100-stock database, 4 model tabs, and My Watchlist search (v1.5.1)
+- Update lapislazuli.html
+- Update lapislazuli.html
+- Update styles.css
+- Update styles.css
+- Update about.html
+- Make about page rabbit more cartoony (Secret Life of Pets style)
+- Add first-person cinematic ending to Daedalus maze
+- Rewrite about page animation: procedural rabbit showman with wonderland scene
+- Switch background logo from PNG to SVG for sharper rendering
+- Updates for the about me page
+- Add whimsical Zyxxyz rabbit animation to About page (version/1.4.0)
+- Add Zyxxyz rabbit animation to About page with futuristic HUD metrics (version/1.3.1)
+- Update about.html
+- Optimise chess AI with MVV-LVA move ordering; cut test suite from 15s to 6s
+- Add braided mazes, Icarus cutscene, fix cutscene not playing (version/1.3.0)
+- Add end-game cutscene: corridor, Icarus, Minotaur chase (version/1.2.3)
+- Add solvability tests for Daedalus maze generation (version/1.2.3)
+- Fix impossible Daedalus levels — braid maze for multi-path routing (version/1.2.3)
+- Delete .claude directory
+- Promote The Lawyer to top-level nav item (version/1.2.2)
+- Add The Lawyer — LSAT prep curriculum (version/1.2.0)
+- Fix FIREBASE_READY not exposed on window, breaking all score listeners
+- Add missing navbar div to architect, lapislazuli, and sortinghat pages
+- Fix unescaped apostrophes in lesson titles causing JS SyntaxError
+- Fix stale calculator description after curriculum expansion
+- Add back-navigation breadcrumb bar to all sub-pages (version/1.1.1)
+- Update settings.local.json
+- Expand Calculator curriculum to 14 subjects (graduate-level math)
+- Add Linear Algebra as 9th subject to The Calculator
+- Add comprehensive README with site overview and structure
+- Fix canvas coordinate offset in Motion Pictures editor
+- Fix doodle pad coordinate offset on wide viewports
+- Add inline SVG illustrations to all 35 Calculator lessons
+- Fix CSS lint error in nav-brand hover rule
+- v1 site-wide cleanup
+- Add persistent ZYXXYZ home brand link to navbar
+- daedalus update
+- Update calculator.html
+- Calculator update
+- Major app overhaul
+- medic update
+- hacker update
+- Updates to include new apps and features
+- Update package.json
+- Update styles.css
+- Update index.html
+- Melody update
+- Update index.html
+- Investor update
+- adagio and prism update
+- adagio update
+- Update motionpictures.html
+- Firefox update
+- Look and feel update
+- security updates
+- Update deploy.yml
+- Updating deployment failure
+- Fixing test classes
+- Linting fixes
+- Updates to some files for linting
+- Update .stylelintrc.json
+- computervision
+- Update architect.html
+- architect
+- sortinghat
+- Update to community page
+- Update stories.html
+- Update systemoperator.html
+- Update .eslintrc.json
+- Update look and feel
+- Fixing parts
+- Update software.html
+- Update handmade.html
+- Updates for mouse coordinates
+- Update games.html
+- Update webcomic.html
+- Font updates
+- Update about.html
+- Updates for more games as well as tests and computer engineering page
+- Update biosuefi.html
+- Major updates
+- New games updates
+- Updates to improve games
+- Huge overhaul for games
+- Updates for package_lock and opacity
+- Update motionpictures.html
+- Major overhaul
+- QOL Changes
+- Update to security
+- Update webcomic.html
+- Updates for Doodles
+- Updates to webcomics
+- Update settings.local.json
+- Updates to virtuoso page and forum page
+- Update forum.html
+- Moving to use firebase in other locations
+- - Random temp username generated on load (e.g. MysticRaven_742) — persists for your browser session, gone when you close the tab   - Dark chat window with orange-tinted message bubbles (yours on the right, others on the left)   - Real-time — messages appear instantly without refreshing, powered by Firebase   - Last 100 messages load on join, live connection indicator (● live / ● reconnecting)   - 1.5s send rate limit, 500-char limit with a counter that warns at 420   - Shows a setup notice instead of the chat window if Firebase isn't configured yet
+- Update forum.html
+- Update about.html
+- Update games page
+- Update games.html
+- Updates to homepage
+- Update games.html
+- Updates for virtuoso
+- Updates fo lapis lazuli
+- Updates to the homepage
+- Update games.html
+- Delete deploy.yml
+- Major overhaul of changes to fix issues
+- Test
+- Create CODEOWNERS
+- Update deploy.yml
+- Absolute vs relative
+- Update virtuoso.html
+- Stuffz
+- Update styles.css
+- Update styles.css
+- Update comebacklater.png
+- Update styles.css
+- Update styles.css
+- Update styles.css
+- Update styles.css
+- Umm yeah...
+- Update comebacklater.png
+- Update styles.css
+- Added the style
+- Update styles.css
+- Updating some formatting
+- Removing unneeded style sheet
+- Formatting changes
+- More changes
+- Updates to pages to read from root
+- Pages!
+- Something new to try
+- Update aboutStyles.css
+- Update aboutStyles.css
+- Update aboutStyles.css
+- Ch-ch-ch-changes
+- Update aboutStyles.css
+- Um Body
+- Update aboutStyles.css
+- Update comebacklater.png
+- An Attempt!
+- AAAAAAAAAHHHHHHHHH
+- More random styling choices
+- Need to allow for the path to be on the root directory
+- Let's make it pretty!
+- More styling practice
+- Update about.html
+- Renaming the file because I cannot read nor spell
+- Github Actions incorporation
+- Test changes
+- Update index.html
+- Update index.html
+- Update index.html
+- Changes for relative path
+- Update about.html
+- Updates for 404 errors
+- Organization changes
+-  Updates to image sizing and labeling
+- Restructuring project due to incorrect directories being pointed to
+- Create CNAME
+- Update to folder structure
+- Initial commit
+- Initial commit
+
