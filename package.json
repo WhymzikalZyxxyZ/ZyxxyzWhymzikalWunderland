@@ -1,71 +1,71 @@
 {
-    "name": "zyxxyz-whymzykal-wunderland",
-    "version": "3.9.5",
-    "private": true,
-    "scripts": {
-        "lint:js": "eslint \"js/**/*.js\" \"tests/**/*.js\" \"anonymail/worker/public/js/**/*.js\"",
-        "lint:css": "stylelint \"css/*.css\" \"anonymail/worker/public/css/*.css\"",
-        "lint:html": "htmlhint \"**/*.html\" --ignore \"node_modules/**,coverage/**,**/coverage/**\"",
-        "lint:kotlin": "ktlint --relative 'kotlin/**/*.kt'",
-        "lint:go": "cd editor-service && golangci-lint run ./...",
-        "lint": "npm run lint:js && npm run lint:css && npm run lint:html",
-        "test": "jest --coverage",
-        "test:features": "node --experimental-vm-modules node_modules/.bin/jest --config jest.features.config.cjs --coverage",
-        "check": "node scripts/check.js",
-        "install:all": "node scripts/install-all.js",
-        "minify": "node scripts/minify.js",
-        "bump": "node scripts/bump-version.js"
-    },
-    "jest": {
-        "testEnvironment": "node",
-        "coverageProvider": "v8",
-        "testTimeout": 30000,
-        "testPathIgnorePatterns": [
-            "/node_modules/",
-            "\\.mjs$",
-            "<rootDir>/anonymail/",
-            "<rootDir>/the-locator/",
-            "<rootDir>/elinal/",
-            "<rootDir>/epitome/"
-        ],
-        "collectCoverageFrom": [
-            "js/engines/tetris-engine.js",
-            "js/engines/snake-engine.js",
-            "js/community/forum-utils.js",
-            "js/username-gen.js",
-            "js/engines/rps-engine.js",
-            "js/engines/pong-engine.js",
-            "js/engines/puzzle-engine.js",
-            "js/engines/chess-engine.js",
-            "js/engines/checkers-engine.js",
-            "js/engines/card-engine.js",
-            "js/engines/blackjack-engine.js",
-            "js/engines/solitaire-engine.js",
-            "js/engines/poker-engine.js",
-            "js/engines/five-card-draw-engine.js"
-        ],
-        "coverageThreshold": {
-            "global": {
-                "lines": 90,
-                "functions": 90,
-                "branches": 90,
-                "statements": 90
-            }
-        }
-    },
-    "dependencies": {
-        "postal-mime": "^2.3.7",
-        "qrcode": "^1.5.4"
-    },
-    "devDependencies": {
-        "@eslint/js": "^10.0.1",
-        "clean-css-cli": "^5.6.3",
-        "eslint": "^10.5.0",
-        "globals": "^17.6.0",
-        "htmlhint": "^1.1.4",
-        "jest": "^30.4.2",
-        "stylelint": "^17.13.0",
-        "stylelint-config-standard": "^40.0.0",
-        "terser": "^5.31.0"
+  "name": "zyxxyz-whymzykal-wunderland",
+  "version": "4.9.3",
+  "private": true,
+  "scripts": {
+    "lint:js": "eslint \"js/**/*.js\" \"tests/**/*.js\" \"anonymail/worker/public/js/**/*.js\"",
+    "lint:css": "stylelint \"css/*.css\" \"anonymail/worker/public/css/*.css\"",
+    "lint:html": "htmlhint \"**/*.html\" --ignore \"node_modules/**,coverage/**,**/coverage/**\"",
+    "lint:kotlin": "ktlint --relative 'kotlin/**/*.kt'",
+    "lint:go": "cd editor-service && golangci-lint run ./...",
+    "lint": "npm run lint:js && npm run lint:css && npm run lint:html",
+    "test": "jest --coverage",
+    "test:features": "node --experimental-vm-modules node_modules/.bin/jest --config jest.features.config.cjs --coverage",
+    "check": "node scripts/check.js",
+    "install:all": "node scripts/install-all.js",
+    "minify": "node scripts/minify.js",
+    "bump": "node scripts/bump-version.js"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coverageProvider": "v8",
+    "testTimeout": 30000,
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "\\.mjs$",
+      "<rootDir>/anonymail/",
+      "<rootDir>/the-locator/",
+      "<rootDir>/elinal/",
+      "<rootDir>/epitome/"
+    ],
+    "collectCoverageFrom": [
+      "js/engines/tetris-engine.js",
+      "js/engines/snake-engine.js",
+      "js/community/forum-utils.js",
+      "js/username-gen.js",
+      "js/engines/rps-engine.js",
+      "js/engines/pong-engine.js",
+      "js/engines/puzzle-engine.js",
+      "js/engines/chess-engine.js",
+      "js/engines/checkers-engine.js",
+      "js/engines/card-engine.js",
+      "js/engines/blackjack-engine.js",
+      "js/engines/solitaire-engine.js",
+      "js/engines/poker-engine.js",
+      "js/engines/five-card-draw-engine.js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 90,
+        "functions": 90,
+        "branches": 90,
+        "statements": 90
+      }
     }
+  },
+  "dependencies": {
+    "postal-mime": "^2.3.7",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "clean-css-cli": "^5.6.3",
+    "eslint": "^10.5.0",
+    "globals": "^17.6.0",
+    "htmlhint": "^1.1.4",
+    "jest": "^30.4.2",
+    "stylelint": "^17.13.0",
+    "stylelint-config-standard": "^40.0.0",
+    "terser": "^5.31.0"
+  }
 }
