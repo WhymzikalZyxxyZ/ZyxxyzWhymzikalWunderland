@@ -6,6 +6,30 @@
     --accent-border: rgb(244, 162, 97, 0.2);
     --text-muted:    #c8b0d8;
     --bg-base:       rgb(14, 8, 24, 0.95);
+
+    /* Fonts: Jokerman/Papyrus are the site's signature decorative faces —
+       kept for the hero wordmark only. Everything read for information
+       (nav, body copy, cards) uses clean system fonts instead; no web
+       fonts are loaded, matching the site's fully self-contained ethos. */
+    --font-display: jokerman, fantasy;
+    --font-heading: georgia, 'Times New Roman', serif;
+    --font-body:    -apple-system, blinkmacsystemfont, 'Segoe UI', roboto, helvetica, arial, sans-serif;
+    --font-mono:    'Courier New', monospace;
+
+    /* A brighter, readable nav-item color — the old #a898b8 read too dim
+       against the near-black dropdown background. */
+    --text-nav: #e2d5f0;
+
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 40px;
+
+    --text-sm:   14px;
+    --text-base: 16px;
+    --text-lg:   20px;
+    --text-xl:   28px;
 }
 
 /* ── Base reset ─────────────────────────────────────────────────────────── */
@@ -81,9 +105,28 @@ p { margin: 0; }
     background: rgb(240,235,225,0.95) !important;
     border-bottom-color: rgb(0,0,0,0.1) !important;
 }
+
+[data-theme="light"] .navbar.navbar--scrolled {
+    background: rgb(245,240,232,0.98) !important;
+}
 [data-theme="light"] .nav-link { color: #444 !important; }
 [data-theme="light"] .nav-link:hover { color: var(--accent) !important; }
 [data-theme="light"] .nav-brand { color: var(--accent) !important; }
+
+/* The dropdown menus never picked up a light variant before — they stayed
+   dark-on-dark-adjacent even in light mode. */
+[data-theme="light"] .nav-dropdown-menu {
+    background-color: rgb(255, 253, 248, 0.98) !important;
+    border-color: rgb(0, 0, 0, 0.1) !important;
+    box-shadow: 0 10px 32px rgb(0, 0, 0, 0.15) !important;
+}
+[data-theme="light"] .nav-dropdown-menu a { color: #444 !important; }
+
+[data-theme="light"] .nav-dropdown-menu a:hover,
+[data-theme="light"] .nav-dropdown-menu a.nav-active {
+    color: var(--accent) !important;
+}
+[data-theme="light"] .nav-dropdown-group-label { color: #886a4a !important; }
 
 [data-theme="light"] .section-cards .card {
     background: rgb(255,255,255,0.85) !important;
@@ -185,6 +228,20 @@ canvas {
     top: 0;
     z-index: 1000;
     border-bottom: 1px solid rgb(244, 162, 97, 0.2);
+    transition: background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Scroll-aware: a little denser and more opaque once the page has scrolled,
+   so the sticky bar reads as "responding" rather than just sitting there. */
+.navbar.navbar--scrolled {
+    background-color: rgb(10, 5, 18, 0.98);
+    box-shadow: 0 6px 24px rgb(0, 0, 0, 0.35);
+}
+
+.navbar.navbar--scrolled .nav-brand,
+.navbar.navbar--scrolled .nav-link {
+    padding-top: 11px;
+    padding-bottom: 11px;
 }
 
 .nav-brand {
@@ -197,7 +254,7 @@ canvas {
     padding: 15px 20px 15px 16px;
     white-space: nowrap;
     flex-shrink: 0;
-    transition: color 0.2s ease, text-shadow 0.2s ease;
+    transition: color 0.2s ease, text-shadow 0.2s ease, padding 0.2s ease;
     margin-right: 4px;
     border-right: 1px solid rgb(244, 162, 97, 0.2);
 }
@@ -215,13 +272,15 @@ canvas {
 .nav-link {
     display: flex;
     align-items: center;
+    position: relative;
     padding: 15px 18px;
-    color: var(--text-muted);
+    color: var(--text-nav);
     text-decoration: none;
-    font-family: Papyrus, fantasy;
-    font-size: 15px;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 500;
     white-space: nowrap;
-    transition: color 0.2s ease, background-color 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, padding 0.2s ease;
     cursor: pointer;
 }
 
@@ -231,10 +290,38 @@ canvas {
     background-color: rgb(244, 162, 97, 0.08);
 }
 
+/* A thin underline that grows in from the center — used both for the
+   current page (always on) and as a hover cue (on interaction). */
+.nav-link::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 6px;
+    width: 0;
+    height: 2px;
+    background: var(--accent);
+    transform: translateX(-50%);
+    transition: width 0.2s ease;
+}
+
+.nav-link:hover::after {
+    width: calc(100% - 28px);
+}
+
 .nav-active > .nav-link,
 a.nav-link.nav-active {
     color: var(--accent);
-    box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.nav-active > .nav-link::after,
+a.nav-link.nav-active::after {
+    width: calc(100% - 28px);
+    animation: nav-underline-in 0.3s ease;
+}
+
+@keyframes nav-underline-in {
+    from { width: 0; }
+    to   { width: calc(100% - 28px); }
 }
 
 .nav-dropdown-toggle::after {
@@ -257,6 +344,8 @@ a.nav-link.nav-active {
     border-radius: 10px;
     padding: 6px 0;
     min-width: 180px;
+    max-height: 70vh;
+    overflow-y: auto;
     box-shadow: 0 10px 32px rgb(0, 0, 0, 0.55);
     visibility: hidden;
     opacity: 0;
@@ -277,13 +366,32 @@ a.nav-link.nav-active {
 .nav-dropdown-menu a {
     display: block;
     padding: 9px 20px;
-    color: #a898b8;
+    color: var(--text-nav);
     text-decoration: none;
-    font-family: Papyrus, fantasy;
-    font-size: 13px;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
     white-space: nowrap;
-    transition: color 0.15s ease, background-color 0.15s ease;
+    transition: color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+    opacity: 0;
+    transform: translateY(-4px);
 }
+
+/* Staggered reveal: each item eases in slightly after the last once the
+   dropdown becomes visible. Capped at 12 items so a long list doesn't
+   end with a visibly stale final entry. */
+.nav-dropdown:hover .nav-dropdown-menu a,
+.nav-dropdown:focus-within .nav-dropdown-menu a {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.16s ease, transform 0.16s ease, color 0.15s ease, background-color 0.15s ease;
+}
+.nav-dropdown-menu a:nth-child(n)  { transition-delay: 0ms; }
+.nav-dropdown-menu a:nth-child(2)  { transition-delay: 20ms; }
+.nav-dropdown-menu a:nth-child(3)  { transition-delay: 40ms; }
+.nav-dropdown-menu a:nth-child(4)  { transition-delay: 60ms; }
+.nav-dropdown-menu a:nth-child(5)  { transition-delay: 80ms; }
+.nav-dropdown-menu a:nth-child(6)  { transition-delay: 100ms; }
+.nav-dropdown-menu a:nth-child(n+7) { transition-delay: 120ms; }
 
 .nav-dropdown-menu a:hover,
 .nav-dropdown-menu a.nav-active {
@@ -292,7 +400,7 @@ a.nav-link.nav-active {
 }
 
 .nav-dropdown-menu--wide {
-    min-width: 300px;
+    min-width: 320px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     padding: 6px;
@@ -301,6 +409,21 @@ a.nav-link.nav-active {
 .nav-dropdown-menu--wide a {
     border-radius: 6px;
 }
+
+/* Group headers inside a grouped (Technologist/Gamer-style) dropdown —
+   spans both grid columns as a section divider. */
+.nav-dropdown-group-label {
+    grid-column: 1 / -1;
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 10px 14px 4px;
+    opacity: 1;
+}
+.nav-dropdown-group-label:first-child { padding-top: 4px; }
 
 /* Mobile hamburger */
 .nav-burger {
@@ -405,6 +528,13 @@ a.nav-link.nav-active {
     .nav-dropdown-menu a {
         padding: 8px 28px;
         font-size: 13px;
+        /* Desktop's hover-triggered stagger reveal doesn't apply here —
+           mobile dropdowns open via a click-toggled class, so items must
+           default to visible rather than waiting on a :hover/:focus-within
+           state that mobile never enters. */
+        opacity: 1;
+        transform: none;
+        transition-delay: 0ms !important;
     }
 
     .nav-dropdown-toggle::after {
@@ -526,13 +656,14 @@ body.page-fade-out {
 
 .card h3 {
     color: var(--accent);
-    font-family: Jokerman, fantasy;
+    font-family: var(--font-heading);
     font-size: 1.5em;
     margin: 0;
 }
 
 .card p {
     color: #bbb;
+    font-family: var(--font-body);
     font-size: 0.9em;
     line-height: 1.55;
     margin: 0;

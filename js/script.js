@@ -109,56 +109,108 @@ const NAV_STRUCTURE = [
         ],
     },
     {
+        // Games are naturally choose-one items rather than a browse-a-category
+        // list, so only a light 3-way grouping is applied — enough to break
+        // up 13 flat entries without over-categorizing.
         label: 'Gamer', href: '/gamer/games',
         children: [
-            { label: 'All Games',           href: '/gamer/games' },
-            { label: 'Blackjack',           href: '/gamer/blackjack' },
-            { label: 'Chess',               href: '/gamer/chess' },
-            { label: 'Checkers',            href: '/gamer/checkers' },
-            { label: 'Poker',               href: '/gamer/poker' },
-            { label: 'Five Card Draw',      href: '/gamer/five-card-draw' },
-            { label: 'Solitaire',           href: '/gamer/solitaire' },
-            { label: 'Snake',               href: '/gamer/snake' },
-            { label: 'Tetris',              href: '/gamer/tetris' },
-            { label: 'Pong',                href: '/gamer/pong' },
-            { label: 'Puzzle',              href: '/gamer/puzzle' },
-            { label: 'Rock Paper Scissors', href: '/gamer/rps' },
-            { label: 'Daedalus',            href: '/gamer/daedalus' },
+            { label: 'All Games', href: '/gamer/games' },
+            {
+                group: 'Card Games',
+                items: [
+                    { label: 'Blackjack',      href: '/gamer/blackjack' },
+                    { label: 'Poker',          href: '/gamer/poker' },
+                    { label: 'Five Card Draw', href: '/gamer/five-card-draw' },
+                    { label: 'Solitaire',      href: '/gamer/solitaire' },
+                ],
+            },
+            {
+                group: 'Arcade',
+                items: [
+                    { label: 'Snake',               href: '/gamer/snake' },
+                    { label: 'Tetris',              href: '/gamer/tetris' },
+                    { label: 'Pong',                href: '/gamer/pong' },
+                    { label: 'Puzzle',              href: '/gamer/puzzle' },
+                    { label: 'Rock Paper Scissors', href: '/gamer/rps' },
+                ],
+            },
+            {
+                group: 'Strategy & Adventure',
+                items: [
+                    { label: 'Chess',    href: '/gamer/chess' },
+                    { label: 'Checkers', href: '/gamer/checkers' },
+                    { label: 'Daedalus', href: '/gamer/daedalus' },
+                ],
+            },
         ],
     },
     {
+        // Mirrors the same categories already used on /technologist/apps so
+        // the nav and the hub page read consistently. Also absorbs the site's
+        // formerly-flat top-level tool links (Lawyer, Locator, MEND, CHART,
+        // Anonymail) instead of leaving them competing for top-bar space, and
+        // drops the ELINAL entry that used to be duplicated at both levels.
         label: 'Technologist', href: '/technologist/apps',
         children: [
-            { label: 'ELINAL',               href: '/technologist/elinal' },
-            { label: 'Apps',                 href: '/technologist/apps' },
-            { label: 'BIOS / UEFI',          href: '/technologist/biosuefi' },
-            { label: 'Computer Engineering', href: '/technologist/computerengineering' },
-            { label: 'Computer Vision',      href: '/technologist/computervision' },
-            { label: 'Software',             href: '/technologist/software' },
-            { label: 'System Operator',      href: '/technologist/systemoperator' },
-            { label: 'Sorting Hat',          href: '/technologist/sortinghat' },
-            { label: 'Architect',            href: '/technologist/architect' },
-            { label: 'Prism',                href: '/technologist/prism' },
-            { label: 'The Investor',         href: '/technologist/investor' },
-            { label: 'The Hacker',           href: '/technologist/hacker' },
-            { label: 'The Medic',            href: '/technologist/medic' },
-            { label: 'Rate Limiter',         href: '/technologist/rate-limiter' },
-            { label: 'Query Plan',           href: '/technologist/query-plan' },
-            { label: 'State Machine',        href: '/technologist/state-machine' },
-            { label: 'Pipeline',             href: '/technologist/pipeline' },
-            { label: 'CodeCollab',           href: '/technologist/code-collab' },
-            { label: 'Schema Diff',          href: '/technologist/schema-diff' },
-            { label: 'The Calculator',       href: '/technologist/calculator' },
-            { label: 'The Editor',           href: '/technologist/editor' },
-            { label: 'The Warden',           href: 'https://github.com/WhymzikalZyxxyZ/the-warden/releases', target: '_blank' },
+            { label: 'Apps', href: '/technologist/apps' },
+            {
+                group: 'Diagnostics & Systems',
+                items: [
+                    { label: 'BIOS / UEFI',          href: '/technologist/biosuefi' },
+                    { label: 'Computer Engineering', href: '/technologist/computerengineering' },
+                    { label: 'System Operator',      href: '/technologist/systemoperator' },
+                    { label: 'State Machine',        href: '/technologist/state-machine' },
+                    { label: 'The Warden',           href: 'https://github.com/WhymzikalZyxxyZ/the-warden/releases', target: '_blank' },
+                ],
+            },
+            {
+                group: 'Dev Tools',
+                items: [
+                    { label: 'Software',     href: '/technologist/software' },
+                    { label: 'CodeCollab',   href: '/technologist/code-collab' },
+                    { label: 'Schema Diff',  href: '/technologist/schema-diff' },
+                    { label: 'Query Plan',   href: '/technologist/query-plan' },
+                    { label: 'Rate Limiter', href: '/technologist/rate-limiter' },
+                    { label: 'Pipeline',     href: '/technologist/pipeline' },
+                    { label: 'The Editor',   href: '/technologist/editor' },
+                ],
+            },
+            {
+                group: 'Reference & Learning',
+                items: [
+                    { label: 'The Calculator',  href: '/technologist/calculator' },
+                    { label: 'Sorting Hat',     href: '/technologist/sortinghat' },
+                    { label: 'Architect',       href: '/technologist/architect' },
+                    { label: 'Prism',           href: '/technologist/prism' },
+                    { label: 'Computer Vision', href: '/technologist/computervision' },
+                    { label: 'The Investor',    href: '/technologist/investor' },
+                    { label: 'The Hacker',      href: '/technologist/hacker' },
+                    { label: 'The Medic',       href: '/technologist/medic' },
+                ],
+            },
+            {
+                group: 'Privacy & Security',
+                items: [
+                    { label: 'Anonymail',   href: 'https://mail.zyxwonderland.xyz', target: '_blank' },
+                    { label: 'The Locator', href: '/technologist/locator' },
+                ],
+            },
+            {
+                group: 'Law & Civic',
+                items: [
+                    { label: 'ELINAL',     href: '/technologist/elinal' },
+                    { label: 'The Lawyer', href: '/technologist/lawyer' },
+                ],
+            },
+            {
+                group: 'Health & Wellness',
+                items: [
+                    { label: 'MEND',  href: 'https://github.com/WhymzikalZyxxyZ/mend/releases', target: '_blank' },
+                    { label: 'CHART', href: 'https://github.com/WhymzikalZyxxyZ/chart/releases', target: '_blank' },
+                ],
+            },
         ],
     },
-    { label: 'The Lawyer',  href: '/technologist/lawyer' },
-    { label: 'The Locator', href: '/technologist/locator' },
-    { label: 'ELINAL',      href: '/technologist/elinal' },
-    { label: 'MEND',        href: 'https://github.com/WhymzikalZyxxyZ/mend/releases', target: '_blank' },
-    { label: 'CHART',       href: 'https://github.com/WhymzikalZyxxyZ/chart/releases', target: '_blank' },
-    { label: 'Anonymail',   href: 'https://mail.zyxwonderland.xyz', target: '_blank' },
     {
         label: 'Community', href: '/community/forum',
         children: [
@@ -228,8 +280,14 @@ function buildNavbar() {
             return;
         }
 
+        // Children may be plain link items or { group, items } sub-groups
+        // (used by the Technologist/Gamer dropdowns to chunk long lists) —
+        // flatten to a plain list of links wherever we just need to check
+        // hrefs, without needing two parallel code paths for that.
+        const flatChildren = item.children.flatMap(c => c.items || [c]);
+
         const wrap = document.createElement('div');
-        const sectionActive = item.children.some(c => path === c.href || path.endsWith(c.href));
+        const sectionActive = flatChildren.some(c => path === c.href || path.endsWith(c.href));
         wrap.className = 'nav-item nav-dropdown' + (sectionActive ? ' nav-active' : '');
 
         const toggle = document.createElement('a');
@@ -252,14 +310,27 @@ function buildNavbar() {
         wrap.appendChild(toggle);
 
         const menu = document.createElement('div');
-        menu.className = 'nav-dropdown-menu' + (item.children.length > 6 ? ' nav-dropdown-menu--wide' : '');
-        item.children.forEach(child => {
+        menu.className = 'nav-dropdown-menu' + (flatChildren.length > 6 ? ' nav-dropdown-menu--wide' : '');
+
+        const appendLink = child => {
             const a = document.createElement('a');
             a.href = child.href;
             a.textContent = child.label;
             if (child.target) { a.target = child.target; a.rel = 'noopener noreferrer'; }
             if (path === child.href || path.endsWith(child.href)) a.classList.add('nav-active');
             menu.appendChild(a);
+        };
+
+        item.children.forEach(child => {
+            if (child.items) {
+                const label = document.createElement('span');
+                label.className = 'nav-dropdown-group-label';
+                label.textContent = child.group;
+                menu.appendChild(label);
+                child.items.forEach(appendLink);
+                return;
+            }
+            appendLink(child);
         });
         wrap.appendChild(menu);
         linksWrap.appendChild(wrap);
@@ -277,6 +348,21 @@ function buildNavbar() {
     themeBtn.title = curTheme === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
     themeBtn.addEventListener('click', toggleTheme);
     el.appendChild(themeBtn);
+
+    // Scroll-aware navbar: a touch denser/more opaque once scrolled, so the
+    // sticky bar reads as responsive rather than just sitting there.
+    // rAF-throttled since scroll fires far more often than a class toggle needs.
+    let scrollTicking = false;
+    const updateScrolledClass = () => {
+        el.classList.toggle('navbar--scrolled', window.scrollY > 40);
+        scrollTicking = false;
+    };
+    window.addEventListener('scroll', () => {
+        if (scrollTicking) return;
+        scrollTicking = true;
+        requestAnimationFrame(updateScrolledClass);
+    }, { passive: true });
+    updateScrolledClass();
 }
 
 function buildBackLink() {
