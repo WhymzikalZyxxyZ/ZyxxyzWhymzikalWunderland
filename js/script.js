@@ -156,6 +156,7 @@ const NAV_STRUCTURE = [
     { label: 'The Lawyer',  href: '/technologist/lawyer' },
     { label: 'The Locator', href: '/technologist/locator' },
     { label: 'ELINAL',      href: '/technologist/elinal' },
+    { label: 'MEND',        href: 'https://github.com/WhymzikalZyxxyZ/mend', target: '_blank' },
     { label: 'Anonymail',   href: 'https://mail.zyxwonderland.xyz', target: '_blank' },
     {
         label: 'Community', href: '/community/forum',
