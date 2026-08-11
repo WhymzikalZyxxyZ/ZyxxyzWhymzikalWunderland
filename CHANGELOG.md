@@ -2,6 +2,16 @@
 
 All notable changes follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [4.10.0] — 2026-08-11
+
+### New Features
+
+- feat: restructure nav into labeled sub-groups (Technologist's 22-item wall becomes 6 categories), fold 5 stray top-level links and a duplicate ELINAL entry into their proper homes
+- feat: add design-token typography/spacing system, fix illegible nav text (decorative script font at 13-15px → readable system font), light-theme dropdown colors that never existed before
+- feat: scroll-aware navbar, animated active-page underline, staggered dropdown reveal
+- feat: refresh About page copy for the site's current breadth (language-portfolio, CHART, MEND)
+- fix: correct README's stale "Porkbun FTP" deployment claim to GitHub Pages (verified against deploy.yml), refresh outdated Technologist/Community tables and test count
+
 ## [4.9.6] — 2026-08-11
 
 ### Changes
