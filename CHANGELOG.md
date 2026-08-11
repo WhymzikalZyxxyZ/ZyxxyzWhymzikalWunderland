@@ -2,6 +2,12 @@
 
 All notable changes follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [4.9.5] — 2026-08-11
+
+### New Features
+
+- feat: unveil CHART — a SMART on FHIR clinical viewer joins the Health & Wellness door, demonstrating the OAuth2/PKCE app-launch pattern real EHR systems require, design docs and repo live now, Android download to follow
+
 ## [4.9.4] — 2026-08-10
 
 ### New Features
