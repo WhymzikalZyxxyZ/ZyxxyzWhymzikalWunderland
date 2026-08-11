@@ -2,6 +2,13 @@
 
 All notable changes follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [4.12.0] — 2026-08-11
+
+### New Features
+
+- feat: add /resume — a real downloadable PDF plus an on-site copy, publicly linking the ZYXXYZ persona to Matthew Macaspac by explicit choice
+- feat: add contact CTAs (mailto:zyxxyz@zyxwonderland.xyz) on the About and Highlights pages, and Résumé to the top-level nav
+
 ## [4.11.0] — 2026-08-11
 
 ### New Features
