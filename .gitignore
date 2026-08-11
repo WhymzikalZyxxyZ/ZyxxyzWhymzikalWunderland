@@ -55,6 +55,7 @@
 
 # Office & document formats
 *.pdf
+!/resume/Matthew-Macaspac-Resume.pdf
 *.doc
 *.docx
 *.xls
