@@ -2,6 +2,12 @@
 
 All notable changes follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [4.9.6] — 2026-08-11
+
+### Changes
+
+- chore: point the MEND and CHART Technologist touchpoints at their GitHub Releases pages now that signed APKs actually exist for both
+
 ## [4.9.5] — 2026-08-11
 
 ### New Features

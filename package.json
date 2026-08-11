@@ -1,6 +1,6 @@
 {
   "name": "zyxxyz-whymzykal-wunderland",
-  "version": "4.9.5",
+  "version": "4.9.6",
   "private": true,
   "scripts": {
     "lint:js": "eslint \"js/**/*.js\" \"tests/**/*.js\" \"anonymail/worker/public/js/**/*.js\"",
