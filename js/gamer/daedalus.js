@@ -485,19 +485,35 @@ function resetEnemies(cfg) {
 
 let pendingIntro = -1;
 
+// Called right before any intro cutscene starts. Without this, a level-
+// complete/game-complete overlay left over from the previous level (nextBtn
+// never hid lcOverlay) and the stale paused maze (loop() keeps drawing it
+// for STATE 'lc') could both still be live underneath the cutscene canvas —
+// normally masked by icOverlay's opaque background, but fragile, and the
+// actual visible symptom once it broke through: the cutscene reading as cut
+// short/not fully shown because gameplay chrome was already back on screen.
+function beginIntroCutscene() {
+    STATE = 'ic';
+    document.getElementById('lcOverlay').style.display = 'none';
+    document.getElementById('gcOverlay').style.display = 'none';
+}
+
 function startLevel(idx) {
     if (idx === 0 && pendingIntro !== 0) {
         pendingIntro = 0;
+        beginIntroCutscene();
         runLevel1Cutscene(() => startLevel(0));
         return;
     }
     if (idx === 4 && pendingIntro !== 4) {
         pendingIntro = 4;
+        beginIntroCutscene();
         runLevel5Cutscene(() => startLevel(4));
         return;
     }
     if (idx === 5 && pendingIntro !== 5) {
         pendingIntro = 5;
+        beginIntroCutscene();
         runLevel6Cutscene(() => startLevel(5));
         return;
     }
@@ -1481,6 +1497,7 @@ function runLevel1Cutscene(cb) {
 // First-person: spot Minotaur at far end → it charges → player sprints → turns corner
 // → Minotaur thunders past junction → "We were not alone in this maze…"
 function runLevel5Cutscene(cb) {
+    timerPause();
     const icOvl = document.getElementById('icOverlay');
     const cvs   = document.getElementById('icCanvas');
     icOvl.style.display = 'block';
@@ -1628,6 +1645,7 @@ function runLevel5Cutscene(cb) {
         if (t >= PH_END) {
             cancelAnimationFrame(rafId5); rafId5 = null;
             icOvl.style.display = 'none';
+            timerResume();
             cb(); return;
         }
         rafId5 = requestAnimationFrame(tick5);
@@ -1639,6 +1657,7 @@ function runLevel5Cutscene(cb) {
 // First-person corridor view — torches die, darkness swallows everything
 // → "Darkness descends…"
 function runLevel6Cutscene(cb) {
+    timerPause();
     const icOvl = document.getElementById('icOverlay');
     const cvs   = document.getElementById('icCanvas');
     icOvl.style.display = 'block';
@@ -1701,6 +1720,7 @@ function runLevel6Cutscene(cb) {
         if (t >= PH_END) {
             cancelAnimationFrame(rafId6); rafId6 = null;
             icOvl.style.display = 'none';
+            timerResume();
             cb(); return;
         }
         rafId6 = requestAnimationFrame(tick6);
