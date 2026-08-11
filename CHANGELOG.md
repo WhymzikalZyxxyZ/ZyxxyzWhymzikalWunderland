@@ -2,6 +2,13 @@
 
 All notable changes follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [4.11.0] — 2026-08-11
+
+### New Features
+
+- feat: add /highlights — four curated case studies (CHART, MEND, the nine-language chess engine portfolio, Anonymail) with Problem/Decision/Outcome structure, an original inline-SVG sequence diagram of CHART's SMART App Launch flow, an original architecture diagram for MEND, and direct links into the two genuinely live/interactive existing features (the language-comparison dashboard, Anonymail itself) rather than static screenshots
+- feat: add Highlights to the top-level nav and cross-link it from the About page
+
 ## [4.10.1] — 2026-08-11
 
 ### Bug Fixes
