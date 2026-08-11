@@ -2,6 +2,12 @@
 
 All notable changes follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [4.12.1] — 2026-08-11
+
+### New Features
+
+- feat: add ELINAL as a fifth Highlights case study, linking straight to the live in-site page
+
 ## [4.12.0] — 2026-08-11
 
 ### New Features
