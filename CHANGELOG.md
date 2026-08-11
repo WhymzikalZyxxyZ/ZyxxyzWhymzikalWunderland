@@ -2,6 +2,12 @@
 
 All notable changes follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [4.10.1] — 2026-08-11
+
+### Bug Fixes
+
+- fix(daedalus): level-complete/game-complete overlays weren't hidden before the next intro cutscene started, and loop() kept redrawing the stale paused maze underneath (STATE stayed 'lc' through the whole cutscene) — both only masked by the cutscene canvas's opaque background, not actually cleared, so any gap read as the cutscene cutting short. Also fixes Level 5/6 cutscenes never pausing the run timer (Level 1's did), so their ~10s intros were incorrectly counted against the player's time.
+
 ## [4.10.0] — 2026-08-11
 
 ### New Features
