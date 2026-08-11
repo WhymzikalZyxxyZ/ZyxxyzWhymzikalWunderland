@@ -136,6 +136,15 @@
         }
         .arch-arrow { stroke: var(--accent); stroke-width: 1.75; fill: none; marker-end: url(#hlArrow); }
 
+        .hl-cta {
+            text-align: center; padding: var(--space-xl) 0 var(--space-md);
+            border-top: 1px solid rgba(244,162,97,0.15);
+        }
+        .hl-cta p {
+            font-family: var(--font-heading); font-style: italic;
+            color: #ddd; font-size: 1.15em; margin-bottom: var(--space-md);
+        }
+
         @media (width <= 760px) {
             .hl-case { grid-template-columns: 1fr; gap: var(--space-md); }
             .hl-case--reverse .hl-case-text,
@@ -337,6 +346,14 @@
             </a>
         </div>
     </section>
+
+    <div class="hl-cta">
+        <p>If any of this is worth a conversation, I'd like to have it.</p>
+        <div class="hl-links" style="justify-content: center;">
+            <a href="/resume">Résumé →</a>
+            <a href="mailto:zyxxyz@zyxwonderland.xyz">Email me →</a>
+        </div>
+    </div>
 
 </div>
 

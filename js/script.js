@@ -30,6 +30,7 @@
         '/':                                   { desc: 'Games, art, tech projects, and more — ZYXXYZ\'s personal corner of the internet.' },
         '/about':                              { desc: 'Goggles, a suit, a banana cane. Who is ZYXXYZ? The answer is in here somewhere.' },
         '/highlights':                         { desc: 'Four pieces worth ninety seconds — the decisions behind them, and proof they\'re real.' },
+        '/resume':                             { desc: 'The person behind ZYXXYZ, on paper — download the résumé or say hello.' },
         '/gamer/games':                        { desc: 'Twelve games, eleven leaderboards. Tetris, Snake, Daedalus, chess, poker, and more.' },
         '/gamer/daedalus':                     { desc: 'Ten mazes. One unbroken run. Escape every level before the Minotaur finds you.' },
         '/virtuoso/virtuoso':                  { desc: 'Art, animations, comics, doodles, crafts, and stories — made by hand and pixel.' },
@@ -97,6 +98,7 @@ const NAV_STRUCTURE = [
     { label: 'Home',       href: '/' },
     { label: 'About',      href: '/about' },
     { label: 'Highlights', href: '/highlights' },
+    { label: 'Résumé',     href: '/resume' },
     { label: 'Blog',       href: '/blog' },
     {
         label: 'Virtuoso', href: '/virtuoso/virtuoso',
