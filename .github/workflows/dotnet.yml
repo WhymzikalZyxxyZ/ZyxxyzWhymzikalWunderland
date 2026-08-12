@@ -68,22 +68,17 @@ jobs:
           dotnet-version: '9.0.x'
       # maui-ios / maui-maccatalyst workloads can't even be installed on
       # Linux ("isn't supported on this platform"), so unfiltered restore of
-      # this multi-target csproj is a dead end here — it must be scoped down.
-      # ZyxxyzMaui.csproj's ProjectReference to the single-target (net9.0)
-      # dotnet/shared/ZyxxyzShared.csproj carries
-      # SetTargetFramework="TargetFramework=net9.0" so that reference always
-      # restores/builds as net9.0 regardless of what TFM the entry project
-      # restores under — but NuGet only honors that metadata via its
-      # cross-targeting restore graph, which only activates when
-      # $(TargetFrameworks) still evaluates to 2+ values. Collapsing it to a
-      # single value (net9.0-android alone) drops out of that graph entirely
-      # and falls back to bluntly propagating the global TargetFramework
-      # property to every reference, breaking ZyxxyzShared's restore the
-      # same way a bare -p:TargetFramework=net9.0-android override did.
-      # Keeping two entries (android + windows, dropping only the
-      # uninstallable ios/maccatalyst ones) keeps cross-targeting active so
-      # SetTargetFramework is actually respected, while the build step below
-      # still only builds Android.
+      # this multi-target csproj is a dead end here. Every attempt to scope
+      # restore down via a *global* -p:TargetFramework(s) override broke
+      # dotnet/shared/ZyxxyzShared.csproj's own plain-net9.0 restore instead
+      # — global properties passed on the command line unconditionally
+      # override a ProjectReference's own file-level TargetFramework,
+      # regardless of SetTargetFramework metadata (that only governs
+      # build-time reference resolution, not restore). Fixed at the actual
+      # source instead: ZyxxyzCiAndroidOnly is a property name nothing else
+      # in the solution reads, so passing it can't leak into and override
+      # any other project — ZyxxyzMaui.csproj uses it to conditionally
+      # collapse its own TargetFrameworks to just net9.0-android.
       - run: dotnet workload install maui-android --skip-sign-check
-      - run: dotnet restore dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj "-p:TargetFrameworks=net9.0-android%3Bnet9.0-windows10.0.19041.0" -p:EnableWindowsTargeting=true
-      - run: dotnet build dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj --no-restore -c Release -f net9.0-android
+      - run: dotnet restore dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj -p:ZyxxyzCiAndroidOnly=true
+      - run: dotnet build dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj --no-restore -c Release -p:ZyxxyzCiAndroidOnly=true

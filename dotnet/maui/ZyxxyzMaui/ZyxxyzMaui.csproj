@@ -6,7 +6,23 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <OutputType>Exe</OutputType>
     <RootNamespace>ZyxxyzMaui</RootNamespace>
-    <TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst;net9.0-windows10.0.19041.0</TargetFrameworks>
+    <!--
+      CI on Linux can only install the maui-android workload (maui-ios /
+      maui-maccatalyst error out at `dotnet workload install` — "isn't
+      supported on this platform" — so a normal unfiltered restore of the
+      full TargetFrameworks list always fails there). Passing
+      -p:TargetFramework(s)=net9.0-android from the command line to scope
+      restore down doesn't work either: that's a *global* MSBuild property,
+      and global properties unconditionally override a ProjectReference's
+      own file-level TargetFramework during restore — it silently broke
+      ../../shared/ZyxxyzShared.csproj's plain net9.0 restore every time,
+      regardless of SetTargetFramework metadata (that's build-time-only).
+      ZyxxyzCiAndroidOnly is a property name nothing else in the solution
+      reads, so passing -p:ZyxxyzCiAndroidOnly=true from CI can't leak into
+      and override any other project's own TargetFramework.
+    -->
+    <TargetFrameworks Condition="'$(ZyxxyzCiAndroidOnly)' == 'true'">net9.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="'$(ZyxxyzCiAndroidOnly)' != 'true'">net9.0-android;net9.0-ios;net9.0-maccatalyst;net9.0-windows10.0.19041.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
