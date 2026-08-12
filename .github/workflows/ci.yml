@@ -409,7 +409,7 @@ jobs:
         working-directory: dart/shared
         run: |
           pip install lcov_cobertura 2>/dev/null || true
-          COVERED=$(grep -c "DA:[0-9]*,1" coverage/lcov.info || echo 0)
+          COVERED=$(grep -c "DA:[0-9]*,[1-9]" coverage/lcov.info || echo 0)
           TOTAL=$(grep -c "DA:" coverage/lcov.info || echo 1)
           PCT=$(( COVERED * 100 / TOTAL ))
           echo "Coverage: ${PCT}% (${COVERED}/${TOTAL} lines)"
