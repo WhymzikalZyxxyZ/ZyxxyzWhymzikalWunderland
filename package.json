@@ -26,7 +26,8 @@
       "<rootDir>/anonymail/",
       "<rootDir>/the-locator/",
       "<rootDir>/elinal/",
-      "<rootDir>/epitome/"
+      "<rootDir>/epitome/",
+      "<rootDir>/typescript/"
     ],
     "collectCoverageFrom": [
       "js/engines/tetris-engine.js",
