@@ -1,5 +1,6 @@
 """Flask REST API — mirrors dotnet/api. In-memory store, JWT auth."""
 from __future__ import annotations
+
 import base64
 import hashlib
 import hmac
@@ -9,7 +10,8 @@ import re
 import secrets
 import time
 from functools import wraps
-from flask import Flask, request, jsonify, abort
+
+from flask import Flask, abort, jsonify, request
 
 app = Flask(__name__)
 
@@ -50,7 +52,7 @@ def _verify_token(token: str) -> str | None:
         if data["exp"] < time.time():
             return None
         return data["sub"]
-    except Exception:
+    except Exception:  # noqa: BLE001 — deliberately fail-closed on any malformed/invalid token
         return None
 
 # ── Password hashing (scrypt) ────────────────────────────────────────────────
@@ -65,7 +67,7 @@ def _verify_pw(pw: str, stored: str) -> bool:
         salt, hash_hex = stored.split(":", 1)
         candidate = hashlib.scrypt(pw.encode(), salt=bytes.fromhex(salt), n=16384, r=8, p=1)
         return hmac.compare_digest(candidate.hex(), hash_hex)
-    except Exception:
+    except Exception:  # noqa: BLE001 — deliberately fail-closed on any malformed stored hash
         return False
 
 def require_auth(f):

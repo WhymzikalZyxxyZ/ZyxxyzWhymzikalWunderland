@@ -1,8 +1,8 @@
 """Chess engine — pure Python, no dependencies. Mirrors Java/Kotlin/C# implementations."""
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 
 P, N, B, R, Q, K = 1, 2, 3, 4, 5, 6
 
@@ -20,8 +20,8 @@ class ChessMove:
     c: int
     tr: int
     tc: int
-    promo: Optional[int] = None
-    castle: Optional[str] = None
+    promo: int | None = None
+    castle: str | None = None
     ep: bool = False
     double: bool = False
 
@@ -362,7 +362,7 @@ def _minimax(g, depth, alpha, beta, maximising):
     return best
 
 
-def get_ai_move(g: ChessGame) -> Optional[ChessMove]:
+def get_ai_move(g: ChessGame) -> ChessMove | None:
     if not g.legal_moves:
         return None
     depths = [0, 1, 1, 2, 2, 2, 3, 3, 4, 4]
