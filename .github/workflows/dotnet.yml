@@ -67,5 +67,5 @@ jobs:
         with:
           dotnet-version: '9.0.x'
       - run: dotnet workload install maui-android --skip-sign-check
-      - run: dotnet restore dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj -p:TargetFramework=net9.0-android
+      - run: dotnet restore dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj -p:TargetFrameworks=net9.0-android
       - run: dotnet build dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj --no-restore -c Release -f net9.0-android
