@@ -2,6 +2,12 @@
 
 All notable changes follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [4.14.0] — 2026-08-12
+
+### New Features
+
+- feat: mark LEDGER as proven, not just designed — Highlights Outcome copy and the technologist/apps card now reflect the implemented, concurrency-tested API instead of the earlier design-phase framing
+
 ## [4.13.0] — 2026-08-12
 
 ### New Features
