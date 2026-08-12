@@ -68,18 +68,22 @@ jobs:
           dotnet-version: '9.0.x'
       # maui-ios / maui-maccatalyst workloads can't even be installed on
       # Linux ("isn't supported on this platform"), so unfiltered restore of
-      # this multi-target csproj is a dead end here — it must be scoped to
-      # Android. Passing -p:TargetFramework(s) globally to do that used to
-      # break dotnet/shared/ZyxxyzShared.csproj's own restore, because
-      # MSBuild propagates command-line global properties to every
-      # ProjectReference regardless of what that referenced project actually
-      # declares — it would silently override ZyxxyzShared's fixed net9.0
-      # TargetFramework too. Fixed at the source instead: ZyxxyzShared's
-      # ProjectReference in ZyxxyzMaui.csproj now carries
-      # SetTargetFramework="TargetFramework=net9.0", which pins that
-      # specific reference's TFM through NuGet's restore graph regardless of
-      # which global TargetFrameworks override the entry project restores
-      # under.
+      # this multi-target csproj is a dead end here — it must be scoped down.
+      # ZyxxyzMaui.csproj's ProjectReference to the single-target (net9.0)
+      # dotnet/shared/ZyxxyzShared.csproj carries
+      # SetTargetFramework="TargetFramework=net9.0" so that reference always
+      # restores/builds as net9.0 regardless of what TFM the entry project
+      # restores under — but NuGet only honors that metadata via its
+      # cross-targeting restore graph, which only activates when
+      # $(TargetFrameworks) still evaluates to 2+ values. Collapsing it to a
+      # single value (net9.0-android alone) drops out of that graph entirely
+      # and falls back to bluntly propagating the global TargetFramework
+      # property to every reference, breaking ZyxxyzShared's restore the
+      # same way a bare -p:TargetFramework=net9.0-android override did.
+      # Keeping two entries (android + windows, dropping only the
+      # uninstallable ios/maccatalyst ones) keeps cross-targeting active so
+      # SetTargetFramework is actually respected, while the build step below
+      # still only builds Android.
       - run: dotnet workload install maui-android --skip-sign-check
-      - run: dotnet restore dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj -p:TargetFrameworks=net9.0-android
+      - run: dotnet restore dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj "-p:TargetFrameworks=net9.0-android;net9.0-windows10.0.19041.0"
       - run: dotnet build dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj --no-restore -c Release -f net9.0-android
