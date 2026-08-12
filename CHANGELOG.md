@@ -2,6 +2,13 @@
 
 All notable changes follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [4.13.0] — 2026-08-12
+
+### New Features
+
+- feat: unveil LEDGER — a double-entry transaction ledger joins Finance & Markets, with a sixth Highlights case study and a new SVG diagram of the transaction-submission flow
+- feat: add a Finance & Markets nav group (Lapis Lazuli, The Investor, LEDGER), fixing a pre-existing gap where Lapis Lazuli was missing from nav entirely and The Investor was misfiled under Reference & Learning
+
 ## [4.12.1] — 2026-08-11
 
 ### New Features
