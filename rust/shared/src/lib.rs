@@ -491,6 +491,14 @@ mod tests {
         assert_eq!(g3.full_move, 2);
     }
 
+    #[test]
+    fn half_move_increments_on_non_pawn_non_capture() {
+        let g = new_game();
+        let m = *g.legal_moves.iter().find(|m| m.r==7 && m.c==1).unwrap(); // Nb1
+        let g2 = apply_move(&g, &m);
+        assert_eq!(g2.half_move, 1);
+    }
+
     // ── Castling ─────────────────────────────────────────────────────────────
 
     #[test]

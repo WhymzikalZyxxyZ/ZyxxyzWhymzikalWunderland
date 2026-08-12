@@ -87,6 +87,13 @@ class ChessEngineTest {
         assertEquals(CH_PAWN, next.board[4][4])
     }
 
+    @Test fun `applyMove increments halfMove on non-pawn non-capture`() {
+        val state = newChessGame()
+        val move = getLegalMoves(state).first { it.r == 7 && it.c == 1 } // Nb1
+        val next = applyMove(state, move)
+        assertEquals(1, next.halfMove)
+    }
+
     // ── isInCheck / isSquareAttacked ──────────────────────────────────────────
 
     @Test fun `white king is not in check at start`() {

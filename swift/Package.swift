@@ -10,6 +10,7 @@ let package = Package(
     ],
     targets: [
         .target(name: "ChessEngine", path: "Sources/ChessEngine"),
-        .executableTarget(name: "ChessApp", dependencies: ["ChessEngine"], path: "Sources/ChessApp")
+        .executableTarget(name: "ChessApp", dependencies: ["ChessEngine"], path: "Sources/ChessApp"),
+        .testTarget(name: "ChessEngineTests", dependencies: ["ChessEngine"], path: "Tests/ChessEngineTests")
     ]
 )

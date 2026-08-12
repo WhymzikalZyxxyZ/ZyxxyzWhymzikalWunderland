@@ -85,5 +85,5 @@ jobs:
       # SetTargetFramework is actually respected, while the build step below
       # still only builds Android.
       - run: dotnet workload install maui-android --skip-sign-check
-      - run: dotnet restore dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj "-p:TargetFrameworks=net9.0-android%3Bnet9.0-windows10.0.19041.0"
+      - run: dotnet restore dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj "-p:TargetFrameworks=net9.0-android%3Bnet9.0-windows10.0.19041.0" -p:EnableWindowsTargeting=true
       - run: dotnet build dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj --no-restore -c Release -f net9.0-android
