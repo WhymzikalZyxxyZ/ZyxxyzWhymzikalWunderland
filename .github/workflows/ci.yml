@@ -168,7 +168,14 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.64.8
+          # Was pinned to v1.64.8 (built with Go 1.24) — a dependency bump
+          # (golang.org/x/image/x/text, to close real CVEs) pushed
+          # editor-service's go.mod to `go 1.25.0`, which that pinned
+          # golangci-lint refuses to lint ("the Go language version used to
+          # build golangci-lint is lower than the targeted Go version").
+          # Following latest keeps this from recurring every time the Go
+          # toolchain requirement moves forward.
+          version: latest
           working-directory: editor-service
 
   # ── Kotlin ────────────────────────────────────────────────────────────────────
