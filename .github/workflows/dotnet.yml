@@ -66,6 +66,14 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
-      - run: dotnet workload install maui-android --skip-sign-check
-      - run: dotnet restore dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj -p:TargetFrameworks=net9.0-android
+      # Passing -p:TargetFramework(s) to `dotnet restore` to scope it to Android
+      # doesn't just affect ZyxxyzMaui.csproj — MSBuild propagates global
+      # properties to every ProjectReference too, including the plain
+      # single-target (net9.0) dotnet/shared/ZyxxyzShared.csproj, which then
+      # tries to restore itself as net9.0-android and breaks. So instead we
+      # install every workload this multi-target csproj references and let
+      # restore run unfiltered across all of them; only the build step below
+      # is scoped to Android via -f.
+      - run: dotnet workload install maui-android maui-ios maui-maccatalyst --skip-sign-check
+      - run: dotnet restore dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj
       - run: dotnet build dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj --no-restore -c Release -f net9.0-android
