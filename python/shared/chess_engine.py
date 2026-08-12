@@ -315,7 +315,7 @@ def apply_move(g: ChessGame, m: ChessMove) -> ChessGame:
     next_turn = -g.turn
     legal = get_legal_moves(board, next_turn, w_k, w_q, b_k, b_q, ep_r, ep_c)
     status = _update_status(board, next_turn, legal)
-    half = 0 if piece == P or board[m.tr][m.tc] != 0 else g.half_move + 1
+    half = 0 if piece == P or g.board[m.tr][m.tc] != 0 else g.half_move + 1
     full = g.full_move + (1 if g.turn == -1 else 0)
     return ChessGame(board=board, turn=next_turn, w_k=w_k, w_q=w_q, b_k=b_k, b_q=b_q,
                      ep_r=ep_r, ep_c=ep_c, half_move=half, full_move=full,

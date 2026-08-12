@@ -129,7 +129,7 @@ Game chess::applyMove(const Game& g, const Move& m){
     ng.legalMoves=getLegalMoves(ng.board,ng.turn,ng.wK,ng.wQ,ng.bK,ng.bQ,ng.epR,ng.epC);
     bool chk=inCheck(ng.board,ng.turn);
     ng.status=ng.legalMoves.empty()?(chk?Status::Checkmate:Status::Stalemate):(chk?Status::Check:Status::Active);
-    ng.halfMove=(piece==P||ng.board[m.tr][m.tc]!=0)?0:g.halfMove+1;
+    ng.halfMove=(piece==P||g.board[m.tr][m.tc]!=0)?0:g.halfMove+1;
     ng.fullMove=g.fullMove+(g.turn==-1?1:0);
     return ng;
 }

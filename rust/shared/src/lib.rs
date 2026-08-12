@@ -323,7 +323,7 @@ pub fn apply_move(g: &ChessGame, m: &ChessMove) -> ChessGame {
     let next_turn = -g.turn;
     let legal_moves = get_legal_moves(&board, next_turn, w_k, w_q, b_k, b_q, ep_r, ep_c);
     let status = update_status(&board, next_turn, &legal_moves);
-    let half_move = if piece == 1 || board[m.tr as usize][m.tc as usize] != 0 { 0 } else { g.half_move + 1 };
+    let half_move = if piece == 1 || g.board[m.tr as usize][m.tc as usize] != 0 { 0 } else { g.half_move + 1 };
     let full_move = g.full_move + if g.turn == -1 { 1 } else { 0 };
     ChessGame { board, turn: next_turn, w_k, w_q, b_k, b_q, ep_r, ep_c, half_move, full_move, status, legal_moves }
 }
