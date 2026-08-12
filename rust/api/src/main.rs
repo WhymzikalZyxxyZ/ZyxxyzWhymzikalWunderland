@@ -10,9 +10,10 @@
 // HMAC-signed tokens, and adding argon2 for real salted password hashing —
 // bringing this to parity with typescript/api and python/api's auth.
 use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
+use rand_core::OsRng;
 use axum::{
     extract::Query,
     http::{HeaderMap, StatusCode},
