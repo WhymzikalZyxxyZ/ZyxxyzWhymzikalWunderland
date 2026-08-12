@@ -2,6 +2,12 @@
 
 All notable changes follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [4.15.0] — 2026-08-12
+
+### New Features
+
+- feat: unveil WIRE — an event-ingestion pipeline joins Finance & Markets, with a seventh Highlights case study and a new SVG diagram of the produce-to-commit flow
+
 ## [4.14.0] — 2026-08-12
 
 ### New Features
