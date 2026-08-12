@@ -80,6 +80,19 @@ func withCORS(h http.HandlerFunc) http.HandlerFunc {
 			apiErr(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
+		// Every other error path in this service returns a structured
+		// {"error": "..."} body — a panic deep in pdfcpu's parsing of a
+		// malformed-but-not-rejected PDF (or any other unexpected failure)
+		// previously had no equivalent: net/http's stdlib server recovers
+		// per-connection on its own, but writes its own plain-text 500, not
+		// this API's JSON error shape. Recovering here keeps every response
+		// consistent, whether the failure was anticipated or not.
+		defer func() {
+			if rec := recover(); rec != nil {
+				log.Printf("panic handling %s: %v", r.URL.Path, rec)
+				apiErr(w, "internal error processing the request", http.StatusInternalServerError)
+			}
+		}()
 		h(w, r)
 	}
 }
