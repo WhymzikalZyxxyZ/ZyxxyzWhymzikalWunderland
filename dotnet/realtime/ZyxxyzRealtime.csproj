@@ -6,9 +6,16 @@
     <LangVersion>latest</LangVersion>
     <RootNamespace>ZyxxyzRealtime</RootNamespace>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.*" />
-    <!-- Pin Newtonsoft.Json >=13.0.3 to override vulnerable 11.0.2 pulled in transitively by SignalR 1.x (GHSA-5crp-9r3c-p9vr) -->
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-  </ItemGroup>
+  <!--
+    No PackageReference needed for SignalR: on a Microsoft.NET.Sdk.Web
+    project targeting net9.0, AddSignalR()/MapHub<> (see Program.cs) are
+    already provided by the ASP.NET Core shared framework. A dependency
+    audit found this project pulling in the abandoned standalone
+    Microsoft.AspNetCore.SignalR 1.* package instead (last real release
+    from the ASP.NET Core 1.x/2016-2018 era), whose only actual effect was
+    dragging in a vulnerable transitive Newtonsoft.Json 11.0.2
+    (GHSA-5crp-9r3c-p9vr) — which is why a Newtonsoft.Json override used to
+    live here. Removing the SignalR package removes the vulnerable
+    transitive dependency at the source; the override is no longer needed.
+  -->
 </Project>
