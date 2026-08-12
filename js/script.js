@@ -163,6 +163,7 @@ const NAV_STRUCTURE = [
                     { label: 'Lapis Lazuli', href: '/technologist/lapislazuli' },
                     { label: 'The Investor', href: '/technologist/investor' },
                     { label: 'LEDGER',       href: 'https://github.com/WhymzikalZyxxyZ/ledger', target: '_blank' },
+                    { label: 'WIRE',         href: 'https://github.com/WhymzikalZyxxyZ/wire', target: '_blank' },
                 ],
             },
             {

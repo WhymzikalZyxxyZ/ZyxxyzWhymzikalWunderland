@@ -440,6 +440,70 @@
         </div>
     </section>
 
+    <!-- ── WIRE ──────────────────────────────────────────────────────────── -->
+    <section class="hl-case">
+        <div class="hl-case-text">
+            <div class="hl-eyebrow">Java · Spring Kafka · Redpanda</div>
+            <h2>WIRE</h2>
+            <p class="hl-hook">
+                LEDGER proves a transaction is correct once it arrives.
+                WIRE proves it arrives at all &mdash; in order, exactly once,
+                no matter what fails along the way.
+            </p>
+            <dl>
+                <dt>Problem</dt>
+                <dd>A synchronous API call is only half of "real-time transaction ingestion." The other half is what happens when the broker redelivers a message, a downstream call times out, or one malformed event lands in a stream that has to keep moving &mdash; the exact conditions naive ingestion pipelines don't survive.</dd>
+                <dt>Decision</dt>
+                <dd>Redpanda &mdash; the same Kafka wire protocol, partition/consumer-group/offset semantics and all, chosen for CI weight rather than any change in what's being proven. Events are keyed by <code>accountId</code> for structural per-account ordering, and delivery is made effectively-once by pairing the broker's at-least-once guarantee with LEDGER's own idempotency key, rather than inventing a second correctness mechanism.</dd>
+                <dt>Outcome</dt>
+                <dd>A repo whose every ADR names the failure it exists to prevent &mdash; lost updates, duplicate posts, head-of-line blocking from a single poison message &mdash; before a line of consumer code is written. Docs-first, same as LEDGER; concurrency tests against a real broker are next.</dd>
+            </dl>
+            <div class="hl-links">
+                <a href="https://github.com/WhymzikalZyxxyZ/wire" target="_blank" rel="noopener noreferrer">Repo →</a>
+                <a href="https://github.com/WhymzikalZyxxyZ/wire/blob/main/docs/adr/002-delivery-and-consistency.md" target="_blank" rel="noopener noreferrer">Read the ADR →</a>
+            </div>
+        </div>
+        <div class="hl-case-visual">
+            <svg viewBox="0 0 480 340" role="img" aria-labelledby="wireFlowTitle">
+                <title id="wireFlowTitle">WIRE's event flow: production keyed by account, ordered delivery, idempotent post to LEDGER, offset commit only on a terminal outcome</title>
+                <defs>
+                    <marker id="wireArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path class="hl-marker-fill" d="M0,0 L10,5 L0,10 z"></path>
+                    </marker>
+                </defs>
+
+                <rect class="arch-box" x="110" y="12" width="260" height="40"></rect>
+                <text class="arch-label" x="240" y="32">Event produced</text>
+                <text class="arch-sublabel" x="240" y="46">accountId → partition key</text>
+
+                <line class="arch-arrow" x1="240" y1="52" x2="240" y2="78" marker-end="url(#wireArrow)"></line>
+
+                <rect class="arch-box" x="110" y="78" width="260" height="46"></rect>
+                <text class="arch-label" x="240" y="98">wire.transactions.raw</text>
+                <text class="arch-sublabel" x="240" y="112">ordered per account, at-least-once</text>
+
+                <line class="arch-arrow" x1="240" y1="124" x2="240" y2="150" marker-end="url(#wireArrow)"></line>
+
+                <rect class="arch-box" x="110" y="150" width="260" height="40"></rect>
+                <text class="arch-label" x="240" y="170">Validate → POST /transactions</text>
+                <text class="arch-sublabel" x="240" y="184">eventId becomes LEDGER's idempotencyKey</text>
+
+                <line class="arch-arrow" x1="240" y1="190" x2="240" y2="216" marker-end="url(#wireArrow)"></line>
+
+                <rect class="arch-box" x="110" y="216" width="260" height="46"></rect>
+                <text class="arch-label" x="240" y="236">LEDGER responds</text>
+                <text class="arch-sublabel" x="240" y="250">2xx/dup → commit · 5xx → retry · 4xx → DLQ</text>
+
+                <line class="arch-arrow" x1="240" y1="262" x2="240" y2="288" marker-end="url(#wireArrow)"></line>
+
+                <rect class="arch-box" x="110" y="288" width="260" height="40"></rect>
+                <text class="arch-label" x="240" y="308">Commit offset</text>
+                <text class="arch-sublabel" x="240" y="322">only after a terminal outcome</text>
+            </svg>
+            <div class="hl-visual-caption">At-least-once delivery from the broker, plus an idempotent receiver, equals effectively-once posting &mdash; no new correctness mechanism invented.</div>
+        </div>
+    </section>
+
     <div class="hl-cta">
         <p>If any of this is worth a conversation, I'd like to have it.</p>
         <div class="hl-links" style="justify-content: center;">
