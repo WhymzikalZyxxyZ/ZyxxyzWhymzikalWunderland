@@ -2,6 +2,16 @@
 
 All notable changes follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [4.17.0] — 2026-08-12
+
+### Fixes (security)
+
+- fix: rust/api's auth was entirely non-cryptographic (a placeholder XOR hash and unsigned forgeable tokens) — now uses real HMAC-signed JWTs (jsonwebtoken) and salted argon2 password hashing, with submit_score actually checking auth instead of hardcoding "anonymous"
+- fix: dotnet/api hashed passwords with unsalted single-round SHA-256 and fell back to a hardcoded JWT secret if unset — now uses salted PBKDF2-HMAC-SHA256 with a timing-safe comparison, and fails fast on a missing/short secret
+- fix: editor-service had no request-size cap, no rate limiting, wide-open CORS, and unsanitized zip entry filenames (zip-slip) — all four closed
+- fix: Anonymail's mailbox session token was compared with plain `===` instead of a timing-safe comparison; its HTML sanitizer never blocked remote tracking-pixel images, undermining the product's anonymity guarantee; and a second base64-conversion crash (same bug class as 4.16.0's fix) was found in attachment encryption
+- fix: removed an abandoned SignalR package and its vulnerable transitive Newtonsoft.Json pull-through in dotnet/realtime; bumped vulnerable golang.org/x/image and x/text transitive deps in editor-service; removed unused duplicate root dependencies; fixed a stale express version floor and a Node engines mismatch
+
 ## [4.16.0] — 2026-08-12
 
 ### Fixes
