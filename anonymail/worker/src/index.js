@@ -125,6 +125,20 @@ function log(level, requestId, event, fields = {}) {
     console.log(JSON.stringify({ level, requestId, event, ts: Date.now(), ...fields }));
 }
 
+// Uint8Array → base64. Spreading the whole array into String.fromCharCode
+// (i.e. String.fromCharCode(...bytes)) blows V8's per-call argument limit
+// (~65536 args) for any attachment past roughly that many bytes — a very
+// ordinary photo or PDF attachment. Chunking keeps each call well under
+// that limit regardless of attachment size.
+function uint8ToBase64(bytes) {
+    const CHUNK = 0x8000; // 32KB
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+    }
+    return btoa(binary);
+}
+
 // ── Core request handler (extracted for testability and error wrapping) ───────
 async function _handleRequest(request, env, url, path, method, ip, requestId) {
     // Global rate limit
@@ -307,42 +321,53 @@ export default {
     async email(message, env) {
         const to = (message.to || '').toLowerCase();
 
-        // Parse the raw email stream
-        const raw    = await new Response(message.raw).arrayBuffer();
-        const parser = new PostalMime();
-        const parsed = await parser.parse(raw);
+        try {
+            // Parse the raw email stream
+            const raw    = await new Response(message.raw).arrayBuffer();
+            const parser = new PostalMime();
+            const parsed = await parser.parse(raw);
 
-        const attachments = (parsed.attachments || []).map(a => {
-            // Convert Uint8Array to base64 for JSON serialisation
-            const b64 = btoa(String.fromCharCode(...a.content));
-            return {
+            const attachments = (parsed.attachments || []).map(a => ({
                 filename:    a.filename   || 'attachment',
                 contentType: a.mimeType   || 'application/octet-stream',
                 size:        a.content.byteLength,
-                data:        b64,
+                data:        uint8ToBase64(a.content),
+            }));
+
+            const payload = {
+                from:        parsed.from?.address || message.from,
+                to,
+                cc:          (parsed.cc || []).map(x => x.address).join(', '),
+                subject:     parsed.subject || '(no subject)',
+                body:        parsed.text    || '',
+                bodyHtml:    parsed.html    || null,
+                attachments,
             };
-        });
 
-        const payload = {
-            from:        parsed.from?.address || message.from,
-            to,
-            cc:          (parsed.cc || []).map(x => x.address).join(', '),
-            subject:     parsed.subject || '(no subject)',
-            body:        parsed.text    || '',
-            bodyHtml:    parsed.html    || null,
-            attachments,
-        };
+            const mb  = env.MAILBOX.get(env.MAILBOX.idFromName(to));
+            const res = await mb.fetch(new Request('http://do/deliver', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(payload),
+            }));
 
-        const mb  = env.MAILBOX.get(env.MAILBOX.idFromName(to));
-        const res = await mb.fetch(new Request('http://do/deliver', {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify(payload),
-        }));
-
-        if (!res.ok) {
-            // Unknown address — reject so the sending MTA gets a bounce
-            message.setReject('Mailbox not found');
+            if (!res.ok) {
+                // Unknown address — reject so the sending MTA gets a bounce
+                message.setReject('Mailbox not found');
+            }
+        } catch (e) {
+            // Previously uncaught: a parse failure (malformed MIME, an
+            // oversized attachment tripping the old base64 conversion) or a
+            // DO being unreachable would throw here with nothing catching
+            // it — Cloudflare Email Routing then has no setReject() call to
+            // work with, and the message is effectively dropped with no
+            // bounce and no record beyond an unhandled-exception log line.
+            // Rejecting explicitly at least tells the sending MTA delivery
+            // failed, instead of the message silently vanishing.
+            console.log(JSON.stringify({
+                level: 'error', event: 'email.delivery_failed', to, error: e.message, stack: e.stack,
+            }));
+            message.setReject('Delivery failed');
         }
     },
 };
