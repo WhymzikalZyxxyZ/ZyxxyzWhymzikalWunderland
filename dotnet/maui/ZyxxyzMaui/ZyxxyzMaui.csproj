@@ -25,7 +25,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.*" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\shared\ZyxxyzShared.csproj" />
+    <ProjectReference Include="..\..\shared\ZyxxyzShared.csproj" SetTargetFramework="TargetFramework=net9.0" />
   </ItemGroup>
   <ItemGroup>
     <MauiImage Include="Resources\Images\*" />

@@ -66,14 +66,20 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
-      # Passing -p:TargetFramework(s) to `dotnet restore` to scope it to Android
-      # doesn't just affect ZyxxyzMaui.csproj — MSBuild propagates global
-      # properties to every ProjectReference too, including the plain
-      # single-target (net9.0) dotnet/shared/ZyxxyzShared.csproj, which then
-      # tries to restore itself as net9.0-android and breaks. So instead we
-      # install every workload this multi-target csproj references and let
-      # restore run unfiltered across all of them; only the build step below
-      # is scoped to Android via -f.
-      - run: dotnet workload install maui-android maui-ios maui-maccatalyst --skip-sign-check
-      - run: dotnet restore dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj
+      # maui-ios / maui-maccatalyst workloads can't even be installed on
+      # Linux ("isn't supported on this platform"), so unfiltered restore of
+      # this multi-target csproj is a dead end here — it must be scoped to
+      # Android. Passing -p:TargetFramework(s) globally to do that used to
+      # break dotnet/shared/ZyxxyzShared.csproj's own restore, because
+      # MSBuild propagates command-line global properties to every
+      # ProjectReference regardless of what that referenced project actually
+      # declares — it would silently override ZyxxyzShared's fixed net9.0
+      # TargetFramework too. Fixed at the source instead: ZyxxyzShared's
+      # ProjectReference in ZyxxyzMaui.csproj now carries
+      # SetTargetFramework="TargetFramework=net9.0", which pins that
+      # specific reference's TFM through NuGet's restore graph regardless of
+      # which global TargetFrameworks override the entry project restores
+      # under.
+      - run: dotnet workload install maui-android --skip-sign-check
+      - run: dotnet restore dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj -p:TargetFrameworks=net9.0-android
       - run: dotnet build dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj --no-restore -c Release -f net9.0-android
