@@ -29,7 +29,7 @@
     const PAGE_META = {
         '/':                                   { desc: 'Games, art, tech projects, and more — ZYXXYZ\'s personal corner of the internet.' },
         '/about':                              { desc: 'Goggles, a suit, a banana cane. Who is ZYXXYZ? The answer is in here somewhere.' },
-        '/highlights':                         { desc: 'Five pieces worth ninety seconds — the decisions behind them, and proof they\'re real.' },
+        '/highlights':                         { desc: 'Six pieces worth ninety seconds — the decisions behind them, and proof they\'re real.' },
         '/resume':                             { desc: 'The person behind ZYXXYZ, on paper — download the résumé or say hello.' },
         '/gamer/games':                        { desc: 'Twelve games, eleven leaderboards. Tetris, Snake, Daedalus, chess, poker, and more.' },
         '/gamer/daedalus':                     { desc: 'Ten mazes. One unbroken run. Escape every level before the Minotaur finds you.' },
@@ -158,6 +158,14 @@ const NAV_STRUCTURE = [
         children: [
             { label: 'Apps', href: '/technologist/apps' },
             {
+                group: 'Finance & Markets',
+                items: [
+                    { label: 'Lapis Lazuli', href: '/technologist/lapislazuli' },
+                    { label: 'The Investor', href: '/technologist/investor' },
+                    { label: 'LEDGER',       href: 'https://github.com/WhymzikalZyxxyZ/ledger', target: '_blank' },
+                ],
+            },
+            {
                 group: 'Diagnostics & Systems',
                 items: [
                     { label: 'BIOS / UEFI',          href: '/technologist/biosuefi' },
@@ -187,7 +195,6 @@ const NAV_STRUCTURE = [
                     { label: 'Architect',       href: '/technologist/architect' },
                     { label: 'Prism',           href: '/technologist/prism' },
                     { label: 'Computer Vision', href: '/technologist/computervision' },
-                    { label: 'The Investor',    href: '/technologist/investor' },
                     { label: 'The Hacker',      href: '/technologist/hacker' },
                     { label: 'The Medic',       href: '/technologist/medic' },
                 ],

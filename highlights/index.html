@@ -160,7 +160,7 @@
     <div class="hl-hero">
         <h1>✦ Highlights</h1>
         <p>
-            Five pieces I'd actually hand you if you only had ninety seconds &mdash;
+            Six pieces I'd actually hand you if you only had ninety seconds &mdash;
             the decisions behind them, and proof they're real, not just described.
         </p>
     </div>
@@ -374,6 +374,69 @@
                 <span class="hl-live-cta">See it live</span>
                 <span class="hl-live-sub">Real cases, real opinions, decoded right now — not a static excerpt.</span>
             </a>
+        </div>
+    </section>
+
+    <!-- ── LEDGER ────────────────────────────────────────────────────────── -->
+    <section class="hl-case hl-case--reverse">
+        <div class="hl-case-text">
+            <div class="hl-eyebrow">Java · Spring Boot · PostgreSQL</div>
+            <h2>LEDGER</h2>
+            <p class="hl-hook">
+                Money that never appears or disappears &mdash; proven with a
+                database transaction, not just a promise.
+            </p>
+            <dl>
+                <dt>Problem</dt>
+                <dd>Anyone can claim "I build financial backend systems." Almost nobody can show a ledger that stays correct under concurrent load &mdash; exactly where naive implementations quietly break.</dd>
+                <dt>Decision</dt>
+                <dd>Java and Spring Boot on PostgreSQL &mdash; the literal stack, not an approximation of it. A database-level <code>UNIQUE</code> constraint enforces idempotency by construction, not application code a future change could race. Balance reads are O(1) via a transactionally-maintained running-balance table, not summed over history on every request.</dd>
+                <dt>Outcome</dt>
+                <dd>A repo whose every ADR ties back to a specific claim &mdash; and one that's explicit about what isn't proven yet, rather than quietly overclaiming.</dd>
+            </dl>
+            <div class="hl-links">
+                <a href="https://github.com/WhymzikalZyxxyZ/ledger" target="_blank" rel="noopener noreferrer">Repo →</a>
+                <a href="https://github.com/WhymzikalZyxxyZ/ledger/blob/main/docs/adr/002-data-model-and-consistency.md" target="_blank" rel="noopener noreferrer">Read the ADR →</a>
+            </div>
+        </div>
+        <div class="hl-case-visual">
+            <svg viewBox="0 0 480 340" role="img" aria-labelledby="ledgerFlowTitle">
+                <title id="ledgerFlowTitle">LEDGER's transaction submission flow: idempotency check, entry insertion, locked balance update, commit</title>
+                <defs>
+                    <marker id="ledgerArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path class="hl-marker-fill" d="M0,0 L10,5 L0,10 z"></path>
+                    </marker>
+                </defs>
+
+                <rect class="arch-box" x="110" y="12" width="260" height="40"></rect>
+                <text class="arch-label" x="240" y="32">POST /transactions</text>
+                <text class="arch-sublabel" x="240" y="46">idempotencyKey + entries</text>
+
+                <line class="arch-arrow" x1="240" y1="52" x2="240" y2="78" marker-end="url(#ledgerArrow)"></line>
+
+                <rect class="arch-box" x="110" y="78" width="260" height="46"></rect>
+                <text class="arch-label" x="240" y="98">idempotency_key UNIQUE</text>
+                <text class="arch-sublabel" x="240" y="112">duplicate → return original result</text>
+
+                <line class="arch-arrow" x1="240" y1="124" x2="240" y2="150" marker-end="url(#ledgerArrow)"></line>
+
+                <rect class="arch-box" x="110" y="150" width="260" height="40"></rect>
+                <text class="arch-label" x="240" y="170">Insert ledger_entries</text>
+                <text class="arch-sublabel" x="240" y="184">entries net to zero, or reject</text>
+
+                <line class="arch-arrow" x1="240" y1="190" x2="240" y2="216" marker-end="url(#ledgerArrow)"></line>
+
+                <rect class="arch-box" x="110" y="216" width="260" height="46"></rect>
+                <text class="arch-label" x="240" y="236">Lock account_balances</text>
+                <text class="arch-sublabel" x="240" y="250">SELECT ... FOR UPDATE — no lost updates</text>
+
+                <line class="arch-arrow" x1="240" y1="262" x2="240" y2="288" marker-end="url(#ledgerArrow)"></line>
+
+                <rect class="arch-box" x="110" y="288" width="260" height="40"></rect>
+                <text class="arch-label" x="240" y="308">Commit</text>
+                <text class="arch-sublabel" x="240" y="322">O(1) balance reads from here on</text>
+            </svg>
+            <div class="hl-visual-caption">The full submission path — idempotency and consistency are enforced by the database, not application-level discipline.</div>
         </div>
     </section>
 
