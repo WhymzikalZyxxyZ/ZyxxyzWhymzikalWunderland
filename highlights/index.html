@@ -392,11 +392,11 @@
                 <dt>Decision</dt>
                 <dd>Java and Spring Boot on PostgreSQL &mdash; the literal stack, not an approximation of it. A database-level <code>UNIQUE</code> constraint enforces idempotency by construction, not application code a future change could race. Balance reads are O(1) via a transactionally-maintained running-balance table, not summed over history on every request.</dd>
                 <dt>Outcome</dt>
-                <dd>A repo whose every ADR ties back to a specific claim &mdash; and one that's explicit about what isn't proven yet, rather than quietly overclaiming.</dd>
+                <dd>A working API, not just a design doc: 20 threads racing the same account and 20 threads racing the same idempotency key, fired concurrently against a real PostgreSQL instance in CI &mdash; both invariants hold every run. Every ADR ties back to a specific claim, and now to a passing test that would fail if the claim were false.</dd>
             </dl>
             <div class="hl-links">
                 <a href="https://github.com/WhymzikalZyxxyZ/ledger" target="_blank" rel="noopener noreferrer">Repo →</a>
-                <a href="https://github.com/WhymzikalZyxxyZ/ledger/blob/main/docs/adr/002-data-model-and-consistency.md" target="_blank" rel="noopener noreferrer">Read the ADR →</a>
+                <a href="https://github.com/WhymzikalZyxxyZ/ledger/blob/main/src/test/java/xyz/zyxwonderland/ledger/service/TransactionServiceConcurrencyTest.java" target="_blank" rel="noopener noreferrer">See the concurrency test →</a>
             </div>
         </div>
         <div class="hl-case-visual">
