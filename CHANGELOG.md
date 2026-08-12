@@ -2,6 +2,13 @@
 
 All notable changes follow [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [4.16.0] — 2026-08-12
+
+### Fixes
+
+- fix: Anonymail's inbound email handler now catches parse/delivery failures and rejects cleanly instead of silently dropping mail, and no longer crashes on attachments over ~64KB (a base64-conversion bug that spread the whole byte array into a single function call)
+- fix: editor-service's PDF/zip/compress endpoints now recover from panics with a structured JSON error instead of falling through to a plain-text 500
+
 ## [4.15.0] — 2026-08-12
 
 ### New Features
