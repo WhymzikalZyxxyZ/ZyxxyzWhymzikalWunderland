@@ -63,26 +63,21 @@
   </ItemGroup>
   <ItemGroup>
     <!--
-      Adding the RuntimeIdentifier here made things worse on the first
-      try: using Properties="RuntimeIdentifier=android-arm64" REPLACES the
-      entire global-property set used to evaluate this reference, whereas
-      SetTargetFramework composes via AdditionalProperties (which ADDS to
-      it). Properties clobbered what SetTargetFramework was contributing —
-      confirmed by the CI error flipping from wanting the RID-qualified
-      'net9.0/android-arm64' target to wanting a plain 'net9.0-android'
-      one, i.e. TargetFramework=net9.0 stopped taking effect entirely.
-      AdditionalProperties composes correctly with SetTargetFramework
-      instead of replacing it.
-
-      Only applies to CI's Android-only build — must not leak into normal
-      multi-target dev builds (net9.0-ios/maccatalyst/windows), where
-      forcing an Android RID onto this reference would be nonsensical.
-      Split into two mutually exclusive items on the same Condition as
-      everything else here rather than trying to make one item's metadata
-      itself conditional.
+      Tried pinning RuntimeIdentifier here via ProjectReference metadata
+      first — Properties="RuntimeIdentifier=android-arm64" REPLACES the
+      whole global-property set used to evaluate the reference and
+      clobbered SetTargetFramework's contribution entirely (confirmed in
+      CI: the error flipped from wanting a RID-qualified target to wanting
+      a plain net9.0-android one). Switching to AdditionalProperties (which
+      composes instead of replacing) fixed that specific breakage, but
+      still didn't make the build succeed: NuGet correctly recognizes
+      ZyxxyzShared has no RID-specific content and never writes a
+      RID-qualified section into its assets file no matter what the
+      *referencing* side asks for. The real fix has to live on
+      ZyxxyzShared.csproj itself — see the RuntimeIdentifiers comment
+      there.
     -->
-    <ProjectReference Condition="'$(ZyxxyzCiAndroidOnly)' == 'true'" Include="..\..\shared\ZyxxyzShared.csproj" SetTargetFramework="TargetFramework=net9.0" AdditionalProperties="RuntimeIdentifier=android-arm64" />
-    <ProjectReference Condition="'$(ZyxxyzCiAndroidOnly)' != 'true'" Include="..\..\shared\ZyxxyzShared.csproj" SetTargetFramework="TargetFramework=net9.0" />
+    <ProjectReference Include="..\..\shared\ZyxxyzShared.csproj" SetTargetFramework="TargetFramework=net9.0" />
   </ItemGroup>
   <ItemGroup>
     <MauiImage Include="Resources\Images\*" />
