@@ -63,21 +63,29 @@
   </ItemGroup>
   <ItemGroup>
     <!--
-      Tried pinning RuntimeIdentifier here via ProjectReference metadata
-      first — Properties="RuntimeIdentifier=android-arm64" REPLACES the
-      whole global-property set used to evaluate the reference and
-      clobbered SetTargetFramework's contribution entirely (confirmed in
-      CI: the error flipped from wanting a RID-qualified target to wanting
-      a plain net9.0-android one). Switching to AdditionalProperties (which
-      composes instead of replacing) fixed that specific breakage, but
-      still didn't make the build succeed: NuGet correctly recognizes
-      ZyxxyzShared has no RID-specific content and never writes a
-      RID-qualified section into its assets file no matter what the
-      *referencing* side asks for. The real fix has to live on
-      ZyxxyzShared.csproj itself — see the RuntimeIdentifiers comment
-      there.
+      Tried pinning RuntimeIdentifier here via separate ProjectReference
+      metadata attributes first — Properties="..." REPLACES the whole
+      global-property set and clobbered SetTargetFramework's contribution
+      (CI: error flipped from wanting a RID-qualified target to wanting a
+      plain net9.0-android one); AdditionalProperties="..." composed
+      correctly but restore still never wrote a RID-qualified section into
+      ZyxxyzShared's assets file (fixed by adding RuntimeIdentifiers to
+      ZyxxyzShared.csproj itself — see the comment there). Once that made
+      restore RID-aware, the mismatch moved to build time: this
+      SetTargetFramework value only pinned TargetFramework, so ZyxxyzShared
+      still compiled to the RID-less obj/Release/net9.0/ output folder
+      while the copy step, now correctly expecting the RID-qualified
+      restore entry, looked for it under net9.0/android-arm64/ instead
+      (MSB3030: file not found). SetTargetFramework accepts a
+      semicolon-separated property list, not just one property — setting
+      both TargetFramework and RuntimeIdentifier here in the single
+      mechanism already proven to reach both restore and build-time
+      reference resolution is what actually keeps them in agreement,
+      rather than juggling two different metadata attributes for two
+      properties that need to travel together.
     -->
-    <ProjectReference Include="..\..\shared\ZyxxyzShared.csproj" SetTargetFramework="TargetFramework=net9.0" />
+    <ProjectReference Condition="'$(ZyxxyzCiAndroidOnly)' == 'true'" Include="..\..\shared\ZyxxyzShared.csproj" SetTargetFramework="TargetFramework=net9.0;RuntimeIdentifier=android-arm64" />
+    <ProjectReference Condition="'$(ZyxxyzCiAndroidOnly)' != 'true'" Include="..\..\shared\ZyxxyzShared.csproj" SetTargetFramework="TargetFramework=net9.0" />
   </ItemGroup>
   <ItemGroup>
     <MauiImage Include="Resources\Images\*" />
