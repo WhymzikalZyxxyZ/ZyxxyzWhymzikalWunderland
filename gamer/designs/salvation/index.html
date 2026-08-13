@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salvation — Game Design Document — ZYXXYZ's Whymzykal Wunderland</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/script.js" defer></script>
+    <style>
+        .design-page { max-width: 880px; margin: 0 auto; padding: 0 24px 96px; }
+
+        .design-hero { text-align: center; padding: 56px 24px 36px; }
+        .design-hero .kicker {
+            font-family: 'Courier New', monospace; font-size: 11px; letter-spacing: 3px;
+            color: #8fa8d0; text-transform: uppercase; margin-bottom: 14px;
+        }
+        .design-hero h1 {
+            font-family: Papyrus, fantasy; font-size: 3em; font-weight: 900;
+            color: #f4a261; text-shadow: 0 0 32px rgba(244,162,97,0.4);
+            margin: 0 0 12px;
+        }
+        .design-hero p.tagline {
+            color: #c8b0d8; font-size: 1.05em; font-style: italic;
+            max-width: 560px; margin: 0 auto; line-height: 1.6;
+        }
+        .status-pill {
+            display: inline-block; margin-top: 18px; padding: 5px 14px;
+            border: 1px solid rgba(244,162,97,0.4); border-radius: 20px;
+            font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: 1.5px;
+            color: #f4a261; text-transform: uppercase;
+        }
+
+        .design-section { margin-bottom: 54px; }
+        .design-section h2 {
+            font-family: Papyrus, fantasy; font-size: 1.3em; font-weight: 700;
+            color: #c8b0d8; letter-spacing: 1px;
+            border-bottom: 1px solid rgba(200,176,216,0.18);
+            padding-bottom: 10px; margin-bottom: 20px;
+        }
+        .design-section h3 {
+            font-family: 'Courier New', monospace; color: #f4a261;
+            font-size: 1em; letter-spacing: 0.5px; margin: 22px 0 8px;
+        }
+        .design-section p, .design-section li {
+            color: #ccc; line-height: 1.75; font-size: 14.5px;
+        }
+        .design-section ul, .design-section ol { padding-left: 22px; margin: 10px 0; }
+        .design-section li { margin-bottom: 6px; }
+        .note {
+            background: rgba(244,162,97,0.06); border-left: 3px solid rgba(244,162,97,0.5);
+            padding: 12px 16px; margin: 16px 0; font-size: 13px; color: #d8c8a8;
+            border-radius: 0 6px 6px 0;
+        }
+        .note strong { color: #f4a261; }
+
+        /* Character cards */
+        .char-grid { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 18px; }
+        .char-card {
+            background: rgba(0,0,0,0.5); border: 1px solid rgba(200,176,216,0.22);
+            border-radius: 10px; padding: 18px 20px; width: calc(50% - 9px);
+            box-sizing: border-box;
+        }
+        .char-card h4 {
+            font-family: 'Courier New', monospace; color: #f4a261;
+            margin: 0 0 4px; font-size: 1.05em;
+        }
+        .char-card .role {
+            font-size: 11px; color: #8fa8d0; letter-spacing: 1px;
+            text-transform: uppercase; margin-bottom: 10px; display: block;
+        }
+        .unlock-tag {
+            display: inline-block; font-size: 9.5px; letter-spacing: 1px;
+            text-transform: uppercase; padding: 2px 8px; border-radius: 10px;
+            margin-bottom: 12px;
+        }
+        .unlock-tag.start { background: rgba(76,175,80,0.15); color: #7fd888; }
+        .unlock-tag.grace { background: rgba(244,162,97,0.15); color: #f4a261; }
+        .char-card .flavor {
+            font-style: italic; color: #c8b0d8; font-size: 12.5px;
+            margin: 0 0 12px; line-height: 1.6;
+        }
+        .char-card .stat-lean {
+            font-family: 'Courier New', monospace; font-size: 10.5px; color: #777;
+            margin-top: 10px; border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 8px;
+        }
+
+        /* Stat table */
+        .stat-table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13.5px; }
+        .stat-table th {
+            text-align: left; font-family: 'Courier New', monospace; color: #f4a261;
+            font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+            border-bottom: 1px solid rgba(244,162,97,0.3); padding: 8px 10px;
+        }
+        .stat-table td {
+            padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,0.06); color: #ccc;
+        }
+        .stat-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+        /* Relic rank chips */
+        .rank-chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+        .rank-chip {
+            font-family: 'Courier New', monospace; font-size: 10.5px; padding: 4px 10px;
+            border-radius: 4px; letter-spacing: 0.5px;
+        }
+        .rank-chip.common { background: rgba(255,255,255,0.08); color: #ccc; }
+        .rank-chip.blessed { background: rgba(143,168,208,0.18); color: #8fa8d0; }
+        .rank-chip.sanctified { background: rgba(200,176,216,0.18); color: #c8b0d8; }
+        .rank-chip.divine { background: rgba(244,162,97,0.2); color: #f4a261; }
+        .rank-chip.cursed { background: rgba(139,0,0,0.22); color: #e88a8a; }
+
+        .back-link {
+            display: inline-block; margin-bottom: 28px; font-family: 'Courier New', monospace;
+            font-size: 12px; color: #8fa8d0; text-decoration: none; letter-spacing: 0.5px;
+        }
+        .back-link:hover { color: #f4a261; }
+        .creed {
+            font-family: 'Courier New', monospace; font-size: 11px; letter-spacing: 1px;
+            color: #777; margin: 18px auto 0; max-width: 460px; line-height: 1.7;
+        }
+        .creed b { color: #f4a261; }
+
+        @media (max-width: 640px) {
+            .char-card { width: 100%; }
+            .design-hero h1 { font-size: 2.2em; }
+        }
+    </style>
+</head>
+<body class="wunderBody">
+<div class="navbar"></div>
+
+<div class="design-page">
+
+    <a href="/gamer/games" class="back-link">← Back to Games</a>
+
+    <div class="design-hero">
+        <div class="kicker">Game Design Document</div>
+        <h1>✝ Salvation</h1>
+        <p class="tagline">Ten trials of a world that fell for temptation. Five who still believe, descending into the dark to meet it face to face. And at the end of every blade, one question, breathlessly asked of every soul you meet: surrender, or be saved.</p>
+        <p class="creed"><b>S</b>in <b>A</b>bsolved, <b>L</b>ight <b>V</b>anquishes <b>A</b>ll <b>T</b>emptation <b>I</b>nside <b>O</b>ur <b>N</b>ight — the creed spoken at the Sanctuary, and the game's own name in full.</p>
+        <div class="status-pill">Living Document — Draft v0.1</div>
+    </div>
+
+    <!-- ── Overview ────────────────────────────────────────────────── -->
+    <section class="design-section">
+        <h2>Overview</h2>
+        <p><strong>Genre:</strong> Top-down roguelite. Runs end in permadeath, but progress made across runs — unlocked characters, relics, and permanent blessings — persists in a hub between attempts.</p>
+        <p><strong>Engine:</strong> Godot 4 with C#. Built-in TileMap/TileSet nodes handle the room-based level structure natively; Area2D covers hitboxes, pickups, and the door-lock-on-clear mechanic; the export pipeline is a single self-contained step per platform, with none of the cross-targeting complexity of mobile app tooling.</p>
+        <p><strong>Art:</strong> Pixel art. The strongest genre precedent for this exact mood (Enter the Gungeon, Hyper Light Drifter) and the most forgiving medium for producing five characters and nine bosses without a rigging/skeletal-animation pipeline.</p>
+        <p><strong>Controls:</strong> Twin-stick, keyboard + mouse first (WASD move, mouse aim/attack). Several boss mechanics — Sloth's room decaying under stillness, Doubt's illusion reads — assume continuous real-time movement rather than tile-stepping, so grid movement was ruled out early. Controller support is a later input-remapping pass, not a structural fork.</p>
+        <p><strong>Premise:</strong> The world has fallen to corruption, and corruption has a way of looking beautiful right up until it doesn't. Five faithful — each carrying a different gift of the divine, each drawn downward for their own reasons — descend through ten trials to confront G.O.D. itself at the world's end. Every enemy faced is an intimate choice, close enough to feel their last breath: strike them down, or lay hands on them and offer something gentler.</p>
+    </section>
+
+    <!-- ── Core Loop ───────────────────────────────────────────────── -->
+    <section class="design-section">
+        <h2>Core Loop — Roguelite Structure</h2>
+        <p>A run begins at Level 1 and ends one of three ways: death (permadeath — the run ends, loot from that run is lost), retreat (a rare Sanctuary Waystone lets a player bank progress and end the run early), or victory over G.O.D. at Level 10.</p>
+        <h3>The Sanctuary (hub, between runs)</h3>
+        <ul>
+            <li><strong>Grace</strong> — the meta-currency, earned per run based on rooms cleared, enemies redeemed, and depth reached. Spent at the Sanctuary between runs.</li>
+            <li>The Sanctuary is also where narrative cutscene fragments accumulate — a roster of small vignettes that build the overworld story independently of any single run's outcome.</li>
+        </ul>
+        <h3>Grace Catalog</h3>
+        <p>What Grace buys is decided; exact costs are not — pricing blind, before any real playtest data exists on Grace-earn rate or death frequency, would just mean re-balancing everything later anyway. The sink types:</p>
+        <ul>
+            <li><strong>Character Unlocks</strong> — the Exorcist and the Prophet are Grace-gated. The Paladin, Cleric, and Monk are available from the very first run.</li>
+            <li><strong>Permanent Stat Blessings</strong> — small, run-independent bonuses to a chosen stat.</li>
+            <li><strong>Relic Pool Expansion</strong> — unlocks additional relics into future runs' loot pool.</li>
+            <li><strong>Starting Loadout Variants</strong> — alternate opening gear for a run.</li>
+        </ul>
+        <div class="note"><strong>Design intent:</strong> death should sting, never erase. Every run — even a fast, humbling death on Level 2 — should leave something of itself behind: a little Grace, maybe a cutscene fragment, maybe a relic slipped into next run's pool, like a promise whispered before the dark takes you.</div>
+    </section>
+
+    <!-- ── Characters ──────────────────────────────────────────────── -->
+    <section class="design-section">
+        <h2>The Five</h2>
+        <p>Five playable characters, each carrying a gift the others don't — and a hunger for the descent that they'd never quite admit to a confessor. Each leans into a different way of touching the dark, so who you bring changes how the whole night feels.</p>
+        <div class="char-grid">
+            <div class="char-card">
+                <h4>The Paladin</h4>
+                <span class="role">Holy Knight — Melee Tank</span>
+                <span class="unlock-tag start">Available from start</span>
+                <p class="flavor">Armor like a second skin, and just as close. She gets in close, close enough that no one gets past her.</p>
+                <p><strong>Magic — Divine Smite:</strong> a targeted holy strike dealing bonus damage to high-HP enemies.</p>
+                <p><strong>Passive — Unshaken:</strong> redeeming an enemy grants a brief protective shield.</p>
+                <div class="stat-lean">Leans: Power, Defense</div>
+            </div>
+            <div class="char-card">
+                <h4>The Cleric</h4>
+                <span class="role">Support — Healer</span>
+                <span class="unlock-tag start">Available from start</span>
+                <p class="flavor">Her hands have healed more wounds than she can name, and every one of them remembers her touch.</p>
+                <p><strong>Magic — Sanctuary Light:</strong> heals the caster and deals a burst of holy damage to nearby enemies.</p>
+                <p><strong>Passive — Overflowing Grace:</strong> healing also restores a sliver of Magic.</p>
+                <div class="stat-lean">Leans: Magic, Faith</div>
+            </div>
+            <div class="char-card">
+                <h4>The Monk</h4>
+                <span class="role">Martial — Fast Melee</span>
+                <span class="unlock-tag start">Available from start</span>
+                <p class="flavor">Discipline is its own kind of pleasure, if you let it consume you the way he has.</p>
+                <p><strong>Magic — Chi Flurry:</strong> a rapid multi-hit dash through enemies in a line.</p>
+                <p><strong>Passive — Focused Mind:</strong> landing three consecutive hits grants a brief speed surge.</p>
+                <div class="stat-lean">Leans: Speed, Power</div>
+            </div>
+            <div class="char-card">
+                <h4>The Exorcist</h4>
+                <span class="role">Ranged — Curse Specialist</span>
+                <span class="unlock-tag grace">Grace unlock</span>
+                <p class="flavor">She's spent her life whispering to what shouldn't be listened to, and it's never once refused her.</p>
+                <p><strong>Magic — Banish:</strong> a ranged holy bolt that can instantly redeem low-HP enemies instead of killing them outright.</p>
+                <p><strong>Passive — Merciful Hand:</strong> redeemed enemies drop bonus Grace.</p>
+                <div class="stat-lean">Leans: Magic, Luck</div>
+            </div>
+            <div class="char-card">
+                <h4>The Prophet</h4>
+                <span class="role">Utility — Control</span>
+                <span class="unlock-tag grace">Grace unlock</span>
+                <p class="flavor">He sees what's coming before it arrives, and there's something almost indecent about how rarely that comforts him.</p>
+                <p><strong>Magic — Divine Judgment:</strong> a telegraphed, delayed area strike — high reward for good positioning.</p>
+                <p><strong>Passive — Foresight:</strong> room contents are revealed on the minimap before entry.</p>
+                <div class="stat-lean">Leans: Magic, Faith</div>
+            </div>
+        </div>
+        <div class="note">Paladin, Cleric, and Monk are available from the first run — they're also the MVP's three, so the earliest players ever get their hands on the game, everyone's on equal footing. Exorcist and Prophet are Grace unlocks: both carry a mechanic that automates or reshapes the Redeem/Smite choice itself (Banish auto-redeems; Foresight reveals what's coming), and that's worth earning after the core choice is already second nature.</div>
+    </section>
+
+    <!-- ── Stats ───────────────────────────────────────────────────── -->
+    <section class="design-section">
+        <h2>Full Stat List</h2>
+        <table class="stat-table">
+            <tr><th>Stat</th><th>Governs</th></tr>
+            <tr><td><strong>Health</strong></td><td>Damage the character can absorb before death.</td></tr>
+            <tr><td><strong>Magic</strong></td><td>Resource consumed by each character's unique ability.</td></tr>
+            <tr><td><strong>Speed</strong></td><td>Movement speed.</td></tr>
+            <tr><td><strong>Power</strong></td><td>Base attack damage, melee and ranged alike.</td></tr>
+            <tr><td><strong>Defense</strong></td><td>Flat/percentage reduction applied to incoming damage.</td></tr>
+            <tr><td><strong>Faith</strong></td><td>Rises when enemies are <em>redeemed</em> rather than smitten. Gates Faith-locked relic effects and shifts cutscene/epilogue tone at run's end.</td></tr>
+            <tr><td><strong>Luck</strong></td><td>Improves item rarity odds on room clear.</td></tr>
+            <tr><td><strong>Critical Chance</strong></td><td>Odds an attack lands as a critical hit.</td></tr>
+            <tr><td><strong>Critical Damage</strong></td><td>Damage multiplier applied on a critical hit.</td></tr>
+        </table>
+        <p style="margin-top:14px;">Treasure rooms grant permanent-for-the-run increases to Speed, Power, or Magic (per the original brief) — Health/Defense/Faith/Luck/Crit move primarily through relics and blessings instead, so treasure pickups stay focused and legible.</p>
+    </section>
+
+    <!-- ── The Choice ──────────────────────────────────────────────── -->
+    <section class="design-section">
+        <h2>The Choice — Redeem or Smite</h2>
+        <p>When an enemy is reduced to low HP, the player chooses the finishing move:</p>
+        <ul>
+            <li><strong>Smite</strong> — a killing blow. Higher immediate gold/item drop chance. Rewards an aggressive playstyle.</li>
+            <li><strong>Redeem</strong> — the enemy is freed rather than destroyed (a light-burst effect, no gore). Grants Faith and a small chance of an immediate blessing (temporary buff). Lower immediate loot.</li>
+        </ul>
+        <p>This is the mechanical spine of the theme: the game keeps score of who you chose to be, not just how well you fought. Faith accumulated across a run shifts which end-of-level cutscene variant plays, and a full run's Faith total shifts the final cutscene before G.O.D.</p>
+    </section>
+
+    <!-- ── Items & Relics ──────────────────────────────────────────── -->
+    <section class="design-section">
+        <h2>Items &amp; Relics</h2>
+        <p>Relics are unique items with their own stat bonus and special effect — and like anything worth holding onto, they only get better the longer you keep them close. Every relic tracks kills landed while it's equipped, ranking up at kill thresholds:</p>
+        <div class="rank-chips">
+            <span class="rank-chip common">Common — base effect</span>
+            <span class="rank-chip blessed">Blessed — 10 kills</span>
+            <span class="rank-chip sanctified">Sanctified — 25 kills</span>
+            <span class="rank-chip divine">Divine — 50 kills</span>
+        </div>
+        <p>Each rank-up adds a stat bump and/or strengthens the relic's unique effect — a relic earned early in a run should feel meaningfully different by Level 10 than the moment it was picked up. Rank progress resets each run (roguelite, not permanent per-item progression) unless a Sanctuary upgrade later says otherwise.</p>
+        <h3>Cursed relics</h3>
+        <div class="rank-chips">
+            <span class="rank-chip cursed">Cursed — strong effect, real cost</span>
+        </div>
+        <p>A found relic can roll Cursed — orthogonal to its rank, which still climbs through kills the same as any other relic. A strong effect paired with a genuine drawback (a stat penalty, a standing debuff), always visually telegraphed on pickup so a curse reads as a deliberate risk taken, not a trap sprung. Deferred past MVP: the base econony needs to feel right and trustworthy before it's deliberately broken.</p>
+    </section>
+
+    <!-- ── Levels & Difficulty ─────────────────────────────────────── -->
+    <section class="design-section">
+        <h2>Levels &amp; Difficulty</h2>
+        <p>Ten levels, each one drawing you further down and asking a little more of you in return. Every level is a set of pre-authored room templates procedurally arranged into a level graph (not tile-by-tile generation — keeps scope achievable while still giving each descent its own shape). Rooms stay locked until cleared: monster rooms give way only once the last enemy falls, treasure/shrine rooms open the moment you cross the threshold.</p>
+        <h3>Room types</h3>
+        <ul>
+            <li><strong>Monster</strong> — standard combat encounter, gates progress until cleared.</li>
+            <li><strong>Treasure</strong> — Speed/Power/Magic stat boost.</li>
+            <li><strong>Shrine</strong> — a risk/reward choice room (e.g. trade Health for a relic, or take a guaranteed small blessing).</li>
+            <li><strong>Boss</strong> — one per level, final room.</li>
+        </ul>
+        <h3>Scaling per level</h3>
+        <ul>
+            <li>Enemy HP and damage scale up each level.</li>
+            <li>Enemy count per room and room count per level both increase gradually.</li>
+            <li>Relic/treasure rarity floor rises with depth — later levels drop better average loot.</li>
+        </ul>
+    </section>
+
+    <!-- ── Bosses ──────────────────────────────────────────────────── -->
+    <section class="design-section">
+        <h2>Bosses &amp; G.O.D.</h2>
+        <p>Each of the ten levels ends in a unique boss fight, and each boss owns exactly one mechanic no other boss uses — every fight teaches something the player will need again at the end. Bosses are named for sin, since that's what they are: the seven deadly sins, plus two more corruptions the world fell to.</p>
+        <table class="stat-table">
+            <tr><th>Lv</th><th>Boss</th><th>Mechanic</th><th>Tests</th></tr>
+            <tr><td>1</td><td><strong>Pride</strong></td><td>Mirrors your last-used ability back at you</td><td>Unpredictable ability use</td></tr>
+            <tr><td>2</td><td><strong>Envy</strong></td><td>Steals a stat/buff on hit — reclaim it by damaging the boss</td><td>Controlled aggression</td></tr>
+            <tr><td>3</td><td><strong>Wrath</strong></td><td>Soft enrage — grows stronger the longer the fight runs</td><td>Decisive, non-stalling play</td></tr>
+            <tr><td>4</td><td><strong>Gluttony</strong></td><td>Consumes adds/hazards in the room to heal itself</td><td>Add-priority management</td></tr>
+            <tr><td>5</td><td><strong>Sloth</strong></td><td>Slow and passive, but the room decays around anyone standing still</td><td>Constant positioning, inverse tempo</td></tr>
+            <tr><td>6</td><td><strong>Greed</strong></td><td>Drops fake treasure mid-fight that punishes greedy grabs; real reward only on the kill</td><td>Restraint — mirrors the run's own loot tension</td></tr>
+            <tr><td>7</td><td><strong>Lust</strong></td><td>Periodically fakes a "redeemable" state — using Redeem on the trap punishes you</td><td>Reading true intent vs. illusion — lands directly on the Redeem/Smite mechanic itself</td></tr>
+            <tr><td>8</td><td><strong>Despair</strong></td><td>Drains Magic to zero; the rest of the fight is base-kit only</td><td>Mastery without your ability crutch</td></tr>
+            <tr><td>9</td><td><strong>Doubt</strong></td><td>Splits into illusory duplicates — only one is real</td><td>Observation over reflex</td></tr>
+        </table>
+        <h3>Level 10 — G.O.D.</h3>
+        <p><strong>G.O.D. stands for Gauntlet of Divinity</strong> — not just a fitting phrase, but a literal description of the fight. G.O.D. reintroduces all nine mechanics above, two or three combined per phase in escalating order rather than dropped on the player all at once, so the fight reads as a culmination the player has been trained for across the whole run, not a wall thrown up at the end.</p>
+        <p>The fight's final beat forces one last Redeem-or-Smite choice — on G.O.D. itself. That choice is what actually determines which of the two ending variants plays, so the game's central mechanic pays off in the single moment that matters most.</p>
+        <div class="note">
+            <strong>Narrative framing:</strong> G.O.D. isn't a villain to be conquered — it's the last and hardest trial of faith, the one that asks everything of you and gives nothing away easily. Defeating it isn't "beating the divine," it's earning passage through it. This keeps the ending — the heroes raised by light on a voyage to heaven — as a genuine, earned triumph rather than an ironic or hollow one.
+        </div>
+    </section>
+
+    <!-- ── Cutscenes & Choice ──────────────────────────────────────── -->
+    <section class="design-section">
+        <h2>Cutscenes &amp; Narrative Choice</h2>
+        <ul>
+            <li>A cutscene plays at every level transition (before Level 1, between each level, and the ending) — short story beats building the world's fall and the mystery of G.O.D.</li>
+            <li>Cutscenes carry light branching: a run's accumulated Faith (from Redeem-vs-Smite choices) shifts dialogue tone and which variant of certain beats plays — a high-Faith run reads as a story of mercy, a high-Smite run reads as a story of righteous judgment. Same skeleton, different voice.</li>
+            <li>The final cutscene — heroes raised by light on a voyage to heaven — has at least two tonal variants gated on total run Faith, giving the ending some weight tied to how the player actually played.</li>
+        </ul>
+    </section>
+
+    <!-- ── Tech Stack ──────────────────────────────────────────────── -->
+    <section class="design-section">
+        <h2>Tech Stack</h2>
+        <ul>
+            <li><strong>Engine:</strong> Godot 4, C# scripting.</li>
+            <li><strong>2D tooling:</strong> TileMap/TileSet for room layouts, Area2D for collision/hitboxes/triggers, scene-based architecture for reusable room templates.</li>
+            <li><strong>Export:</strong> single-step per-platform export — no multi-RID restore graph, no mobile workload installation, dramatically simpler than a cross-platform mobile build pipeline.</li>
+        </ul>
+    </section>
+
+    <!-- ── MVP Scope ───────────────────────────────────────────────── -->
+    <section class="design-section">
+        <h2>MVP Scope</h2>
+        <p>"Done enough" means a playable version with three working characters and four levels, bosses included. That can't include G.O.D. — mechanically, G.O.D. <em>is</em> the other nine bosses' abilities recombined, so it can't exist until nine boss mechanics already do. The MVP's fourth boss is the last of four sin bosses, not the finale.</p>
+        <h3>In scope</h3>
+        <ul>
+            <li><strong>Characters:</strong> Paladin, Cleric, Monk — a tank-melee, resource-support, and fast-melee spread, all available from the first run.</li>
+            <li><strong>Levels 1–4:</strong> Pride, Envy, Wrath, Gluttony — also, not coincidentally, the four technically simplest bosses to build, ahead of the illusion-rendering, floor-decay, and Magic-strip systems the back half needs.</li>
+            <li>Core combat, Health/Magic bars, and the five foundational stats: Health, Magic, Speed, Power, Defense.</li>
+            <li>The Redeem-or-Smite choice and Faith — the game's identity, not optional even at MVP scale.</li>
+            <li>Monster / treasure / boss rooms, door-lock-on-clear, treasure stat pickups.</li>
+            <li>A minimal Sanctuary: permadeath run-end, Grace earned and spent on exactly one thing.</li>
+            <li>The level-transition cutscene <em>system</em>, even with placeholder art or text — proving the pipeline matters more than the writing at this stage.</li>
+        </ul>
+        <h3>Deferred</h3>
+        <ul>
+            <li>Exorcist and Prophet (the Grace-gated unlocks) and bosses 5 through 9, plus G.O.D. at Level 10.</li>
+            <li>Luck, Crit Chance, and Crit Damage — hardcoded inert until itemization math is worth building.</li>
+            <li>Shrine rooms, the full 4-tier relic catalog, cursed relics, controller support, and branching cutscene variants.</li>
+        </ul>
+    </section>
+
+    <!-- ── Still Undecided ─────────────────────────────────────────── -->
+    <section class="design-section">
+        <h2>Still Open</h2>
+        <ul>
+            <li>Exact Grace costs across the four sink types — deliberately left unset until MVP playtesting gives real numbers on Grace-earn rate and death frequency to tune against.</li>
+            <li>Cursed-relic drop rate and the exact visual telegraph that reads as "this one bites back" before pickup.</li>
+            <li>Controller remapping scope — a later Godot input-action pass, not a structural decision, but not yet scheduled.</li>
+        </ul>
+    </section>
+
+</div>
+
+</body>
+</html>
