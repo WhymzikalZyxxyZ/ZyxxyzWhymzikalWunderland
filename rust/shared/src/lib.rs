@@ -323,7 +323,7 @@ pub fn apply_move(g: &ChessGame, m: &ChessMove) -> ChessGame {
     let next_turn = -g.turn;
     let legal_moves = get_legal_moves(&board, next_turn, w_k, w_q, b_k, b_q, ep_r, ep_c);
     let status = update_status(&board, next_turn, &legal_moves);
-    let half_move = if piece == 1 || board[m.tr as usize][m.tc as usize] != 0 { 0 } else { g.half_move + 1 };
+    let half_move = if piece == 1 || g.board[m.tr as usize][m.tc as usize] != 0 { 0 } else { g.half_move + 1 };
     let full_move = g.full_move + if g.turn == -1 { 1 } else { 0 };
     ChessGame { board, turn: next_turn, w_k, w_q, b_k, b_q, ep_r, ep_c, half_move, full_move, status, legal_moves }
 }
@@ -489,6 +489,14 @@ mod tests {
         let m2 = *g2.legal_moves.iter().find(|m| m.r==1&&m.c==4&&m.tr==3).unwrap();
         let g3 = apply_move(&g2, &m2);
         assert_eq!(g3.full_move, 2);
+    }
+
+    #[test]
+    fn half_move_increments_on_non_pawn_non_capture() {
+        let g = new_game();
+        let m = *g.legal_moves.iter().find(|m| m.r==7 && m.c==1).unwrap(); // Nb1
+        let g2 = apply_move(&g, &m);
+        assert_eq!(g2.half_move, 1);
     }
 
     // ── Castling ─────────────────────────────────────────────────────────────

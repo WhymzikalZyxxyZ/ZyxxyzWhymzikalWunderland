@@ -205,7 +205,7 @@ export function applyMove(g:ChessGame,m:ChessMove):ChessGame {
     const nextTurn=-g.turn;
     const legalMoves=getLegalMoves(board,nextTurn,wK,wQ,bK,bQ,epR,epC);
     const status=updateStatus(board,nextTurn,legalMoves);
-    const halfMove=(piece===P||board[m.tr][m.tc]!==0)?0:g.halfMove+1;
+    const halfMove=(piece===P||g.board[m.tr][m.tc]!==0)?0:g.halfMove+1;
     const fullMove=g.fullMove+(g.turn===-1?1:0);
     return {board,turn:nextTurn,wK,wQ,bK,bQ,epR,epC,halfMove,fullMove,status,legalMoves};
 }

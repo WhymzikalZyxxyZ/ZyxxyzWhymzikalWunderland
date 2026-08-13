@@ -198,7 +198,7 @@ export class MailboxDO {
                     return;
                 }
                 await this._ensureKey();
-                if (!this.token || msg.token !== this.token) {
+                if (!this.token || !_timingSafeEqual(msg.token, this.token)) {
                     server.close(4002, 'Invalid or expired session');
                     return;
                 }
@@ -380,7 +380,7 @@ export class MailboxDO {
     async _checkAuth(token) {
         if (!token) return false;
         if (!this.token) await this._ensureKey();
-        return token === this.token;
+        return _timingSafeEqual(token, this.token);
     }
 
     // Store a new email-like record into the given box; returns its id.
@@ -518,12 +518,36 @@ function _hex(bytes) {
     return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// A security audit found the mailbox session token — the sole secret
+// protecting a user's inbox — was compared with plain === in both the
+// HTTP (_checkAuth) and WebSocket auth paths. A remote timing side-channel
+// could in principle let an attacker incrementally guess a valid 32-byte
+// token faster than brute force; this compares in constant time instead.
+function _timingSafeEqual(a, b) {
+    if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+    let diff = 0;
+    for (let i = 0; i < a.length; i++) {
+        diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    return diff === 0;
+}
+
 // Compiled once at module load — _sanitize is called for every inbound HTML email.
 const _RE_SCRIPT  = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
 const _RE_STYLE   = /<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi;
 const _RE_HANDLER = /\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi;
 const _RE_JS_HREF = /\bhref\s*=\s*["']?\s*javascript:[^"'\s>]*/gi;
 const _RE_JS_SRC  = /\bsrc\s*=\s*["']?\s*javascript:[^"'\s>]*/gi;
+// A security audit found this sanitizer blocked script execution (correctly
+// — bodyHtml renders in a sandboxed iframe with no allow-scripts) but never
+// touched remote <img> sources. For a product whose entire point is
+// anonymity, an unblocked tracking pixel (<img src="https://attacker/…">)
+// lets a sender learn the recipient's IP and confirm the mail was read the
+// moment the anonymous inbox owner opens it — directly undermining the
+// anonymity guarantee. Blocked by default; no proxy/opt-in built, so a
+// legitimate embedded image (rare in transactional mail) also won't load —
+// an accepted tradeoff in favor of not leaking real IPs by default.
+const _RE_REMOTE_SRC = /\bsrc\s*=\s*["']?\s*(?:https?:|\/\/)[^"'\s>]*/gi;
 
 // Strip the most dangerous HTML patterns — iframe sandbox is the primary defence
 function _sanitize(html) {
@@ -532,7 +556,8 @@ function _sanitize(html) {
         .replace(_RE_STYLE,   '')
         .replace(_RE_HANDLER, '')
         .replace(_RE_JS_HREF, 'href="#"')
-        .replace(_RE_JS_SRC,  'src=""');
+        .replace(_RE_JS_SRC,  'src=""')
+        .replace(_RE_REMOTE_SRC, 'src=""');
 }
 
 // Build a minimal MIME message for outbound sending

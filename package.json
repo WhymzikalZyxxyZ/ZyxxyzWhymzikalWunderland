@@ -1,6 +1,6 @@
 {
   "name": "zyxxyz-whymzykal-wunderland",
-  "version": "4.16.0",
+  "version": "4.17.0",
   "private": true,
   "scripts": {
     "lint:js": "eslint \"js/**/*.js\" \"tests/**/*.js\" \"anonymail/worker/public/js/**/*.js\"",
@@ -26,7 +26,8 @@
       "<rootDir>/anonymail/",
       "<rootDir>/the-locator/",
       "<rootDir>/elinal/",
-      "<rootDir>/epitome/"
+      "<rootDir>/epitome/",
+      "<rootDir>/typescript/"
     ],
     "collectCoverageFrom": [
       "js/engines/tetris-engine.js",
@@ -52,10 +53,6 @@
         "statements": 90
       }
     }
-  },
-  "dependencies": {
-    "postal-mime": "^2.3.7",
-    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -165,7 +165,7 @@ ChessGame applyMove(ChessGame g, ChessMove m) {
   final nextTurn=-g.turn;
   final legal=getLegalMoves(board,nextTurn,wK,wQ,bK,bQ,epR,epC);
   final status=legal.isEmpty?(_inCheck(board,nextTurn)?ChessStatus.checkmate:ChessStatus.stalemate):(_inCheck(board,nextTurn)?ChessStatus.check:ChessStatus.active);
-  final half=(piece==P||board[m.tr][m.tc]!=0)?0:g.halfMove+1;
+  final half=(piece==P||g.board[m.tr][m.tc]!=0)?0:g.halfMove+1;
   final full=g.fullMove+(g.turn==-1?1:0);
   return ChessGame(board:board,turn:nextTurn,wK:wK,wQ:wQ,bK:bK,bQ:bQ,epR:epR,epC:epC,halfMove:half,fullMove:full,status:status,legalMoves:legal);
 }

@@ -6,7 +6,44 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <OutputType>Exe</OutputType>
     <RootNamespace>ZyxxyzMaui</RootNamespace>
-    <TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst;net9.0-windows10.0.19041.0</TargetFrameworks>
+    <!--
+      CI on Linux can only install the maui-android workload (maui-ios /
+      maui-maccatalyst error out at `dotnet workload install` — "isn't
+      supported on this platform" — so a normal unfiltered restore of the
+      full TargetFrameworks list always fails there). Passing
+      -p:TargetFramework(s)=net9.0-android from the command line to scope
+      restore down doesn't work either: that's a *global* MSBuild property,
+      and global properties unconditionally override a ProjectReference's
+      own file-level TargetFramework during restore — it silently broke
+      ../../shared/ZyxxyzShared.csproj's plain net9.0 restore every time,
+      regardless of SetTargetFramework metadata (that's build-time-only).
+      ZyxxyzCiAndroidOnly is a property name nothing else in the solution
+      reads, so passing -p:ZyxxyzCiAndroidOnly=true from CI can't leak into
+      and override any other project's own TargetFramework.
+    -->
+    <TargetFrameworks Condition="'$(ZyxxyzCiAndroidOnly)' == 'true'">net9.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="'$(ZyxxyzCiAndroidOnly)' != 'true'">net9.0-android;net9.0-ios;net9.0-maccatalyst;net9.0-windows10.0.19041.0</TargetFrameworks>
+    <!--
+      .NET-for-Android always builds every supported ABI (arm64-v8a,
+      x86_64, ...) regardless of Debug/Release unless RuntimeIdentifiers is
+      pinned, and that requires a RID-qualified restore entry for
+      ../../shared/ZyxxyzShared.csproj (a plain library with no native code
+      and no RID needs of its own) or the build fails with NETSDK1047.
+
+      Setting RuntimeIdentifiers here on the entry project does NOT, on its
+      own, make restore produce that RID-qualified entry for the reference
+      — confirmed directly in CI: restore succeeded, but the resulting
+      assets file still had no 'net9.0/android-arm64' target for
+      ZyxxyzShared. NuGet only creates a RID-qualified restore-graph entry
+      for a given ProjectReference when *that reference's own* evaluated
+      properties include a RuntimeIdentifier — the same mechanism that
+      makes SetTargetFramework below actually work (confirmed working in
+      an earlier CI run). So RuntimeIdentifier also has to be set as
+      per-reference Properties metadata on the ProjectReference itself, not
+      inferred from this property. Kept here too since the actual Android
+      build machinery still reads it from the entry project.
+    -->
+    <RuntimeIdentifiers Condition="'$(ZyxxyzCiAndroidOnly)' == 'true'">android-arm64</RuntimeIdentifiers>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
@@ -25,7 +62,30 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.*" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\shared\ZyxxyzShared.csproj" />
+    <!--
+      Tried pinning RuntimeIdentifier here via separate ProjectReference
+      metadata attributes first — Properties="..." REPLACES the whole
+      global-property set and clobbered SetTargetFramework's contribution
+      (CI: error flipped from wanting a RID-qualified target to wanting a
+      plain net9.0-android one); AdditionalProperties="..." composed
+      correctly but restore still never wrote a RID-qualified section into
+      ZyxxyzShared's assets file (fixed by adding RuntimeIdentifiers to
+      ZyxxyzShared.csproj itself — see the comment there). Once that made
+      restore RID-aware, the mismatch moved to build time: this
+      SetTargetFramework value only pinned TargetFramework, so ZyxxyzShared
+      still compiled to the RID-less obj/Release/net9.0/ output folder
+      while the copy step, now correctly expecting the RID-qualified
+      restore entry, looked for it under net9.0/android-arm64/ instead
+      (MSB3030: file not found). SetTargetFramework accepts a
+      semicolon-separated property list, not just one property — setting
+      both TargetFramework and RuntimeIdentifier here in the single
+      mechanism already proven to reach both restore and build-time
+      reference resolution is what actually keeps them in agreement,
+      rather than juggling two different metadata attributes for two
+      properties that need to travel together.
+    -->
+    <ProjectReference Condition="'$(ZyxxyzCiAndroidOnly)' == 'true'" Include="..\..\shared\ZyxxyzShared.csproj" SetTargetFramework="TargetFramework=net9.0;RuntimeIdentifier=android-arm64" />
+    <ProjectReference Condition="'$(ZyxxyzCiAndroidOnly)' != 'true'" Include="..\..\shared\ZyxxyzShared.csproj" SetTargetFramework="TargetFramework=net9.0" />
   </ItemGroup>
   <ItemGroup>
     <MauiImage Include="Resources\Images\*" />

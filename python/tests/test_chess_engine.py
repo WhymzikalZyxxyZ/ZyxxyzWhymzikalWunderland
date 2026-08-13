@@ -142,6 +142,12 @@ def test_half_move_resets_on_pawn():
     g2 = apply_move(g, m)
     assert g2.half_move == 0
 
+def test_half_move_increments_on_non_pawn_non_capture():
+    g = new_game()
+    m = next(mv for mv in g.legal_moves if mv.r == 7 and mv.c == 1)  # Nb1
+    g2 = apply_move(g, m)
+    assert g2.half_move == 1
+
 def test_full_move_increments_after_black():
     g = new_game()
     m1 = next(mv for mv in g.legal_moves if mv.r == 6 and mv.c == 4 and mv.tr == 4)

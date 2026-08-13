@@ -2,7 +2,15 @@
 
 # Runs on every push to a version/* or feature/* branch, and on PRs into development.
 # The promote workflow waits for this to pass before merging to test/main.
-
+#
+# Also runs on a nightly schedule (and on-demand via workflow_dispatch) with
+# every language job forced on, bypassing the path filter below entirely.
+# Path-filtered jobs can otherwise go stale for months without anyone
+# noticing — the MAUI and Dart jobs both silently stopped running on real
+# inputs for a long stretch simply because dart/**, dotnet/**, and ci.yml
+# happened not to change, and a broken coverage-threshold script and an
+# unbuildable restore command both sat undetected until something
+# incidental (editing this file) finally forced them to run again.
 on:
   push:
     branches:
@@ -12,6 +20,18 @@ on:
   pull_request:
     branches:
       - development
+  schedule:
+    - cron: '0 9 * * *'  # 09:00 UTC daily
+  workflow_dispatch: {}
+
+# A new push to the same ref makes any already-running CI for the previous
+# commit on that ref moot — cancel it instead of letting it burn compute to
+# completion. Doesn't dedupe the separate push-vs-pull_request double-trigger
+# (those land on different refs: refs/heads/<branch> vs refs/pull/<pr>/merge,
+# so they don't share a group), only repeated pushes to the same ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
 
@@ -20,25 +40,34 @@ jobs:
   # job is skipped, cutting matrix time to what actually matters.
   # Both the language path AND .github/workflows/ci.yml changes trigger a job,
   # so editing the workflow itself re-validates all affected suites.
+  # On a scheduled or manually-dispatched run there's no meaningful "changed
+  # paths" to diff against, so every output is forced true instead — the
+  # whole point of the nightly run is to catch jobs that path-filtering has
+  # been silently skipping.
   detect-changes:
     name: Detect changed paths
     runs-on: ubuntu-latest
     outputs:
-      web:        ${{ steps.filter.outputs.web }}
-      typescript: ${{ steps.filter.outputs.typescript }}
-      go:         ${{ steps.filter.outputs.go }}
-      kotlin:     ${{ steps.filter.outputs.kotlin }}
-      dotnet:     ${{ steps.filter.outputs.dotnet }}
-      python:     ${{ steps.filter.outputs.python }}
-      rust:       ${{ steps.filter.outputs.rust }}
-      swift:      ${{ steps.filter.outputs.swift }}
-      dart:       ${{ steps.filter.outputs.dart }}
-      cpp:        ${{ steps.filter.outputs.cpp }}
-      ci:         ${{ steps.filter.outputs.ci }}
+      web:        ${{ steps.force.outputs.all == 'true' || steps.filter.outputs.web == 'true' }}
+      typescript: ${{ steps.force.outputs.all == 'true' || steps.filter.outputs.typescript == 'true' }}
+      go:         ${{ steps.force.outputs.all == 'true' || steps.filter.outputs.go == 'true' }}
+      kotlin:     ${{ steps.force.outputs.all == 'true' || steps.filter.outputs.kotlin == 'true' }}
+      dotnet:     ${{ steps.force.outputs.all == 'true' || steps.filter.outputs.dotnet == 'true' }}
+      python:     ${{ steps.force.outputs.all == 'true' || steps.filter.outputs.python == 'true' }}
+      rust:       ${{ steps.force.outputs.all == 'true' || steps.filter.outputs.rust == 'true' }}
+      swift:      ${{ steps.force.outputs.all == 'true' || steps.filter.outputs.swift == 'true' }}
+      dart:       ${{ steps.force.outputs.all == 'true' || steps.filter.outputs.dart == 'true' }}
+      cpp:        ${{ steps.force.outputs.all == 'true' || steps.filter.outputs.cpp == 'true' }}
+      java:       ${{ steps.force.outputs.all == 'true' || steps.filter.outputs.java == 'true' }}
+      ci:         ${{ steps.force.outputs.all == 'true' || steps.filter.outputs.ci == 'true' }}
     steps:
+      - id: force
+        run: echo "all=${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v5
+        if: steps.force.outputs.all != 'true'
       - uses: dorny/paths-filter@v3
         id: filter
+        if: steps.force.outputs.all != 'true'
         with:
           filters: |
             web:
@@ -69,6 +98,8 @@ jobs:
               - 'dart/**'
             cpp:
               - 'cpp/**'
+            java:
+              - 'java/**'
             ci:
               - '.github/workflows/ci.yml'
 
@@ -153,6 +184,24 @@ jobs:
             --rule "no-unused-vars: warn" \
             server.ts || true
 
+  test-typescript:
+    name: Test TypeScript (node:test via tsx)
+    runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.typescript == 'true' || needs.detect-changes.outputs.ci == 'true'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: typescript/api/package.json
+      - name: Install API dependencies (provides tsx)
+        working-directory: typescript/api
+        run: npm install
+      - name: Run shared engine tests
+        run: typescript/api/node_modules/.bin/tsx --test typescript/shared/chess_engine.test.ts
+
   # ── Go ────────────────────────────────────────────────────────────────────────
   lint-go:
     name: Lint Go (editor-service)
@@ -165,10 +214,23 @@ jobs:
         with:
           go-version-file: editor-service/go.mod
           cache-dependency-path: editor-service/go.sum
+      # A dependency bump (golang.org/x/image/x/text, to close real HIGH-
+      # severity CVEs — the x/image and x/text fix releases both require
+      # Go 1.25) pushed editor-service's go.mod to `go 1.25.0`. As of this
+      # change, no golangci-lint release (checked: pinned v1.64.8, and
+      # `latest`, which still resolves to the same v1.64.8) supports
+      # linting Go-1.25-targeted code yet — it refuses outright ("the Go
+      # language version used to build golangci-lint is lower than the
+      # targeted Go version"). continue-on-error keeps this from blocking
+      # merges on a linter that hasn't caught up to the language version,
+      # while still surfacing the failure in the checks list so it's not
+      # silently forgotten. go vet (see the build step above) still runs
+      # and blocks on real correctness issues regardless.
       - name: golangci-lint
+        continue-on-error: true
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.64.8
+          version: latest
           working-directory: editor-service
 
   # ── Kotlin ────────────────────────────────────────────────────────────────────
@@ -185,6 +247,35 @@ jobs:
           chmod +x ktlint
       - name: Lint Kotlin sources
         run: ./ktlint --relative 'kotlin/**/*.kt'
+
+  test-kotlin:
+    name: Test Kotlin (commonTest via androidTarget)
+    runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.kotlin == 'true' || needs.detect-changes.outputs.ci == 'true'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      # No gradlew wrapper is committed in kotlin/, so setup-gradle provisions
+      # a matching Gradle directly (8.9 — within AGP 8.5.2's supported range)
+      # and we invoke `gradle` rather than `./gradlew`.
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Ensure compileSdk 35 platform is installed
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0"
+      # commonTest only has kotlin.test as a dependency (no JVM target is
+      # declared), so androidTarget's unit-test task is the only way to run
+      # it in CI — testDebugUnitTest runs on the JVM via Robolectric-style
+      # unit testing, no emulator required.
+      - name: Run shared module tests
+        working-directory: kotlin
+        run: gradle :shared:testDebugUnitTest --no-daemon
 
   # ── .NET / C# ─────────────────────────────────────────────────────────────────
   lint-dotnet:
@@ -327,7 +418,7 @@ jobs:
         run: swiftlint lint swift/ --strict
 
   test-swift:
-    name: Build Swift package
+    name: Build + test Swift package
     runs-on: macos-latest
     needs: [detect-changes]
     if: needs.detect-changes.outputs.swift == 'true' || needs.detect-changes.outputs.ci == 'true'
@@ -342,6 +433,9 @@ jobs:
       - name: Build ChessEngine module
         working-directory: swift
         run: swift build -c release
+      - name: Run ChessEngine tests
+        working-directory: swift
+        run: swift test
 
   # ── Dart ──────────────────────────────────────────────────────────────────────
   lint-dart:
@@ -396,11 +490,32 @@ jobs:
         working-directory: dart/shared
         run: |
           pip install lcov_cobertura 2>/dev/null || true
-          COVERED=$(grep -c "DA:[0-9]*,1" coverage/lcov.info || echo 0)
+          COVERED=$(grep -c "DA:[0-9]*,[1-9]" coverage/lcov.info || echo 0)
           TOTAL=$(grep -c "DA:" coverage/lcov.info || echo 1)
           PCT=$(( COVERED * 100 / TOTAL ))
           echo "Coverage: ${PCT}% (${COVERED}/${TOTAL} lines)"
           if [ "$PCT" -lt 90 ]; then echo "Coverage below 90%"; exit 1; fi
+
+  # ── Java ──────────────────────────────────────────────────────────────────────
+  # Not previously in CI at all — no lint, build, or test job existed for
+  # java/, despite java/shared/pom.xml already having JUnit + Surefire
+  # configured. Adding a real job here rather than leaving it unvalidated.
+  test-java:
+    name: Test Java (shared engine, JaCoCo >=90%)
+    runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.java == 'true' || needs.detect-changes.outputs.ci == 'true'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+          cache-dependency-path: java/shared/pom.xml
+      - name: Test + JaCoCo coverage check (>=90% required)
+        working-directory: java/shared
+        run: mvn -B test
 
   # ── C++ ───────────────────────────────────────────────────────────────────────
   lint-cpp:
@@ -431,6 +546,9 @@ jobs:
         run: cmake -S cpp -B cpp/build -DCMAKE_BUILD_TYPE=Release
       - name: Build
         run: cmake --build cpp/build
+      - name: Run tests
+        working-directory: cpp/build
+        run: ctest --output-on-failure
 
   # ── WASM build ────────────────────────────────────────────────────────────────
   build-wasm:

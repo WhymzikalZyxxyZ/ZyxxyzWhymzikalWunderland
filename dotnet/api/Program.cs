@@ -15,7 +15,16 @@ builder.Services.AddScoped<IScoreRepository, ScoreRepository>();
 builder.Services.AddScoped<IScoreService, ScoreService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "dev-secret-key-32-chars-minimum!!";
+// A security audit found this previously fell back to a hardcoded string
+// (committed in source, visible to anyone with repo access) if Jwt:Key was
+// ever unset — silently accepting a config gap instead of failing loudly.
+// typescript/api and python/api both already throw on a missing secret;
+// this now matches them, and additionally rejects a too-short key (a short
+// HMAC key is materially weaker against brute force).
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException("Jwt:Key configuration value is required");
+if (jwtKey.Length < 32)
+    throw new InvalidOperationException("Jwt:Key must be at least 32 characters");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
     {

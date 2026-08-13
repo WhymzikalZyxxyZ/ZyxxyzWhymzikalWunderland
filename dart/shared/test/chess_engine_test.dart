@@ -58,6 +58,14 @@ void main() {
     });
   });
 
+  group('ChessMove equality', () {
+    test('hashCode matches for equal moves', () {
+      const a = ChessMove(6, 4, 4, 4);
+      const b = ChessMove(6, 4, 4, 4);
+      expect(a.hashCode, equals(b.hashCode));
+    });
+  });
+
   group('Apply move', () {
     test('e4 places pawn and clears source', () {
       final g = newGame();

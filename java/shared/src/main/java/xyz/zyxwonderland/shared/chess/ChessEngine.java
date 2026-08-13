@@ -116,7 +116,7 @@ public final class ChessEngine {
             if (m.r == 0 && m.c == 0) bQ = false;
         }
 
-        int half = (abs == P || board[m.tr][m.tc] != 0) ? 0 : g.halfMove + 1;
+        int half = (abs == P || g.board[m.tr][m.tc] != 0) ? 0 : g.halfMove + 1;
         int full = g.fullMove + (g.turn == -1 ? 1 : 0);
         int next = -g.turn;
 

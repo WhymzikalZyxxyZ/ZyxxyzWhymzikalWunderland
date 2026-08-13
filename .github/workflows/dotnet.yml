@@ -10,6 +10,16 @@ on:
       - 'dotnet/**'
       - '.github/workflows/dotnet.yml'
 
+# A new push to the same ref makes any already-running build for the
+# previous commit on that ref moot — cancel it instead of burning compute
+# to completion. This repo's push and pull_request triggers fire on
+# different refs (refs/heads/<branch> vs refs/pull/<pr>/merge) for the same
+# commit, so this doesn't dedupe that double-trigger — only repeated pushes
+# to the same ref, which was the bulk of the waste observed tonight.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-shared:
     name: Shared library
@@ -66,6 +76,27 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
+      # maui-ios / maui-maccatalyst workloads can't even be installed on
+      # Linux ("isn't supported on this platform"), so unfiltered restore of
+      # this multi-target csproj is a dead end here. Every attempt to scope
+      # restore down via a *global* -p:TargetFramework(s) override broke
+      # dotnet/shared/ZyxxyzShared.csproj's own plain-net9.0 restore instead
+      # — global properties passed on the command line unconditionally
+      # override a ProjectReference's own file-level TargetFramework,
+      # regardless of SetTargetFramework metadata (that only governs
+      # build-time reference resolution, not restore). Fixed at the actual
+      # source instead: ZyxxyzCiAndroidOnly is a property name nothing else
+      # in the solution reads, so passing it can't leak into and override
+      # any other project — ZyxxyzMaui.csproj uses it to conditionally
+      # collapse its own TargetFrameworks to just net9.0-android.
+      # .NET-for-Android builds every supported ABI (arm64-v8a, x86_64, ...)
+      # by default in both Debug and Release, and that needs RID-specific
+      # restore across the whole project graph. Passing -p:RuntimeIdentifier
+      # on the command line hit the exact same global-property-leak problem
+      # as TargetFramework(s) above; pinning it to android-arm64 instead
+      # inside ZyxxyzMaui.csproj (gated by ZyxxyzCiAndroidOnly) is the
+      # correctly-designed path — see the comment on RuntimeIdentifiers
+      # there for why.
       - run: dotnet workload install maui-android --skip-sign-check
-      - run: dotnet restore dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj
-      - run: dotnet build dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj --no-restore -c Release -f net9.0-android
+      - run: dotnet restore dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj -p:ZyxxyzCiAndroidOnly=true
+      - run: dotnet build dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj --no-restore -c Release -p:ZyxxyzCiAndroidOnly=true

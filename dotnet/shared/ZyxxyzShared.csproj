@@ -4,6 +4,27 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
+    <!--
+      This is a plain portable library with no native/RID-specific
+      dependencies, so it doesn't need RuntimeIdentifiers for anything it
+      does itself. It's here purely because of a limitation in the
+      .NET-for-Android build tooling: when dotnet/maui/ZyxxyzMaui.csproj
+      (CI's Android-only build, see ZyxxyzCiAndroidOnly there) references
+      this project, the Android build step looks up an exact
+      'net9.0/android-arm64'-keyed target in this project's OWN restored
+      assets file — and NuGet correctly recognizes this library has no
+      RID-specific content, so it never bothers writing that keyed section
+      unless THIS project's own restore is RID-aware. No amount of
+      ProjectReference metadata on the *referencing* side (SetTargetFramework
+      plus Properties, then AdditionalProperties — both tried, both
+      confirmed by CI logs not to produce the entry) can substitute for
+      that. ZyxxyzCiAndroidOnly reaches this evaluation as an inherited
+      global property from the whole build invocation (the same mechanism
+      that caused it to leak destructively in earlier TargetFramework
+      attempts elsewhere in this saga — here it's finally being used on
+      purpose), so this only ever activates for that one CI job.
+    -->
+    <RuntimeIdentifiers Condition="'$(ZyxxyzCiAndroidOnly)' == 'true'">android-arm64</RuntimeIdentifiers>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Net.Http.Json" Version="9.0.*" />

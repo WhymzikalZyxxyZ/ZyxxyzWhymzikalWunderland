@@ -196,7 +196,7 @@ public func applyMove(_ g: ChessGame,_ m: ChessMove) -> ChessGame {
     let legal = getLegalMoves(board,turn: nextTurn,wK: wK,wQ: wQ,bK: bK,bQ: bQ,epR: epR,epC: epC)
     let status: ChessStatus = legal.isEmpty ? (inCheck(board,turn: nextTurn) ? .checkmate : .stalemate)
                                             : (inCheck(board,turn: nextTurn) ? .check : .active)
-    let half = (piece==P || board[m.tr][m.tc] != 0) ? 0 : g.halfMove+1
+    let half = (piece==P || g.board[m.tr][m.tc] != 0) ? 0 : g.halfMove+1
     let full = g.fullMove + (g.turn == -1 ? 1 : 0)
     return ChessGame(board: board,turn: nextTurn,wK: wK,wQ: wQ,bK: bK,bQ: bQ,epR: epR,epC: epC,halfMove: half,fullMove: full,status: status,legalMoves: legal)
 }

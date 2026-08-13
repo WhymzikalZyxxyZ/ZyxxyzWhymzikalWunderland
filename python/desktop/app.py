@@ -1,5 +1,6 @@
 """Python desktop app — Tkinter chess + status monitor."""
 from __future__ import annotations
+
 import json
 import os
 import sys
@@ -11,9 +12,12 @@ from tkinter import messagebox, ttk
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
 
-from chess_engine import (  # noqa: E402
-    ChessGame, ChessStatus,
-    new_game, apply_move, get_ai_move,
+from chess_engine import (
+    ChessGame,
+    ChessStatus,
+    apply_move,
+    get_ai_move,
+    new_game,
 )
 
 # ── Colours ──────────────────────────────────────────────────────────────────
@@ -166,7 +170,7 @@ class StatusPanel(tk.Frame):
             with urllib.request.urlopen(API_URL, timeout=3) as r:
                 data = json.loads(r.read())
             self.after(0, lambda: self._update(data, ok=True))
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 — any failure just becomes a status label, by design
             msg = str(e)
             self.after(0, lambda: self.status_var.set(f"Unreachable: {msg}"))
 

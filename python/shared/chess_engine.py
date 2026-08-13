@@ -1,8 +1,8 @@
 """Chess engine — pure Python, no dependencies. Mirrors Java/Kotlin/C# implementations."""
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 
 P, N, B, R, Q, K = 1, 2, 3, 4, 5, 6
 
@@ -20,8 +20,8 @@ class ChessMove:
     c: int
     tr: int
     tc: int
-    promo: Optional[int] = None
-    castle: Optional[str] = None
+    promo: int | None = None
+    castle: str | None = None
     ep: bool = False
     double: bool = False
 
@@ -315,7 +315,7 @@ def apply_move(g: ChessGame, m: ChessMove) -> ChessGame:
     next_turn = -g.turn
     legal = get_legal_moves(board, next_turn, w_k, w_q, b_k, b_q, ep_r, ep_c)
     status = _update_status(board, next_turn, legal)
-    half = 0 if piece == P or board[m.tr][m.tc] != 0 else g.half_move + 1
+    half = 0 if piece == P or g.board[m.tr][m.tc] != 0 else g.half_move + 1
     full = g.full_move + (1 if g.turn == -1 else 0)
     return ChessGame(board=board, turn=next_turn, w_k=w_k, w_q=w_q, b_k=b_k, b_q=b_q,
                      ep_r=ep_r, ep_c=ep_c, half_move=half, full_move=full,
@@ -362,7 +362,7 @@ def _minimax(g, depth, alpha, beta, maximising):
     return best
 
 
-def get_ai_move(g: ChessGame) -> Optional[ChessMove]:
+def get_ai_move(g: ChessGame) -> ChessMove | None:
     if not g.legal_moves:
         return None
     depths = [0, 1, 1, 2, 2, 2, 3, 3, 4, 4]

@@ -7,6 +7,21 @@ export function randomHex(bytes) {
     return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Uint8Array → base64. Spreading a whole array into String.fromCharCode
+// (String.fromCharCode(...bytes)) blows V8's per-call argument limit
+// (~65536 args) for anything past roughly that many bytes — the same bug
+// already found and fixed in index.js's attachment handling. encryptBuf
+// below is exactly where an attachment's raw bytes hit this same call
+// shape, so it needed the identical fix.
+function _uint8ToBase64(bytes) {
+    const CHUNK = 0x8000; // 32KB
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+    }
+    return btoa(binary);
+}
+
 export async function generateKey() {
     return crypto.subtle.generateKey(
         { name: 'AES-GCM', length: 256 },
@@ -23,7 +38,7 @@ export async function encrypt(key, text) {
     const combined   = new Uint8Array(12 + ciphertext.byteLength);
     combined.set(iv);
     combined.set(new Uint8Array(ciphertext), 12);
-    return btoa(String.fromCharCode(...combined));
+    return _uint8ToBase64(combined);
 }
 
 export async function decrypt(key, b64) {
@@ -45,7 +60,7 @@ export async function encryptBuf(key, buf) {
     const combined   = new Uint8Array(12 + ciphertext.byteLength);
     combined.set(iv);
     combined.set(new Uint8Array(ciphertext), 12);
-    return btoa(String.fromCharCode(...combined));
+    return _uint8ToBase64(combined);
 }
 
 export async function decryptBuf(key, b64) {

@@ -7,12 +7,15 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/pdfcpu/pdfcpu/pkg/api"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
@@ -23,7 +26,65 @@ var bufPool = sync.Pool{New: func() any { return new(bytes.Buffer) }}
 const (
 	maxFileSize  = 50 << 20  // 50 MB per file
 	maxTotalSize = 150 << 20 // 150 MB total multipart
+
+	// A security audit found no rate limit and no request-body size cap
+	// anywhere in this service — combined with Access-Control-Allow-Origin: *
+	// on every endpoint, any third-party page's JS could silently drive
+	// expensive PDF/zip work through a visitor's browser. Both are fixed
+	// below (rateAllow, and http.MaxBytesReader in withCORS).
+	rateLimitMax    = 20
+	rateLimitWindow = time.Minute
 )
+
+// zyxwonderland.xyz and its www subdomain are the only legitimate callers —
+// audit found Access-Control-Allow-Origin: * applied unconditionally.
+var allowedOrigins = map[string]bool{
+	"https://zyxwonderland.xyz":     true,
+	"https://www.zyxwonderland.xyz": true,
+}
+
+var (
+	rateMu     sync.Mutex
+	rateLimits = map[string]*rateEntry{}
+)
+
+type rateEntry struct {
+	count int
+	reset time.Time
+}
+
+func rateAllow(ip string) bool {
+	rateMu.Lock()
+	defer rateMu.Unlock()
+	now := time.Now()
+	e, ok := rateLimits[ip]
+	if !ok || now.After(e.reset) {
+		rateLimits[ip] = &rateEntry{count: 1, reset: now.Add(rateLimitWindow)}
+		return true
+	}
+	if e.count >= rateLimitMax {
+		return false
+	}
+	e.count++
+	return true
+}
+
+// clientIP prefers proxy-supplied headers (Fly.io sets Fly-Client-IP; a
+// generic reverse proxy sets X-Forwarded-For) since RemoteAddr is the
+// proxy's own address once behind one, not the real client's.
+func clientIP(r *http.Request) string {
+	if ip := r.Header.Get("Fly-Client-IP"); ip != "" {
+		return ip
+	}
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		return strings.TrimSpace(strings.Split(xff, ",")[0])
+	}
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return host
+}
 
 func main() {
 	port := os.Getenv("PORT")
@@ -46,7 +107,7 @@ func main() {
 	mux.HandleFunc("/api/compress", withCORS(handleCompress))
 	mux.HandleFunc("/api/zip", withCORS(handleZip))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		setCORS(w)
+		setCORS(w, r)
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return
@@ -63,15 +124,19 @@ func main() {
 
 // ── Middleware ─────────────────────────────────────────────────────────────
 
-func setCORS(w http.ResponseWriter) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+func setCORS(w http.ResponseWriter, r *http.Request) {
+	origin := r.Header.Get("Origin")
+	if allowedOrigins[origin] {
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Vary", "Origin")
+	}
 	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 }
 
 func withCORS(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		setCORS(w)
+		setCORS(w, r)
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return
@@ -80,6 +145,16 @@ func withCORS(h http.HandlerFunc) http.HandlerFunc {
 			apiErr(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
+		if !rateAllow(clientIP(r)) {
+			apiErr(w, "too many requests — slow down", http.StatusTooManyRequests)
+			return
+		}
+		// Caps the request body before any multipart parsing touches it —
+		// readOne/readMany's own 50MB-per-file check runs only after
+		// ParseMultipartForm has already buffered/spooled the request,
+		// which was no cap on total request size at all (found in a
+		// security audit).
+		r.Body = http.MaxBytesReader(w, r.Body, maxTotalSize)
 		// Every other error path in this service returns a structured
 		// {"error": "..."} body — a panic deep in pdfcpu's parsing of a
 		// malformed-but-not-rejected PDF (or any other unexpected failure)
@@ -171,6 +246,20 @@ func pdfConf() *model.Configuration {
 	c := model.NewDefaultConfiguration()
 	c.ValidationMode = model.ValidationRelaxed
 	return c
+}
+
+// sanitizeZipEntryName strips any directory component from a client-supplied
+// filename before it becomes a zip entry name. A security audit found
+// handleZip used the raw upload filename unmodified — a name containing
+// "../" or an absolute path becomes a valid zip-slip payload for whatever
+// tool later extracts the archive, even though this service itself never
+// extracts anything.
+func sanitizeZipEntryName(name string) string {
+	base := filepath.Base(name)
+	if base == "." || base == ".." || base == string(filepath.Separator) || base == "" {
+		return "file"
+	}
+	return base
 }
 
 // stripExt removes the extension from a filename (case-insensitive match).
@@ -547,7 +636,7 @@ func handleZip(w http.ResponseWriter, r *http.Request) {
 	var out bytes.Buffer
 	zw := zip.NewWriter(&out)
 	for i, d := range datas {
-		f, err := zw.Create(names[i])
+		f, err := zw.Create(sanitizeZipEntryName(names[i]))
 		if err != nil {
 			apiErr(w, "zip error: "+err.Error(), http.StatusInternalServerError)
 			return
