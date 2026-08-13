@@ -17,6 +17,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      # Without this, wrangler-action falls back to installing the latest
+      # wrangler globally, which conflicts with drizzle-orm's pinned
+      # @cloudflare/workers-types peer dependency. deploy.yml's real Epitome
+      # job avoids this the same way — installing from the lockfile first so
+      # the already-compatible pinned wrangler version is what gets used.
+      - name: Install Epitome worker dependencies
+        run: cd epitome/worker && npm ci
+
       - name: Seed d1_migrations for already-applied 0001 + 0002
         uses: cloudflare/wrangler-action@v4
         with:
