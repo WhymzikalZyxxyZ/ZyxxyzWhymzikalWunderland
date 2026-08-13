@@ -109,16 +109,39 @@ jobs:
           ADMIN_TOKEN:      ${{ secrets.ELINAL_ADMIN_TOKEN }}
 
       # Migration runs after the worker deploy, so new worker code is live first.
-      # Current migration uses IF NOT EXISTS — safe regardless of order.
       # CAUTION: If a future migration adds or renames columns, deploy the worker
       # AFTER the migration completes, not before, to avoid a schema mismatch window.
-      - name: Run ELINAL D1 migration
+      #
+      # A snapshot before every migration run, cheap and automatic — not a
+      # one-time favor for today's fix, a standing safety net for every future
+      # migration this database ever runs.
+      - name: Backup ELINAL D1 before migrating
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken:         ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId:        ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: elinal/worker
-          command:          d1 execute elinal-db --remote --file=migrations/0001_initial.sql
+          command:          d1 export elinal-db --remote --output=elinal-db-backup.sql
+
+      - name: Upload ELINAL D1 backup
+        uses: actions/upload-artifact@v4
+        with:
+          name:           elinal-db-backup-${{ github.sha }}
+          path:           elinal/worker/elinal-db-backup.sql
+          retention-days: 30
+
+      # `wrangler d1 migrations apply` tracks completed migrations in a
+      # `d1_migrations` table on the database itself — each file in
+      # migrations/ runs exactly once, ever, regardless of how many times
+      # this workflow runs. Replaces a raw `d1 execute --file=` call that
+      # re-ran unconditionally on every deploy.
+      - name: Run ELINAL D1 migrations
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken:         ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId:        ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: elinal/worker
+          command:          d1 migrations apply elinal-db --remote
 
   # ── Deploy Cloudflare Worker (Epitome) ───────────────────────────────────────
   deploy-epitome-worker:
@@ -152,29 +175,55 @@ jobs:
           accountId:        ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: epitome/worker
 
-      - name: Run Epitome D1 migration 0001
+      # A snapshot before every migration run, cheap and automatic — not a
+      # one-time favor for today's fix, a standing safety net for every future
+      # migration this database ever runs.
+      - name: Backup Epitome D1 before migrating
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken:         ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId:        ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: epitome/worker
-          command:          d1 execute epitome --remote --file=drizzle/0001_initial.sql
+          command:          d1 export epitome --remote --output=epitome-backup.sql
 
-      - name: Run Epitome D1 migration 0002 (chapters + mainCoverKey)
-        uses: cloudflare/wrangler-action@v4
+      - name: Upload Epitome D1 backup
+        uses: actions/upload-artifact@v4
         with:
-          apiToken:         ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId:        ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: epitome/worker
-          command:          d1 execute epitome --remote --file=drizzle/0002_chapters.sql
+          name:           epitome-db-backup-${{ github.sha }}
+          path:           epitome/worker/epitome-backup.sql
+          retention-days: 30
 
-      - name: Run Epitome D1 migration 0003 (events P&L, inventory, sales, bundles)
+      # `wrangler d1 migrations apply` tracks completed migrations in a
+      # `d1_migrations` table on the database itself (migrations_dir points
+      # at drizzle/ — see wrangler.toml) — each file runs exactly once, ever,
+      # regardless of how many times this workflow runs. Replaces three raw
+      # `d1 execute --file=` calls that all re-ran unconditionally on every
+      # deploy; 0002's ALTER TABLE ADD COLUMN broke on its second run for
+      # exactly that reason once the column already existed.
+      #
+      # One-time only, run once by hand before this first goes live: since
+      # 0001 and 0002 already succeeded against production under the old
+      # raw-execute step (with no d1_migrations bookkeeping to show it),
+      # wrangler needs to be told they're already applied or it will try
+      # to replay 0002's ALTER TABLE and hit the same "duplicate column"
+      # error this whole change fixes. Seed command (idempotent, safe to
+      # run more than once):
+      #   npx wrangler d1 execute epitome --remote --command "
+      #     CREATE TABLE IF NOT EXISTS d1_migrations(
+      #       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      #       name TEXT UNIQUE,
+      #       applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+      #     );
+      #     INSERT OR IGNORE INTO d1_migrations (name)
+      #       VALUES ('0001_initial.sql'), ('0002_chapters.sql');
+      #   "
+      - name: Run Epitome D1 migrations
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken:         ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId:        ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: epitome/worker
-          command:          d1 execute epitome --remote --file=drizzle/0003_events_inventory_sales.sql
+          command:          d1 migrations apply epitome --remote
 
   # ── Deploy static site to GitHub Pages ───────────────────────────────────────
   deploy:
