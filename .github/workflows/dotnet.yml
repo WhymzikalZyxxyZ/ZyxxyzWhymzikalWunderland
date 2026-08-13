@@ -10,6 +10,16 @@ on:
       - 'dotnet/**'
       - '.github/workflows/dotnet.yml'
 
+# A new push to the same ref makes any already-running build for the
+# previous commit on that ref moot — cancel it instead of burning compute
+# to completion. This repo's push and pull_request triggers fire on
+# different refs (refs/heads/<branch> vs refs/pull/<pr>/merge) for the same
+# commit, so this doesn't dedupe that double-trigger — only repeated pushes
+# to the same ref, which was the bulk of the waste observed tonight.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-shared:
     name: Shared library
@@ -80,12 +90,19 @@ jobs:
       # any other project — ZyxxyzMaui.csproj uses it to conditionally
       # collapse its own TargetFrameworks to just net9.0-android.
       # Release config for net9.0-android implicitly builds every supported
-      # ABI (arm64-v8a, x86_64, ...) unless RuntimeIdentifier is pinned to
-      # one, and multi-RID output needs RID-specific restore across the
-      # whole project graph — including plain ZyxxyzShared, which has no
-      # native code and no RID needs of its own. This job only needs to
-      # confirm the app compiles, not produce a real multi-arch package, so
-      # pin a single RID rather than restoring/building every architecture.
+      # ABI (arm64-v8a, x86_64, ...), and pinning -p:RuntimeIdentifier to
+      # scope that down turned out to be the same leak problem yet again —
+      # ZyxxyzShared has no native code and no RID needs of its own, but the
+      # global property still pushed it toward self-contained RID-specific
+      # output (NETSDK1112: missing runtime pack for
+      # linux-bionic-arm64 — .NET-for-Android's actual underlying RID,
+      # derived from android-arm64, needed a pack restore never fetched for
+      # a plain library that was never supposed to need one at all).
+      # Sidestepped entirely by building Debug instead of Release: MAUI
+      # Android's Debug config uses the lighter fast-deploy path and
+      # doesn't force self-contained/multi-RID output, which is all this
+      # job needs anyway — it only exists to confirm the app compiles, not
+      # to produce a real deployable package.
       - run: dotnet workload install maui-android --skip-sign-check
-      - run: dotnet restore dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj -p:ZyxxyzCiAndroidOnly=true -p:RuntimeIdentifier=android-arm64
-      - run: dotnet build dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj --no-restore -c Release -p:ZyxxyzCiAndroidOnly=true -p:RuntimeIdentifier=android-arm64
+      - run: dotnet restore dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj -p:ZyxxyzCiAndroidOnly=true
+      - run: dotnet build dotnet/maui/ZyxxyzMaui/ZyxxyzMaui.csproj --no-restore -c Debug -p:ZyxxyzCiAndroidOnly=true

@@ -24,6 +24,15 @@ on:
     - cron: '0 9 * * *'  # 09:00 UTC daily
   workflow_dispatch: {}
 
+# A new push to the same ref makes any already-running CI for the previous
+# commit on that ref moot — cancel it instead of letting it burn compute to
+# completion. Doesn't dedupe the separate push-vs-pull_request double-trigger
+# (those land on different refs: refs/heads/<branch> vs refs/pull/<pr>/merge,
+# so they don't share a group), only repeated pushes to the same ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
 
   # ── Detect changed paths ─────────────────────────────────────────────────────
