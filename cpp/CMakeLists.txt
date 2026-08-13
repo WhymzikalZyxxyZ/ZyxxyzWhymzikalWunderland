@@ -6,6 +6,12 @@ set(CMAKE_CXX_STANDARD 17)
 add_library(chess_engine STATIC shared/chess_engine.cpp shared/chess_engine.h)
 target_include_directories(chess_engine PUBLIC shared)
 
+# Tests (plain assert-based, no external framework dependency)
+enable_testing()
+add_executable(chess_engine_test shared/test/chess_engine_test.cpp)
+target_link_libraries(chess_engine_test PRIVATE chess_engine)
+add_test(NAME chess_engine_test COMMAND chess_engine_test)
+
 # Desktop (requires SDL2: apt install libsdl2-dev or vcpkg install sdl2)
 find_package(SDL2 QUIET)
 if(SDL2_FOUND)
