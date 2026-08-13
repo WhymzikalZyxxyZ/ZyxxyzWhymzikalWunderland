@@ -82,7 +82,7 @@ public partial class ChessViewModel : ObservableObject
         IsAiThinking = true;
         StatusText = "AI thinking…";
 
-        var aiMove = await Task.Run(() => ChessEngine.GetAIMove(Game));
+        var aiMove = await Task.Run(() => ChessEngine.GetAIMove(Game, Game.LegalMoves.Count));
 
         if (aiMove is not null)
             Game = ChessEngine.ApplyMove(Game, aiMove);
