@@ -17,6 +17,11 @@ binding            = "ASSETS"
 binding       = "DB"
 database_name = "epitome"
 database_id   = "c72a5077-2872-4af3-9ac3-7ab32d252efb"
+# drizzle-kit (see drizzle.config.ts) already outputs generated migration SQL
+# to ./drizzle — pointing wrangler's own tracked-migrations tooling at the
+# same folder instead of its "migrations" default avoids a rename and keeps
+# schema generation and migration application on one shared source of truth.
+migrations_dir = "drizzle"
 
 [[kv_namespaces]]
 binding = "STORAGE"
