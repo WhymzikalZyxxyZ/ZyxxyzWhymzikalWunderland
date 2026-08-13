@@ -26,18 +26,22 @@
     <!--
       .NET-for-Android always builds every supported ABI (arm64-v8a,
       x86_64, ...) regardless of Debug/Release unless RuntimeIdentifiers is
-      pinned, and that requires RID-specific restore across the whole
-      project graph — including ../../shared/ZyxxyzShared.csproj, which has
-      no native code and no RID needs of its own. Passing
-      -p:RuntimeIdentifier on the command line hit the exact same leak as
-      TargetFramework(s) above (it pushed ZyxxyzShared toward
-      self-contained RID-specific output and failed on a missing runtime
-      pack it was never supposed to need). Setting it here instead, gated
-      by the same safe flag, is the correctly-designed path: an entry
-      project's own file-level RuntimeIdentifiers legitimately propagates
-      through ProjectReference during restore (that's what it's for),
-      unlike a raw CLI override stomping a referenced project's own
-      TargetFramework.
+      pinned, and that requires a RID-qualified restore entry for
+      ../../shared/ZyxxyzShared.csproj (a plain library with no native code
+      and no RID needs of its own) or the build fails with NETSDK1047.
+
+      Setting RuntimeIdentifiers here on the entry project does NOT, on its
+      own, make restore produce that RID-qualified entry for the reference
+      — confirmed directly in CI: restore succeeded, but the resulting
+      assets file still had no 'net9.0/android-arm64' target for
+      ZyxxyzShared. NuGet only creates a RID-qualified restore-graph entry
+      for a given ProjectReference when *that reference's own* evaluated
+      properties include a RuntimeIdentifier — the same mechanism that
+      makes SetTargetFramework below actually work (confirmed working in
+      an earlier CI run). So RuntimeIdentifier also has to be set as
+      per-reference Properties metadata on the ProjectReference itself, not
+      inferred from this property. Kept here too since the actual Android
+      build machinery still reads it from the entry project.
     -->
     <RuntimeIdentifiers Condition="'$(ZyxxyzCiAndroidOnly)' == 'true'">android-arm64</RuntimeIdentifiers>
     <Nullable>enable</Nullable>
@@ -58,7 +62,16 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.*" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\shared\ZyxxyzShared.csproj" SetTargetFramework="TargetFramework=net9.0" />
+    <!--
+      Properties="RuntimeIdentifier=android-arm64" only applies to CI's
+      Android-only build — it must not leak into normal multi-target dev
+      builds (net9.0-ios/maccatalyst/windows), where forcing an Android RID
+      onto this reference would be nonsensical. Split into two mutually
+      exclusive items on the same Condition as everything else here rather
+      than trying to make one item's metadata itself conditional.
+    -->
+    <ProjectReference Condition="'$(ZyxxyzCiAndroidOnly)' == 'true'" Include="..\..\shared\ZyxxyzShared.csproj" SetTargetFramework="TargetFramework=net9.0" Properties="RuntimeIdentifier=android-arm64" />
+    <ProjectReference Condition="'$(ZyxxyzCiAndroidOnly)' != 'true'" Include="..\..\shared\ZyxxyzShared.csproj" SetTargetFramework="TargetFramework=net9.0" />
   </ItemGroup>
   <ItemGroup>
     <MauiImage Include="Resources\Images\*" />
