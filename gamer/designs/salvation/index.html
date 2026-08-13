@@ -68,6 +68,13 @@
             font-size: 11px; color: #8fa8d0; letter-spacing: 1px;
             text-transform: uppercase; margin-bottom: 10px; display: block;
         }
+        .unlock-tag {
+            display: inline-block; font-size: 9.5px; letter-spacing: 1px;
+            text-transform: uppercase; padding: 2px 8px; border-radius: 10px;
+            margin-bottom: 12px;
+        }
+        .unlock-tag.start { background: rgba(76,175,80,0.15); color: #7fd888; }
+        .unlock-tag.grace { background: rgba(244,162,97,0.15); color: #f4a261; }
         .char-card .flavor {
             font-style: italic; color: #c8b0d8; font-size: 12.5px;
             margin: 0 0 12px; line-height: 1.6;
@@ -99,12 +106,18 @@
         .rank-chip.blessed { background: rgba(143,168,208,0.18); color: #8fa8d0; }
         .rank-chip.sanctified { background: rgba(200,176,216,0.18); color: #c8b0d8; }
         .rank-chip.divine { background: rgba(244,162,97,0.2); color: #f4a261; }
+        .rank-chip.cursed { background: rgba(139,0,0,0.22); color: #e88a8a; }
 
         .back-link {
             display: inline-block; margin-bottom: 28px; font-family: 'Courier New', monospace;
             font-size: 12px; color: #8fa8d0; text-decoration: none; letter-spacing: 0.5px;
         }
         .back-link:hover { color: #f4a261; }
+        .creed {
+            font-family: 'Courier New', monospace; font-size: 11px; letter-spacing: 1px;
+            color: #777; margin: 18px auto 0; max-width: 460px; line-height: 1.7;
+        }
+        .creed b { color: #f4a261; }
 
         @media (max-width: 640px) {
             .char-card { width: 100%; }
@@ -123,6 +136,7 @@
         <div class="kicker">Game Design Document</div>
         <h1>✝ Salvation</h1>
         <p class="tagline">Ten trials of a world that fell for temptation. Five who still believe, descending into the dark to meet it face to face. And at the end of every blade, one question, breathlessly asked of every soul you meet: surrender, or be saved.</p>
+        <p class="creed"><b>S</b>in <b>A</b>bsolved, <b>L</b>ight <b>V</b>anquishes <b>A</b>ll <b>T</b>emptation <b>I</b>nside <b>O</b>ur <b>N</b>ight — the creed spoken at the Sanctuary, and the game's own name in full.</p>
         <div class="status-pill">Living Document — Draft v0.1</div>
     </div>
 
@@ -131,6 +145,8 @@
         <h2>Overview</h2>
         <p><strong>Genre:</strong> Top-down roguelite. Runs end in permadeath, but progress made across runs — unlocked characters, relics, and permanent blessings — persists in a hub between attempts.</p>
         <p><strong>Engine:</strong> Godot 4 with C#. Built-in TileMap/TileSet nodes handle the room-based level structure natively; Area2D covers hitboxes, pickups, and the door-lock-on-clear mechanic; the export pipeline is a single self-contained step per platform, with none of the cross-targeting complexity of mobile app tooling.</p>
+        <p><strong>Art:</strong> Pixel art. The strongest genre precedent for this exact mood (Enter the Gungeon, Hyper Light Drifter) and the most forgiving medium for producing five characters and nine bosses without a rigging/skeletal-animation pipeline.</p>
+        <p><strong>Controls:</strong> Twin-stick, keyboard + mouse first (WASD move, mouse aim/attack). Several boss mechanics — Sloth's room decaying under stillness, Doubt's illusion reads — assume continuous real-time movement rather than tile-stepping, so grid movement was ruled out early. Controller support is a later input-remapping pass, not a structural fork.</p>
         <p><strong>Premise:</strong> The world has fallen to corruption, and corruption has a way of looking beautiful right up until it doesn't. Five faithful — each carrying a different gift of the divine, each drawn downward for their own reasons — descend through ten trials to confront G.O.D. itself at the world's end. Every enemy faced is an intimate choice, close enough to feel their last breath: strike them down, or lay hands on them and offer something gentler.</p>
     </section>
 
@@ -141,8 +157,15 @@
         <h3>The Sanctuary (hub, between runs)</h3>
         <ul>
             <li><strong>Grace</strong> — the meta-currency, earned per run based on rooms cleared, enemies redeemed, and depth reached. Spent at the Sanctuary between runs.</li>
-            <li>Grace unlocks: additional playable characters, new relics added to the run's loot pool, permanent minor stat blessings (small, run-independent bonuses), and alternate starting loadouts.</li>
-            <li>The Sanctuary is also where narrative cutscene fragments accumulate — a character roster of small vignettes that build the overworld story independently of any single run's outcome.</li>
+            <li>The Sanctuary is also where narrative cutscene fragments accumulate — a roster of small vignettes that build the overworld story independently of any single run's outcome.</li>
+        </ul>
+        <h3>Grace Catalog</h3>
+        <p>What Grace buys is decided; exact costs are not — pricing blind, before any real playtest data exists on Grace-earn rate or death frequency, would just mean re-balancing everything later anyway. The sink types:</p>
+        <ul>
+            <li><strong>Character Unlocks</strong> — the Exorcist and the Prophet are Grace-gated. The Paladin, Cleric, and Monk are available from the very first run.</li>
+            <li><strong>Permanent Stat Blessings</strong> — small, run-independent bonuses to a chosen stat.</li>
+            <li><strong>Relic Pool Expansion</strong> — unlocks additional relics into future runs' loot pool.</li>
+            <li><strong>Starting Loadout Variants</strong> — alternate opening gear for a run.</li>
         </ul>
         <div class="note"><strong>Design intent:</strong> death should sting, never erase. Every run — even a fast, humbling death on Level 2 — should leave something of itself behind: a little Grace, maybe a cutscene fragment, maybe a relic slipped into next run's pool, like a promise whispered before the dark takes you.</div>
     </section>
@@ -155,6 +178,7 @@
             <div class="char-card">
                 <h4>The Paladin</h4>
                 <span class="role">Holy Knight — Melee Tank</span>
+                <span class="unlock-tag start">Available from start</span>
                 <p class="flavor">Armor like a second skin, and just as close. She gets in close, close enough that no one gets past her.</p>
                 <p><strong>Magic — Divine Smite:</strong> a targeted holy strike dealing bonus damage to high-HP enemies.</p>
                 <p><strong>Passive — Unshaken:</strong> redeeming an enemy grants a brief protective shield.</p>
@@ -163,6 +187,7 @@
             <div class="char-card">
                 <h4>The Cleric</h4>
                 <span class="role">Support — Healer</span>
+                <span class="unlock-tag start">Available from start</span>
                 <p class="flavor">Her hands have healed more wounds than she can name, and every one of them remembers her touch.</p>
                 <p><strong>Magic — Sanctuary Light:</strong> heals the caster and deals a burst of holy damage to nearby enemies.</p>
                 <p><strong>Passive — Overflowing Grace:</strong> healing also restores a sliver of Magic.</p>
@@ -171,6 +196,7 @@
             <div class="char-card">
                 <h4>The Monk</h4>
                 <span class="role">Martial — Fast Melee</span>
+                <span class="unlock-tag start">Available from start</span>
                 <p class="flavor">Discipline is its own kind of pleasure, if you let it consume you the way he has.</p>
                 <p><strong>Magic — Chi Flurry:</strong> a rapid multi-hit dash through enemies in a line.</p>
                 <p><strong>Passive — Focused Mind:</strong> landing three consecutive hits grants a brief speed surge.</p>
@@ -179,6 +205,7 @@
             <div class="char-card">
                 <h4>The Exorcist</h4>
                 <span class="role">Ranged — Curse Specialist</span>
+                <span class="unlock-tag grace">Grace unlock</span>
                 <p class="flavor">She's spent her life whispering to what shouldn't be listened to, and it's never once refused her.</p>
                 <p><strong>Magic — Banish:</strong> a ranged holy bolt that can instantly redeem low-HP enemies instead of killing them outright.</p>
                 <p><strong>Passive — Merciful Hand:</strong> redeemed enemies drop bonus Grace.</p>
@@ -187,13 +214,14 @@
             <div class="char-card">
                 <h4>The Prophet</h4>
                 <span class="role">Utility — Control</span>
+                <span class="unlock-tag grace">Grace unlock</span>
                 <p class="flavor">He sees what's coming before it arrives, and there's something almost indecent about how rarely that comforts him.</p>
                 <p><strong>Magic — Divine Judgment:</strong> a telegraphed, delayed area strike — high reward for good positioning.</p>
                 <p><strong>Passive — Foresight:</strong> room contents are revealed on the minimap before entry.</p>
                 <div class="stat-lean">Leans: Magic, Faith</div>
             </div>
         </div>
-        <div class="note">All five available from the start is the default assumption — <strong>open question:</strong> should any be Grace-gated unlocks instead, to give the Sanctuary more to spend on early?</div>
+        <div class="note">Paladin, Cleric, and Monk are available from the first run — they're also the MVP's three, so the earliest players ever get their hands on the game, everyone's on equal footing. Exorcist and Prophet are Grace unlocks: both carry a mechanic that automates or reshapes the Redeem/Smite choice itself (Banish auto-redeems; Foresight reveals what's coming), and that's worth earning after the core choice is already second nature.</div>
     </section>
 
     <!-- ── Stats ───────────────────────────────────────────────────── -->
@@ -236,7 +264,11 @@
             <span class="rank-chip divine">Divine — 50 kills</span>
         </div>
         <p>Each rank-up adds a stat bump and/or strengthens the relic's unique effect — a relic earned early in a run should feel meaningfully different by Level 10 than the moment it was picked up. Rank progress resets each run (roguelite, not permanent per-item progression) unless a Sanctuary upgrade later says otherwise.</p>
-        <div class="note"><strong>Open question:</strong> should any relics have a downside (a "cursed" tier — strong effect, real cost) for players who want higher variance? Common in the genre, not yet decided here.</div>
+        <h3>Cursed relics</h3>
+        <div class="rank-chips">
+            <span class="rank-chip cursed">Cursed — strong effect, real cost</span>
+        </div>
+        <p>A found relic can roll Cursed — orthogonal to its rank, which still climbs through kills the same as any other relic. A strong effect paired with a genuine drawback (a stat penalty, a standing debuff), always visually telegraphed on pickup so a curse reads as a deliberate risk taken, not a trap sprung. Deferred past MVP: the base econony needs to feel right and trustworthy before it's deliberately broken.</p>
     </section>
 
     <!-- ── Levels & Difficulty ─────────────────────────────────────── -->
@@ -302,15 +334,35 @@
         </ul>
     </section>
 
+    <!-- ── MVP Scope ───────────────────────────────────────────────── -->
+    <section class="design-section">
+        <h2>MVP Scope</h2>
+        <p>"Done enough" means a playable version with three working characters and four levels, bosses included. That can't include G.O.D. — mechanically, G.O.D. <em>is</em> the other nine bosses' abilities recombined, so it can't exist until nine boss mechanics already do. The MVP's fourth boss is the last of four sin bosses, not the finale.</p>
+        <h3>In scope</h3>
+        <ul>
+            <li><strong>Characters:</strong> Paladin, Cleric, Monk — a tank-melee, resource-support, and fast-melee spread, all available from the first run.</li>
+            <li><strong>Levels 1–4:</strong> Pride, Envy, Wrath, Gluttony — also, not coincidentally, the four technically simplest bosses to build, ahead of the illusion-rendering, floor-decay, and Magic-strip systems the back half needs.</li>
+            <li>Core combat, Health/Magic bars, and the five foundational stats: Health, Magic, Speed, Power, Defense.</li>
+            <li>The Redeem-or-Smite choice and Faith — the game's identity, not optional even at MVP scale.</li>
+            <li>Monster / treasure / boss rooms, door-lock-on-clear, treasure stat pickups.</li>
+            <li>A minimal Sanctuary: permadeath run-end, Grace earned and spent on exactly one thing.</li>
+            <li>The level-transition cutscene <em>system</em>, even with placeholder art or text — proving the pipeline matters more than the writing at this stage.</li>
+        </ul>
+        <h3>Deferred</h3>
+        <ul>
+            <li>Exorcist and Prophet (the Grace-gated unlocks) and bosses 5 through 9, plus G.O.D. at Level 10.</li>
+            <li>Luck, Crit Chance, and Crit Damage — hardcoded inert until itemization math is worth building.</li>
+            <li>Shrine rooms, the full 4-tier relic catalog, cursed relics, controller support, and branching cutscene variants.</li>
+        </ul>
+    </section>
+
     <!-- ── Still Undecided ─────────────────────────────────────────── -->
     <section class="design-section">
         <h2>Still Open</h2>
         <ul>
-            <li>Are all five characters available from the start, or partially Grace-gated?</li>
-            <li>Cursed/negative-effect relics — yes or no?</li>
-            <li>Controller support scope, and input scheme (twin-stick vs. grid movement) — not yet decided.</li>
-            <li>Art style and asset pipeline (pixel art vs. vector) — the single biggest scope/timeline driver, still unset.</li>
-            <li>Exact Grace costs and permanent-blessing catalog for the Sanctuary hub.</li>
+            <li>Exact Grace costs across the four sink types — deliberately left unset until MVP playtesting gives real numbers on Grace-earn rate and death frequency to tune against.</li>
+            <li>Cursed-relic drop rate and the exact visual telegraph that reads as "this one bites back" before pickup.</li>
+            <li>Controller remapping scope — a later Godot input-action pass, not a structural decision, but not yet scheduled.</li>
         </ul>
     </section>
 
