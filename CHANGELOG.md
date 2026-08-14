@@ -2,7 +2,12 @@
 
 All notable changes follow [Conventional Commits](https://www.conventionalcommits.org/).
 
-## [4.17.0] — 2026-08-12
+## [4.19.0] — 2026-08-13
+
+### Features
+
+- feat: Salvation — a Godot 4 / C# roguelite vertical slice, first commit. Procedurally generates a branching, one-way dungeon (three routes always converge on the boss room, verified by test); Isaac-style locked room camera; Paladin with a free basic attack plus a Magic-costing Divine Smite; a Furi-inspired precision parry (narrow timing window, refunds Magic on a perfect block) alongside a Hades-style dash with brief i-frames and a fading afterimage trail; Pride, the first boss, with a telegraphed mirrored-counterattack mechanic and a health-gated enrage phase; obstacle placement that's verified reachable-to-every-door by a flood-fill before it's allowed to spawn, so no room can softlock; runtime-generated pixel-art (floors, walls, characters, doors) instead of static image assets; a sultry-themed serif UI with eased (non-stiff) bar/button motion; PS4/dual-stick controller support alongside mouse-and-keyboard.
+- test: two-tier test setup — a plain-xUnit project (`salvation/tests/Salvation.Tests`) for the pure logic (stat math, dungeon-graph construction, pixel-canvas drawing) that runs with zero Godot engine dependency, plus a GoDotTest suite (`salvation/project/scripts/tests`) for scene-level behavior (Room/Door lock state) that runs inside a real Godot process via `godot --headless --path . scenes/tests/test_main.tscn -- --run-tests`.
 
 ### Fixes (security)
 
