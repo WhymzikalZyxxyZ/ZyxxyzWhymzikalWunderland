@@ -33,9 +33,15 @@ var _knockback_remaining: float = 0.0
 var _knockback_velocity: Vector2 = Vector2.ZERO
 
 
+## See PlayerController.ACTOR_Z_INDEX — same reasoning, kept as its own
+## constant since Enemy and PlayerController don't share a base class.
+const ACTOR_Z_INDEX := 10
+
+
 func _ready() -> void:
 	active_enemies.append(self)
 	stats = _create_stats()
+	z_index = ACTOR_Z_INDEX
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 
 	var texture := _build_sprite()

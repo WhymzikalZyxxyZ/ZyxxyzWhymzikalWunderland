@@ -113,6 +113,31 @@ static func build_pride_boss() -> Texture2D:
 	return canvas.bake(palette, 2)
 
 
+## A simple curved slash arc — the pixel-level attack effect, drawn once
+## and reused for every strike rather than a full sprite-sheet animation.
+## Native size is fixed; callers rotate the resulting Sprite2D to the
+## attacker's facing direction.
+static func build_slash() -> Texture2D:
+	var canvas := PixelCanvas.new(20, 20)
+
+	# An arc built from three overlapping ellipse rings, thickest at the
+	# center and tapering at each end — reads as a curved sword-swing rather
+	# than a straight bar.
+	canvas.fill_ellipse(10, 10, 9, 9, "s")
+	canvas.fill_ellipse(10, 10, 6, 6, ".")
+	canvas.fill_ellipse(2, 4, 3, 3, ".")
+	canvas.fill_ellipse(18, 4, 3, 3, ".")
+	canvas.fill_ellipse(2, 16, 5, 5, ".")
+	canvas.fill_ellipse(18, 16, 5, 5, ".")
+	canvas.fill_ellipse(10, 3, 2, 2, "h")
+
+	var palette := {
+		"s": Color(0.92, 0.92, 0.98, 0.85),
+		"h": Color(1.0, 1.0, 1.0, 0.95),
+	}
+	return canvas.bake(palette, 2)
+
+
 ## Iron-bound gothic door. Native size is fixed; callers stretch via Sprite2D.scale to fit the actual gap.
 static func build_door() -> Texture2D:
 	var canvas := PixelCanvas.new(10, 18)

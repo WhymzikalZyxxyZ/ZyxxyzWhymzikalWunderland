@@ -26,6 +26,7 @@ func _build_sprite() -> Texture2D:
 
 func _attack() -> void:
 	_strike_in_facing_cone(basic_attack_damage, basic_attack_range)
+	_spawn_attack_slash(basic_attack_range * 0.6)
 	print("Paladin: sword strike!")
 
 
@@ -38,6 +39,7 @@ func _use_magic() -> void:
 	if landed:
 		record_ability_used(smite_damage)
 
+	_spawn_attack_slash(smite_range * 0.6)
 	print("Paladin: Divine Smite!")
 
 

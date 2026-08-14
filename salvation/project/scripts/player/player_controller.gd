@@ -39,6 +39,11 @@ static var active_players: Array[PlayerController] = []
 @export var parry_cooldown: float = 0.9
 @export var parry_magic_refund: float = 15.0
 
+## Path to the screen shown on death. Exported (not a hardcoded scene-change
+## call) so a future multi-character run can override it per-character, and
+## so tests can construct a PlayerController without a live SceneTree behind it.
+@export var death_screen_path: String = "res://scenes/ui/death_screen.tscn"
+
 var stats: Stats
 
 var health_ratio: float:
@@ -64,9 +69,20 @@ var _sprite: Sprite2D
 var _hit_flash_remaining: float = 0.0
 
 
+## Environment (floor/walls/obstacles) sits at negative z_index, but that's
+## only relative to Room, its immediate parent. Actors set an explicit,
+## unambiguously positive z_index instead of relying on being "0 by default,
+## which happens to be above -1/-2" — this stays correct even if a future
+## room layer, decoration, or effect gets added between the environment and
+## the actors without every one of those additions having to reason about
+## the exact z_index gap it's not allowed to cross.
+const ACTOR_Z_INDEX := 10
+
+
 func _ready() -> void:
 	active_players.append(self)
 	stats = _create_stats()
+	z_index = ACTOR_Z_INDEX
 
 	# Grounded is the CharacterBody2D default and applies floor/slope/
 	# wall-slide physics meant for platformers — with no gravity here,
@@ -121,6 +137,13 @@ func _physics_process(delta: float) -> void:
 		if _dash_time_remaining <= 0.0:
 			_is_dashing = false
 			is_invulnerable = false
+	elif move_input == Vector2.ZERO:
+		# Releasing the stick/keys stops the character immediately rather than
+		# coasting — the lerp below is for ramping smoothly INTO motion, not
+		# for how it ends. Decaying velocity toward zero at the same rate
+		# reads as sliding/ice-skating, which is exactly what MOTION_MODE_FLOATING
+		# was chosen over the grounded default to avoid in the first place.
+		velocity = Vector2.ZERO
 	else:
 		var target := move_input * stats.speed
 		velocity = velocity.lerp(target, clampf(acceleration * delta, 0.0, 1.0))
@@ -178,6 +201,23 @@ func _spawn_dash_afterimage() -> void:
 	get_parent().add_child(ghost)
 
 
+## Basic pixel-level attack feedback: a slash arc spawned facing the current
+## rotation, offset out to roughly where the strike lands. Concrete
+## characters call this from their own _attack()/_use_magic() — the range
+## differs per ability, so it's a parameter rather than baked in here.
+func _spawn_attack_slash(offset_distance: float) -> void:
+	if get_parent() == null:
+		return
+
+	var slash := AttackSlash.new()
+	slash.texture = CharacterSprites.build_slash()
+	slash.global_position = global_position + Vector2.RIGHT.rotated(rotation) * offset_distance
+	slash.rotation = rotation
+	slash.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	slash.z_index = ACTOR_Z_INDEX
+	get_parent().add_child(slash)
+
+
 ## Free basic attack, always available. Base is an unarmed placeholder.
 func _attack() -> void:
 	print("%s attacks (base implementation — override in the concrete character)." % CharacterId.name_of(character_id))
@@ -221,5 +261,8 @@ func _die() -> void:
 	var collision := get_node_or_null("CollisionShape2D")
 	if collision != null:
 		collision.disabled = true
+
+	if is_inside_tree():
+		get_tree().change_scene_to_file(death_screen_path)
 
 	queue_free()
