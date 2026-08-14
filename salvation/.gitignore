@@ -1,0 +1,15 @@
+# Godot 4 local cache — shader cache, imported assets, .NET build temp.
+# Fully regenerated on next editor open / build; never worth committing.
+.godot/
+
+# Mono/.NET build output, for both the game project and the test project.
+bin/
+obj/
+
+# Godot export artifacts, if export presets are ever configured locally.
+export.cfg
+export_presets.cfg
+
+# OS/editor cruft.
+.DS_Store
+*.tmp

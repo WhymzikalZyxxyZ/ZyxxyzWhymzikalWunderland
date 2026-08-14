@@ -1,0 +1,36 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/BossHealthBar.cs" id="1_script"]
+
+[node name="BossHealthBarLayer" type="CanvasLayer"]
+
+[node name="BossHealthBar" type="Control" parent="."]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_top = 24.0
+offset_bottom = 84.0
+mouse_filter = 2
+script = ExtResource("1_script")
+
+[node name="VBox" type="VBoxContainer" parent="BossHealthBar"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_right = 200.0
+offset_bottom = 60.0
+alignment = 1
+
+[node name="HealthBar" type="ProgressBar" parent="BossHealthBar/VBox"]
+custom_minimum_size = Vector2(400, 22)
+layout_mode = 2
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="NameLabel" type="Label" parent="BossHealthBar/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "Boss"
