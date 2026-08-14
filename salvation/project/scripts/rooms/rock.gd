@@ -1,0 +1,57 @@
+class_name Rock
+extends StaticBody2D
+## A breakable obstacle: three hits to shatter, then a 21% chance to leave
+## behind a HealthPickup. Tracked via a hand-kept registry the same way
+## Enemy is, so player attacks can find rocks in range without every attack
+## needing its own room reference.
+
+const MAX_HITS := 3
+const DROP_CHANCE := 0.21
+
+static var active_rocks: Array[Rock] = []
+
+@export var hit_flash_duration: float = 0.08
+
+var hits_remaining: int = MAX_HITS
+
+var _sprite: Sprite2D
+var _collision: CollisionShape2D
+var _hit_flash_remaining: float = 0.0
+
+
+func _ready() -> void:
+	active_rocks.append(self)
+
+
+func _exit_tree() -> void:
+	active_rocks.erase(self)
+
+
+func _process(delta: float) -> void:
+	if _hit_flash_remaining <= 0.0:
+		return
+	_hit_flash_remaining -= delta
+	if _sprite != null:
+		_sprite.modulate = Color(1.8, 1.8, 1.8) if _hit_flash_remaining > 0.0 else Color.WHITE
+
+
+func take_damage(_amount: float = 1.0) -> void:
+	if hits_remaining <= 0:
+		return
+
+	hits_remaining -= 1
+	_hit_flash_remaining = hit_flash_duration
+	if hits_remaining <= 0:
+		_break()
+
+
+func _break() -> void:
+	if randf() < DROP_CHANCE:
+		var pickup := HealthPickup.new()
+		pickup.global_position = global_position
+		get_parent().add_child(pickup)
+
+	active_rocks.erase(self)
+	if _collision != null:
+		_collision.disabled = true
+	queue_free()
