@@ -5,6 +5,12 @@ extends Node2D
 ## steps inside — a plain AABB check against PlayerController.active_players.
 ## Tracks its enemies in a list and polls is_instance_valid each frame
 ## rather than relying on a freed reference lingering.
+##
+## Enemies are NOT attached up front. DungeonGenerator only hands a Room a
+## list of PackedScenes to spawn (enemy_scenes_to_spawn) before add_child();
+## the room doesn't actually instantiate any of them until the moment it's
+## first revealed, so nothing exists — walking around, colliding, chasing —
+## for a room the player hasn't stepped into yet.
 
 const FLOOR_Z_INDEX := -2
 const WALL_Z_INDEX := -1
@@ -26,10 +32,15 @@ const WALL_Z_INDEX := -1
 @export var door_gap_center_x: float = 0.0
 @export var door_gap_size: float = 90.0
 
+## Set by DungeonGenerator before add_child(). Instantiated lazily, only
+## once this room is actually revealed — see _spawn_pending_enemies().
+@export var enemy_scenes_to_spawn: Array[PackedScene] = []
+
 var is_cleared: bool = false
 var is_revealed: bool = false
 
 var _enemies: Array[Enemy] = []
+var _enemies_spawned: bool = false
 var _camera: Camera2D
 
 
@@ -39,22 +50,22 @@ func _ready() -> void:
 	_build_obstacles()
 	_camera = _build_camera()
 
-	for enemy in _find_enemies(self):
-		_enemies.append(enemy)
-
-	if _enemies.is_empty():
-		is_cleared = true
+	# Nothing to spawn yet, so a room with no pending enemies is cleared
+	# immediately; one that has enemies queued stays uncleared until they're
+	# actually spawned (on reveal) and then defeated.
+	is_cleared = enemy_scenes_to_spawn.is_empty()
 
 	is_revealed = not starts_hidden
 	visible = is_revealed
 	if is_revealed:
 		_camera.make_current()
+		_spawn_pending_enemies()
 
 
 func _physics_process(_delta: float) -> void:
 	if not is_cleared:
 		_enemies = _enemies.filter(func(e): return is_instance_valid(e))
-		if _enemies.is_empty():
+		if _enemies_spawned and _enemies.is_empty():
 			is_cleared = true
 
 	if not is_revealed:
@@ -67,7 +78,45 @@ func _physics_process(_delta: float) -> void:
 			is_revealed = true
 			visible = true
 			_camera.make_current()
+			_spawn_pending_enemies()
 			break
+
+
+## Instantiates every queued enemy scene at a random position within this
+## room's bounds — the same spread DungeonGenerator used to compute up
+## front, now done here since spawning happens here. A no-op past the
+## first call, so revealing a room twice (shouldn't normally happen, but
+## cheap to guard) can't double-spawn.
+func _spawn_pending_enemies() -> void:
+	if _enemies_spawned:
+		return
+	_enemies_spawned = true
+
+	if enemy_scenes_to_spawn.is_empty():
+		return
+
+	var rng := RandomNumberGenerator.new()
+	rng.seed = gore_seed + 104729
+
+	for scene in enemy_scenes_to_spawn:
+		var enemy: Enemy = scene.instantiate()
+		# A boss gets the room's center, same as the old up-front spawn did —
+		# rank-and-file enemies still scatter randomly.
+		enemy.position = bounds.get_center() if enemy.is_boss else Vector2(
+			rng.randf_range(bounds.position.x + 60.0, bounds.end.x - 60.0),
+			rng.randf_range(bounds.position.y + 60.0, bounds.end.y - 60.0)
+		)
+		add_child(enemy)
+		_enemies.append(enemy)
+
+	is_cleared = _enemies.is_empty()
+
+
+## Copy of whatever's actually been spawned so far — used by DungeonGenerator
+## to find the boss once it exists, since binding the health bar at
+## generation time isn't possible anymore (nothing has spawned yet then).
+func get_spawned_enemies() -> Array[Enemy]:
+	return _enemies.duplicate()
 
 
 ## Isaac-style locked room camera: fixed on this room's center, swapped in via make_current the moment the room is revealed.
@@ -79,21 +128,12 @@ func _build_camera() -> Camera2D:
 	return camera
 
 
-static func _find_enemies(root: Node) -> Array[Enemy]:
-	var found: Array[Enemy] = []
-	for child in root.get_children():
-		if child is Enemy:
-			found.append(child)
-		found.append_array(_find_enemies(child))
-	return found
-
-
-## Environment layer, always behind actors. DungeonGenerator attaches
-## enemies/the player to a Room BEFORE it enters the tree (Room._ready()
-## needs them present to count enemies correctly), which means they're
-## EARLIER children than anything built here — and in Godot 2D, later
-## siblings draw on top of earlier ones by default. Explicit z_index
-## sidesteps child order entirely instead of relying on it.
+## Environment layer, always behind actors. DungeonGenerator attaches the
+## player to the start Room BEFORE it enters the tree, and enemies are
+## spawned later still (lazily, on reveal — see _spawn_pending_enemies),
+## so actors can end up either earlier or later children than this floor
+## depending on the room. Explicit z_index sidesteps child order entirely
+## instead of relying on it either way.
 func _build_floor() -> void:
 	var tile := EnvironmentArt.build_floor_tile(floor_color)
 	var floor_sprite := EnvironmentArt.build_tiled_sprite(tile, bounds.position, bounds.size)

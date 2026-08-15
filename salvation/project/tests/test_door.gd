@@ -5,6 +5,8 @@ extends GutTest
 ## for real. Room instances are added to the tree first so room.get_path()
 ## resolves to a real absolute NodePath the door can be pointed at.
 
+const SINNER_SCENE: PackedScene = preload("res://scenes/enemies/sinner.tscn")
+
 
 func test_door_with_no_gated_room_starts_unlocked() -> void:
 	var door := Door.new()
@@ -19,7 +21,7 @@ func test_door_gated_by_an_uncleared_room_starts_locked() -> void:
 
 	var room := Room.new()
 	room.bounds = Rect2(-100, -100, 200, 200)
-	room.add_child(Sinner.new())
+	room.enemy_scenes_to_spawn = [SINNER_SCENE]
 	root.add_child(room)
 
 	var door := Door.new()

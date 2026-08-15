@@ -211,17 +211,21 @@ func _spawn_dash_afterimage() -> void:
 	get_parent().add_child(ghost)
 
 
-## Basic pixel-level attack feedback: a slash arc spawned facing the current
-## rotation, offset out to roughly where the strike lands. Concrete
-## characters call this from their own _attack()/_use_magic() — the range
-## differs per ability, so it's a parameter rather than baked in here.
-func _spawn_attack_slash(offset_distance: float) -> void:
+## Basic pixel-level attack feedback: a crescent that sweeps through an arc
+## centered on the current facing direction, at roughly the range the
+## strike actually lands. Concrete characters call this from their own
+## _attack()/_use_magic() — the range differs per ability, so it's a
+## parameter rather than baked in here.
+func _spawn_attack_slash(swing_radius: float) -> void:
 	if get_parent() == null:
 		return
 
 	var slash := AttackSlash.new()
 	slash.texture = CharacterSprites.build_slash()
-	slash.global_position = global_position + Vector2.RIGHT.rotated(rotation) * offset_distance
+	slash.pivot = self
+	slash.facing_angle = rotation
+	slash.radius = swing_radius
+	slash.global_position = global_position + Vector2.RIGHT.rotated(rotation) * swing_radius
 	slash.rotation = rotation
 	slash.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	slash.z_index = ACTOR_Z_INDEX

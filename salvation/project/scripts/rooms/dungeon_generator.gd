@@ -1,19 +1,26 @@
 class_name DungeonGenerator
 extends Node2D
-## Builds a branching, one-way dungeon on a small grid: a start room, a
-## boss room grid_width-1 columns away, and three routes (top/middle/bottom
-## row) between them that share an early trunk before forking at a
-## randomized column — so the boss room ends up with a door for every
-## route actually built, and each fork room can have doors on any of its
-## four sides depending on which routes pass through it. Door.gd seals the
-## entry door behind the player once they arrive in a room, so a chosen
-## branch can't be un-chosen.
+## Builds a dungeon around a single empty start room: four routes, one per
+## cardinal direction, each independently reaching out a random number of
+## rooms before bending to converge on one shared boss room. Every route is
+## capped at MAX_ROOMS_PER_ROUTE rooms (reach out + bend back included) —
+## enforced by construction (see _max_reach_for), not just hoped for, since
+## a route that starts by heading straight away from the boss has much
+## less room to wander before it has to turn back than one already heading
+## toward it. Door.gd seals the entry door behind the player once they
+## arrive in a room, so a chosen branch can't be un-chosen.
 ##
 ## Room population order matters: Room._ready() (which builds walls from
-## its door flags and scans its children for enemies) fires the instant a
-## Room enters the SceneTree. Everything a room needs — door flags,
-## enemies, the player — has to be attached to it *before* add_child(room),
-## not after, or Room._ready() runs against an empty/half-configured room.
+## its door flags) fires the instant a Room enters the SceneTree. Door
+## flags and the player have to be attached *before* add_child(room), not
+## after, or Room._ready() runs against a half-configured room. Enemies
+## are different: they're queued as PackedScenes on the room and only
+## actually instantiated by the room itself once it's revealed — see
+## Room._spawn_pending_enemies() — so nothing exists in a room the player
+## hasn't stepped into yet.
+
+const MAX_ROOMS_PER_ROUTE := 5
+const DIRECTIONS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
 @export var paladin_scene: PackedScene
 @export var sinner_scene: PackedScene
@@ -21,13 +28,25 @@ extends Node2D
 @export var boss_health_bar_path: NodePath
 @export var player_hud_path: NodePath
 
-@export var grid_width: int = 5
-@export var grid_height: int = 3
 @export var room_size: Vector2 = Vector2(480, 420)
 @export var room_spacing: Vector2 = Vector2(600, 520)
 @export var door_gap_size: float = 90.0
+## Where the boss room sits relative to the start room. Kept modest —
+## every direction has to be able to reach it and bend back within
+## MAX_ROOMS_PER_ROUTE rooms, and the farther away it is, the less reach
+## the directions facing away from it get.
+@export var boss_offset: Vector2i = Vector2i(2, 0)
 ## 0 = random each run.
 @export var seed_value: int = 0
+## Inclusive range for how many Sinners a non-start, non-boss room queues.
+@export var min_enemies_per_room: int = 0
+@export var max_enemies_per_room: int = 10
+
+# The boss doesn't exist until its room is revealed and lazily spawns it,
+# so the health bar can't bind at generation time — _process polls until
+# it appears, then stops.
+var _pending_boss_room: Room
+var _pending_boss_bar: BossHealthBar
 
 
 func _ready() -> void:
@@ -37,16 +56,17 @@ func _ready() -> void:
 	else:
 		rng.randomize()
 
-	var mid_row := grid_height / 2
-	var start := Vector2i(0, mid_row)
-	var boss := Vector2i(grid_width - 1, mid_row)
-	var branch_column: int = clampi(rng.randi_range(1, grid_width - 2), 1, grid_width - 2)
+	var start := Vector2i.ZERO
+	var boss := boss_offset
 
 	var cells: Array[Vector2i] = [start, boss]
 	var edges: Array[Array] = []  # each element is [Vector2i, Vector2i], normalized
 
-	for row in range(grid_height):
-		var path := build_l_path(start, Vector2i(branch_column, row), boss)
+	for direction in DIRECTIONS:
+		var max_reach := _max_reach_for(direction, boss)
+		var reach: int = rng.randi_range(1, max_reach)
+		var waypoint := start + direction * reach
+		var path := build_l_path(start, waypoint, boss)
 		for cell in path:
 			if not cells.has(cell):
 				cells.append(cell)
@@ -65,15 +85,16 @@ func _ready() -> void:
 		_apply_door_flags(rooms, edge, distances)
 
 	var paladin: PlayerController = null
-	var boss_enemies: Array[Enemy] = []
+	var boss_room: Room = null
 	for cell in cells:
 		var room: Room = rooms[cell]
 		if cell == start:
 			paladin = _spawn_player(room)
 		elif cell == boss:
-			boss_enemies.append(_spawn_boss(room))
+			_queue_boss(room)
+			boss_room = room
 		else:
-			_spawn_enemies(room, rng)
+			_queue_enemies(room, rng)
 
 	for cell in cells:
 		add_child(rooms[cell])
@@ -85,10 +106,40 @@ func _ready() -> void:
 		var hud := get_node_or_null(player_hud_path)
 		if hud != null:
 			hud.bind_player(paladin)
-	if not boss_enemies.is_empty() and not boss_health_bar_path.is_empty():
+	if boss_room != null and not boss_health_bar_path.is_empty():
 		var bar := get_node_or_null(boss_health_bar_path)
 		if bar != null:
-			bar.bind_boss(boss_enemies[0])
+			_pending_boss_room = boss_room
+			_pending_boss_bar = bar
+
+
+func _process(_delta: float) -> void:
+	if _pending_boss_room == null:
+		return
+
+	var spawned := _pending_boss_room.get_spawned_enemies()
+	if spawned.is_empty():
+		return
+
+	_pending_boss_bar.bind_boss(spawned[0])
+	_pending_boss_room = null
+
+
+## The largest `reach` (rooms traveled straight in `direction` from the
+## start before bending toward `boss`) such that the FULL route — reach out,
+## then Manhattan-distance back to boss — still fits within
+## MAX_ROOMS_PER_ROUTE. Computed, not guessed: a direction pointed straight
+## at the boss can reach further before it has to turn around than one
+## pointed straight away from it, and this finds the exact cutoff for
+## whichever direction it's asked about rather than assuming one number
+## works for all four.
+static func _max_reach_for(direction: Vector2i, boss: Vector2i) -> int:
+	for reach in range(MAX_ROOMS_PER_ROUTE, 0, -1):
+		var waypoint := direction * reach
+		var route_length := reach + absi(waypoint.x - boss.x) + absi(waypoint.y - boss.y)
+		if route_length <= MAX_ROOMS_PER_ROUTE:
+			return reach
+	return 1
 
 
 static func build_l_path(start: Vector2i, waypoint: Vector2i, boss: Vector2i) -> Array[Vector2i]:
@@ -246,19 +297,16 @@ func _spawn_player(room: Room) -> PlayerController:
 	return paladin
 
 
-func _spawn_boss(room: Room) -> Enemy:
-	var boss: Enemy = pride_boss_scene.instantiate()
-	boss.position = room.bounds.get_center()
-	room.add_child(boss)
-	return boss
+func _queue_boss(room: Room) -> void:
+	room.enemy_scenes_to_spawn = [pride_boss_scene]
 
 
-func _spawn_enemies(room: Room, rng: RandomNumberGenerator) -> void:
-	var count := rng.randi_range(1, 2)
+## 0 to max_enemies_per_room Sinners, inclusive — an empty room is a valid
+## roll, same as a packed one. Position is picked by the room itself at
+## spawn time, not here, since spawning no longer happens here either.
+func _queue_enemies(room: Room, rng: RandomNumberGenerator) -> void:
+	var count := rng.randi_range(min_enemies_per_room, max_enemies_per_room)
+	var scenes: Array[PackedScene] = []
 	for i in range(count):
-		var sinner: Enemy = sinner_scene.instantiate()
-		sinner.position = Vector2(
-			rng.randf_range(room.bounds.position.x + 60.0, room.bounds.end.x - 60.0),
-			rng.randf_range(room.bounds.position.y + 60.0, room.bounds.end.y - 60.0)
-		)
-		room.add_child(sinner)
+		scenes.append(sinner_scene)
+	room.enemy_scenes_to_spawn = scenes

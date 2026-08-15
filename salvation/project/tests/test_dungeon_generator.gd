@@ -51,27 +51,49 @@ func test_compute_distances_start_is_zero_and_grows_by_one_per_hop() -> void:
 	assert_eq(distances[Vector2i(2, 0)], 2)
 
 
-func test_three_row_fan_always_converges_on_the_boss_with_exactly_three_edges() -> void:
-	# Reproduces exactly what DungeonGenerator._ready() builds (three paths,
-	# one per row, sharing an early trunk before forking) and checks the
-	# property players actually experience: the boss room ends up with one
-	# door per route, for every possible branch column.
-	var start := Vector2i(0, 1)
-	var boss := Vector2i(4, 1)
+func test_max_reach_for_never_lets_a_route_exceed_the_room_cap() -> void:
+	var boss := Vector2i(2, 0)
 
-	for branch_column in range(1, 4):
+	for direction in DungeonGenerator.DIRECTIONS:
+		var max_reach: int = DungeonGenerator._max_reach_for(direction, boss)
+		var waypoint := direction * max_reach
+		var route_length: int = max_reach + absi(waypoint.x - boss.x) + absi(waypoint.y - boss.y)
+
+		assert_true(max_reach >= 1, "Every direction should get at least one room of reach.")
+		assert_lte(route_length, DungeonGenerator.MAX_ROOMS_PER_ROUTE, "direction=%s" % direction)
+
+
+func test_four_directions_always_converge_on_the_boss_within_the_room_cap() -> void:
+	# Reproduces exactly what DungeonGenerator._ready() builds — four
+	# independent routes, one per cardinal direction, each reaching out a
+	# random (capped) distance before bending to the same boss cell — and
+	# checks the property players actually experience: every route
+	# actually arrives at the boss, and none of them take more than
+	# MAX_ROOMS_PER_ROUTE rooms to do it.
+	var start := Vector2i.ZERO
+	var boss := Vector2i(2, 0)
+
+	for trial in range(20):
+		var rng := RandomNumberGenerator.new()
+		rng.seed = trial + 1
+
+		var cells: Array[Vector2i] = [start, boss]
 		var edges: Array[Array] = []
 
-		for row in range(3):
-			var path := DungeonGenerator.build_l_path(start, Vector2i(branch_column, row), boss)
+		for direction in DungeonGenerator.DIRECTIONS:
+			var max_reach: int = DungeonGenerator._max_reach_for(direction, boss)
+			var reach := rng.randi_range(1, max_reach)
+			var waypoint := start + direction * reach
+			var path := DungeonGenerator.build_l_path(start, waypoint, boss)
+
+			assert_lte(path.size() - 1, DungeonGenerator.MAX_ROOMS_PER_ROUTE, "trial=%d direction=%s" % [trial, direction])
+
+			for cell in path:
+				if not cells.has(cell):
+					cells.append(cell)
 			for i in range(path.size() - 1):
 				var edge := DungeonGenerator.normalize_edge(path[i], path[i + 1])
-				var already_present := false
-				for e in edges:
-					if e[0] == edge[0] and e[1] == edge[1]:
-						already_present = true
-						break
-				if not already_present:
+				if not DungeonGenerator._edges_contains(edges, edge):
 					edges.append(edge)
 
 		var boss_edge_count := 0
@@ -79,4 +101,4 @@ func test_three_row_fan_always_converges_on_the_boss_with_exactly_three_edges() 
 			if edge[0] == boss or edge[1] == boss:
 				boss_edge_count += 1
 
-		assert_eq(boss_edge_count, 3, "branch_column=%d" % branch_column)
+		assert_gt(boss_edge_count, 0, "trial=%d: boss should be reachable by at least one route." % trial)

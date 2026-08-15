@@ -14,6 +14,11 @@ static var active_enemies: Array[Enemy] = []
 @export var is_boss: bool = false
 @export var display_name: String = ""
 
+## Only meaningful when is_boss is true — shown on the victory screen as a
+## hint of what's coming, not a reward screen that treats the run as over.
+@export var next_boss_name: String = ""
+@export var victory_screen_path: String = "res://scenes/ui/victory_screen.tscn"
+
 @export var hit_flash_duration: float = 0.08
 @export var knockback_force: float = 260.0
 @export var knockback_duration: float = 0.12
@@ -149,5 +154,9 @@ func _defeat() -> void:
 	var collision := get_node_or_null("CollisionShape2D")
 	if collision != null:
 		collision.disabled = true
+
+	if is_boss and is_inside_tree():
+		VictoryScreen.next_boss_name = next_boss_name
+		get_tree().change_scene_to_file(victory_screen_path)
 
 	queue_free()
