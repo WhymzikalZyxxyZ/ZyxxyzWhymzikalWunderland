@@ -16,7 +16,10 @@ func _ready() -> void:
 	# A loss ends this run — nothing left for MainMenuScreen's Continue to
 	# resume into, so the saved level/character resume point clears here,
 	# same as complete_run() already does on the opposite (victory) ending.
+	# record_death() is the separate lifetime tally, unaffected by the
+	# per-run clear.
 	RunProgress.clear_run_progress()
+	RunProgress.record_death()
 
 	_prompt = get_node_or_null("VBox/Prompt")
 

@@ -1,15 +1,22 @@
 extends Node
-## Two kinds of persisted state, both in the same save file, kept
+## Three kinds of persisted state, all in the same save file, kept
 ## deliberately separate:
 ##  - Meta-progression (which characters/relics have been earned) never
 ##    resets. complete_run always grants exactly one new unlock, so the
 ##    game is provably finishable end to end: Paladin -> ... -> Prophet ->
 ##    every relic.
+##  - Lifetime totals (total_deaths, total_victories) never reset either —
+##    a plain running count, not a per-run history. "Victory" here means a
+##    full run actually completed (the Adversary fell), not each
+##    individual boss cleared along the way.
 ##  - The current run's resume point (which level, which character) is
 ##    transient — it's exactly what MainMenuScreen's "Continue" button
 ##    reads, and it's cleared the moment that run actually ends, in either
 ##    direction (DeathScreen on a loss, complete_run() on the final trial's
 ##    victory), so a stale save never offers to resume a run that's over.
+##    There is only ever one resume point — a single save slot, not a
+##    history of runs — so starting a New Run while one is saved simply
+##    replaces it the moment the next level starts and re-saves.
 ##
 ## Registered as an autoload singleton (see project.godot) so every scene
 ## can reach it as "RunProgress". save_path is a constructor parameter
@@ -22,6 +29,9 @@ const SAVE_PATH := "user://salvation_progress.cfg"
 var _save_path: String
 var _unlocked_characters: Dictionary = {CharacterId.PALADIN: true}
 var _unlocked_relics: Array[String] = []
+
+var _total_deaths: int = 0
+var _total_victories: int = 0
 
 var _current_level_path: String = ""
 var _current_character_id: int = -1
@@ -41,6 +51,21 @@ func is_unlocked(id: int) -> bool:
 
 func unlocked_relics() -> Array[String]:
 	return _unlocked_relics
+
+
+func total_deaths() -> int:
+	return _total_deaths
+
+
+func total_victories() -> int:
+	return _total_victories
+
+
+## Called from DeathScreen — a lifetime tally, separate from and
+## unaffected by clear_run_progress()'s per-run resume point.
+func record_death() -> void:
+	_total_deaths += 1
+	_save()
 
 
 ## True once a level has actually started and no run-ending event
@@ -86,6 +111,7 @@ func clear_run_progress() -> void:
 ## exactly like a loss does.
 func complete_run() -> String:
 	clear_run_progress()
+	_total_victories += 1
 
 	for candidate in [CharacterId.PALADIN, CharacterId.CLERIC, CharacterId.MONK, CharacterId.EXORCIST, CharacterId.PROPHET]:
 		if not _unlocked_characters.has(candidate):
@@ -103,6 +129,8 @@ func _save() -> void:
 	var config := ConfigFile.new()
 	config.set_value("progress", "characters", _unlocked_characters.keys())
 	config.set_value("progress", "relics", _unlocked_relics)
+	config.set_value("progress", "total_deaths", _total_deaths)
+	config.set_value("progress", "total_victories", _total_victories)
 	config.set_value("run", "level_path", _current_level_path)
 	config.set_value("run", "character_id", _current_character_id)
 	config.save(_save_path)
@@ -120,6 +148,9 @@ func _load() -> void:
 	var relics = config.get_value("progress", "relics", [])
 	for relic in relics:
 		_unlocked_relics.append(relic)
+
+	_total_deaths = config.get_value("progress", "total_deaths", 0)
+	_total_victories = config.get_value("progress", "total_victories", 0)
 
 	_current_level_path = config.get_value("run", "level_path", "")
 	_current_character_id = config.get_value("run", "character_id", -1)

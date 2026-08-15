@@ -15,6 +15,7 @@ func _ready() -> void:
 	var continue_button := get_node_or_null("VBox/ContinueButton")
 	var new_run_button := get_node_or_null("VBox/NewRunButton")
 	var progress_label := get_node_or_null("VBox/ProgressLabel")
+	var stats_label := get_node_or_null("VBox/StatsLabel")
 
 	if continue_button != null:
 		if RunProgress.has_run_in_progress():
@@ -27,6 +28,9 @@ func _ready() -> void:
 
 	if progress_label != null:
 		progress_label.text = _progress_summary()
+
+	if stats_label != null:
+		stats_label.text = "%d deaths — %d victories" % [RunProgress.total_deaths(), RunProgress.total_victories()]
 
 
 func _on_continue_pressed() -> void:

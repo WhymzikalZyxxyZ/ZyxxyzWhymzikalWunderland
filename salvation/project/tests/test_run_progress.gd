@@ -90,6 +90,55 @@ func test_run_progress_survives_across_instances_pointed_at_the_same_path() -> v
 	assert_false(second.has_run_in_progress(), "complete_run()'s clear should have persisted too.")
 
 
+func test_total_deaths_and_victories_start_at_zero() -> void:
+	var progress := _build()
+
+	assert_eq(progress.total_deaths(), 0)
+	assert_eq(progress.total_victories(), 0)
+
+
+func test_record_death_increments_the_lifetime_total_but_not_victories() -> void:
+	var progress := _build()
+
+	progress.record_death()
+	progress.record_death()
+
+	assert_eq(progress.total_deaths(), 2)
+	assert_eq(progress.total_victories(), 0)
+
+
+func test_complete_run_increments_total_victories_but_not_deaths() -> void:
+	var progress := _build()
+
+	progress.complete_run()
+
+	assert_eq(progress.total_victories(), 1)
+	assert_eq(progress.total_deaths(), 0)
+
+
+func test_clearing_run_progress_does_not_affect_lifetime_totals() -> void:
+	var progress := _build()
+	progress.record_death()
+	progress.save_run_progress("res://scenes/levels/level2.tscn", CharacterId.CLERIC)
+
+	progress.clear_run_progress()
+
+	assert_eq(progress.total_deaths(), 1, "The per-run resume point and lifetime totals are separate; clearing one shouldn't touch the other.")
+
+
+func test_lifetime_totals_survive_across_instances_pointed_at_the_same_path() -> void:
+	var first: Node = RunProgressScript.new(_temp_path)
+	add_child_autofree(first)
+	first.record_death()
+	first.complete_run()
+
+	var second: Node = RunProgressScript.new(_temp_path)
+	add_child_autofree(second)
+
+	assert_eq(second.total_deaths(), 1)
+	assert_eq(second.total_victories(), 1)
+
+
 func test_a_corrupted_save_file_is_treated_as_a_fresh_start() -> void:
 	var file := FileAccess.open(_temp_path, FileAccess.WRITE)
 	file.store_string("not a valid config file")
