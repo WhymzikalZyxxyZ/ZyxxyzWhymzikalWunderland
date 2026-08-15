@@ -176,11 +176,21 @@ func _physics_process(delta: float) -> void:
 		else:
 			_sprite.modulate = Color.WHITE
 
+	# Right stick preferred over mouse when both are present — a controller
+	# player moving the stick shouldn't have facing hijacked by wherever the
+	# mouse cursor happens to be sitting.
 	var aim_input := Input.get_vector("aim_left", "aim_right", "aim_up", "aim_down")
 	if aim_input != Vector2.ZERO:
 		look_at(global_position + aim_input)
 	elif get_viewport() != null:
-		look_at(get_viewport().get_mouse_position())
+		# get_mouse_position() is viewport/screen-space; look_at() needs a
+		# global/world position. Every Room camera sits at that room's own
+		# world center with a non-default zoom, so feeding screen-space
+		# coordinates in directly aimed at a wildly wrong point the instant
+		# the camera wasn't sitting at the world origin at 1:1 zoom — which
+		# is to say, in every room except by coincidence. get_global_mouse_position()
+		# is the transform-aware equivalent and is what look_at() actually needs.
+		look_at(get_global_mouse_position())
 
 	if Input.is_action_just_pressed("attack"):
 		_attack()

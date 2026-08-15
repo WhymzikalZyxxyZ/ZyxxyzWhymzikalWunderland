@@ -20,6 +20,23 @@ func test_room_with_an_enemy_child_is_not_cleared_yet() -> void:
 	assert_false(room.is_cleared, "A room with a live enemy child should not be is_cleared yet.")
 
 
+func test_room_becomes_cleared_once_its_last_enemy_is_freed() -> void:
+	# Door.gd's unlock condition is literally `_gated_room.is_cleared` — this
+	# is what actually drives "defeat everyone in the room to open its door."
+	var room := Room.new()
+	room.bounds = Rect2(-100, -100, 200, 200)
+	var sinner := Sinner.new()
+	room.add_child(sinner)
+	add_child_autofree(room)
+
+	assert_false(room.is_cleared, "Sanity check: still uncleared with a live enemy.")
+
+	sinner.queue_free()
+	await wait_physics_frames(2)
+
+	assert_true(room.is_cleared, "Room should flip to cleared once its last enemy is actually freed.")
+
+
 func test_room_generates_at_least_one_wall_body() -> void:
 	var room := Room.new()
 	room.bounds = Rect2(-100, -100, 200, 200)
