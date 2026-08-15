@@ -1,14 +1,15 @@
 class_name DungeonGenerator
 extends Node2D
-## Builds a dungeon around a single empty start room: four routes, one per
-## cardinal direction, each independently reaching out a random number of
-## rooms before bending to converge on one shared boss room. Every route is
-## capped at MAX_ROOMS_PER_ROUTE rooms (reach out + bend back included) —
-## enforced by construction (see _max_reach_for), not just hoped for, since
-## a route that starts by heading straight away from the boss has much
-## less room to wander before it has to turn back than one already heading
-## toward it. Door.gd seals the entry door behind the player once they
-## arrive in a room, so a chosen branch can't be un-chosen.
+## Builds a dungeon as a single procedurally-grown corridor rather than a
+## fixed layout: starting from an empty start room, each step picks one of
+## up to four unvisited cardinal neighbors at random to place the next
+## room — "each room has 4 paths, and the one actually built is chosen
+## randomly among them." The odds that any given room becomes the boss
+## room climb by 1/BOSS_CHANCE_DENOMINATOR every step it doesn't: 1-in-6
+## right after the start room, 2-in-6 the room after that, and so on,
+## guaranteed by the sixth room if nothing rolled sooner. Door.gd seals
+## the entry door behind the player once they arrive in a room, so a
+## chosen turn can't be un-chosen.
 ##
 ## Room population order matters: Room._ready() (which builds walls from
 ## its door flags) fires the instant a Room enters the SceneTree. Door
@@ -19,7 +20,7 @@ extends Node2D
 ## Room._spawn_pending_enemies() — so nothing exists in a room the player
 ## hasn't stepped into yet.
 
-const MAX_ROOMS_PER_ROUTE := 5
+const BOSS_CHANCE_DENOMINATOR := 6
 const DIRECTIONS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
 @export var paladin_scene: PackedScene
@@ -31,11 +32,6 @@ const DIRECTIONS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0
 @export var room_size: Vector2 = Vector2(480, 420)
 @export var room_spacing: Vector2 = Vector2(600, 520)
 @export var door_gap_size: float = 90.0
-## Where the boss room sits relative to the start room. Kept modest —
-## every direction has to be able to reach it and bend back within
-## MAX_ROOMS_PER_ROUTE rooms, and the farther away it is, the less reach
-## the directions facing away from it get.
-@export var boss_offset: Vector2i = Vector2i(2, 0)
 ## 0 = random each run.
 @export var seed_value: int = 0
 ## Inclusive range for how many Sinners a non-start, non-boss room queues.
@@ -57,28 +53,17 @@ func _ready() -> void:
 		rng.randomize()
 
 	var start := Vector2i.ZERO
-	var boss := boss_offset
+	var path := build_corridor(start, rng)
+	var boss: Vector2i = path[path.size() - 1]
 
-	var cells: Array[Vector2i] = [start, boss]
-	var edges: Array[Array] = []  # each element is [Vector2i, Vector2i], normalized
+	var edges: Array[Array] = []
+	for i in range(path.size() - 1):
+		edges.append(normalize_edge(path[i], path[i + 1]))
 
-	for direction in DIRECTIONS:
-		var max_reach := _max_reach_for(direction, boss)
-		var reach: int = rng.randi_range(1, max_reach)
-		var waypoint := start + direction * reach
-		var path := build_l_path(start, waypoint, boss)
-		for cell in path:
-			if not cells.has(cell):
-				cells.append(cell)
-		for i in range(path.size() - 1):
-			var edge := normalize_edge(path[i], path[i + 1])
-			if not _edges_contains(edges, edge):
-				edges.append(edge)
-
-	var distances := compute_distances(start, cells, edges)
+	var distances := compute_distances(start, path, edges)
 
 	var rooms: Dictionary = {}
-	for cell in cells:
+	for cell in path:
 		rooms[cell] = _build_room(cell, cell == start, cell == boss, rng)
 
 	for edge in edges:
@@ -86,7 +71,7 @@ func _ready() -> void:
 
 	var paladin: PlayerController = null
 	var boss_room: Room = null
-	for cell in cells:
+	for cell in path:
 		var room: Room = rooms[cell]
 		if cell == start:
 			paladin = _spawn_player(room)
@@ -96,7 +81,7 @@ func _ready() -> void:
 		else:
 			_queue_enemies(room, rng)
 
-	for cell in cells:
+	for cell in path:
 		add_child(rooms[cell])
 
 	for edge in edges:
@@ -125,54 +110,49 @@ func _process(_delta: float) -> void:
 	_pending_boss_room = null
 
 
-## The largest `reach` (rooms traveled straight in `direction` from the
-## start before bending toward `boss`) such that the FULL route — reach out,
-## then Manhattan-distance back to boss — still fits within
-## MAX_ROOMS_PER_ROUTE. Computed, not guessed: a direction pointed straight
-## at the boss can reach further before it has to turn around than one
-## pointed straight away from it, and this finds the exact cutoff for
-## whichever direction it's asked about rather than assuming one number
-## works for all four.
-static func _max_reach_for(direction: Vector2i, boss: Vector2i) -> int:
-	for reach in range(MAX_ROOMS_PER_ROUTE, 0, -1):
-		var waypoint := direction * reach
-		var route_length := reach + absi(waypoint.x - boss.x) + absi(waypoint.y - boss.y)
-		if route_length <= MAX_ROOMS_PER_ROUTE:
-			return reach
-	return 1
-
-
-static func build_l_path(start: Vector2i, waypoint: Vector2i, boss: Vector2i) -> Array[Vector2i]:
+## Grows a single corridor of cells from start: at every step, picks one
+## of the current room's unvisited cardinal neighbors at random (never
+## backtracking into an already-placed room), then rolls whether that new
+## room becomes the boss room — starting at 1/BOSS_CHANCE_DENOMINATOR and
+## climbing by the same fraction each additional step, so it's guaranteed
+## by the BOSS_CHANCE_DENOMINATOR-th room even if every earlier roll
+## missed. The returned array's last element is always the boss room.
+static func build_corridor(start: Vector2i, rng: RandomNumberGenerator) -> Array[Vector2i]:
 	var path: Array[Vector2i] = [start]
-	var cur := start
-	cur = _step_axis(cur, waypoint.x, true, path)
-	cur = _step_axis(cur, waypoint.y, false, path)
-	cur = _step_axis(cur, boss.x, true, path)
-	cur = _step_axis(cur, boss.y, false, path)
+	var visited := {start: true}
+	var current := start
+	var rooms_placed := 0
+
+	while true:
+		var candidates: Array[Vector2i] = []
+		for direction in DIRECTIONS:
+			var next := current + direction
+			if not visited.has(next):
+				candidates.append(next)
+
+		# Boxed in by its own earlier turns — vanishingly rare this early,
+		# but the corridor has to end somewhere, so the last room placed
+		# becomes the boss room rather than looping forever.
+		if candidates.is_empty():
+			break
+
+		var next: Vector2i = candidates[rng.randi_range(0, candidates.size() - 1)]
+		visited[next] = true
+		path.append(next)
+		current = next
+		rooms_placed += 1
+
+		var boss_chance: float = float(mini(rooms_placed, BOSS_CHANCE_DENOMINATOR)) / float(BOSS_CHANCE_DENOMINATOR)
+		if rng.randf() < boss_chance:
+			break
+
 	return path
-
-
-static func _step_axis(cur: Vector2i, target: int, horizontal: bool, path: Array[Vector2i]) -> Vector2i:
-	var current: int = cur.x if horizontal else cur.y
-	var step: int = signi(target - current)
-	while current != target:
-		current += step
-		cur = Vector2i(current, cur.y) if horizontal else Vector2i(cur.x, current)
-		path.append(cur)
-	return cur
 
 
 static func normalize_edge(a: Vector2i, b: Vector2i) -> Array:
 	if a.x < b.x or (a.x == b.x and a.y < b.y):
 		return [a, b]
 	return [b, a]
-
-
-static func _edges_contains(edges: Array[Array], edge: Array) -> bool:
-	for e in edges:
-		if e[0] == edge[0] and e[1] == edge[1]:
-			return true
-	return false
 
 
 static func compute_distances(start: Vector2i, cells: Array[Vector2i], edges: Array[Array]) -> Dictionary:

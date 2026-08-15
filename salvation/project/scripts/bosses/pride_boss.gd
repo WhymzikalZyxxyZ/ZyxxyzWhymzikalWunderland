@@ -24,8 +24,18 @@ extends Enemy
 @export var enraged_mirror_interval: float = 2.5
 @export var enraged_mirror_range: float = 280.0
 
+## Baseline aggression independent of whatever the player does — the mirror
+## is Pride's signature (and telegraphed) counter, but standing still and
+## never using an ability shouldn't mean Pride never attacks at all.
+## Untelegraphed on purpose: this is meant to read as ordinary pressure,
+## not another readable set piece competing with the mirror for attention.
+@export var base_attack_interval: float = 3.0
+@export var base_attack_damage: float = 12.0
+@export var base_attack_range: float = 90.0
+
 var _mirrored_damage: float = 0.0
 var _mirror_cooldown_remaining: float = 0.0
+var _base_attack_cooldown_remaining: float = 0.0
 var _tracked_player: PlayerController
 var _last_seen_ability_use_id: int = -1
 
@@ -66,6 +76,12 @@ func _physics_process(delta: float) -> void:
 	if _tracked_player == null or not is_instance_valid(_tracked_player):
 		_update_telegraph_glow()
 		return
+
+	_base_attack_cooldown_remaining -= delta
+	if _base_attack_cooldown_remaining <= 0.0 and global_position.distance_to(_tracked_player.global_position) <= base_attack_range:
+		_tracked_player.take_damage(base_attack_damage)
+		_base_attack_cooldown_remaining = base_attack_interval
+		print("Pride lashes out with a base strike!")
 
 	if _last_seen_ability_use_id < 0:
 		# First frame we've seen this player: baseline without mirroring
