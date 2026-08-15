@@ -28,7 +28,7 @@ func _build_sprite() -> Texture2D:
 
 
 func _attack() -> void:
-	_strike_in_facing_cone(basic_attack_damage, basic_attack_range)
+	_strike_in_facing_cone(_rolled_damage(basic_attack_damage), basic_attack_range)
 	_spawn_attack_slash(basic_attack_range * 0.6)
 	print("Prophet: staff strike!")
 
@@ -38,13 +38,15 @@ func _use_magic() -> void:
 		print("Prophet: not enough Magic for the Final Verse.")
 		return
 
-	var landed := _strike_in_facing_cone(verse_damage, verse_range)
+	var rolled := _rolled_damage(verse_damage)
+	var landed := _strike_in_facing_cone(rolled, verse_range)
 	if landed:
-		record_ability_used(verse_damage)
+		record_ability_used(rolled)
 
 	_spawn_attack_slash(verse_range * 0.6)
 	# The biggest burst of any Magic ability, on self rather than at the
 	# point of impact — the Verse radiates outward from the Prophet, the
 	# hit landing is almost incidental to it.
 	_spawn_magic_burst(global_position, Color(0.55, 0.6, 0.95, 0.85), 2.4)
+	_trigger_arcane_echo(verse_damage, Color(0.55, 0.6, 0.95, 0.7))
 	print("Prophet: Final Verse!")

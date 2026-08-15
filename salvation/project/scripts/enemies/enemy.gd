@@ -189,6 +189,16 @@ func _defeat() -> void:
 	if is_boss and is_inside_tree():
 		VictoryScreen.next_boss_name = next_boss_name
 		VictoryScreen.next_level_scene_path = next_level_scene_path
+		# Every boss defeat grants exactly one random upgrade (damage,
+		# attack speed, move speed, a new bonus spell, crit chance, or crit
+		# damage) — see PlayerController.apply_random_boss_upgrade. Only
+		# one player is ever actually active in practice, but this loop
+		# doesn't assume that; if a second one existed, both would be upgraded.
+		VictoryScreen.last_upgrade_description = ""
+		for player in PlayerController.active_players:
+			if is_instance_valid(player):
+				VictoryScreen.last_upgrade_description = player.apply_random_boss_upgrade()
+				break
 		get_tree().change_scene_to_file(victory_screen_path)
 
 	queue_free()

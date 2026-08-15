@@ -15,6 +15,7 @@ func after_each() -> void:
 	# the next.
 	VictoryScreen.next_boss_name = ""
 	VictoryScreen.next_level_scene_path = ""
+	VictoryScreen.last_upgrade_description = ""
 
 
 func test_mid_run_shows_the_next_boss_hint_and_is_not_final() -> void:
@@ -51,3 +52,25 @@ func test_mid_run_does_not_show_a_completion_time() -> void:
 	add_child_autofree(screen)
 
 	assert_eq(screen._time_label.text, "", "Only the final trial's victory reports a completion time.")
+
+
+func test_upgrade_label_shows_whatever_the_boss_kill_granted() -> void:
+	VictoryScreen.next_boss_name = "Envy"
+	VictoryScreen.next_level_scene_path = "res://scenes/levels/level2.tscn"
+	VictoryScreen.last_upgrade_description = "+15% Damage"
+
+	var screen: VictoryScreen = VICTORY_SCREEN_SCENE.instantiate()
+	add_child_autofree(screen)
+
+	assert_eq(screen._upgrade_label.text, "Gained: +15% Damage")
+
+
+func test_upgrade_label_stays_empty_when_nothing_was_granted() -> void:
+	VictoryScreen.next_boss_name = "Envy"
+	VictoryScreen.next_level_scene_path = "res://scenes/levels/level2.tscn"
+	VictoryScreen.last_upgrade_description = ""
+
+	var screen: VictoryScreen = VICTORY_SCREEN_SCENE.instantiate()
+	add_child_autofree(screen)
+
+	assert_eq(screen._upgrade_label.text, "")

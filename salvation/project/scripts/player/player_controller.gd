@@ -13,6 +13,33 @@ extends CharacterBody2D
 var last_ability_damage: float = 0.0
 var last_ability_use_id: int = 0
 
+## Rolled per-run growth: every boss defeated grants exactly one of these,
+## picked at random — see apply_random_boss_upgrade(). All reset to
+## nothing at the start of every run just by virtue of being a fresh
+## PlayerController instance; nothing here is persisted between runs.
+enum BossUpgradeType { DAMAGE, ATTACK_SPEED, MOVE_SPEED, NEW_MAGIC, CRIT_CHANCE, CRIT_DAMAGE }
+
+const DAMAGE_UPGRADE_AMOUNT := 0.15
+const ATTACK_SPEED_UPGRADE_FACTOR := 0.85
+const MOVE_SPEED_UPGRADE_FACTOR := 1.12
+const CRIT_CHANCE_UPGRADE_AMOUNT := 0.08
+const CRIT_DAMAGE_UPGRADE_AMOUNT := 0.25
+## A cooldown of exactly zero would let Attack Speed upgrades stack toward
+## an unclickable-fast, physics-frame-limited attack rate — this is the
+## floor no amount of stacking can go under.
+const MIN_ATTACK_COOLDOWN := 0.08
+
+## Multiplies every point of melee/ranged damage this character deals —
+## see _rolled_damage(). Grown by the Damage boss upgrade; nothing else
+## touches it.
+var bonus_damage_multiplier: float = 1.0
+
+## Each stack triggers one bonus Arcane Echo (a small extra burst +
+## fraction of the ability's own effect) alongside every future Magic
+## cast — see _trigger_arcane_echo(), called from each concrete
+## character's own _use_magic(). Grown by the New Magic boss upgrade.
+var echo_stacks: int = 0
+
 ## Every currently-active player, maintained by hand as a simple registry.
 static var active_players: Array[PlayerController] = []
 
@@ -30,6 +57,15 @@ static var active_players: Array[PlayerController] = []
 @export var acceleration: float = 26.0
 
 @export var hit_flash_duration: float = 0.08
+
+## The basic attack had no cooldown at all before boss upgrades existed —
+## spam-clickable, gated only by the player's own click rate. A real
+## cooldown had to exist first for an "Attack Speed" upgrade to have
+## anything to actually shrink; 0.35s (~2.85/s uncapped) is picked to
+## still feel snappy for a character with no upgrades yet, not a nerf
+## dressed up as infrastructure.
+@export var attack_cooldown: float = 0.35
+var _attack_cooldown_remaining: float = 0.0
 
 ## A minor shove away from whatever landed the hit — same idea as Enemy's
 ## own knockback on take_damage, kept deliberately light (lower force,
@@ -205,8 +241,10 @@ func _physics_process(delta: float) -> void:
 		# is the transform-aware equivalent and is what look_at() actually needs.
 		look_at(get_global_mouse_position())
 
-	if Input.is_action_just_pressed("attack"):
+	_attack_cooldown_remaining -= delta
+	if Input.is_action_just_pressed("attack") and _attack_cooldown_remaining <= 0.0:
 		_attack()
+		_attack_cooldown_remaining = attack_cooldown
 	if Input.is_action_just_pressed("magic"):
 		_use_magic()
 
@@ -287,6 +325,8 @@ func _attack() -> void:
 ## their Magic ability. Returns whether anything was actually hit, since
 ## some callers (e.g. a Magic ability) only want to spend the cast's
 ## resource / record it as the player's last landed ability if it did.
+## damage should already be the output of _rolled_damage() — this applies
+## it as-is to every target caught in the swing, it doesn't roll anything itself.
 func _strike_in_facing_cone(damage: float, attack_range: float) -> bool:
 	var origin := global_position
 	var facing := Vector2.RIGHT.rotated(rotation)
@@ -325,6 +365,69 @@ func _use_magic() -> void:
 func record_ability_used(damage: float) -> void:
 	last_ability_damage = damage
 	last_ability_use_id += 1
+
+
+## Applies bonus_damage_multiplier and rolls stats.critical_chance/
+## critical_damage — every concrete character's _attack()/_use_magic()
+## should route its base damage number through this exactly once per use
+## (not once per target hit) before handing it to _strike_in_facing_cone
+## or a Projectile, so every target caught in the same swing/shot takes
+## the identical (possibly critical) amount, and so record_ability_used
+## reflects what actually landed rather than the un-rolled base number.
+func _rolled_damage(base_damage: float) -> float:
+	var amount: float = base_damage * bonus_damage_multiplier
+	if randf() < stats.critical_chance:
+		amount *= stats.critical_damage
+		print("%s critical hit!" % CharacterId.name_of(character_id))
+	return amount
+
+
+## Called from each concrete character's own _use_magic(), after its
+## normal effect — a no-op until at least one New Magic boss upgrade has
+## been granted. Each stack fires one additional small burst dealing a
+## fraction of the ability's own base amount, landing on whatever's in
+## front of the caster the same way a basic attack would (a flat cone
+## strike, not the ability's own possibly-different shape — Exorcist's
+## Rite echo doesn't launch a second Projectile, for instance, it just
+## strikes like everyone else's melee cone does).
+func _trigger_arcane_echo(base_amount: float, tint: Color) -> void:
+	if echo_stacks <= 0:
+		return
+
+	for i in range(echo_stacks):
+		_strike_in_facing_cone(_rolled_damage(base_amount * 0.4), 60.0)
+		_spawn_magic_burst(global_position + Vector2.RIGHT.rotated(rotation) * 40.0, tint, 0.9)
+
+
+## Called by Enemy._defeat() on every boss kill, for every active player —
+## rolls exactly one of the six upgrade types at random and applies it
+## immediately. Returns a short description (e.g. "+15% Damage") so the
+## caller can show the player what they actually got; nothing here
+## displays anything itself.
+func apply_random_boss_upgrade() -> String:
+	var upgrade: BossUpgradeType = BossUpgradeType.values()[randi() % BossUpgradeType.size()]
+
+	match upgrade:
+		BossUpgradeType.DAMAGE:
+			bonus_damage_multiplier += DAMAGE_UPGRADE_AMOUNT
+			return "+%d%% Damage" % roundi(DAMAGE_UPGRADE_AMOUNT * 100)
+		BossUpgradeType.ATTACK_SPEED:
+			attack_cooldown = maxf(attack_cooldown * ATTACK_SPEED_UPGRADE_FACTOR, MIN_ATTACK_COOLDOWN)
+			return "+%d%% Attack Speed" % roundi((1.0 - ATTACK_SPEED_UPGRADE_FACTOR) * 100)
+		BossUpgradeType.MOVE_SPEED:
+			stats.speed *= MOVE_SPEED_UPGRADE_FACTOR
+			return "+%d%% Move Speed" % roundi((MOVE_SPEED_UPGRADE_FACTOR - 1.0) * 100)
+		BossUpgradeType.NEW_MAGIC:
+			echo_stacks += 1
+			return "New Magic: Arcane Echo (+%d)" % echo_stacks
+		BossUpgradeType.CRIT_CHANCE:
+			stats.critical_chance = clampf(stats.critical_chance + CRIT_CHANCE_UPGRADE_AMOUNT, 0.0, 1.0)
+			return "+%d%% Critical Chance" % roundi(CRIT_CHANCE_UPGRADE_AMOUNT * 100)
+		BossUpgradeType.CRIT_DAMAGE:
+			stats.critical_damage += CRIT_DAMAGE_UPGRADE_AMOUNT
+			return "+%d%% Critical Damage" % roundi(CRIT_DAMAGE_UPGRADE_AMOUNT * 100)
+
+	return ""
 
 
 ## source_position is the attacker's position, used to push the player away

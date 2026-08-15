@@ -28,7 +28,7 @@ func _build_sprite() -> Texture2D:
 
 
 func _attack() -> void:
-	_strike_in_facing_cone(basic_attack_damage, basic_attack_range)
+	_strike_in_facing_cone(_rolled_damage(basic_attack_damage), basic_attack_range)
 	_spawn_attack_slash(basic_attack_range * 0.6)
 	print("Cleric: mace strike!")
 
@@ -38,9 +38,13 @@ func _use_magic() -> void:
 		print("Cleric: not enough Magic to Mend.")
 		return
 
+	# Deliberately not routed through _rolled_damage/bonus_damage_multiplier —
+	# those exist to scale damage, and a heal isn't damage. Crit/Damage boss
+	# upgrades don't touch Sacred Mend's heal amount.
 	stats.heal(mend_heal_amount)
 	record_ability_used(mend_heal_amount)
 	# A healing glow on self, not a combat slash — Mend doesn't swing
 	# anything at anyone, so it shouldn't look like it does.
 	_spawn_magic_burst(global_position, Color(0.45, 0.95, 0.6, 0.85))
+	_trigger_arcane_echo(basic_attack_damage, Color(0.45, 0.95, 0.6, 0.7))
 	print("Cleric: Sacred Mend!")

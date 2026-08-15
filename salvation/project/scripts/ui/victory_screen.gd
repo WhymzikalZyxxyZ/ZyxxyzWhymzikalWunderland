@@ -6,11 +6,15 @@ extends Control
 ## any of the existing gameplay actions being pressed, same dismissal
 ## pattern as TutorialScreen/DeathScreen.
 
-## Both set by Enemy._defeat() immediately before the scene change — the
-## simplest way to hand two values forward without standing up a full
+## All three set by Enemy._defeat() immediately before the scene change —
+## the simplest way to hand values forward without standing up a full
 ## autoload for it. Read once in _ready() and not touched again.
 static var next_boss_name: String = ""
 static var next_level_scene_path: String = ""
+## Whatever PlayerController.apply_random_boss_upgrade() returned for
+## this boss — shown regardless of whether this is the final trial or
+## not, since every boss (including the tenth) grants one.
+static var last_upgrade_description: String = ""
 
 ## Where "continue" goes once the final trial (next_level_scene_path
 ## empty) is cleared, after the run-completion reward is granted — the
@@ -20,6 +24,7 @@ static var next_level_scene_path: String = ""
 var _prompt: Label
 var _next_boss_label: Label
 var _time_label: Label
+var _upgrade_label: Label
 var _pulse_time: float = 0.0
 var _is_final_trial: bool = false
 
@@ -28,8 +33,12 @@ func _ready() -> void:
 	_prompt = get_node_or_null("VBox/Prompt")
 	_next_boss_label = get_node_or_null("VBox/NextBoss")
 	_time_label = get_node_or_null("VBox/TimeLabel")
+	_upgrade_label = get_node_or_null("VBox/UpgradeLabel")
 
 	_is_final_trial = next_level_scene_path == ""
+
+	if _upgrade_label != null and last_upgrade_description != "":
+		_upgrade_label.text = "Gained: %s" % last_upgrade_description
 
 	if _is_final_trial:
 		# Read before complete_run() — it clears the run's elapsed timer

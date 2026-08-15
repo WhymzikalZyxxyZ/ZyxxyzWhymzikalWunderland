@@ -29,7 +29,7 @@ func _build_sprite() -> Texture2D:
 
 
 func _attack() -> void:
-	_strike_in_facing_cone(basic_attack_damage, basic_attack_range)
+	_strike_in_facing_cone(_rolled_damage(basic_attack_damage), basic_attack_range)
 	_spawn_attack_slash(basic_attack_range * 0.6)
 	print("Exorcist: warding strike!")
 
@@ -39,11 +39,15 @@ func _use_magic() -> void:
 		print("Exorcist: not enough Magic for Banishing Rite.")
 		return
 
+	# Rolled once here, not inside Projectile — a Projectile is a plain
+	# decoupled Node with no knowledge of who cast it or their upgrades,
+	# so the caster has to hand it an already-final damage number.
+	var rolled := _rolled_damage(rite_damage)
 	if get_parent() != null:
 		var bolt := Projectile.new()
 		bolt.speed = rite_speed
 		bolt.max_distance = rite_max_distance
-		bolt.damage = rite_damage
+		bolt.damage = rolled
 		get_parent().add_child(bolt)
 		bolt.launch(global_position, Vector2.RIGHT.rotated(rotation))
 
@@ -51,6 +55,7 @@ func _use_magic() -> void:
 	# Rite already reads as distinct via the bolt itself; this is just the
 	# moment of casting it, not a second copy of the same effect.
 	_spawn_magic_burst(global_position, Color(0.55, 0.4, 0.85, 0.75))
+	_trigger_arcane_echo(rite_damage, Color(0.55, 0.4, 0.85, 0.7))
 
-	record_ability_used(rite_damage)
+	record_ability_used(rolled)
 	print("Exorcist: Banishing Rite!")

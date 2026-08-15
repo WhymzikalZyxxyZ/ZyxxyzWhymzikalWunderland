@@ -28,7 +28,7 @@ func _build_sprite() -> Texture2D:
 
 
 func _attack() -> void:
-	_strike_in_facing_cone(basic_attack_damage, basic_attack_range)
+	_strike_in_facing_cone(_rolled_damage(basic_attack_damage), basic_attack_range)
 	_spawn_attack_slash(basic_attack_range * 0.6)
 	print("Monk: quick strike!")
 
@@ -38,13 +38,15 @@ func _use_magic() -> void:
 		print("Monk: not enough Magic for Flurry Strike.")
 		return
 
-	var landed := _strike_in_facing_cone(flurry_damage, flurry_range)
+	var rolled := _rolled_damage(flurry_damage)
+	var landed := _strike_in_facing_cone(rolled, flurry_range)
 	if landed:
-		record_ability_used(flurry_damage)
+		record_ability_used(rolled)
 
 	# Three overlapping slashes at slightly different angles rather than
 	# one — this is a flurry of hits landing at once, not one bigger swing.
 	_spawn_attack_slash(flurry_range * 0.6, -18.0)
 	_spawn_attack_slash(flurry_range * 0.6, 0.0)
 	_spawn_attack_slash(flurry_range * 0.6, 18.0)
+	_trigger_arcane_echo(flurry_damage, Color(0.85, 0.75, 0.3, 0.7))
 	print("Monk: Flurry Strike!")
