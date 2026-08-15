@@ -59,6 +59,7 @@ jobs:
       dart:       ${{ steps.force.outputs.all == 'true' || steps.filter.outputs.dart == 'true' }}
       cpp:        ${{ steps.force.outputs.all == 'true' || steps.filter.outputs.cpp == 'true' }}
       java:       ${{ steps.force.outputs.all == 'true' || steps.filter.outputs.java == 'true' }}
+      godot:      ${{ steps.force.outputs.all == 'true' || steps.filter.outputs.godot == 'true' }}
       ci:         ${{ steps.force.outputs.all == 'true' || steps.filter.outputs.ci == 'true' }}
     steps:
       - id: force
@@ -100,6 +101,8 @@ jobs:
               - 'cpp/**'
             java:
               - 'java/**'
+            godot:
+              - 'salvation/**'
             ci:
               - '.github/workflows/ci.yml'
 
@@ -675,3 +678,33 @@ jobs:
             dotnet list "$proj" package --vulnerable --include-transitive 2>&1 | tee /tmp/audit.txt
             grep -q "has the following vulnerable packages" /tmp/audit.txt && exit 1 || true
           done
+
+  # ── Godot: GUT test suite (Salvation) ────────────────────────────────────────
+  # Uses the standard (non-mono) Godot build — Salvation is pure GDScript, no
+  # .NET runtime involved, matching what actually ships in the Web export.
+  test-godot:
+    name: Test Godot (GUT — Salvation)
+    runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.godot == 'true' || needs.detect-changes.outputs.ci == 'true'
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.7.1
+          use-dotnet: false
+          include-templates: false
+      - name: Import project (registers script class_names)
+        run: godot --headless --path salvation/project --import
+      - name: Run GUT suite
+        run: >
+          godot --headless --path salvation/project
+          -s addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
+      - name: Verify main level loads without script errors
+        run: |
+          godot --headless --path salvation/project scenes/levels/level1.tscn --quit-after 2 2>&1 | tee /tmp/level1.log
+          if grep -q "SCRIPT ERROR" /tmp/level1.log; then
+            echo "::error::level1.tscn produced script errors on load"
+            exit 1
+          fi

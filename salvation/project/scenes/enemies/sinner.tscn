@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://d4h8s2n1sinner"]
 
-[ext_resource type="Script" path="res://scripts/enemies/Sinner.cs" id="1_script"]
+[ext_resource type="Script" path="res://scripts/enemies/sinner.gd" id="1_script"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(24, 24)

@@ -9,6 +9,7 @@ obj/
 # Godot export artifacts, if export presets are ever configured locally.
 export.cfg
 export_presets.cfg
+builds/
 
 # OS/editor cruft.
 .DS_Store
