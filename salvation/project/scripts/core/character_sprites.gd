@@ -73,13 +73,26 @@ static func build_sinner() -> Texture2D:
 	return canvas.bake(palette, 2)
 
 
-## The shared robed-and-horned silhouette every one of the ten trial bosses
-## uses — recolored per sin from a single base hue rather than each getting
-## its own hand-drawn shape, the same "one shape, many palettes" approach
-## Room's rock/wall art already uses (see EnvironmentArt._shift). base_color
-## is the robe's primary hue; everything else (shadow, highlight, horns,
-## gold trim, outline) is derived from it so a boss always reads as
-## visually coherent regardless of which sin it is.
+## Every trial-boss palette derives from a single base hue the same way —
+## shadow/highlight/horn-dark from Color.darkened/.lightened, gold trim and
+## outline held constant across every sin so a boss always reads as
+## visually coherent regardless of which one it is.
+static func _sin_palette(base_color: Color) -> Dictionary:
+	return {
+		"p": base_color,
+		"P": base_color.darkened(0.35),
+		"H": base_color.lightened(0.2),
+		"k": base_color.darkened(0.6),
+		"g": Color(0.78, 0.63, 0.24),
+		"e": Color(0.9, 0.75, 0.3),
+		"o": Color(0.03, 0.01, 0.04),
+	}
+
+
+## The classic robed-and-horned silhouette — Pride's original shape, and
+## the Adversary's too (fitting: the last trial wears every sin at once,
+## echoing the first). Every other trial boss gets its own distinct
+## silhouette below rather than just a recolor of this one.
 static func build_sin_boss(base_color: Color) -> Texture2D:
 	var canvas := PixelCanvas.new(25, 24)
 
@@ -107,17 +120,165 @@ static func build_sin_boss(base_color: Color) -> Texture2D:
 	canvas.fill_triangle(Vector2(16, 18), Vector2(18, 22), Vector2(21, 19), ".")
 
 	canvas.auto_outline("o")
+	return canvas.bake(_sin_palette(base_color), 2)
 
-	var palette := {
-		"p": base_color,
-		"P": base_color.darkened(0.35),
-		"H": base_color.lightened(0.2),
-		"k": base_color.darkened(0.6),
-		"g": Color(0.78, 0.63, 0.24),
-		"e": Color(0.9, 0.75, 0.3),
-		"o": Color(0.03, 0.01, 0.04),
-	}
-	return canvas.bake(palette, 2)
+
+## Envy: a hunched, watchful shape — two extra "eyes" set asymmetrically
+## into the shoulders (always watching what it doesn't have) and an arm
+## reaching further than a normal Sinner's ever does.
+static func build_envy_boss(base_color: Color) -> Texture2D:
+	var canvas := PixelCanvas.new(26, 22)
+
+	canvas.fill_triangle(Vector2(3, 12), Vector2(0, 21), Vector2(10, 18), "P")
+	canvas.fill_ellipse(12, 13, 8, 7, "p")
+	canvas.fill_ellipse(15, 15, 5, 5, "P")
+	canvas.fill_ellipse(8, 6, 3, 3, "H")
+
+	# The reach — longer than any other trial boss's arm, always stretching for more.
+	canvas.fill_rect(18, 11, 25, 13, "P")
+	canvas.fill_triangle(Vector2(23, 10), Vector2(26, 12), Vector2(23, 14), "k")
+
+	# Watching eyes: deliberately mismatched size and height.
+	canvas.fill_ellipse(5, 10, 1.4, 1.4, "e")
+	canvas.fill_ellipse(17, 8, 1.0, 1.0, "e")
+
+	canvas.fill_rect(10, 12, 12, 14, "g")
+
+	canvas.auto_outline("o")
+	return canvas.bake(_sin_palette(base_color), 2)
+
+
+## Wrath: broad shoulders, a jagged blade-arm, and a single crack across
+## the face — nothing ornamental, all of it built for hitting first.
+static func build_wrath_boss(base_color: Color) -> Texture2D:
+	var canvas := PixelCanvas.new(25, 23)
+
+	canvas.fill_ellipse(11, 14, 9, 8, "p")
+	canvas.fill_ellipse(14, 16, 6, 6, "P")
+	canvas.fill_ellipse(9, 6, 3.5, 3, "H")
+
+	# Shoulder spikes — jagged, not the smooth horns other sins wear.
+	canvas.fill_triangle(Vector2(2, 8), Vector2(0, 2), Vector2(6, 7), "k")
+	canvas.fill_triangle(Vector2(16, 7), Vector2(19, 1), Vector2(20, 8), "k")
+
+	# The blade-arm — a single jagged edge, longer and heavier than any base attack should look.
+	canvas.fill_triangle(Vector2(17, 13), Vector2(25, 9), Vector2(18, 18), "k")
+
+	# A crack across the face rather than the calm gold eyes other sins get.
+	canvas.set_px(8, 5, "o")
+	canvas.set_px(9, 6, "o")
+	canvas.set_px(9, 7, "o")
+
+	canvas.auto_outline("o")
+	return canvas.bake(_sin_palette(base_color), 2)
+
+
+## Gluttony: wide, round, and low — a small head atop a body that's
+## consumed more than any other trial boss, drooping under its own weight.
+static func build_gluttony_boss(base_color: Color) -> Texture2D:
+	var canvas := PixelCanvas.new(27, 24)
+
+	canvas.fill_ellipse(13, 14, 11, 8, "p")
+	canvas.fill_ellipse(13, 20, 10, 4, "P")
+	canvas.fill_ellipse(13, 5, 3, 3, "H")
+	canvas.fill_ellipse(4, 15, 2.5, 3, "P")
+	canvas.fill_ellipse(22, 15, 2.5, 3, "P")
+
+	# A gold band strained across the belly — excess, not adornment.
+	canvas.fill_rect(4, 16, 22, 18, "g")
+
+	canvas.auto_outline("o")
+	return canvas.bake(_sin_palette(base_color), 2)
+
+
+## Greed: a normal frame built entirely around one outstretched hand
+## clutching a coin far larger than anything else on its body.
+static func build_greed_boss(base_color: Color) -> Texture2D:
+	var canvas := PixelCanvas.new(26, 22)
+
+	canvas.fill_triangle(Vector2(2, 12), Vector2(0, 21), Vector2(9, 18), "P")
+	canvas.fill_ellipse(10, 13, 7, 7, "p")
+	canvas.fill_ellipse(13, 15, 5, 5, "P")
+	canvas.fill_ellipse(7, 6, 3, 3, "H")
+
+	# The coin — the single largest gold shape of any trial boss.
+	canvas.fill_ellipse(21, 12, 4, 4, "e")
+	canvas.fill_ellipse(21, 12, 2.3, 2.3, "g")
+	canvas.fill_rect(15, 11, 18, 13, "P")
+
+	# Grasping fingers curled around it.
+	canvas.fill_triangle(Vector2(17, 9), Vector2(19, 7), Vector2(18, 12), "k")
+	canvas.fill_triangle(Vector2(17, 16), Vector2(19, 18), Vector2(18, 13), "k")
+
+	canvas.auto_outline("o")
+	return canvas.bake(_sin_palette(base_color), 2)
+
+
+## Sloth: low, slumped, unadorned — no horns, no reach, just weight and a
+## robe dragged so far back it trails off the edge of the canvas.
+static func build_sloth_boss(base_color: Color) -> Texture2D:
+	var canvas := PixelCanvas.new(26, 18)
+
+	canvas.fill_triangle(Vector2(6, 10), Vector2(0, 17), Vector2(20, 15), "P")
+	canvas.fill_ellipse(14, 11, 10, 6, "p")
+	canvas.fill_ellipse(6, 9, 3, 2.5, "H")
+
+	canvas.auto_outline("o")
+	return canvas.bake(_sin_palette(base_color), 2)
+
+
+## Lust: slender and tall, with flowing trails streaming back from the
+## head and a heart-shaped mark at the chest — the most ornamental silhouette.
+static func build_lust_boss(base_color: Color) -> Texture2D:
+	var canvas := PixelCanvas.new(22, 25)
+
+	canvas.fill_ellipse(11, 15, 5.5, 8, "p")
+	canvas.fill_ellipse(11, 6, 3, 3, "H")
+
+	# Flowing trails, thin and asymmetric.
+	canvas.fill_triangle(Vector2(8, 4), Vector2(2, 2), Vector2(9, 9), "P")
+	canvas.fill_triangle(Vector2(14, 4), Vector2(21, 8), Vector2(13, 9), "P")
+	canvas.fill_triangle(Vector2(9, 5), Vector2(4, 12), Vector2(10, 10), "P")
+
+	# Heart mark at the chest.
+	canvas.fill_ellipse(9, 14, 1.4, 1.4, "e")
+	canvas.fill_ellipse(12, 14, 1.4, 1.4, "e")
+	canvas.fill_triangle(Vector2(7, 15), Vector2(14, 15), Vector2(10.5, 19), "e")
+
+	canvas.auto_outline("o")
+	return canvas.bake(_sin_palette(base_color), 2)
+
+
+## Despair: tall and gaunt, arms hanging, with a hollow void where every
+## other trial boss has a lit face — nothing looks back at you.
+static func build_despair_boss(base_color: Color) -> Texture2D:
+	var canvas := PixelCanvas.new(22, 27)
+
+	canvas.fill_triangle(Vector2(4, 16), Vector2(1, 26), Vector2(11, 23), "P")
+	canvas.fill_ellipse(11, 16, 6, 9, "p")
+	canvas.fill_ellipse(11, 5, 3, 3.2, "k")  # hollow face, not "H" — nothing shines here.
+	canvas.fill_rect(3, 12, 5, 22, "P")
+	canvas.fill_rect(17, 12, 19, 22, "P")
+
+	canvas.auto_outline("o")
+	return canvas.bake(_sin_palette(base_color), 2)
+
+
+## Doubt: split down the middle — one half drawn solid, the other faded
+## and smaller, reading as two overlapping figures that never quite agree.
+static func build_doubt_boss(base_color: Color) -> Texture2D:
+	var canvas := PixelCanvas.new(24, 22)
+
+	# Solid half.
+	canvas.fill_ellipse(9, 13, 7, 8, "p")
+	canvas.fill_ellipse(9, 5, 3, 3, "H")
+
+	# Faded, offset half — smaller and set back, like an afterimage of doubt.
+	canvas.fill_ellipse(16, 14, 5, 6, "P")
+	canvas.fill_ellipse(16, 8, 2.2, 2.2, "k")
+
+	canvas.auto_outline("o")
+	return canvas.bake(_sin_palette(base_color), 2)
 
 
 ## A simple curved slash arc — the pixel-level attack effect, drawn once

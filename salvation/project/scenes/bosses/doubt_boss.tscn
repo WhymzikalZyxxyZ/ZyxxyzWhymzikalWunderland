@@ -11,8 +11,8 @@ is_boss = true
 display_name = "Doubt"
 next_boss_name = "The Adversary"
 next_level_scene_path = "res://scenes/levels/level10.tscn"
-mirror_interval = 2.6
-enraged_mirror_interval = 1.6
+signature_interval = 2.6
+enraged_signature_interval = 1.6
 base_attack_damage = 17.0
 base_attack_interval = 1.9
 

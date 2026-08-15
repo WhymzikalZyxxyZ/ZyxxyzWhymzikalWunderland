@@ -11,8 +11,8 @@ is_boss = true
 display_name = "Sloth"
 next_boss_name = "Lust"
 next_level_scene_path = "res://scenes/levels/level7.tscn"
-mirror_interval = 5.0
-enraged_mirror_interval = 3.2
+signature_interval = 5.0
+enraged_signature_interval = 3.2
 base_attack_damage = 20.0
 base_attack_interval = 3.5
 

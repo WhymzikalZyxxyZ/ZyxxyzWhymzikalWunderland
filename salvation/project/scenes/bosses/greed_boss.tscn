@@ -11,8 +11,8 @@ is_boss = true
 display_name = "Greed"
 next_boss_name = "Sloth"
 next_level_scene_path = "res://scenes/levels/level6.tscn"
-mirror_interval = 3.4
-enraged_mirror_interval = 2.1
+signature_interval = 3.4
+enraged_signature_interval = 2.1
 base_attack_damage = 16.0
 base_attack_interval = 2.4
 

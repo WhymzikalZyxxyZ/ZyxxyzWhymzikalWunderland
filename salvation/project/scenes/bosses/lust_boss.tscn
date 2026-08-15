@@ -11,8 +11,8 @@ is_boss = true
 display_name = "Lust"
 next_boss_name = "Despair"
 next_level_scene_path = "res://scenes/levels/level8.tscn"
-mirror_interval = 2.8
-enraged_mirror_interval = 1.8
+signature_interval = 2.8
+enraged_signature_interval = 1.8
 base_attack_damage = 15.0
 base_attack_interval = 2.0
 
