@@ -1,14 +1,14 @@
-[gd_scene load_steps=7 format=3 uid="uid://a1r9v3l1level1"]
+[gd_scene load_steps=7 format=3 uid="uid://h8y6c0s8level8"]
 
 [ext_resource type="Script" path="res://scripts/rooms/dungeon_generator.gd" id="1_generator"]
 [ext_resource type="PackedScene" path="res://scenes/player/paladin.tscn" id="2_paladin"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/sinner.tscn" id="3_sinner"]
-[ext_resource type="PackedScene" path="res://scenes/bosses/pride_boss.tscn" id="4_pride"]
+[ext_resource type="PackedScene" path="res://scenes/bosses/despair_boss.tscn" id="4_boss"]
 [ext_resource type="PackedScene" path="res://scenes/ui/boss_health_bar.tscn" id="5_healthbar"]
 [ext_resource type="PackedScene" path="res://scenes/ui/player_hud.tscn" id="6_playerhud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/level_title_card.tscn" id="7_titlecard"]
 
-[node name="Level1" type="Node2D"]
+[node name="Level8" type="Node2D"]
 
 [node name="BossHealthBarLayer" parent="." instance=ExtResource("5_healthbar")]
 
@@ -16,13 +16,13 @@
 
 [node name="LevelTitleCardLayer" parent="." instance=ExtResource("7_titlecard")]
 [node name="LevelTitleCard" parent="LevelTitleCardLayer" index="0"]
-title_text = "PRIDE"
-subtitle_text = "TRIAL I"
+title_text = "DESPAIR"
+subtitle_text = "TRIAL VIII"
 
 [node name="DungeonGenerator" type="Node2D" parent="."]
 script = ExtResource("1_generator")
 paladin_scene = ExtResource("2_paladin")
 sinner_scene = ExtResource("3_sinner")
-boss_scene = ExtResource("4_pride")
+boss_scene = ExtResource("4_boss")
 boss_health_bar_path = NodePath("../BossHealthBarLayer/BossHealthBar")
 player_hud_path = NodePath("../PlayerHudLayer/PlayerHud")

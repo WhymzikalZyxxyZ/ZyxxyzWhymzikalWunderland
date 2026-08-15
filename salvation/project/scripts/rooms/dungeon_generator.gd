@@ -28,7 +28,9 @@ const DIRECTIONS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0
 
 @export var paladin_scene: PackedScene
 @export var sinner_scene: PackedScene
-@export var pride_boss_scene: PackedScene
+## Whichever trial boss guards this level's boss room — not Pride-specific
+## despite the historical name of the level1 scene that first used this.
+@export var boss_scene: PackedScene
 @export var boss_health_bar_path: NodePath
 @export var player_hud_path: NodePath
 
@@ -224,7 +226,7 @@ func _spawn_player(room: Room) -> PlayerController:
 
 
 func _queue_boss(room: Room) -> void:
-	room.enemy_scenes_to_spawn = [pride_boss_scene]
+	room.enemy_scenes_to_spawn = [boss_scene]
 
 
 ## 0 to max_enemies_per_room Sinners, inclusive — an empty room is a valid

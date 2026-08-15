@@ -1,0 +1,23 @@
+[gd_scene load_steps=2 format=3 uid="uid://n5u3k8y1advrs"]
+
+[ext_resource type="Script" path="res://scripts/bosses/adversary_boss.gd" id="1_script"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(56, 56)
+
+[node name="AdversaryBoss" type="CharacterBody2D"]
+script = ExtResource("1_script")
+is_boss = true
+display_name = "The Adversary"
+next_boss_name = ""
+next_level_scene_path = ""
+mirror_interval = 2.2
+enraged_mirror_interval = 1.4
+mirror_range = 240.0
+enraged_mirror_range = 300.0
+base_attack_damage = 26.0
+base_attack_interval = 1.6
+base_attack_range = 100.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")

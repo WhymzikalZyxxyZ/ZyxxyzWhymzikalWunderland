@@ -1,0 +1,20 @@
+[gd_scene load_steps=2 format=3 uid="uid://i0p8f3t6greed"]
+
+[ext_resource type="Script" path="res://scripts/bosses/greed_boss.gd" id="1_script"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(56, 56)
+
+[node name="GreedBoss" type="CharacterBody2D"]
+script = ExtResource("1_script")
+is_boss = true
+display_name = "Greed"
+next_boss_name = "Sloth"
+next_level_scene_path = "res://scenes/levels/level6.tscn"
+mirror_interval = 3.4
+enraged_mirror_interval = 2.1
+base_attack_damage = 16.0
+base_attack_interval = 2.4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")

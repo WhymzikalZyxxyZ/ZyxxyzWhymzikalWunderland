@@ -13,7 +13,7 @@ func _build_generator(seed_value: int) -> DungeonGenerator:
 	var generator := DungeonGenerator.new()
 	generator.paladin_scene = PALADIN_SCENE
 	generator.sinner_scene = SINNER_SCENE
-	generator.pride_boss_scene = PRIDE_BOSS_SCENE
+	generator.boss_scene = PRIDE_BOSS_SCENE
 	generator.seed_value = seed_value
 	add_child_autofree(generator)
 	return generator

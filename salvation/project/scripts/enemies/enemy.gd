@@ -19,6 +19,12 @@ static var active_enemies: Array[Enemy] = []
 @export var next_boss_name: String = ""
 @export var victory_screen_path: String = "res://scenes/ui/victory_screen.tscn"
 
+## Only meaningful when is_boss is true. Scene VictoryScreen actually
+## continues into once dismissed — empty means this is the final trial, so
+## VictoryScreen grants a run-completion reward and returns to the title
+## screen instead of trying to load a level that doesn't exist.
+@export var next_level_scene_path: String = ""
+
 @export var hit_flash_duration: float = 0.08
 @export var knockback_force: float = 260.0
 @export var knockback_duration: float = 0.12
@@ -182,6 +188,7 @@ func _defeat() -> void:
 
 	if is_boss and is_inside_tree():
 		VictoryScreen.next_boss_name = next_boss_name
+		VictoryScreen.next_level_scene_path = next_level_scene_path
 		get_tree().change_scene_to_file(victory_screen_path)
 
 	queue_free()

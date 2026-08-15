@@ -73,11 +73,18 @@ static func build_sinner() -> Texture2D:
 	return canvas.bake(palette, 2)
 
 
-static func build_pride_boss() -> Texture2D:
+## The shared robed-and-horned silhouette every one of the ten trial bosses
+## uses — recolored per sin from a single base hue rather than each getting
+## its own hand-drawn shape, the same "one shape, many palettes" approach
+## Room's rock/wall art already uses (see EnvironmentArt._shift). base_color
+## is the robe's primary hue; everything else (shadow, highlight, horns,
+## gold trim, outline) is derived from it so a boss always reads as
+## visually coherent regardless of which sin it is.
+static func build_sin_boss(base_color: Color) -> Texture2D:
 	var canvas := PixelCanvas.new(25, 24)
 
 	# Robe train dragging to one side, drawn first so the body overlaps
-	# it — the asymmetry that sells "a figure", not a purple oval.
+	# it — the asymmetry that sells "a figure", not a colored oval.
 	canvas.fill_triangle(Vector2(3, 14), Vector2(0, 23), Vector2(11, 20), "P")
 
 	canvas.fill_ellipse(12, 14, 9, 8, "p")
@@ -102,10 +109,10 @@ static func build_pride_boss() -> Texture2D:
 	canvas.auto_outline("o")
 
 	var palette := {
-		"p": Color(0.32, 0.14, 0.42),
-		"P": Color(0.2, 0.08, 0.28),
-		"H": Color(0.42, 0.2, 0.52),
-		"k": Color(0.12, 0.04, 0.16),
+		"p": base_color,
+		"P": base_color.darkened(0.35),
+		"H": base_color.lightened(0.2),
+		"k": base_color.darkened(0.6),
 		"g": Color(0.78, 0.63, 0.24),
 		"e": Color(0.9, 0.75, 0.3),
 		"o": Color(0.03, 0.01, 0.04),

@@ -1,0 +1,20 @@
+[gd_scene load_steps=2 format=3 uid="uid://k2r0h5v8lust"]
+
+[ext_resource type="Script" path="res://scripts/bosses/lust_boss.gd" id="1_script"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(56, 56)
+
+[node name="LustBoss" type="CharacterBody2D"]
+script = ExtResource("1_script")
+is_boss = true
+display_name = "Lust"
+next_boss_name = "Despair"
+next_level_scene_path = "res://scenes/levels/level8.tscn"
+mirror_interval = 2.8
+enraged_mirror_interval = 1.8
+base_attack_damage = 15.0
+base_attack_interval = 2.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")
