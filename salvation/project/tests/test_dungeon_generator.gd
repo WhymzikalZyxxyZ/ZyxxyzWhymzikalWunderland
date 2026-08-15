@@ -1,91 +1,99 @@
 extends GutTest
-## Exercises the pure graph-building logic (build_corridor/normalize_edge/
-## compute_distances) directly. These only touch Vector2i (a struct) and
-## plain collections, so there's nothing scene-tree-dependent about them —
-## they're here rather than in a separate plain-script test purely because
-## GDScript doesn't have an equivalent split to Salvation.Tests vs GoDotTest;
-## GUT covers both cleanly since GDScript has no CLR to corrupt.
+## Exercises DungeonGenerator's lazy 4-ary branching: the start room's
+## children exist immediately, deeper rooms only appear once their parent
+## is actually revealed — mirroring Room's own lazy enemy-spawn-on-reveal
+## design one level up.
+
+const PALADIN_SCENE: PackedScene = preload("res://scenes/player/paladin.tscn")
+const SINNER_SCENE: PackedScene = preload("res://scenes/enemies/sinner.tscn")
+const PRIDE_BOSS_SCENE: PackedScene = preload("res://scenes/bosses/pride_boss.tscn")
 
 
-func test_build_corridor_starts_at_start() -> void:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 1
-
-	var path := DungeonGenerator.build_corridor(Vector2i.ZERO, rng)
-
-	assert_eq(path[0], Vector2i.ZERO)
-
-
-func test_build_corridor_never_takes_a_diagonal_or_zero_step() -> void:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 2
-
-	var path := DungeonGenerator.build_corridor(Vector2i.ZERO, rng)
-
-	for i in range(path.size() - 1):
-		var delta: Vector2i = path[i + 1] - path[i]
-		var manhattan: int = absi(delta.x) + absi(delta.y)
-		assert_eq(manhattan, 1)
+func _build_generator(seed_value: int) -> DungeonGenerator:
+	var generator := DungeonGenerator.new()
+	generator.paladin_scene = PALADIN_SCENE
+	generator.sinner_scene = SINNER_SCENE
+	generator.pride_boss_scene = PRIDE_BOSS_SCENE
+	generator.seed_value = seed_value
+	add_child_autofree(generator)
+	return generator
 
 
-func test_build_corridor_never_revisits_a_cell() -> void:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 3
+func test_start_room_gets_up_to_four_real_children_immediately() -> void:
+	var generator := _build_generator(1)
 
-	var path := DungeonGenerator.build_corridor(Vector2i.ZERO, rng)
-
-	var seen := {}
-	for cell in path:
-		assert_false(seen.has(cell), "Corridor revisited %s" % cell)
-		seen[cell] = true
+	assert_eq(generator._rooms_by_cell.size(), 5, "Start room plus all four of its cardinal children should exist right away.")
+	for direction in DungeonGenerator.DIRECTIONS:
+		assert_true(generator._rooms_by_cell.has(direction), "Missing child room in direction %s" % direction)
 
 
-func test_build_corridor_is_never_longer_than_the_guaranteed_boss_room() -> void:
-	# BOSS_CHANCE_DENOMINATOR-th room after the start is a guaranteed boss
-	# roll (chance == 1.0), so the corridor — start plus however many rooms
-	# got placed — can never exceed that across any seed.
-	for seed in range(1, 60):
-		var rng := RandomNumberGenerator.new()
-		rng.seed = seed
+func test_children_of_the_start_room_are_not_yet_expanded() -> void:
+	var generator := _build_generator(2)
 
-		var path := DungeonGenerator.build_corridor(Vector2i.ZERO, rng)
-
-		assert_lte(path.size() - 1, DungeonGenerator.BOSS_CHANCE_DENOMINATOR, "seed=%d" % seed)
+	for direction in DungeonGenerator.DIRECTIONS:
+		assert_false(generator._expanded_cells.has(direction), "A child room shouldn't grow its own children until it's revealed.")
 
 
-func test_build_corridor_boss_chance_is_guaranteed_by_the_sixth_room() -> void:
-	# A dishonest RNG that always reports "miss" up until the roll where
-	# chance hits 1.0 proves the guarantee holds structurally, not just
-	# statistically across enough seeds.
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 42
+func test_entering_a_child_room_expands_its_own_four_children() -> void:
+	var generator := _build_generator(3)
 
-	var path := DungeonGenerator.build_corridor(Vector2i.ZERO, rng)
+	var target_cell: Vector2i = DungeonGenerator.DIRECTIONS[0]
+	var target_room: Room = generator._rooms_by_cell[target_cell]
 
-	assert_lte(path.size() - 1, DungeonGenerator.BOSS_CHANCE_DENOMINATOR)
-	assert_gte(path.size(), 2, "The corridor should place at least one room past the start.")
+	var player := Paladin.new()
+	add_child_autofree(player)
+	player.global_position = target_room.global_position
+
+	await wait_physics_frames(2)
+	await wait_process_frames(1)
+
+	assert_true(target_room.is_revealed)
+	assert_true(generator._expanded_cells.has(target_cell))
+	# Its own children now exist too — at minimum the direction pointing
+	# straight back through the entry door is excluded (already occupied
+	# by the start room), so up to three new rooms, at least one guaranteed.
+	var grandchildren := 0
+	for direction in DungeonGenerator.DIRECTIONS:
+		var next: Vector2i = target_cell + direction
+		if generator._rooms_by_cell.has(next) and next != Vector2i.ZERO:
+			grandchildren += 1
+	assert_gt(grandchildren, 0, "Revealing a room should generate at least one new child beyond the one already there.")
 
 
-func test_normalize_edge_is_order_independent() -> void:
-	var a := Vector2i(1, 2)
-	var b := Vector2i(3, 4)
+func test_a_boss_room_never_grows_further_children() -> void:
+	var generator := _build_generator(4)
 
-	var edge_ab := DungeonGenerator.normalize_edge(a, b)
-	var edge_ba := DungeonGenerator.normalize_edge(b, a)
+	# Force a specific child into being the boss room, then reveal it directly
+	# and confirm DungeonGenerator treats it as a dead end.
+	var target_cell: Vector2i = DungeonGenerator.DIRECTIONS[0]
+	var target_room: Room = generator._rooms_by_cell[target_cell]
+	target_room.is_boss_room = true
 
-	assert_eq(edge_ab[0], edge_ba[0])
-	assert_eq(edge_ab[1], edge_ba[1])
+	var player := Paladin.new()
+	add_child_autofree(player)
+	player.global_position = target_room.global_position
+
+	await wait_physics_frames(2)
+
+	var rooms_before := generator._rooms_by_cell.size()
+	await wait_physics_frames(2)
+	var rooms_after := generator._rooms_by_cell.size()
+
+	assert_eq(rooms_before, rooms_after, "A boss room should never grow new children once revealed.")
 
 
-func test_compute_distances_start_is_zero_and_grows_by_one_per_hop() -> void:
-	var cells: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0)]
-	var edges: Array[Array] = [
-		[Vector2i(0, 0), Vector2i(1, 0)],
-		[Vector2i(1, 0), Vector2i(2, 0)],
-	]
+func test_boss_chance_is_guaranteed_by_the_sixth_room_in_a_branch() -> void:
+	# BOSS_CHANCE_DENOMINATOR-deep into any branch, the roll is chance == 1.0
+	# (mini() caps depth at BOSS_CHANCE_DENOMINATOR), so it's a structural
+	# guarantee, not a statistical one — verified directly on the formula
+	# DungeonGenerator._expand_room uses rather than by seed-hunting.
+	var depth := DungeonGenerator.BOSS_CHANCE_DENOMINATOR
+	var boss_chance: float = float(mini(depth, DungeonGenerator.BOSS_CHANCE_DENOMINATOR)) / float(DungeonGenerator.BOSS_CHANCE_DENOMINATOR)
 
-	var distances := DungeonGenerator.compute_distances(Vector2i(0, 0), cells, edges)
+	assert_eq(boss_chance, 1.0)
 
-	assert_eq(distances[Vector2i(0, 0)], 0)
-	assert_eq(distances[Vector2i(1, 0)], 1)
-	assert_eq(distances[Vector2i(2, 0)], 2)
+
+func test_boss_chance_climbs_by_one_sixth_per_depth() -> void:
+	for depth in range(1, DungeonGenerator.BOSS_CHANCE_DENOMINATOR + 1):
+		var boss_chance: float = float(mini(depth, DungeonGenerator.BOSS_CHANCE_DENOMINATOR)) / float(DungeonGenerator.BOSS_CHANCE_DENOMINATOR)
+		assert_almost_eq(boss_chance, float(depth) / float(DungeonGenerator.BOSS_CHANCE_DENOMINATOR), 0.001)

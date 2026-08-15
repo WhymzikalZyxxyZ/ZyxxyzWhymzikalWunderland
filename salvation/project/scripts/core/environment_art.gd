@@ -123,6 +123,23 @@ static func build_heart() -> Texture2D:
 	return canvas.bake(palette, 3)
 
 
+## A small pixel-art magic orb, for the mana pickup rocks can drop.
+static func build_magic_orb() -> Texture2D:
+	var canvas := PixelCanvas.new(10, 10)
+	canvas.fill_ellipse(5, 5, 4, 4, "m")
+	canvas.fill_ellipse(4, 4, 2, 2, "s")
+	canvas.set_px(3, 3, "g")
+	canvas.auto_outline("o")
+
+	var palette := {
+		"m": Color(0.18, 0.32, 0.82),
+		"s": Color(0.45, 0.62, 0.95),
+		"g": Color(0.78, 0.88, 1.0),
+		"o": Color(0.02, 0.02, 0.02),
+	}
+	return canvas.bake(palette, 3)
+
+
 ## Configures a Sprite2D to tile the given texture across a rectangular area, crisp edges preserved.
 static func build_tiled_sprite(tile: Texture2D, top_left: Vector2, size: Vector2) -> Sprite2D:
 	var sprite := Sprite2D.new()

@@ -1,12 +1,14 @@
 class_name Rock
 extends StaticBody2D
 ## A breakable obstacle: three hits to shatter, then a 21% chance to leave
-## behind a HealthPickup. Tracked via a hand-kept registry the same way
-## Enemy is, so player attacks can find rocks in range without every attack
-## needing its own room reference.
+## behind a HealthPickup and a separate, mutually exclusive 21% chance to
+## leave behind a MagicPickup instead. Tracked via a hand-kept registry the
+## same way Enemy is, so player attacks can find rocks in range without
+## every attack needing its own room reference.
 
 const MAX_HITS := 3
-const DROP_CHANCE := 0.21
+const HEALTH_DROP_CHANCE := 0.21
+const MAGIC_DROP_CHANCE := 0.21
 
 static var active_rocks: Array[Rock] = []
 
@@ -46,8 +48,13 @@ func take_damage(_amount: float = 1.0) -> void:
 
 
 func _break() -> void:
-	if randf() < DROP_CHANCE:
+	var roll := randf()
+	if roll < HEALTH_DROP_CHANCE:
 		var pickup := HealthPickup.new()
+		pickup.global_position = global_position
+		get_parent().add_child(pickup)
+	elif roll < HEALTH_DROP_CHANCE + MAGIC_DROP_CHANCE:
+		var pickup := MagicPickup.new()
 		pickup.global_position = global_position
 		get_parent().add_child(pickup)
 

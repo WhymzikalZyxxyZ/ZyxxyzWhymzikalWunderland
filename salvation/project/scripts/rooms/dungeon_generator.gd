@@ -1,24 +1,27 @@
 class_name DungeonGenerator
 extends Node2D
-## Builds a dungeon as a single procedurally-grown corridor rather than a
-## fixed layout: starting from an empty start room, each step picks one of
-## up to four unvisited cardinal neighbors at random to place the next
-## room — "each room has 4 paths, and the one actually built is chosen
-## randomly among them." The odds that any given room becomes the boss
-## room climb by 1/BOSS_CHANCE_DENOMINATOR every step it doesn't: 1-in-6
-## right after the start room, 2-in-6 the room after that, and so on,
-## guaranteed by the sixth room if nothing rolled sooner. Door.gd seals
-## the entry door behind the player once they arrive in a room, so a
-## chosen turn can't be un-chosen.
+## Builds a dungeon as a lazily-grown 4-ary tree: the room the player is
+## currently standing in always has up to four real, already-built exits
+## (up/down/left/right) to choose between, and a room's own four children
+## aren't generated until the *player actually steps into it* — same lazy
+## principle Room already uses for its enemies (see Room._spawn_pending_enemies),
+## just one level up. Whichever of the four doors gets walked through, Door.gd
+## seals that entry door behind the player the moment they arrive, so a
+## turn taken can't be un-taken and the other three sibling rooms are simply
+## abandoned, generated or not.
+##
+## Every room independently rolls its own odds of being the boss room the
+## moment it's created, climbing by 1/BOSS_CHANCE_DENOMINATOR for every step
+## deeper into whichever branch produced it — 1-in-6 for a room one step
+## from the start, 2-in-6 two steps in, and so on, guaranteed by the sixth
+## step. Because that roll only depends on how many rooms deep the branch
+## is (not which of the four directions got taken to get there), the actual
+## order the player enters rooms in never changes the odds — only depth does.
 ##
 ## Room population order matters: Room._ready() (which builds walls from
 ## its door flags) fires the instant a Room enters the SceneTree. Door
 ## flags and the player have to be attached *before* add_child(room), not
-## after, or Room._ready() runs against a half-configured room. Enemies
-## are different: they're queued as PackedScenes on the room and only
-## actually instantiated by the room itself once it's revealed — see
-## Room._spawn_pending_enemies() — so nothing exists in a room the player
-## hasn't stepped into yet.
+## after, or Room._ready() runs against a half-configured room.
 
 const BOSS_CHANCE_DENOMINATOR := 6
 const DIRECTIONS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
@@ -29,208 +32,151 @@ const DIRECTIONS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0
 @export var boss_health_bar_path: NodePath
 @export var player_hud_path: NodePath
 
-@export var room_size: Vector2 = Vector2(480, 420)
-@export var room_spacing: Vector2 = Vector2(600, 520)
-@export var door_gap_size: float = 90.0
+@export var room_size: Vector2 = Vector2(720, 640)
+@export var room_spacing: Vector2 = Vector2(920, 800)
+@export var door_gap_size: float = 100.0
 ## 0 = random each run.
 @export var seed_value: int = 0
 ## Inclusive range for how many Sinners a non-start, non-boss room queues.
 @export var min_enemies_per_room: int = 0
 @export var max_enemies_per_room: int = 10
 
-# The boss doesn't exist until its room is revealed and lazily spawns it,
-# so the health bar can't bind at generation time — _process polls until
-# it appears, then stops.
-var _pending_boss_room: Room
-var _pending_boss_bar: BossHealthBar
+var _rng: RandomNumberGenerator
+var _rooms_by_cell: Dictionary = {}
+var _depth_by_cell: Dictionary = {}
+var _expanded_cells: Dictionary = {}
+
+# The boss doesn't exist until its room is revealed and lazily spawns it, so
+# rather than pre-picking "the" boss room (multiple sibling branches can
+# each independently roll a boss room that never actually gets reached —
+# harmless, since only the branch the player walks ever spawns anything),
+# _process just watches Enemy.active_enemies for whichever boss actually
+# spawns and binds to that one.
+var _boss_bar: BossHealthBar
+var _boss_bar_bound: bool = false
 
 
 func _ready() -> void:
-	var rng := RandomNumberGenerator.new()
+	_rng = RandomNumberGenerator.new()
 	if seed_value != 0:
-		rng.seed = seed_value
+		_rng.seed = seed_value
 	else:
-		rng.randomize()
+		_rng.randomize()
 
 	var start := Vector2i.ZERO
-	var path := build_corridor(start, rng)
-	var boss: Vector2i = path[path.size() - 1]
+	var start_room := _build_room(start, true, false)
+	_rooms_by_cell[start] = start_room
+	_depth_by_cell[start] = 0
 
-	var edges: Array[Array] = []
-	for i in range(path.size() - 1):
-		edges.append(normalize_edge(path[i], path[i + 1]))
-
-	var distances := compute_distances(start, path, edges)
-
-	var rooms: Dictionary = {}
-	for cell in path:
-		rooms[cell] = _build_room(cell, cell == start, cell == boss, rng)
-
-	for edge in edges:
-		_apply_door_flags(rooms, edge, distances)
-
-	var paladin: PlayerController = null
-	var boss_room: Room = null
-	for cell in path:
-		var room: Room = rooms[cell]
-		if cell == start:
-			paladin = _spawn_player(room)
-		elif cell == boss:
-			_queue_boss(room)
-			boss_room = room
-		else:
-			_queue_enemies(room, rng)
-
-	for cell in path:
-		add_child(rooms[cell])
-
-	for edge in edges:
-		_build_door(rooms, edge, distances)
+	var paladin := _spawn_player(start_room)
+	add_child(start_room)
+	_expand_room(start, start_room, 0)
 
 	if paladin != null and not player_hud_path.is_empty():
 		var hud := get_node_or_null(player_hud_path)
 		if hud != null:
 			hud.bind_player(paladin)
-	if boss_room != null and not boss_health_bar_path.is_empty():
-		var bar := get_node_or_null(boss_health_bar_path)
-		if bar != null:
-			_pending_boss_room = boss_room
-			_pending_boss_bar = bar
+
+	if not boss_health_bar_path.is_empty():
+		_boss_bar = get_node_or_null(boss_health_bar_path)
 
 
 func _process(_delta: float) -> void:
-	if _pending_boss_room == null:
+	# Snapshotting keys before the loop is required, not just convenient:
+	# _expand_room adds newly-built children straight into _rooms_by_cell,
+	# and mutating a Dictionary while iterating it live is unsafe.
+	for cell in _rooms_by_cell.keys():
+		if _expanded_cells.has(cell):
+			continue
+		var room: Room = _rooms_by_cell[cell]
+		if not is_instance_valid(room) or not room.is_revealed:
+			continue
+		_expand_room(cell, room, _depth_by_cell[cell])
+
+	if _boss_bar != null and not _boss_bar_bound:
+		for enemy in Enemy.active_enemies:
+			if enemy.is_boss:
+				_boss_bar.bind_boss(enemy)
+				_boss_bar_bound = true
+				break
+
+
+## Builds up to four new rooms adjacent to a just-revealed room — its full
+## set of choosable exits — skipping any direction whose cell is already
+## occupied by a different, previously-placed branch (self-intersection is
+## possible on an unbounded grid; when it happens that room simply has
+## fewer than four real doors rather than double-booking a cell). A room
+## that itself rolled the boss on creation is a dead end: nothing spawns
+## beyond a boss fight, so it never gets expanded.
+func _expand_room(cell: Vector2i, room: Room, depth: int) -> void:
+	_expanded_cells[cell] = true
+	if room.is_boss_room:
 		return
 
-	var spawned := _pending_boss_room.get_spawned_enemies()
-	if spawned.is_empty():
-		return
+	for direction in DIRECTIONS:
+		var next_cell: Vector2i = cell + direction
+		if _rooms_by_cell.has(next_cell):
+			continue
 
-	_pending_boss_bar.bind_boss(spawned[0])
-	_pending_boss_room = null
+		var next_depth := depth + 1
+		var boss_chance: float = float(mini(next_depth, BOSS_CHANCE_DENOMINATOR)) / float(BOSS_CHANCE_DENOMINATOR)
+		var is_boss: bool = _rng.randf() < boss_chance
 
+		var child := _build_room(next_cell, false, is_boss)
+		_rooms_by_cell[next_cell] = child
+		_depth_by_cell[next_cell] = next_depth
 
-## Grows a single corridor of cells from start: at every step, picks one
-## of the current room's unvisited cardinal neighbors at random (never
-## backtracking into an already-placed room), then rolls whether that new
-## room becomes the boss room — starting at 1/BOSS_CHANCE_DENOMINATOR and
-## climbing by the same fraction each additional step, so it's guaranteed
-## by the BOSS_CHANCE_DENOMINATOR-th room even if every earlier roll
-## missed. The returned array's last element is always the boss room.
-static func build_corridor(start: Vector2i, rng: RandomNumberGenerator) -> Array[Vector2i]:
-	var path: Array[Vector2i] = [start]
-	var visited := {start: true}
-	var current := start
-	var rooms_placed := 0
+		_apply_door_flags(room, child, direction)
 
-	while true:
-		var candidates: Array[Vector2i] = []
-		for direction in DIRECTIONS:
-			var next := current + direction
-			if not visited.has(next):
-				candidates.append(next)
+		if is_boss:
+			_queue_boss(child)
+		else:
+			_queue_enemies(child)
 
-		# Boxed in by its own earlier turns — vanishingly rare this early,
-		# but the corridor has to end somewhere, so the last room placed
-		# becomes the boss room rather than looping forever.
-		if candidates.is_empty():
-			break
-
-		var next: Vector2i = candidates[rng.randi_range(0, candidates.size() - 1)]
-		visited[next] = true
-		path.append(next)
-		current = next
-		rooms_placed += 1
-
-		var boss_chance: float = float(mini(rooms_placed, BOSS_CHANCE_DENOMINATOR)) / float(BOSS_CHANCE_DENOMINATOR)
-		if rng.randf() < boss_chance:
-			break
-
-	return path
-
-
-static func normalize_edge(a: Vector2i, b: Vector2i) -> Array:
-	if a.x < b.x or (a.x == b.x and a.y < b.y):
-		return [a, b]
-	return [b, a]
-
-
-static func compute_distances(start: Vector2i, cells: Array[Vector2i], edges: Array[Array]) -> Dictionary:
-	var adjacency: Dictionary = {}
-	for cell in cells:
-		adjacency[cell] = []
-	for edge in edges:
-		var a: Vector2i = edge[0]
-		var b: Vector2i = edge[1]
-		adjacency[a].append(b)
-		adjacency[b].append(a)
-
-	var distances := {start: 0}
-	var queue: Array[Vector2i] = [start]
-	var head := 0
-	while head < queue.size():
-		var current: Vector2i = queue[head]
-		head += 1
-		for neighbor in adjacency[current]:
-			if distances.has(neighbor):
-				continue
-			distances[neighbor] = distances[current] + 1
-			queue.append(neighbor)
-	return distances
+		add_child(child)
+		_build_door(room, child, direction)
 
 
 func _cell_world_position(cell: Vector2i) -> Vector2:
 	return Vector2(cell.x * room_spacing.x, cell.y * room_spacing.y)
 
 
-func _build_room(cell: Vector2i, is_start: bool, is_boss: bool, rng: RandomNumberGenerator) -> Room:
+func _build_room(cell: Vector2i, is_start: bool, is_boss: bool) -> Room:
 	var room := Room.new()
 	room.name = "Room_%d_%d" % [cell.x, cell.y]
 	room.position = _cell_world_position(cell)
 	room.bounds = Rect2(-room_size.x / 2.0, -room_size.y / 2.0, room_size.x, room_size.y)
 	room.starts_hidden = not is_start
 	room.door_gap_size = door_gap_size
+	room.is_boss_room = is_boss
 	room.floor_color = Color(0.16, 0.05, 0.07) if is_boss else Color(0.09, 0.08, 0.1)
-	room.gore_seed = rng.randi()
+	room.gore_seed = _rng.randi()
 	return room
 
 
-static func _apply_door_flags(rooms: Dictionary, edge: Array, distances: Dictionary) -> void:
-	var a: Vector2i = edge[0]
-	var b: Vector2i = edge[1]
-	var source: Vector2i = a if distances[a] <= distances[b] else b
-	var target: Vector2i = b if source == a else a
-	var delta: Vector2i = target - source
-
-	var source_room: Room = rooms[source]
-	var target_room: Room = rooms[target]
-
-	if delta.x != 0:
-		if delta.x > 0:
-			source_room.has_right_door = true
-			target_room.has_left_door = true
+## direction points from source (the already-placed room) to target (the
+## brand-new one) — always that way round now, since expansion only ever
+## walks parent-to-child, never the reverse-distance lookup the old single
+## corridor design needed.
+static func _apply_door_flags(source: Room, target: Room, direction: Vector2i) -> void:
+	if direction.x != 0:
+		if direction.x > 0:
+			source.has_right_door = true
+			target.has_left_door = true
 		else:
-			source_room.has_left_door = true
-			target_room.has_right_door = true
+			source.has_left_door = true
+			target.has_right_door = true
 	else:
-		if delta.y > 0:
-			source_room.has_bottom_door = true
-			target_room.has_top_door = true
+		if direction.y > 0:
+			source.has_bottom_door = true
+			target.has_top_door = true
 		else:
-			source_room.has_top_door = true
-			target_room.has_bottom_door = true
+			source.has_top_door = true
+			target.has_bottom_door = true
 
 
-func _build_door(rooms: Dictionary, edge: Array, distances: Dictionary) -> void:
-	var a: Vector2i = edge[0]
-	var b: Vector2i = edge[1]
-	var source: Vector2i = a if distances[a] <= distances[b] else b
-	var target: Vector2i = b if source == a else a
-	var delta: Vector2i = target - source
-
-	var source_room: Room = rooms[source]
-	var target_room: Room = rooms[target]
-	var horizontal: bool = delta.x != 0
+func _build_door(source: Room, target: Room, direction: Vector2i) -> void:
+	var horizontal: bool = direction.x != 0
 
 	var gap_size: Vector2 = (
 		Vector2(room_spacing.x - room_size.x, door_gap_size) if horizontal
@@ -238,9 +184,9 @@ func _build_door(rooms: Dictionary, edge: Array, distances: Dictionary) -> void:
 	)
 
 	var door := Door.new()
-	door.position = (source_room.position + target_room.position) / 2.0
-	door.gated_room_path = NodePath("../" + source_room.name)
-	door.destination_room_path = NodePath("../" + target_room.name)
+	door.position = (source.position + target.position) / 2.0
+	door.gated_room_path = NodePath("../" + source.name)
+	door.destination_room_path = NodePath("../" + target.name)
 	# Same environment layer as Room's walls — characters must always draw in front of it.
 	door.z_index = -1
 
@@ -284,8 +230,8 @@ func _queue_boss(room: Room) -> void:
 ## 0 to max_enemies_per_room Sinners, inclusive — an empty room is a valid
 ## roll, same as a packed one. Position is picked by the room itself at
 ## spawn time, not here, since spawning no longer happens here either.
-func _queue_enemies(room: Room, rng: RandomNumberGenerator) -> void:
-	var count := rng.randi_range(min_enemies_per_room, max_enemies_per_room)
+func _queue_enemies(room: Room) -> void:
+	var count := _rng.randi_range(min_enemies_per_room, max_enemies_per_room)
 	var scenes: Array[PackedScene] = []
 	for i in range(count):
 		scenes.append(sinner_scene)

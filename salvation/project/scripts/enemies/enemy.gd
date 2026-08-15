@@ -98,8 +98,33 @@ func _physics_process(delta: float) -> void:
 			continue
 
 		collider.take_damage(contact_damage)
+		_spawn_attack_slash(collider.global_position, 28.0)
 		_contact_damage_cooldown_remaining = contact_damage_cooldown
 		break
+
+
+## Basic pixel-level attack feedback for enemies — same sweeping-crescent
+## effect the player's own attacks use (see PlayerController._spawn_attack_slash),
+## tinted red so an enemy's strike always reads as distinct from the
+## player's own white/neutral one at a glance. target_position picks the
+## facing angle; concrete attacks (contact damage here, Pride's mirror and
+## base attack in pride_boss.gd) each call this at the moment damage lands.
+func _spawn_attack_slash(target_position: Vector2, swing_radius: float) -> void:
+	if get_parent() == null:
+		return
+
+	var facing := global_position.direction_to(target_position).angle()
+	var slash := AttackSlash.new()
+	slash.texture = CharacterSprites.build_slash()
+	slash.pivot = self
+	slash.facing_angle = facing
+	slash.radius = swing_radius
+	slash.global_position = global_position + Vector2.RIGHT.rotated(facing) * swing_radius
+	slash.rotation = facing
+	slash.modulate = Color(1.0, 0.15, 0.15)
+	slash.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	slash.z_index = ACTOR_Z_INDEX
+	get_parent().add_child(slash)
 
 
 func _chase() -> void:

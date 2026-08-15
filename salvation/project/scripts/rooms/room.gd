@@ -36,6 +36,12 @@ const WALL_Z_INDEX := -1
 ## once this room is actually revealed — see _spawn_pending_enemies().
 @export var enemy_scenes_to_spawn: Array[PackedScene] = []
 
+## Set by DungeonGenerator. Marks this room as a dead end for dungeon
+## generation purposes (DungeonGenerator._expand_room never builds children
+## past a boss room) — distinct from enemy_scenes_to_spawn containing the
+## boss scene, which is what actually makes it spawn.
+@export var is_boss_room: bool = false
+
 var is_cleared: bool = false
 var is_revealed: bool = false
 
@@ -254,7 +260,7 @@ func _build_obstacles() -> void:
 	var center := bounds.get_center()
 	var accepted: Array[Dictionary] = []
 
-	var attempts := rng.randi_range(2, 5)
+	var attempts := rng.randi_range(6, 12)
 	for i in range(attempts):
 		var candidate := Vector2(
 			rng.randf_range(bounds.position.x + 50.0, bounds.end.x - 50.0),
