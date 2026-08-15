@@ -9,15 +9,22 @@ extends Node
 ##    a plain running count, not a per-run history. "Victory" here means a
 ##    full run actually completed (the Adversary fell), not each
 ##    individual boss cleared along the way.
-##  - The current run's resume point (which level, which character, and
-##    which order this run's Trials I-IX landed in — see boss_order) is
-##    transient — it's exactly what MainMenuScreen's "Continue" button
-##    reads, and it's cleared the moment that run actually ends, in either
-##    direction (DeathScreen on a loss, complete_run() on the final trial's
+##  - The current run's resume point (which level, which character, which
+##    order this run's Trials I-IX landed in, and how long it's taken so
+##    far — see boss_order/run_elapsed_seconds) is transient — it's
+##    exactly what MainMenuScreen's "Continue" button reads, and it's
+##    cleared the moment that run actually ends, in either direction
+##    (DeathScreen on a loss, complete_run() on the final trial's
 ##    victory), so a stale save never offers to resume a run that's over.
 ##    There is only ever one resume point — a single save slot, not a
 ##    history of runs — so starting a New Run while one is saved simply
 ##    replaces it the moment the next level starts and re-saves.
+##
+## IMPORTANT ordering for the run timer: complete_run() clears the resume
+## point (including the elapsed timer) as its first step, so a caller that
+## wants to report how long the run took (VictoryScreen does, on the final
+## trial) MUST read run_elapsed_seconds() before calling complete_run(),
+## not after.
 ##
 ## Registered as an autoload singleton (see project.godot) so every scene
 ## can reach it as "RunProgress". save_path is a constructor parameter
@@ -37,6 +44,16 @@ var _total_victories: int = 0
 var _current_level_path: String = ""
 var _current_character_id: int = -1
 var _boss_order: Array[int] = []
+
+## _run_elapsed_seconds is the persisted, already-banked total; _session_start_time
+## (never persisted — Unix time, -1.0 means "not currently ticking") anchors
+## whatever's accumulated since the last time it was banked. Split this way
+## so a browser tab closed mid-run doesn't lose that session's elapsed time:
+## every _save() banks the running session into _run_elapsed_seconds first
+## (see _sync_run_elapsed), so the persisted value is never more than one
+## save cycle stale.
+var _run_elapsed_seconds: float = 0.0
+var _session_start_time: float = -1.0
 
 
 func _init(save_path: String = SAVE_PATH) -> void:
@@ -88,6 +105,28 @@ func boss_order() -> Array[int]:
 	return _boss_order
 
 
+## Live elapsed time for the current run, in seconds — the banked total
+## plus whatever's accumulated since the session last started ticking (see
+## _session_start_time). Read-only; doesn't bank anything itself.
+func run_elapsed_seconds() -> float:
+	if _session_start_time < 0.0:
+		return _run_elapsed_seconds
+	return _run_elapsed_seconds + (Time.get_unix_time_from_system() - _session_start_time)
+
+
+## "3:07", "42:19", or "1:03:45" once past an hour — always at least
+## minutes:seconds, never bare seconds, since a full ten-trial run is
+## never going to be a handful of seconds long.
+static func format_duration(total_seconds: float) -> String:
+	var whole_seconds := int(round(total_seconds))
+	var hours := whole_seconds / 3600
+	var minutes := (whole_seconds % 3600) / 60
+	var seconds := whole_seconds % 60
+	if hours > 0:
+		return "%d:%02d:%02d" % [hours, minutes, seconds]
+	return "%d:%02d" % [minutes, seconds]
+
+
 ## Called by DungeonGenerator on every level — a no-op once this run
 ## already has an order (levels 2-10 of the same run, or Continue resuming
 ## mid-run all see the exact same shuffle the run started with). Only a
@@ -108,6 +147,8 @@ func ensure_boss_order(rng: RandomNumberGenerator) -> void:
 func save_run_progress(level_path: String, character_id: int) -> void:
 	_current_level_path = level_path
 	_current_character_id = character_id
+	if _session_start_time < 0.0:
+		_session_start_time = Time.get_unix_time_from_system()
 	_save()
 
 
@@ -119,6 +160,8 @@ func clear_run_progress() -> void:
 	_current_level_path = ""
 	_current_character_id = -1
 	_boss_order = []
+	_run_elapsed_seconds = 0.0
+	_session_start_time = -1.0
 	_save()
 
 
@@ -144,7 +187,21 @@ func complete_run() -> String:
 	return "%s is yours." % relic_name
 
 
+## Folds whatever's accumulated since the session last started ticking
+## into the banked total, then restarts the anchor from now — called at
+## the top of every _save() so the persisted value is never more than one
+## save cycle behind the live one run_elapsed_seconds() reports.
+func _sync_run_elapsed() -> void:
+	if _session_start_time < 0.0:
+		return
+	var now := Time.get_unix_time_from_system()
+	_run_elapsed_seconds += now - _session_start_time
+	_session_start_time = now
+
+
 func _save() -> void:
+	_sync_run_elapsed()
+
 	var config := ConfigFile.new()
 	config.set_value("progress", "characters", _unlocked_characters.keys())
 	config.set_value("progress", "relics", _unlocked_relics)
@@ -153,6 +210,7 @@ func _save() -> void:
 	config.set_value("run", "level_path", _current_level_path)
 	config.set_value("run", "character_id", _current_character_id)
 	config.set_value("run", "boss_order", _boss_order)
+	config.set_value("run", "elapsed_seconds", _run_elapsed_seconds)
 	config.save(_save_path)
 
 
@@ -179,3 +237,6 @@ func _load() -> void:
 	_boss_order = []
 	for index in order:
 		_boss_order.append(index)
+
+	_run_elapsed_seconds = config.get_value("run", "elapsed_seconds", 0.0)
+	_session_start_time = -1.0

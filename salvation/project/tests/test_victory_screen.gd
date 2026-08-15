@@ -40,3 +40,14 @@ func test_final_trial_is_detected_from_an_empty_next_level_path() -> void:
 	# whatever it just granted — asserting the exact string would couple
 	# this test to RunProgress's persisted unlock state across runs.
 	assert_false(screen._next_boss_label.text.is_empty())
+	assert_true(screen._time_label.text.begins_with("Completed in "), "Got: %s" % screen._time_label.text)
+
+
+func test_mid_run_does_not_show_a_completion_time() -> void:
+	VictoryScreen.next_boss_name = "Envy"
+	VictoryScreen.next_level_scene_path = "res://scenes/levels/level2.tscn"
+
+	var screen: VictoryScreen = VICTORY_SCREEN_SCENE.instantiate()
+	add_child_autofree(screen)
+
+	assert_eq(screen._time_label.text, "", "Only the final trial's victory reports a completion time.")

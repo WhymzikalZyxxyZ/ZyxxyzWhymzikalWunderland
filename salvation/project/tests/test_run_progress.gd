@@ -197,6 +197,66 @@ func test_boss_order_survives_across_instances_pointed_at_the_same_path() -> voi
 	assert_eq(second.boss_order(), saved_order)
 
 
+func test_run_elapsed_seconds_is_zero_before_a_run_starts() -> void:
+	var progress := _build()
+
+	assert_eq(progress.run_elapsed_seconds(), 0.0)
+
+
+func test_save_run_progress_starts_the_timer_ticking() -> void:
+	var progress := _build()
+
+	progress.save_run_progress("res://scenes/levels/level1.tscn", CharacterId.PALADIN)
+	await wait_seconds(1.1)
+
+	assert_gt(progress.run_elapsed_seconds(), 0.9, "At least ~1 second should have elapsed since the timer started.")
+
+
+func test_a_second_level_start_does_not_restart_the_timer() -> void:
+	var progress := _build()
+	progress.save_run_progress("res://scenes/levels/level1.tscn", CharacterId.PALADIN)
+	await wait_seconds(1.1)
+
+	progress.save_run_progress("res://scenes/levels/level2.tscn", CharacterId.PALADIN)
+
+	assert_gt(progress.run_elapsed_seconds(), 0.9, "Starting the next level shouldn't reset how long the run has taken so far.")
+
+
+func test_clear_run_progress_resets_the_timer_to_zero() -> void:
+	var progress := _build()
+	progress.save_run_progress("res://scenes/levels/level1.tscn", CharacterId.PALADIN)
+	await wait_seconds(1.1)
+
+	progress.clear_run_progress()
+
+	assert_eq(progress.run_elapsed_seconds(), 0.0)
+
+
+func test_elapsed_time_survives_across_instances_pointed_at_the_same_path() -> void:
+	var first: Node = RunProgressScript.new(_temp_path)
+	add_child_autofree(first)
+	first.save_run_progress("res://scenes/levels/level1.tscn", CharacterId.PALADIN)
+	await wait_seconds(1.1)
+	# _save() only banks the session's elapsed time into the persisted
+	# total at the moment it actually runs — level2 starting is what
+	# triggers that here, same as it would for real mid-run.
+	first.save_run_progress("res://scenes/levels/level2.tscn", CharacterId.PALADIN)
+
+	var second: Node = RunProgressScript.new(_temp_path)
+	add_child_autofree(second)
+
+	assert_gt(second.run_elapsed_seconds(), 0.9)
+
+
+func test_format_duration_pads_seconds_and_omits_hours_under_an_hour() -> void:
+	assert_eq(RunProgress.format_duration(7.0), "0:07")
+	assert_eq(RunProgress.format_duration(187.0), "3:07")
+
+
+func test_format_duration_includes_hours_once_past_one() -> void:
+	assert_eq(RunProgress.format_duration(3725.0), "1:02:05")
+
+
 func test_a_corrupted_save_file_is_treated_as_a_fresh_start() -> void:
 	var file := FileAccess.open(_temp_path, FileAccess.WRITE)
 	file.store_string("not a valid config file")

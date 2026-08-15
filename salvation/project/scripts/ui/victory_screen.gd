@@ -19,6 +19,7 @@ static var next_level_scene_path: String = ""
 
 var _prompt: Label
 var _next_boss_label: Label
+var _time_label: Label
 var _pulse_time: float = 0.0
 var _is_final_trial: bool = false
 
@@ -26,20 +27,27 @@ var _is_final_trial: bool = false
 func _ready() -> void:
 	_prompt = get_node_or_null("VBox/Prompt")
 	_next_boss_label = get_node_or_null("VBox/NextBoss")
+	_time_label = get_node_or_null("VBox/TimeLabel")
 
 	_is_final_trial = next_level_scene_path == ""
 
-	if _next_boss_label != null:
-		if _is_final_trial:
+	if _is_final_trial:
+		# Read before complete_run() — it clears the run's elapsed timer
+		# (among everything else about the resume point) as its first
+		# step, so this has to happen first or there's nothing left to report.
+		if _time_label != null:
+			_time_label.text = "Completed in %s" % RunProgress.format_duration(RunProgress.run_elapsed_seconds())
+
+		if _next_boss_label != null:
 			# The last trial standing between the player and the run's
 			# reward — RunProgress.complete_run() both grants it and
 			# describes what it was, so there's nothing left to compute here.
 			_next_boss_label.text = RunProgress.complete_run()
-		else:
-			_next_boss_label.text = (
-				"%s stirs, somewhere ahead." % next_boss_name if next_boss_name != ""
-				else "Another trial waits ahead."
-			)
+	elif _next_boss_label != null:
+		_next_boss_label.text = (
+			"%s stirs, somewhere ahead." % next_boss_name if next_boss_name != ""
+			else "Another trial waits ahead."
+		)
 
 
 func _process(delta: float) -> void:
