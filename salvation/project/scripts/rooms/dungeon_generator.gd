@@ -58,6 +58,15 @@ var _boss_bar_bound: bool = false
 
 
 func _ready() -> void:
+	# Every level re-saves itself as the resume point the instant it
+	# starts — see RunProgress.save_run_progress. get_tree().current_scene
+	# is this level's own root node (Level1, Level2, ...), so its
+	# scene_file_path is exactly the path MainMenuScreen's Continue button
+	# needs to load back into.
+	var scene := get_tree().current_scene
+	if scene != null and not scene.scene_file_path.is_empty():
+		RunProgress.save_run_progress(scene.scene_file_path, CharacterId.chosen_character_id)
+
 	_rng = RandomNumberGenerator.new()
 	if seed_value != 0:
 		_rng.seed = seed_value

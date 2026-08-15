@@ -13,9 +13,9 @@ static var next_boss_name: String = ""
 static var next_level_scene_path: String = ""
 
 ## Where "continue" goes once the final trial (next_level_scene_path
-## empty) is cleared, after the run-completion reward is granted — back to
-## the title screen, same as a fresh run, not a level that doesn't exist.
-@export var restart_scene_path: String = "res://scenes/ui/tutorial_screen.tscn"
+## empty) is cleared, after the run-completion reward is granted — the
+## actual title screen (MainMenuScreen), not a level that doesn't exist.
+@export var restart_scene_path: String = "res://scenes/ui/main_menu_screen.tscn"
 
 var _prompt: Label
 var _next_boss_label: Label

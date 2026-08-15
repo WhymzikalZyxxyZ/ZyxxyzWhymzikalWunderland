@@ -1,14 +1,34 @@
 extends Node
-## Meta-progression persisted across runs: which characters and relics have
-## been earned. Registered as an autoload singleton (see project.godot) so
-## every scene can reach it as "RunProgress". A cleared run is never a dead
-## end — complete_run always grants exactly one new unlock, so the game is
-## provably finishable end to end: Paladin -> ... -> Prophet -> every relic.
+## Two kinds of persisted state, both in the same save file, kept
+## deliberately separate:
+##  - Meta-progression (which characters/relics have been earned) never
+##    resets. complete_run always grants exactly one new unlock, so the
+##    game is provably finishable end to end: Paladin -> ... -> Prophet ->
+##    every relic.
+##  - The current run's resume point (which level, which character) is
+##    transient — it's exactly what MainMenuScreen's "Continue" button
+##    reads, and it's cleared the moment that run actually ends, in either
+##    direction (DeathScreen on a loss, complete_run() on the final trial's
+##    victory), so a stale save never offers to resume a run that's over.
+##
+## Registered as an autoload singleton (see project.godot) so every scene
+## can reach it as "RunProgress". save_path is a constructor parameter
+## (not hardcoded to SAVE_PATH directly) purely so tests can point a
+## throwaway instance at a temp file instead of the real one — the
+## autoload itself is always constructed with the default.
 
 const SAVE_PATH := "user://salvation_progress.cfg"
 
+var _save_path: String
 var _unlocked_characters: Dictionary = {CharacterId.PALADIN: true}
 var _unlocked_relics: Array[String] = []
+
+var _current_level_path: String = ""
+var _current_character_id: int = -1
+
+
+func _init(save_path: String = SAVE_PATH) -> void:
+	_save_path = save_path
 
 
 func _ready() -> void:
@@ -23,11 +43,50 @@ func unlocked_relics() -> Array[String]:
 	return _unlocked_relics
 
 
+## True once a level has actually started and no run-ending event
+## (death or the final trial's victory) has cleared it since.
+func has_run_in_progress() -> bool:
+	return _current_level_path != ""
+
+
+func current_level_path() -> String:
+	return _current_level_path
+
+
+func current_character_id() -> int:
+	return _current_character_id
+
+
+## Called by DungeonGenerator the moment any level starts — every level
+## re-saves itself as the resume point, so quitting mid-level and choosing
+## Continue later resumes at that level's own start (a freshly-generated
+## dungeon, not mid-dungeon state; the lazy room generation has nothing
+## durable to resume into below the level boundary).
+func save_run_progress(level_path: String, character_id: int) -> void:
+	_current_level_path = level_path
+	_current_character_id = character_id
+	_save()
+
+
+## Called when a run ends without completing the final trial (see
+## DeathScreen) — there's nothing left to Continue into, so the saved
+## resume point is cleared rather than left pointing at a level whose
+## in-progress dungeon no longer exists.
+func clear_run_progress() -> void:
+	_current_level_path = ""
+	_current_character_id = -1
+	_save()
+
+
 ## Called when a run ends in victory (the current final boss of whatever
 ## content is unlocked is defeated). Grants the next locked character in
 ## sequence, or — once all five are unlocked — a relic-tier reward instead,
-## so there is always a next thing to play for.
+## so there is always a next thing to play for. Also clears the resume
+## point: the run that just ended has nothing left to Continue into,
+## exactly like a loss does.
 func complete_run() -> String:
+	clear_run_progress()
+
 	for candidate in [CharacterId.PALADIN, CharacterId.CLERIC, CharacterId.MONK, CharacterId.EXORCIST, CharacterId.PROPHET]:
 		if not _unlocked_characters.has(candidate):
 			_unlocked_characters[candidate] = true
@@ -44,12 +103,14 @@ func _save() -> void:
 	var config := ConfigFile.new()
 	config.set_value("progress", "characters", _unlocked_characters.keys())
 	config.set_value("progress", "relics", _unlocked_relics)
-	config.save(SAVE_PATH)
+	config.set_value("run", "level_path", _current_level_path)
+	config.set_value("run", "character_id", _current_character_id)
+	config.save(_save_path)
 
 
 func _load() -> void:
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
+	if config.load(_save_path) != OK:
 		return
 
 	var characters = config.get_value("progress", "characters", [])
@@ -59,3 +120,6 @@ func _load() -> void:
 	var relics = config.get_value("progress", "relics", [])
 	for relic in relics:
 		_unlocked_relics.append(relic)
+
+	_current_level_path = config.get_value("run", "level_path", "")
+	_current_character_id = config.get_value("run", "character_id", -1)
