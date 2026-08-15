@@ -31,6 +31,13 @@ static var active_players: Array[PlayerController] = []
 
 @export var hit_flash_duration: float = 0.08
 
+## A minor shove away from whatever landed the hit — same idea as Enemy's
+## own knockback on take_damage, kept deliberately light (lower force,
+## shorter duration than Enemy's) so it reads as impact feedback rather
+## than a stagger that costs the player real control.
+@export var knockback_force: float = 160.0
+@export var knockback_duration: float = 0.1
+
 ## Furi-style parry: a short, precise window — much narrower than the
 ## dash's i-frames, and rewards actually landing it rather than just
 ## surviving. A hit absorbed during the window costs nothing and refunds
@@ -67,6 +74,9 @@ var _parry_flash_remaining: float = 0.0
 
 var _sprite: Sprite2D
 var _hit_flash_remaining: float = 0.0
+
+var _knockback_remaining: float = 0.0
+var _knockback_velocity: Vector2 = Vector2.ZERO
 
 
 ## Environment (floor/walls/obstacles) sits at negative z_index, but that's
@@ -137,6 +147,9 @@ func _physics_process(delta: float) -> void:
 		if _dash_time_remaining <= 0.0:
 			_is_dashing = false
 			is_invulnerable = false
+	elif _knockback_remaining > 0.0:
+		_knockback_remaining -= delta
+		velocity = _knockback_velocity
 	elif move_input == Vector2.ZERO:
 		# Releasing the stick/keys stops the character immediately rather than
 		# coasting — the lerp below is for ramping smoothly INTO motion, not
@@ -247,7 +260,11 @@ func record_ability_used(damage: float) -> void:
 	last_ability_use_id += 1
 
 
-func take_damage(amount: float) -> void:
+## source_position is the attacker's position, used to push the player away
+## from whatever landed the hit — INF means "no known source" (e.g. a future
+## non-directional damage source), which skips knockback rather than
+## computing a nonsense direction from it.
+func take_damage(amount: float, source_position: Vector2 = Vector2.INF) -> void:
 	if is_invulnerable:
 		return
 
@@ -261,6 +278,11 @@ func take_damage(amount: float) -> void:
 
 	stats.take_damage(amount)
 	_hit_flash_remaining = hit_flash_duration
+
+	if source_position.is_finite() and source_position != global_position:
+		_knockback_velocity = source_position.direction_to(global_position) * knockback_force
+		_knockback_remaining = knockback_duration
+
 	if not stats.is_alive():
 		_die()
 

@@ -79,7 +79,7 @@ func _physics_process(delta: float) -> void:
 
 	_base_attack_cooldown_remaining -= delta
 	if _base_attack_cooldown_remaining <= 0.0 and global_position.distance_to(_tracked_player.global_position) <= base_attack_range:
-		_tracked_player.take_damage(base_attack_damage)
+		_tracked_player.take_damage(base_attack_damage, global_position)
 		_spawn_attack_slash(_tracked_player.global_position, 40.0)
 		_base_attack_cooldown_remaining = base_attack_interval
 		print("Pride lashes out with a base strike!")
@@ -115,7 +115,7 @@ func _physics_process(delta: float) -> void:
 			# actually save you, not just delay the inevitable.
 			if is_instance_valid(_tracked_player) and global_position.distance_to(_tracked_player.global_position) <= mirror_range_now:
 				print("Pride's mirrored strike lands for %s damage!" % damage)
-				_tracked_player.take_damage(damage)
+				_tracked_player.take_damage(damage, global_position)
 				_spawn_attack_slash(_tracked_player.global_position, 40.0)
 
 	_update_telegraph_glow()

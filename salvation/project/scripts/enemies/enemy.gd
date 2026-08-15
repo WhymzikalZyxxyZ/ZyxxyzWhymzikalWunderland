@@ -97,7 +97,7 @@ func _physics_process(delta: float) -> void:
 		if not (collider is PlayerController) or not is_alive_player(collider):
 			continue
 
-		collider.take_damage(contact_damage)
+		collider.take_damage(contact_damage, global_position)
 		_spawn_attack_slash(collider.global_position, 28.0)
 		_contact_damage_cooldown_remaining = contact_damage_cooldown
 		break
