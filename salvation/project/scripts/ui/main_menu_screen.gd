@@ -39,6 +39,13 @@ func _on_continue_pressed() -> void:
 
 
 func _on_new_run_pressed() -> void:
+	# Without this, a New Run started over an abandoned-but-never-cleared
+	# save (the player left mid-run instead of dying or finishing) would
+	# silently inherit that old run's boss_order and elapsed timer — both
+	# only ever reset by clear_run_progress(), which nothing on this path
+	# otherwise calls. save_run_progress() (fired by the next level) only
+	# overwrites level_path/character_id, not those two.
+	RunProgress.clear_run_progress()
 	get_tree().change_scene_to_file(new_run_scene_path)
 
 
