@@ -13,12 +13,14 @@ const MAGIC_DROP_CHANCE := 0.21
 static var active_rocks: Array[Rock] = []
 
 @export var hit_flash_duration: float = 0.08
+@export var crit_flash_duration: float = 0.16
 
 var hits_remaining: int = MAX_HITS
 
 var _sprite: Sprite2D
 var _collision: CollisionShape2D
 var _hit_flash_remaining: float = 0.0
+var _crit_flash_remaining: float = 0.0
 
 
 func _ready() -> void:
@@ -30,6 +32,12 @@ func _exit_tree() -> void:
 
 
 func _process(delta: float) -> void:
+	if _crit_flash_remaining > 0.0:
+		_crit_flash_remaining -= delta
+		if _sprite != null:
+			_sprite.modulate = Color(2.2, 1.9, 0.3) if _crit_flash_remaining > 0.0 else Color.WHITE
+		return
+
 	if _hit_flash_remaining <= 0.0:
 		return
 	_hit_flash_remaining -= delta
@@ -37,12 +45,15 @@ func _process(delta: float) -> void:
 		_sprite.modulate = Color(1.8, 1.8, 1.8) if _hit_flash_remaining > 0.0 else Color.WHITE
 
 
-func take_damage(_amount: float = 1.0) -> void:
+func take_damage(_amount: float = 1.0, is_crit: bool = false) -> void:
 	if hits_remaining <= 0:
 		return
 
 	hits_remaining -= 1
-	_hit_flash_remaining = hit_flash_duration
+	if is_crit:
+		_crit_flash_remaining = crit_flash_duration
+	else:
+		_hit_flash_remaining = hit_flash_duration
 	if hits_remaining <= 0:
 		_break()
 

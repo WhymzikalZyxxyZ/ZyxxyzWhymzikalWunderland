@@ -327,7 +327,7 @@ func _attack() -> void:
 ## resource / record it as the player's last landed ability if it did.
 ## damage should already be the output of _rolled_damage() — this applies
 ## it as-is to every target caught in the swing, it doesn't roll anything itself.
-func _strike_in_facing_cone(damage: float, attack_range: float) -> bool:
+func _strike_in_facing_cone(damage: float, attack_range: float, is_crit: bool = false) -> bool:
 	var origin := global_position
 	var facing := Vector2.RIGHT.rotated(rotation)
 	var landed := false
@@ -340,7 +340,7 @@ func _strike_in_facing_cone(damage: float, attack_range: float) -> bool:
 		if origin.direction_to(target.global_position).dot(facing) < 0.5:
 			continue
 
-		target.take_damage(damage)
+		target.take_damage(damage, is_crit)
 		landed = true
 
 	for rock: Rock in Rock.active_rocks:
@@ -351,7 +351,7 @@ func _strike_in_facing_cone(damage: float, attack_range: float) -> bool:
 		if origin.direction_to(rock.global_position).dot(facing) < 0.5:
 			continue
 
-		rock.take_damage(damage)
+		rock.take_damage(damage, is_crit)
 		landed = true
 
 	return landed
@@ -367,6 +367,14 @@ func record_ability_used(damage: float) -> void:
 	last_ability_use_id += 1
 
 
+## True only for the target(s) hit by the most recent _rolled_damage()
+## call — read this immediately after rolling, before the next roll
+## overwrites it, to pass is_crit through to _strike_in_facing_cone/a
+## Projectile so the target actually flashes gold instead of the plain
+## white hit-flash. Not reset between rolls (each call sets it fresh either way).
+var _last_roll_was_crit: bool = false
+
+
 ## Applies bonus_damage_multiplier and rolls stats.critical_chance/
 ## critical_damage — every concrete character's _attack()/_use_magic()
 ## should route its base damage number through this exactly once per use
@@ -376,7 +384,8 @@ func record_ability_used(damage: float) -> void:
 ## reflects what actually landed rather than the un-rolled base number.
 func _rolled_damage(base_damage: float) -> float:
 	var amount: float = base_damage * bonus_damage_multiplier
-	if randf() < stats.critical_chance:
+	_last_roll_was_crit = randf() < stats.critical_chance
+	if _last_roll_was_crit:
 		amount *= stats.critical_damage
 		print("%s critical hit!" % CharacterId.name_of(character_id))
 	return amount
@@ -395,39 +404,84 @@ func _trigger_arcane_echo(base_amount: float, tint: Color) -> void:
 		return
 
 	for i in range(echo_stacks):
-		_strike_in_facing_cone(_rolled_damage(base_amount * 0.4), 60.0)
+		var rolled := _rolled_damage(base_amount * 0.4)
+		_strike_in_facing_cone(rolled, 60.0, _last_roll_was_crit)
 		_spawn_magic_burst(global_position + Vector2.RIGHT.rotated(rotation) * 40.0, tint, 0.9)
 
 
-## Called by Enemy._defeat() on every boss kill, for every active player —
-## rolls exactly one of the six upgrade types at random and applies it
-## immediately. Returns a short description (e.g. "+15% Damage") so the
-## caller can show the player what they actually got; nothing here
-## displays anything itself.
-func apply_random_boss_upgrade() -> String:
-	var upgrade: BossUpgradeType = BossUpgradeType.values()[randi() % BossUpgradeType.size()]
+## Picks count DISTINCT upgrade types at random (Fisher-Yates over
+## BossUpgradeType's own values, then the first count) — what
+## VictoryScreen actually offers the player to choose between, replacing
+## the old fully-random apply-one-immediately behavior. Static and pure:
+## doesn't need (or touch) any character instance, since which options
+## exist doesn't depend on who's playing.
+static func random_upgrade_choices(count: int) -> Array[BossUpgradeType]:
+	# BossUpgradeType.values() returns a plain Array (of ints), not
+	# Array[BossUpgradeType] — assigning it directly errors under GDScript's
+	# static typing; .assign() does the actual element-by-element conversion.
+	var pool: Array[BossUpgradeType] = []
+	pool.assign(BossUpgradeType.values())
+	for i in range(pool.size() - 1, 0, -1):
+		var j := randi() % (i + 1)
+		var swap: BossUpgradeType = pool[i]
+		pool[i] = pool[j]
+		pool[j] = swap
+	return pool.slice(0, mini(count, pool.size()))
 
-	match upgrade:
+
+## The fixed-magnitude label for a given upgrade type (e.g. "+15% Damage")
+## — static and pure, doesn't depend on any character's current stats, so
+## VictoryScreen can show it as a choice option before anything's actually
+## been applied to anyone.
+static func describe_upgrade(type: BossUpgradeType) -> String:
+	match type:
 		BossUpgradeType.DAMAGE:
-			bonus_damage_multiplier += DAMAGE_UPGRADE_AMOUNT
 			return "+%d%% Damage" % roundi(DAMAGE_UPGRADE_AMOUNT * 100)
 		BossUpgradeType.ATTACK_SPEED:
-			attack_cooldown = maxf(attack_cooldown * ATTACK_SPEED_UPGRADE_FACTOR, MIN_ATTACK_COOLDOWN)
 			return "+%d%% Attack Speed" % roundi((1.0 - ATTACK_SPEED_UPGRADE_FACTOR) * 100)
 		BossUpgradeType.MOVE_SPEED:
-			stats.speed *= MOVE_SPEED_UPGRADE_FACTOR
 			return "+%d%% Move Speed" % roundi((MOVE_SPEED_UPGRADE_FACTOR - 1.0) * 100)
 		BossUpgradeType.NEW_MAGIC:
-			echo_stacks += 1
-			return "New Magic: Arcane Echo (+%d)" % echo_stacks
+			return "New Magic: Arcane Echo"
 		BossUpgradeType.CRIT_CHANCE:
-			stats.critical_chance = clampf(stats.critical_chance + CRIT_CHANCE_UPGRADE_AMOUNT, 0.0, 1.0)
 			return "+%d%% Critical Chance" % roundi(CRIT_CHANCE_UPGRADE_AMOUNT * 100)
 		BossUpgradeType.CRIT_DAMAGE:
-			stats.critical_damage += CRIT_DAMAGE_UPGRADE_AMOUNT
 			return "+%d%% Critical Damage" % roundi(CRIT_DAMAGE_UPGRADE_AMOUNT * 100)
 
 	return ""
+
+
+## Applies one specific upgrade type to this character. Split out from the
+## old apply_random_boss_upgrade() so DungeonGenerator can replay a run's
+## entire accumulated upgrade history onto a freshly-spawned character
+## (see RunProgress.upgrades — every level spawns a brand new
+## PlayerController, so nothing here survives on its own past the level
+## boundary without being explicitly reapplied) and so VictoryScreen's
+## choice UI can apply exactly the one the player actually picked, not a
+## random one.
+func apply_boss_upgrade(type: BossUpgradeType) -> void:
+	match type:
+		BossUpgradeType.DAMAGE:
+			bonus_damage_multiplier += DAMAGE_UPGRADE_AMOUNT
+		BossUpgradeType.ATTACK_SPEED:
+			attack_cooldown = maxf(attack_cooldown * ATTACK_SPEED_UPGRADE_FACTOR, MIN_ATTACK_COOLDOWN)
+		BossUpgradeType.MOVE_SPEED:
+			stats.speed *= MOVE_SPEED_UPGRADE_FACTOR
+		BossUpgradeType.NEW_MAGIC:
+			echo_stacks += 1
+		BossUpgradeType.CRIT_CHANCE:
+			stats.critical_chance = clampf(stats.critical_chance + CRIT_CHANCE_UPGRADE_AMOUNT, 0.0, 1.0)
+		BossUpgradeType.CRIT_DAMAGE:
+			stats.critical_damage += CRIT_DAMAGE_UPGRADE_AMOUNT
+
+
+## Rolls one upgrade at random and applies+describes it in one call — kept
+## for callers (and existing tests) that don't need the player to choose
+## between options.
+func apply_random_boss_upgrade() -> String:
+	var upgrade: BossUpgradeType = BossUpgradeType.values()[randi() % BossUpgradeType.size()]
+	apply_boss_upgrade(upgrade)
+	return describe_upgrade(upgrade)
 
 
 ## source_position is the attacker's position, used to push the player away

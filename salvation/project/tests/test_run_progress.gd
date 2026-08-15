@@ -332,6 +332,42 @@ func test_reset_all_persists_across_instances_pointed_at_the_same_path() -> void
 	assert_false(second.is_unlocked(CharacterId.CLERIC), "The reset should have persisted, not just lived in the first instance's memory.")
 
 
+func test_upgrades_starts_empty() -> void:
+	var progress := _build()
+
+	assert_true(progress.upgrades().is_empty())
+
+
+func test_add_upgrade_appends_in_order() -> void:
+	var progress := _build()
+
+	progress.add_upgrade(PlayerController.BossUpgradeType.DAMAGE)
+	progress.add_upgrade(PlayerController.BossUpgradeType.CRIT_CHANCE)
+
+	assert_eq(progress.upgrades(), [PlayerController.BossUpgradeType.DAMAGE, PlayerController.BossUpgradeType.CRIT_CHANCE])
+
+
+func test_clear_run_progress_resets_upgrades_too() -> void:
+	var progress := _build()
+	progress.add_upgrade(PlayerController.BossUpgradeType.DAMAGE)
+
+	progress.clear_run_progress()
+
+	assert_true(progress.upgrades().is_empty())
+
+
+func test_upgrades_survive_across_instances_pointed_at_the_same_path() -> void:
+	var first: Node = RunProgressScript.new(_temp_path)
+	add_child_autofree(first)
+	first.add_upgrade(PlayerController.BossUpgradeType.MOVE_SPEED)
+	first.add_upgrade(PlayerController.BossUpgradeType.NEW_MAGIC)
+
+	var second: Node = RunProgressScript.new(_temp_path)
+	add_child_autofree(second)
+
+	assert_eq(second.upgrades(), [PlayerController.BossUpgradeType.MOVE_SPEED, PlayerController.BossUpgradeType.NEW_MAGIC])
+
+
 func test_a_corrupted_save_file_is_treated_as_a_fresh_start() -> void:
 	var file := FileAccess.open(_temp_path, FileAccess.WRITE)
 	file.store_string("not a valid config file")

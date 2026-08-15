@@ -29,7 +29,8 @@ func _build_sprite() -> Texture2D:
 
 
 func _attack() -> void:
-	_strike_in_facing_cone(_rolled_damage(basic_attack_damage), basic_attack_range)
+	var rolled := _rolled_damage(basic_attack_damage)
+	_strike_in_facing_cone(rolled, basic_attack_range, _last_roll_was_crit)
 	_spawn_attack_slash(basic_attack_range * 0.6)
 	print("Exorcist: warding strike!")
 
@@ -48,6 +49,7 @@ func _use_magic() -> void:
 		bolt.speed = rite_speed
 		bolt.max_distance = rite_max_distance
 		bolt.damage = rolled
+		bolt.is_crit = _last_roll_was_crit
 		get_parent().add_child(bolt)
 		bolt.launch(global_position, Vector2.RIGHT.rotated(rotation))
 

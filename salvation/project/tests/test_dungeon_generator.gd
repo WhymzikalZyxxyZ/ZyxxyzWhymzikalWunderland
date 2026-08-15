@@ -17,6 +17,35 @@ func _build_generator(seed_value: int) -> DungeonGenerator:
 	return generator
 
 
+func test_spawned_player_replays_every_accumulated_run_upgrade() -> void:
+	# Regression test: every level spawns a brand new PlayerController —
+	# without DungeonGenerator replaying RunProgress.upgrades() onto it,
+	# a boss upgrade picked on an earlier level would silently vanish the
+	# moment the next level loaded.
+	RunProgress.clear_run_progress()
+	RunProgress.add_upgrade(PlayerController.BossUpgradeType.MOVE_SPEED)
+	RunProgress.add_upgrade(PlayerController.BossUpgradeType.NEW_MAGIC)
+	CharacterId.chosen_character_id = CharacterId.PALADIN  # pin the baseline this test's assertions assume
+
+	var generator := _build_generator(1)
+	# Read the player back from the start room DungeonGenerator actually
+	# spawned it into, rather than the global active_players registry —
+	# more direct, and not at risk of picking up a stale entry left by an
+	# earlier test in the same run.
+	var start_room: Room = generator._rooms_by_cell[Vector2i.ZERO]
+	var player: PlayerController = null
+	for child in start_room.get_children():
+		if child is PlayerController:
+			player = child
+			break
+
+	assert_not_null(player)
+	assert_gt(player.stats.speed, 200.0, "Move Speed upgrade should have been replayed onto the fresh player.")
+	assert_eq(player.echo_stacks, 1, "New Magic upgrade should have been replayed exactly once.")
+
+	RunProgress.clear_run_progress()
+
+
 func test_start_room_gets_up_to_four_real_children_immediately() -> void:
 	var generator := _build_generator(1)
 

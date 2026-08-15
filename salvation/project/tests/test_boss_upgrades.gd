@@ -90,3 +90,49 @@ func test_arcane_echo_spawns_one_burst_per_stack() -> void:
 		if child is MagicBurst:
 			burst_count += 1
 	assert_eq(burst_count, 3)
+
+
+func test_random_upgrade_choices_returns_distinct_types() -> void:
+	for i in range(20):
+		var choices := PlayerController.random_upgrade_choices(2)
+		assert_eq(choices.size(), 2)
+		assert_ne(choices[0], choices[1], "Two offered choices should never be the same upgrade.")
+
+
+func test_describe_upgrade_is_pure_and_does_not_need_a_character() -> void:
+	assert_eq(PlayerController.describe_upgrade(PlayerController.BossUpgradeType.DAMAGE), "+15% Damage")
+	assert_eq(PlayerController.describe_upgrade(PlayerController.BossUpgradeType.NEW_MAGIC), "New Magic: Arcane Echo")
+
+
+func test_apply_boss_upgrade_applies_exactly_the_type_given_not_a_random_one() -> void:
+	var paladin := Paladin.new()
+	add_child_autofree(paladin)
+	var original_speed := paladin.stats.speed
+
+	paladin.apply_boss_upgrade(PlayerController.BossUpgradeType.MOVE_SPEED)
+
+	assert_gt(paladin.stats.speed, original_speed)
+	assert_eq(paladin.bonus_damage_multiplier, 1.0, "Only Move Speed was applied — Damage shouldn't have changed.")
+
+
+func test_crit_flag_reaches_take_damage_on_a_guaranteed_crit() -> void:
+	var root := Node2D.new()
+	add_child_autofree(root)
+
+	var paladin := Paladin.new()
+	root.add_child(paladin)
+	paladin.stats.critical_chance = 1.0
+
+	var target := Enemy.new()
+	var collision := CollisionShape2D.new()
+	var shape := RectangleShape2D.new()
+	shape.size = Vector2(28, 28)
+	collision.shape = shape
+	target.add_child(collision)
+	root.add_child(target)
+	target.global_position = paladin.global_position + Vector2(30, 0)  # within basic_attack_range, directly ahead (rotation defaults to 0)
+
+	paladin._attack()
+
+	assert_gt(target._crit_flash_remaining, 0.0, "A guaranteed crit should have flagged the target's crit flash, not the plain hit flash.")
+	assert_eq(target._hit_flash_remaining, 0.0)

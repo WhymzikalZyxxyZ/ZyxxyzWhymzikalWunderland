@@ -55,6 +55,14 @@ var _tutorial_seen: bool = false
 var _current_level_path: String = ""
 var _current_character_id: int = -1
 var _boss_order: Array[int] = []
+## Every boss upgrade (PlayerController.BossUpgradeType int values) chosen
+## so far this run, in the order they were picked. Every level spawns a
+## brand new PlayerController (see DungeonGenerator._spawn_player) — this
+## is what makes an upgrade picked on Trial II still apply on Trial V:
+## DungeonGenerator replays this entire list onto each freshly-spawned
+## character. Without it, every upgrade would vanish the instant the next
+## level loaded.
+var _upgrades: Array[int] = []
 
 ## _run_elapsed_seconds is the persisted, already-banked total; _session_start_time
 ## (never persisted — Unix time, -1.0 means "not currently ticking") anchors
@@ -134,6 +142,19 @@ func boss_order() -> Array[int]:
 	return _boss_order
 
 
+func upgrades() -> Array[int]:
+	return _upgrades
+
+
+## Called by VictoryScreen the moment the player picks one of the two
+## upgrade choices offered after a boss falls. Doesn't apply anything to
+## any character directly — the next level's DungeonGenerator replays the
+## full list (this call included) onto whatever fresh PlayerController it spawns.
+func add_upgrade(type: int) -> void:
+	_upgrades.append(type)
+	_save()
+
+
 ## Live elapsed time for the current run, in seconds — the banked total
 ## plus whatever's accumulated since the session last started ticking (see
 ## _session_start_time). Read-only; doesn't bank anything itself.
@@ -189,6 +210,7 @@ func clear_run_progress() -> void:
 	_current_level_path = ""
 	_current_character_id = -1
 	_boss_order = []
+	_upgrades = []
 	_run_elapsed_seconds = 0.0
 	_session_start_time = -1.0
 	_save()
@@ -237,6 +259,7 @@ func reset_all() -> void:
 	_current_level_path = ""
 	_current_character_id = -1
 	_boss_order = []
+	_upgrades = []
 	_run_elapsed_seconds = 0.0
 	_session_start_time = -1.0
 	_save()
@@ -267,6 +290,7 @@ func _save() -> void:
 	config.set_value("run", "level_path", _current_level_path)
 	config.set_value("run", "character_id", _current_character_id)
 	config.set_value("run", "boss_order", _boss_order)
+	config.set_value("run", "upgrades", _upgrades)
 	config.set_value("run", "elapsed_seconds", _run_elapsed_seconds)
 	config.save(_save_path)
 
@@ -296,6 +320,11 @@ func _load() -> void:
 	_boss_order = []
 	for index in order:
 		_boss_order.append(index)
+
+	var upgrades = config.get_value("run", "upgrades", [])
+	_upgrades = []
+	for type in upgrades:
+		_upgrades.append(type)
 
 	_run_elapsed_seconds = config.get_value("run", "elapsed_seconds", 0.0)
 	_session_start_time = -1.0

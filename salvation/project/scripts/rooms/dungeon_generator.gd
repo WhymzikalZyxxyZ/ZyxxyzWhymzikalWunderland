@@ -118,6 +118,16 @@ func _ready() -> void:
 
 	var paladin := _spawn_player(start_room)
 	add_child(start_room)
+
+	# Only safe once start_room is actually in the tree: paladin was
+	# attached to start_room *before* add_child(start_room) (Room._ready()
+	# needs its children already in place, same reasoning as the door-flags
+	# comment above), which means Paladin._ready() — and the stats it
+	# sets up — hasn't run yet until this line. Replaying upgrades any
+	# earlier hits a null stats.
+	for upgrade_type in RunProgress.upgrades():
+		paladin.apply_boss_upgrade(upgrade_type)
+
 	_expand_room(start, start_room, 0)
 
 	if paladin != null and not player_hud_path.is_empty():
@@ -305,6 +315,16 @@ func _build_door(source: Room, target: Room, direction: Vector2i) -> void:
 ## Paladin so a level built directly, skipping character select, still
 ## works — see CharacterId.chosen_character_id). The run keeps one
 ## character across all ten levels; there's no per-level override.
+##
+## Every level spawns a brand new PlayerController instance — nothing
+## about a previous level's character (including any boss upgrades
+## picked) carries over on its own without explicitly replaying
+## RunProgress.upgrades() back onto it. NOT done here: room.add_child(paladin)
+## happens before room itself is in the tree (see _ready()'s door-flags
+## comment — Room._ready() needs its children already attached), so
+## Paladin._ready() — and the stats upgrades actually modify — hasn't run
+## yet at this point. _ready() replays upgrades itself, right after
+## add_child(start_room) actually puts everything in the live tree.
 func _spawn_player(room: Room) -> PlayerController:
 	var scene := CharacterRoster.scene_for(CharacterId.chosen_character_id)
 	var paladin: PlayerController = scene.instantiate()

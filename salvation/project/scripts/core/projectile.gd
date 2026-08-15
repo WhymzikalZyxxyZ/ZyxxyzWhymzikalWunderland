@@ -15,6 +15,10 @@ extends Area2D
 @export var speed: float = 420.0
 @export var max_distance: float = 320.0
 @export var damage: float = 20.0
+## Set by the caster alongside damage (see Exorcist._use_magic) — whether
+## the crit roll for this shot already landed, so whatever it hits shows
+## the gold crit flash instead of the plain white one.
+@export var is_crit: bool = false
 
 var _direction: Vector2 = Vector2.RIGHT
 var _traveled: float = 0.0
@@ -60,9 +64,9 @@ func _on_body_entered(body: Node2D) -> void:
 
 	if body is Enemy:
 		_has_hit = true
-		body.take_damage(damage)
+		body.take_damage(damage, is_crit)
 		queue_free()
 	elif body is Rock:
 		_has_hit = true
-		body.take_damage()
+		body.take_damage(damage, is_crit)
 		queue_free()

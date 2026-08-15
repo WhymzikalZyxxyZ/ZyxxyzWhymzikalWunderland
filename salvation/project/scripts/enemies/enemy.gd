@@ -26,6 +26,11 @@ static var active_enemies: Array[Enemy] = []
 @export var next_level_scene_path: String = ""
 
 @export var hit_flash_duration: float = 0.08
+## Longer and a distinct gold color rather than the plain white hit_flash —
+## a critical hit landing needs to actually read as different in the
+## moment, not just deal more damage the player has to infer from the
+## health bar afterward.
+@export var crit_flash_duration: float = 0.16
 @export var knockback_force: float = 260.0
 @export var knockback_duration: float = 0.12
 
@@ -40,6 +45,7 @@ var _contact_damage_cooldown_remaining: float = 0.0
 var sprite: Sprite2D
 
 var _hit_flash_remaining: float = 0.0
+var _crit_flash_remaining: float = 0.0
 var _knockback_remaining: float = 0.0
 var _knockback_velocity: Vector2 = Vector2.ZERO
 
@@ -86,7 +92,11 @@ func _physics_process(delta: float) -> void:
 	_chase()
 	move_and_slide()
 
-	if _hit_flash_remaining > 0.0:
+	if _crit_flash_remaining > 0.0:
+		_crit_flash_remaining -= delta
+		if sprite != null:
+			sprite.modulate = Color(2.2, 1.9, 0.3) if _crit_flash_remaining > 0.0 else Color.WHITE
+	elif _hit_flash_remaining > 0.0:
 		_hit_flash_remaining -= delta
 		if sprite != null:
 			sprite.modulate = Color(1.8, 1.8, 1.8) if _hit_flash_remaining > 0.0 else Color.WHITE
@@ -162,9 +172,12 @@ func find_nearest_player() -> PlayerController:
 	return nearest
 
 
-func take_damage(amount: float) -> void:
+func take_damage(amount: float, is_crit: bool = false) -> void:
 	stats.take_damage(amount)
-	_hit_flash_remaining = hit_flash_duration
+	if is_crit:
+		_crit_flash_remaining = crit_flash_duration
+	else:
+		_hit_flash_remaining = hit_flash_duration
 
 	var nearest_player := find_nearest_player()
 	if nearest_player != null:
@@ -189,16 +202,15 @@ func _defeat() -> void:
 	if is_boss and is_inside_tree():
 		VictoryScreen.next_boss_name = next_boss_name
 		VictoryScreen.next_level_scene_path = next_level_scene_path
-		# Every boss defeat grants exactly one random upgrade (damage,
-		# attack speed, move speed, a new bonus spell, crit chance, or crit
-		# damage) — see PlayerController.apply_random_boss_upgrade. Only
-		# one player is ever actually active in practice, but this loop
-		# doesn't assume that; if a second one existed, both would be upgraded.
-		VictoryScreen.last_upgrade_description = ""
-		for player in PlayerController.active_players:
-			if is_instance_valid(player):
-				VictoryScreen.last_upgrade_description = player.apply_random_boss_upgrade()
-				break
+		# Every non-final boss defeat offers a choice of two upgrades — the
+		# player picks one on VictoryScreen, which records it via
+		# RunProgress.add_upgrade() (replayed onto whatever character the
+		# next level spawns; see DungeonGenerator._spawn_player). The final
+		# trial (next_level_scene_path empty) skips this entirely: there's
+		# no next level left for an upgrade to matter on.
+		VictoryScreen.upgrade_choices = (
+			PlayerController.random_upgrade_choices(2) if next_level_scene_path != "" else []
+		)
 		get_tree().change_scene_to_file(victory_screen_path)
 
 	queue_free()

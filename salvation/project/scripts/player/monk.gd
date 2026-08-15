@@ -28,7 +28,8 @@ func _build_sprite() -> Texture2D:
 
 
 func _attack() -> void:
-	_strike_in_facing_cone(_rolled_damage(basic_attack_damage), basic_attack_range)
+	var rolled := _rolled_damage(basic_attack_damage)
+	_strike_in_facing_cone(rolled, basic_attack_range, _last_roll_was_crit)
 	_spawn_attack_slash(basic_attack_range * 0.6)
 	print("Monk: quick strike!")
 
@@ -39,7 +40,7 @@ func _use_magic() -> void:
 		return
 
 	var rolled := _rolled_damage(flurry_damage)
-	var landed := _strike_in_facing_cone(rolled, flurry_range)
+	var landed := _strike_in_facing_cone(rolled, flurry_range, _last_roll_was_crit)
 	if landed:
 		record_ability_used(rolled)
 
