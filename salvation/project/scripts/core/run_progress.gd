@@ -1,11 +1,13 @@
 extends Node
 ## Three kinds of persisted state, all in the same save file, kept
 ## deliberately separate:
-##  - Meta-progression (which characters/relics have been earned) never
-##    resets. complete_run always grants exactly one new unlock, so the
-##    game is provably finishable end to end: Paladin -> ... -> Prophet ->
-##    every relic.
-##  - Lifetime totals (total_deaths, total_victories) never reset either —
+##  - Meta-progression (which characters/relics have been earned, and
+##    whether the tutorial's been seen) never resets on its own.
+##    complete_run always grants exactly one new unlock, so the game is
+##    provably finishable end to end: Paladin -> ... -> Prophet -> every
+##    relic.
+##  - Lifetime totals (total_deaths, total_victories, and
+##    victories_by_character broken out per character) never reset either —
 ##    a plain running count, not a per-run history. "Victory" here means a
 ##    full run actually completed (the Adversary fell), not each
 ##    individual boss cleared along the way.
@@ -21,10 +23,13 @@ extends Node
 ##    replaces it the moment the next level starts and re-saves.
 ##
 ## IMPORTANT ordering for the run timer: complete_run() clears the resume
-## point (including the elapsed timer) as its first step, so a caller that
-## wants to report how long the run took (VictoryScreen does, on the final
-## trial) MUST read run_elapsed_seconds() before calling complete_run(),
-## not after.
+## point (including the elapsed timer and current_character_id) as its
+## first step, so a caller that wants to report how long the run took
+## (VictoryScreen does, on the final trial) MUST read run_elapsed_seconds()
+## before calling complete_run(), not after. complete_run() itself has the
+## same problem internally for crediting victories_by_character — it
+## captures _current_character_id into a local before calling
+## clear_run_progress(), so this is handled for you there.
 ##
 ## Registered as an autoload singleton (see project.godot) so every scene
 ## can reach it as "RunProgress". save_path is a constructor parameter
@@ -40,6 +45,12 @@ var _unlocked_relics: Array[String] = []
 
 var _total_deaths: int = 0
 var _total_victories: int = 0
+## CharacterId -> number of full runs completed with that character.
+## Broken out from _total_victories (their sum always equals it) so
+## MainMenuScreen can show who's actually finished a run, not just how many times.
+var _victories_by_character: Dictionary = {}
+
+var _tutorial_seen: bool = false
 
 var _current_level_path: String = ""
 var _current_character_id: int = -1
@@ -78,6 +89,24 @@ func total_deaths() -> int:
 
 func total_victories() -> int:
 	return _total_victories
+
+
+func victories_for_character(id: int) -> int:
+	return _victories_by_character.get(id, 0)
+
+
+func has_seen_tutorial() -> bool:
+	return _tutorial_seen
+
+
+## Called by TutorialScreen the instant it's dismissed, regardless of how
+## it was reached — a permanent flag (meta-progression, not per-run state),
+## so MainMenuScreen's New Run only shows it again if reset_all() clears it.
+func mark_tutorial_seen() -> void:
+	if _tutorial_seen:
+		return
+	_tutorial_seen = true
+	_save()
 
 
 ## Called from DeathScreen — a lifetime tally, separate from and
@@ -172,8 +201,14 @@ func clear_run_progress() -> void:
 ## point: the run that just ended has nothing left to Continue into,
 ## exactly like a loss does.
 func complete_run() -> String:
+	# Captured before clear_run_progress() wipes _current_character_id —
+	# same ordering footgun as the elapsed timer (see the class docstring):
+	# clear_run_progress() runs first and resets it to -1.
+	var completed_character_id := _current_character_id
+
 	clear_run_progress()
 	_total_victories += 1
+	_victories_by_character[completed_character_id] = _victories_by_character.get(completed_character_id, 0) + 1
 
 	for candidate in [CharacterId.PALADIN, CharacterId.CLERIC, CharacterId.MONK, CharacterId.EXORCIST, CharacterId.PROPHET]:
 		if not _unlocked_characters.has(candidate):
@@ -185,6 +220,26 @@ func complete_run() -> String:
 	_unlocked_relics.append(relic_name)
 	_save()
 	return "%s is yours." % relic_name
+
+
+## Wipes every kind of persisted state this class tracks — meta-progression
+## (unlocks, tutorial-seen), lifetime totals, and the current run's resume
+## point — back to a brand-new save's defaults. Irreversible; callers
+## (MainMenuScreen's Reset Progress button) are responsible for confirming
+## with the player first, this doesn't ask twice.
+func reset_all() -> void:
+	_unlocked_characters = {CharacterId.PALADIN: true}
+	_unlocked_relics = []
+	_total_deaths = 0
+	_total_victories = 0
+	_victories_by_character = {}
+	_tutorial_seen = false
+	_current_level_path = ""
+	_current_character_id = -1
+	_boss_order = []
+	_run_elapsed_seconds = 0.0
+	_session_start_time = -1.0
+	_save()
 
 
 ## Folds whatever's accumulated since the session last started ticking
@@ -207,6 +262,8 @@ func _save() -> void:
 	config.set_value("progress", "relics", _unlocked_relics)
 	config.set_value("progress", "total_deaths", _total_deaths)
 	config.set_value("progress", "total_victories", _total_victories)
+	config.set_value("progress", "victories_by_character", _victories_by_character)
+	config.set_value("progress", "tutorial_seen", _tutorial_seen)
 	config.set_value("run", "level_path", _current_level_path)
 	config.set_value("run", "character_id", _current_character_id)
 	config.set_value("run", "boss_order", _boss_order)
@@ -229,6 +286,8 @@ func _load() -> void:
 
 	_total_deaths = config.get_value("progress", "total_deaths", 0)
 	_total_victories = config.get_value("progress", "total_victories", 0)
+	_victories_by_character = config.get_value("progress", "victories_by_character", {})
+	_tutorial_seen = config.get_value("progress", "tutorial_seen", false)
 
 	_current_level_path = config.get_value("run", "level_path", "")
 	_current_character_id = config.get_value("run", "character_id", -1)

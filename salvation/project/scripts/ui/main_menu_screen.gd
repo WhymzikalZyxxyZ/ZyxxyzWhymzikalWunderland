@@ -5,17 +5,26 @@ extends Control
 ## starts. Continue only appears when RunProgress.has_run_in_progress() is
 ## true, and picks the run back up exactly where DungeonGenerator last
 ## saved it — see RunProgress.save_run_progress, called by every level the
-## instant it starts. New Run always goes through the controls legend and
-## character select, same as the very first run ever did.
+## instant it starts. New Run skips the controls legend once
+## RunProgress.has_seen_tutorial() is true (see TutorialScreen); How to
+## Play always shows it, on purpose, and returns here rather than starting
+## a run.
 
-@export var new_run_scene_path: String = "res://scenes/ui/tutorial_screen.tscn"
+@export var character_select_scene_path: String = "res://scenes/ui/character_select_screen.tscn"
+@export var tutorial_scene_path: String = "res://scenes/ui/tutorial_screen.tscn"
+
+const CHARACTER_IDS := [CharacterId.PALADIN, CharacterId.CLERIC, CharacterId.MONK, CharacterId.EXORCIST, CharacterId.PROPHET]
 
 
 func _ready() -> void:
 	var continue_button := get_node_or_null("VBox/ContinueButton")
 	var new_run_button := get_node_or_null("VBox/NewRunButton")
+	var how_to_play_button := get_node_or_null("VBox/HowToPlayButton")
+	var reset_button := get_node_or_null("VBox/ResetButton")
+	var reset_dialog := get_node_or_null("ResetConfirmDialog")
 	var progress_label := get_node_or_null("VBox/ProgressLabel")
 	var stats_label := get_node_or_null("VBox/StatsLabel")
+	var completions_label := get_node_or_null("VBox/CompletionsLabel")
 
 	if continue_button != null:
 		if RunProgress.has_run_in_progress():
@@ -26,11 +35,21 @@ func _ready() -> void:
 	if new_run_button != null:
 		new_run_button.pressed.connect(_on_new_run_pressed)
 
+	if how_to_play_button != null:
+		how_to_play_button.pressed.connect(_on_how_to_play_pressed)
+
+	if reset_button != null and reset_dialog != null:
+		reset_button.pressed.connect(reset_dialog.popup_centered)
+		reset_dialog.confirmed.connect(_on_reset_confirmed)
+
 	if progress_label != null:
 		progress_label.text = _progress_summary()
 
 	if stats_label != null:
 		stats_label.text = "%d deaths — %d victories" % [RunProgress.total_deaths(), RunProgress.total_victories()]
+
+	if completions_label != null:
+		completions_label.text = _completions_summary()
 
 
 func _on_continue_pressed() -> void:
@@ -46,12 +65,31 @@ func _on_new_run_pressed() -> void:
 	# otherwise calls. save_run_progress() (fired by the next level) only
 	# overwrites level_path/character_id, not those two.
 	RunProgress.clear_run_progress()
-	get_tree().change_scene_to_file(new_run_scene_path)
+
+	if RunProgress.has_seen_tutorial():
+		get_tree().change_scene_to_file(character_select_scene_path)
+		return
+
+	TutorialScreen.dismiss_scene_path = character_select_scene_path
+	get_tree().change_scene_to_file(tutorial_scene_path)
+
+
+func _on_how_to_play_pressed() -> void:
+	# Always shows the tutorial, seen before or not, and returns to the
+	# main menu afterward instead of character select — reviewing controls
+	# shouldn't be indistinguishable from starting a run.
+	TutorialScreen.dismiss_scene_path = "res://scenes/ui/main_menu_screen.tscn"
+	get_tree().change_scene_to_file(tutorial_scene_path)
+
+
+func _on_reset_confirmed() -> void:
+	RunProgress.reset_all()
+	get_tree().reload_current_scene()
 
 
 func _progress_summary() -> String:
 	var unlocked_count := 0
-	for id in [CharacterId.PALADIN, CharacterId.CLERIC, CharacterId.MONK, CharacterId.EXORCIST, CharacterId.PROPHET]:
+	for id in CHARACTER_IDS:
 		if RunProgress.is_unlocked(id):
 			unlocked_count += 1
 
@@ -59,3 +97,15 @@ func _progress_summary() -> String:
 	if relic_count == 0:
 		return "%d of 5 faithful answered." % unlocked_count
 	return "%d of 5 faithful answered. %d relic(s) earned." % [unlocked_count, relic_count]
+
+
+func _completions_summary() -> String:
+	var parts: Array[String] = []
+	for id in CHARACTER_IDS:
+		var count := RunProgress.victories_for_character(id)
+		if count > 0:
+			parts.append("%s x%d" % [CharacterId.name_of(id), count])
+
+	if parts.is_empty():
+		return ""
+	return "Completed a run as: %s" % ", ".join(parts)

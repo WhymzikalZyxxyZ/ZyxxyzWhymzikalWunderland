@@ -50,3 +50,51 @@ func test_new_run_clears_a_stale_saved_run_before_leaving_the_menu() -> void:
 	assert_true(RunProgress.boss_order().is_empty(), "New Run should leave nothing for the next level to inherit.")
 	assert_false(RunProgress.has_run_in_progress())
 	assert_eq(RunProgress.run_elapsed_seconds(), 0.0)
+
+
+func test_new_run_goes_straight_to_character_select_once_tutorial_is_seen() -> void:
+	RunProgress.mark_tutorial_seen()
+
+	var menu := MAIN_MENU_SCENE.instantiate()
+	add_child_autofree(menu)
+	menu.get_node("VBox/NewRunButton").pressed.emit()
+	await wait_process_frames(1)
+
+	assert_eq(get_tree().current_scene.scene_file_path, "res://scenes/ui/character_select_screen.tscn")
+
+
+func test_how_to_play_always_shows_the_tutorial_and_returns_to_the_menu() -> void:
+	RunProgress.mark_tutorial_seen()  # even though it's already been seen
+
+	var menu := MAIN_MENU_SCENE.instantiate()
+	add_child_autofree(menu)
+	menu.get_node("VBox/HowToPlayButton").pressed.emit()
+
+	assert_eq(TutorialScreen.dismiss_scene_path, "res://scenes/ui/main_menu_screen.tscn")
+
+
+func test_reset_confirmed_wipes_progress_and_reloads() -> void:
+	RunProgress.save_run_progress("res://scenes/levels/level2.tscn", CharacterId.MONK)
+	RunProgress.record_death()
+
+	var menu := MAIN_MENU_SCENE.instantiate()
+	add_child_autofree(menu)
+	menu.get_node("ResetConfirmDialog").confirmed.emit()
+
+	assert_eq(RunProgress.total_deaths(), 0)
+	assert_false(RunProgress.has_run_in_progress())
+
+
+func test_completions_summary_lists_only_characters_with_a_finished_run() -> void:
+	RunProgress.reset_all()
+	RunProgress.save_run_progress("res://scenes/levels/level10.tscn", CharacterId.CLERIC)
+	RunProgress.complete_run()
+
+	var menu := MAIN_MENU_SCENE.instantiate()
+	add_child_autofree(menu)
+
+	var completions_label := menu.get_node("VBox/CompletionsLabel")
+	assert_true(completions_label.text.contains("Cleric"), "Got: %s" % completions_label.text)
+	assert_false(completions_label.text.contains("Paladin"), "Paladin hasn't completed a run — shouldn't be listed.")
+
+	RunProgress.reset_all()

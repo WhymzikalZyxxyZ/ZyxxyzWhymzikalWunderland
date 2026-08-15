@@ -53,6 +53,10 @@ text = "Continue"
 layout_mode = 2
 text = "New Run"
 
+[node name="HowToPlayButton" type="Button" parent="VBox"]
+layout_mode = 2
+text = "How to Play"
+
 [node name="Spacer2" type="Control" parent="VBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 12)
@@ -70,3 +74,25 @@ theme_override_colors/font_color = Color(0.42, 0.34, 0.36, 1)
 theme_override_font_sizes/font_size = 13
 horizontal_alignment = 1
 text = ""
+
+[node name="CompletionsLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.42, 0.34, 0.36, 1)
+theme_override_font_sizes/font_size = 13
+horizontal_alignment = 1
+autowrap_mode = 2
+text = ""
+
+[node name="Spacer3" type="Control" parent="VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 12)
+
+[node name="ResetButton" type="Button" parent="VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.58, 0.11, 0.17, 1)
+text = "Reset Progress"
+
+[node name="ResetConfirmDialog" type="ConfirmationDialog" parent="."]
+title = "Reset Progress?"
+dialog_text = "This permanently erases every unlocked character, every relic, all lifetime stats, and any run in progress. This cannot be undone."
+ok_button_text = "Erase Everything"
