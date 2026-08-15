@@ -26,7 +26,6 @@ extends Node2D
 const BOSS_CHANCE_DENOMINATOR := 6
 const DIRECTIONS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
-@export var paladin_scene: PackedScene
 @export var sinner_scene: PackedScene
 ## Whichever trial boss guards this level's boss room — not Pride-specific
 ## despite the historical name of the level1 scene that first used this.
@@ -218,8 +217,13 @@ func _build_door(source: Room, target: Room, direction: Vector2i) -> void:
 	add_child(door)
 
 
+## Spawns whichever character CharacterSelectScreen set (defaults to
+## Paladin so a level built directly, skipping character select, still
+## works — see CharacterId.chosen_character_id). The run keeps one
+## character across all ten levels; there's no per-level override.
 func _spawn_player(room: Room) -> PlayerController:
-	var paladin: PlayerController = paladin_scene.instantiate()
+	var scene := CharacterRoster.scene_for(CharacterId.chosen_character_id)
+	var paladin: PlayerController = scene.instantiate()
 	paladin.position = room.bounds.get_center()
 	room.add_child(paladin)
 	return paladin

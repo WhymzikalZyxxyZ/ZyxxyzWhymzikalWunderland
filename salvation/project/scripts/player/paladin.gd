@@ -41,33 +41,3 @@ func _use_magic() -> void:
 
 	_spawn_attack_slash(smite_range * 0.6)
 	print("Paladin: Divine Smite!")
-
-
-func _strike_in_facing_cone(damage: float, attack_range: float) -> bool:
-	var origin := global_position
-	var facing := Vector2.RIGHT.rotated(rotation)
-	var landed := false
-
-	for target: Enemy in Enemy.active_enemies:
-		if not is_instance_valid(target):
-			continue
-		if origin.distance_to(target.global_position) > attack_range:
-			continue
-		if origin.direction_to(target.global_position).dot(facing) < 0.5:
-			continue
-
-		target.take_damage(damage)
-		landed = true
-
-	for rock: Rock in Rock.active_rocks:
-		if not is_instance_valid(rock):
-			continue
-		if origin.distance_to(rock.global_position) > attack_range:
-			continue
-		if origin.direction_to(rock.global_position).dot(facing) < 0.5:
-			continue
-
-		rock.take_damage(damage)
-		landed = true
-
-	return landed

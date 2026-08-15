@@ -250,6 +250,43 @@ func _attack() -> void:
 	print("%s attacks (base implementation — override in the concrete character)." % CharacterId.name_of(character_id))
 
 
+## Damages every Enemy and Rock within attack_range that's roughly ahead
+## of the current facing direction (dot product against facing, not a
+## precise arc) — the shared melee shape every character except
+## Exorcist's ranged Banishing Rite uses for both their basic attack and
+## their Magic ability. Returns whether anything was actually hit, since
+## some callers (e.g. a Magic ability) only want to spend the cast's
+## resource / record it as the player's last landed ability if it did.
+func _strike_in_facing_cone(damage: float, attack_range: float) -> bool:
+	var origin := global_position
+	var facing := Vector2.RIGHT.rotated(rotation)
+	var landed := false
+
+	for target: Enemy in Enemy.active_enemies:
+		if not is_instance_valid(target):
+			continue
+		if origin.distance_to(target.global_position) > attack_range:
+			continue
+		if origin.direction_to(target.global_position).dot(facing) < 0.5:
+			continue
+
+		target.take_damage(damage)
+		landed = true
+
+	for rock: Rock in Rock.active_rocks:
+		if not is_instance_valid(rock):
+			continue
+		if origin.distance_to(rock.global_position) > attack_range:
+			continue
+		if origin.direction_to(rock.global_position).dot(facing) < 0.5:
+			continue
+
+		rock.take_damage(damage)
+		landed = true
+
+	return landed
+
+
 ## Each character's signature Magic-costing ability. Base does nothing.
 func _use_magic() -> void:
 	print("%s has no magic ability (base implementation — override in the concrete character)." % CharacterId.name_of(character_id))

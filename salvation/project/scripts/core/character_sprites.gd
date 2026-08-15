@@ -44,6 +44,135 @@ static func build_paladin() -> Texture2D:
 	return canvas.bake(palette, 2)
 
 
+## Cleric: pale, unarmored robes and a raised gold circlet — the least
+## armored of the five by silhouette, reading as a healer rather than a fighter.
+static func build_cleric() -> Texture2D:
+	var canvas := PixelCanvas.new(18, 20)
+
+	canvas.fill_triangle(Vector2(3, 10), Vector2(1, 19), Vector2(9, 16), "R")
+	canvas.fill_ellipse(10, 14, 5, 6, "r")
+	canvas.fill_ellipse(12, 15, 3, 5, "R")
+	canvas.fill_ellipse(10, 5, 3.3, 3.3, "r")
+
+	# A circlet rather than pauldrons — nothing about this silhouette reads as armor.
+	canvas.fill_rect(8, 2, 12, 3, "g")
+	canvas.set_px(10, 1, "g")
+
+	canvas.fill_rect(9, 8, 10, 17, "s")
+	canvas.fill_rect(7, 12, 12, 13, "s")
+
+	canvas.auto_outline("o")
+
+	var palette := {
+		"r": Color(0.88, 0.85, 0.78),
+		"R": Color(0.68, 0.64, 0.56),
+		"s": Color(0.94, 0.9, 0.8),
+		"g": Color(0.85, 0.72, 0.3),
+		"o": Color(0.05, 0.04, 0.03),
+	}
+	return canvas.bake(palette, 2)
+
+
+## Monk: leaner and shorter than any other character, no cape, no armor —
+## a plain wrapped robe built for speed rather than protection.
+static func build_monk() -> Texture2D:
+	var canvas := PixelCanvas.new(16, 19)
+
+	canvas.fill_ellipse(8, 13, 4, 6, "r")
+	canvas.fill_ellipse(9, 14, 2.5, 5, "R")
+	canvas.fill_ellipse(8, 5, 3, 3, "r")
+
+	# A wrapped sash, the only accent this character wears.
+	canvas.fill_rect(5, 10, 11, 12, "g")
+
+	canvas.auto_outline("o")
+
+	var palette := {
+		"r": Color(0.78, 0.42, 0.14),
+		"R": Color(0.56, 0.28, 0.08),
+		"g": Color(0.85, 0.75, 0.3),
+		"o": Color(0.04, 0.03, 0.02),
+	}
+	return canvas.bake(palette, 2)
+
+
+## Exorcist: dark robes with a bright holy symbol at the chest and a
+## censer/rod silhouette at the hip — built to read as a caster, not a fighter.
+static func build_exorcist() -> Texture2D:
+	var canvas := PixelCanvas.new(18, 21)
+
+	canvas.fill_triangle(Vector2(2, 10), Vector2(0, 20), Vector2(9, 17), "R")
+	canvas.fill_ellipse(10, 15, 5, 6, "r")
+	canvas.fill_ellipse(12, 16, 3, 5, "R")
+	canvas.fill_ellipse(9, 5, 3, 3, "r")
+
+	# The rod/censer at the hip — a distinct silhouette element none of the melee characters have.
+	canvas.fill_rect(14, 13, 15, 19, "s")
+	canvas.fill_ellipse(14, 12, 1.4, 1.4, "g")
+
+	# Holy symbol at the chest — the brightest point on an otherwise dark figure.
+	canvas.fill_rect(9, 11, 11, 15, "g")
+	canvas.fill_rect(8, 12, 12, 13, "g")
+
+	canvas.auto_outline("o")
+
+	var palette := {
+		"r": Color(0.22, 0.14, 0.32),
+		"R": Color(0.13, 0.08, 0.2),
+		"s": Color(0.15, 0.12, 0.1),
+		"g": Color(0.88, 0.8, 0.4),
+		"o": Color(0.03, 0.02, 0.04),
+	}
+	return canvas.bake(palette, 2)
+
+
+## Prophet: the most ornate of the five — a tall staff-like silhouette and
+## a glowing third-eye mark, deliberately the least armored and most
+## magic-forward looking character in the roster.
+static func build_prophet() -> Texture2D:
+	var canvas := PixelCanvas.new(19, 22)
+
+	canvas.fill_triangle(Vector2(2, 11), Vector2(0, 21), Vector2(10, 18), "R")
+	canvas.fill_ellipse(11, 16, 5, 6, "r")
+	canvas.fill_ellipse(13, 17, 3, 5, "R")
+	canvas.fill_ellipse(9, 5, 3.2, 3.2, "r")
+
+	# A tall staff — taller than any other character's silhouette element.
+	canvas.fill_rect(15, 0, 16, 19, "s")
+	canvas.fill_ellipse(15, 0, 1.6, 1.6, "g")
+
+	# The glowing mark — the only actual light source on any character's face.
+	canvas.fill_ellipse(9, 5, 0.9, 0.9, "e")
+
+	canvas.auto_outline("o")
+
+	var palette := {
+		"r": Color(0.18, 0.14, 0.4),
+		"R": Color(0.1, 0.08, 0.24),
+		"s": Color(0.3, 0.24, 0.14),
+		"g": Color(0.8, 0.7, 0.35),
+		"e": Color(0.6, 0.85, 0.95),
+		"o": Color(0.03, 0.02, 0.05),
+	}
+	return canvas.bake(palette, 2)
+
+
+## A short energy bolt — Exorcist's Banishing Rite is the only ranged
+## attack in the game, so this is the only projectile sprite needed.
+static func build_projectile_bolt() -> Texture2D:
+	var canvas := PixelCanvas.new(10, 5)
+	canvas.fill_ellipse(5, 2, 4.5, 1.8, "g")
+	canvas.fill_ellipse(6, 2, 2.5, 1.0, "e")
+	canvas.auto_outline("o")
+
+	var palette := {
+		"g": Color(0.7, 0.55, 0.2),
+		"e": Color(0.95, 0.9, 0.7),
+		"o": Color(0.05, 0.04, 0.02),
+	}
+	return canvas.bake(palette, 3)
+
+
 static func build_sinner() -> Texture2D:
 	var canvas := PixelCanvas.new(16, 16)
 	canvas.fill_ellipse(8, 9, 5, 5, "r")

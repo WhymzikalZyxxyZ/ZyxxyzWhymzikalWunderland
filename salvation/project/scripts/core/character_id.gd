@@ -16,3 +16,12 @@ const NAMES := {
 
 static func name_of(id: int) -> String:
 	return NAMES.get(id, "Unknown")
+
+
+## Which character the current run is actually playing as — set by
+## CharacterSelectScreen, read by DungeonGenerator._spawn_player(). Same
+## "static field hands a value forward without a full autoload" pattern
+## VictoryScreen.next_boss_name already uses elsewhere. Defaults to
+## Paladin so building a level directly (skipping character select, e.g.
+## in tests) still spawns something valid.
+static var chosen_character_id: int = PALADIN

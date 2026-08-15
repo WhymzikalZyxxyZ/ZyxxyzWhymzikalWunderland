@@ -21,7 +21,6 @@ subtitle_text = "TRIAL II"
 
 [node name="DungeonGenerator" type="Node2D" parent="."]
 script = ExtResource("1_generator")
-paladin_scene = ExtResource("2_paladin")
 sinner_scene = ExtResource("3_sinner")
 boss_scene = ExtResource("4_boss")
 boss_health_bar_path = NodePath("../BossHealthBarLayer/BossHealthBar")

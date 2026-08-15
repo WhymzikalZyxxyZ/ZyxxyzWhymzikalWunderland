@@ -1,9 +1,11 @@
 class_name TutorialScreen
 extends Control
-## The controls legend shown before a run starts. Dismisses into the
-## dungeon on any of the existing gameplay actions being pressed.
+## The controls legend shown before a run starts. Dismisses into character
+## select (not straight into the dungeon) on any of the existing gameplay
+## actions being pressed — the run needs a character chosen before
+## DungeonGenerator can spawn one.
 
-@export var next_scene_path: String = "res://scenes/levels/level1.tscn"
+@export var next_scene_path: String = "res://scenes/ui/character_select_screen.tscn"
 
 var _prompt: Label
 var _pulse_time: float = 0.0

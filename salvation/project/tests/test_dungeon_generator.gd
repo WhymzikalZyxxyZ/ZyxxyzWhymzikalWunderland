@@ -4,14 +4,12 @@ extends GutTest
 ## is actually revealed — mirroring Room's own lazy enemy-spawn-on-reveal
 ## design one level up.
 
-const PALADIN_SCENE: PackedScene = preload("res://scenes/player/paladin.tscn")
 const SINNER_SCENE: PackedScene = preload("res://scenes/enemies/sinner.tscn")
 const PRIDE_BOSS_SCENE: PackedScene = preload("res://scenes/bosses/pride_boss.tscn")
 
 
 func _build_generator(seed_value: int) -> DungeonGenerator:
 	var generator := DungeonGenerator.new()
-	generator.paladin_scene = PALADIN_SCENE
 	generator.sinner_scene = SINNER_SCENE
 	generator.boss_scene = PRIDE_BOSS_SCENE
 	generator.seed_value = seed_value
