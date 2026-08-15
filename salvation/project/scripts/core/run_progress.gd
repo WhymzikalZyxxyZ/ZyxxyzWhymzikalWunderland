@@ -9,7 +9,8 @@ extends Node
 ##    a plain running count, not a per-run history. "Victory" here means a
 ##    full run actually completed (the Adversary fell), not each
 ##    individual boss cleared along the way.
-##  - The current run's resume point (which level, which character) is
+##  - The current run's resume point (which level, which character, and
+##    which order this run's Trials I-IX landed in — see boss_order) is
 ##    transient — it's exactly what MainMenuScreen's "Continue" button
 ##    reads, and it's cleared the moment that run actually ends, in either
 ##    direction (DeathScreen on a loss, complete_run() on the final trial's
@@ -35,6 +36,7 @@ var _total_victories: int = 0
 
 var _current_level_path: String = ""
 var _current_character_id: int = -1
+var _boss_order: Array[int] = []
 
 
 func _init(save_path: String = SAVE_PATH) -> void:
@@ -82,6 +84,22 @@ func current_character_id() -> int:
 	return _current_character_id
 
 
+func boss_order() -> Array[int]:
+	return _boss_order
+
+
+## Called by DungeonGenerator on every level — a no-op once this run
+## already has an order (levels 2-10 of the same run, or Continue resuming
+## mid-run all see the exact same shuffle the run started with). Only a
+## fresh run (no order yet) actually rolls one, using that level's own rng
+## so it respects seed_value when one's set.
+func ensure_boss_order(rng: RandomNumberGenerator) -> void:
+	if not _boss_order.is_empty():
+		return
+	_boss_order = BossRoster.shuffled_order(rng)
+	_save()
+
+
 ## Called by DungeonGenerator the moment any level starts — every level
 ## re-saves itself as the resume point, so quitting mid-level and choosing
 ## Continue later resumes at that level's own start (a freshly-generated
@@ -100,6 +118,7 @@ func save_run_progress(level_path: String, character_id: int) -> void:
 func clear_run_progress() -> void:
 	_current_level_path = ""
 	_current_character_id = -1
+	_boss_order = []
 	_save()
 
 
@@ -133,6 +152,7 @@ func _save() -> void:
 	config.set_value("progress", "total_victories", _total_victories)
 	config.set_value("run", "level_path", _current_level_path)
 	config.set_value("run", "character_id", _current_character_id)
+	config.set_value("run", "boss_order", _boss_order)
 	config.save(_save_path)
 
 
@@ -154,3 +174,8 @@ func _load() -> void:
 
 	_current_level_path = config.get_value("run", "level_path", "")
 	_current_character_id = config.get_value("run", "character_id", -1)
+
+	var order = config.get_value("run", "boss_order", [])
+	_boss_order = []
+	for index in order:
+		_boss_order.append(index)

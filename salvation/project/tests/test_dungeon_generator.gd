@@ -11,7 +11,7 @@ const PRIDE_BOSS_SCENE: PackedScene = preload("res://scenes/bosses/pride_boss.ts
 func _build_generator(seed_value: int) -> DungeonGenerator:
 	var generator := DungeonGenerator.new()
 	generator.sinner_scene = SINNER_SCENE
-	generator.boss_scene = PRIDE_BOSS_SCENE
+	generator.boss_scene_override = PRIDE_BOSS_SCENE
 	generator.seed_value = seed_value
 	add_child_autofree(generator)
 	return generator

@@ -139,6 +139,64 @@ func test_lifetime_totals_survive_across_instances_pointed_at_the_same_path() ->
 	assert_eq(second.total_victories(), 1)
 
 
+func test_boss_order_starts_empty() -> void:
+	var progress := _build()
+
+	assert_true(progress.boss_order().is_empty())
+
+
+func test_ensure_boss_order_generates_a_full_permutation_once() -> void:
+	var progress := _build()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 42
+
+	progress.ensure_boss_order(rng)
+
+	assert_eq(progress.boss_order().size(), 9)
+
+
+func test_ensure_boss_order_is_a_noop_once_a_run_already_has_one() -> void:
+	var progress := _build()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 42
+	progress.ensure_boss_order(rng)
+	var first_order: Array = progress.boss_order().duplicate()
+
+	# A different seed shouldn't matter — a run's order is locked in the
+	# instant it's first generated, exactly what makes Continue resume
+	# into the same order the run started with.
+	var different_rng := RandomNumberGenerator.new()
+	different_rng.seed = 999
+	progress.ensure_boss_order(different_rng)
+
+	assert_eq(progress.boss_order(), first_order)
+
+
+func test_clear_run_progress_resets_the_boss_order_too() -> void:
+	var progress := _build()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 42
+	progress.ensure_boss_order(rng)
+
+	progress.clear_run_progress()
+
+	assert_true(progress.boss_order().is_empty(), "A new run should get a fresh shuffle, not the previous run's order.")
+
+
+func test_boss_order_survives_across_instances_pointed_at_the_same_path() -> void:
+	var first: Node = RunProgressScript.new(_temp_path)
+	add_child_autofree(first)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 42
+	first.ensure_boss_order(rng)
+	var saved_order = first.boss_order().duplicate()
+
+	var second: Node = RunProgressScript.new(_temp_path)
+	add_child_autofree(second)
+
+	assert_eq(second.boss_order(), saved_order)
+
+
 func test_a_corrupted_save_file_is_treated_as_a_fresh_start() -> void:
 	var file := FileAccess.open(_temp_path, FileAccess.WRITE)
 	file.store_string("not a valid config file")

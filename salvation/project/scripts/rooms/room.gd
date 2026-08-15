@@ -260,7 +260,13 @@ func _build_obstacles() -> void:
 	var center := bounds.get_center()
 	var accepted: Array[Dictionary] = []
 
-	var attempts := rng.randi_range(6, 12)
+	# Rooms are randomly sized per-room now (see DungeonGenerator.room_size_min/
+	# _max), so a flat attempt count would leave big rooms sparse and small
+	# ones cramped — scaled by area against the game's original fixed
+	# 720x640 room as the baseline instead.
+	const BASELINE_AREA := 720.0 * 640.0
+	var area_ratio: float = bounds.size.x * bounds.size.y / BASELINE_AREA
+	var attempts := roundi(rng.randi_range(6, 12) * clampf(area_ratio, 0.5, 1.8))
 	for i in range(attempts):
 		var candidate := Vector2(
 			rng.randf_range(bounds.position.x + 50.0, bounds.end.x - 50.0),
