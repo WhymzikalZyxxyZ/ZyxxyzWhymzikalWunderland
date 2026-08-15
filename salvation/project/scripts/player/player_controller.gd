@@ -228,21 +228,51 @@ func _spawn_dash_afterimage() -> void:
 ## centered on the current facing direction, at roughly the range the
 ## strike actually lands. Concrete characters call this from their own
 ## _attack()/_use_magic() — the range differs per ability, so it's a
-## parameter rather than baked in here.
-func _spawn_attack_slash(swing_radius: float) -> void:
+## parameter rather than baked in here. angle_offset_degrees rotates just
+## the slash's facing away from the character's actual facing (rotation
+## itself is untouched) — Monk's Flurry Strike spawns a few of these at
+## slightly different offsets to read as multiple quick hits landing
+## rather than one bigger swing.
+func _spawn_attack_slash(swing_radius: float, angle_offset_degrees: float = 0.0) -> void:
 	if get_parent() == null:
 		return
+
+	var angle: float = rotation + deg_to_rad(angle_offset_degrees)
 
 	var slash := AttackSlash.new()
 	slash.texture = CharacterSprites.build_slash()
 	slash.pivot = self
-	slash.facing_angle = rotation
+	slash.facing_angle = angle
 	slash.radius = swing_radius
-	slash.global_position = global_position + Vector2.RIGHT.rotated(rotation) * swing_radius
-	slash.rotation = rotation
+	slash.global_position = global_position + Vector2.RIGHT.rotated(angle) * swing_radius
+	slash.rotation = angle
 	slash.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	slash.z_index = ACTOR_Z_INDEX
 	get_parent().add_child(slash)
+
+
+## A radial glow at at_position, tinted per spell — the visual for Magic
+## abilities that don't read as a weapon swing (see MagicBurst). Concrete
+## characters call this from their own _use_magic() instead of/alongside
+## _spawn_attack_slash depending on what the spell actually does: a heal
+## centers it on self, a smite centers it where the strike lands.
+## end_scale_override, when positive, replaces MagicBurst's own default
+## end_scale — Prophet's Final Verse wants a visibly bigger burst than
+## everyone else's, being the single hardest-hitting Magic ability in the
+## game; the game-wide default is right for everyone else.
+func _spawn_magic_burst(at_position: Vector2, tint: Color, end_scale_override: float = -1.0) -> void:
+	if get_parent() == null:
+		return
+
+	var burst := MagicBurst.new()
+	burst.texture = CharacterSprites.build_burst()
+	burst.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	burst.global_position = at_position
+	burst.modulate = tint
+	if end_scale_override > 0.0:
+		burst.end_scale = end_scale_override
+	burst.z_index = ACTOR_Z_INDEX
+	get_parent().add_child(burst)
 
 
 ## Free basic attack, always available. Base is an unarmed placeholder.

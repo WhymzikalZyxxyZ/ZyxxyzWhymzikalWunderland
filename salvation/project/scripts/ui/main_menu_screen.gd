@@ -84,7 +84,17 @@ func _on_how_to_play_pressed() -> void:
 
 func _on_reset_confirmed() -> void:
 	RunProgress.reset_all()
-	get_tree().reload_current_scene()
+
+	# reload_current_scene() errors outright if current_scene is unset —
+	# always true in real play (this screen IS the current scene by the
+	# time a player can click anything on it) but not guaranteed in a test
+	# harness that instantiates this screen directly rather than through a
+	# real scene change. Falling back to loading this same scene by path
+	# gets the identical fresh-menu result either way.
+	if get_tree().current_scene != null:
+		get_tree().reload_current_scene()
+	else:
+		get_tree().change_scene_to_file(scene_file_path)
 
 
 func _progress_summary() -> String:

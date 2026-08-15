@@ -67,6 +67,60 @@ func test_exorcist_banishing_rite_spawns_a_projectile_that_damages_an_enemy_in_i
 	assert_lt(target.stats.health, health_before, "The bolt should have traveled far enough to hit the enemy.")
 
 
+func test_cleric_sacred_mend_spawns_a_magic_burst_not_a_combat_slash() -> void:
+	# Sacred Mend doesn't attack anyone — it shouldn't visually look like it
+	# does. Regression coverage for a real mismatch: this used to reuse
+	# _spawn_attack_slash, the same "weapon swing" effect every actual
+	# attack uses.
+	var cleric := Cleric.new()
+	add_child_autofree(cleric)
+	cleric.stats.magic = 50.0
+
+	cleric._use_magic()
+
+	var parent := cleric.get_parent()
+	var has_burst := false
+	var has_slash := false
+	for child in parent.get_children():
+		if child is MagicBurst:
+			has_burst = true
+		if child is AttackSlash:
+			has_slash = true
+
+	assert_true(has_burst, "Sacred Mend should spawn a MagicBurst.")
+	assert_false(has_slash, "Sacred Mend shouldn't spawn a combat slash — it doesn't attack anything.")
+
+
+func test_monk_flurry_strike_spawns_three_overlapping_slashes() -> void:
+	var monk := Monk.new()
+	add_child_autofree(monk)
+	monk.stats.magic = 50.0
+
+	monk._use_magic()
+
+	var slash_count := 0
+	for child in monk.get_parent().get_children():
+		if child is AttackSlash:
+			slash_count += 1
+
+	assert_eq(slash_count, 3, "Flurry Strike should read as multiple hits landing, not one bigger swing.")
+
+
+func test_prophet_final_verse_burst_is_bigger_than_the_shared_default() -> void:
+	var prophet := Prophet.new()
+	add_child_autofree(prophet)
+	prophet.stats.magic = 50.0
+
+	prophet._use_magic()
+
+	var burst: MagicBurst = null
+	for child in prophet.get_parent().get_children():
+		if child is MagicBurst:
+			burst = child
+	assert_not_null(burst, "Final Verse should spawn a MagicBurst.")
+	assert_gt(burst.end_scale, 1.7, "The Verse should be visibly bigger than the game-wide default burst.")
+
+
 func test_character_roster_resolves_a_distinct_scene_per_character() -> void:
 	var seen_paths := {}
 	for id in [CharacterId.PALADIN, CharacterId.CLERIC, CharacterId.MONK, CharacterId.EXORCIST, CharacterId.PROPHET]:

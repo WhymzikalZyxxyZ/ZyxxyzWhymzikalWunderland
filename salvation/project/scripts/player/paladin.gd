@@ -40,4 +40,7 @@ func _use_magic() -> void:
 		record_ability_used(smite_damage)
 
 	_spawn_attack_slash(smite_range * 0.6)
+	# Radiant gold, at the point of impact rather than on self — Smite
+	# strikes down where the sword lands, not where the Paladin is standing.
+	_spawn_magic_burst(global_position + Vector2.RIGHT.rotated(rotation) * smite_range * 0.6, Color(1.0, 0.85, 0.35, 0.9))
 	print("Paladin: Divine Smite!")

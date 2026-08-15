@@ -43,4 +43,8 @@ func _use_magic() -> void:
 		record_ability_used(verse_damage)
 
 	_spawn_attack_slash(verse_range * 0.6)
+	# The biggest burst of any Magic ability, on self rather than at the
+	# point of impact — the Verse radiates outward from the Prophet, the
+	# hit landing is almost incidental to it.
+	_spawn_magic_burst(global_position, Color(0.55, 0.6, 0.95, 0.85), 2.4)
 	print("Prophet: Final Verse!")

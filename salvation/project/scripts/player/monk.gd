@@ -42,5 +42,9 @@ func _use_magic() -> void:
 	if landed:
 		record_ability_used(flurry_damage)
 
-	_spawn_attack_slash(flurry_range * 0.6)
+	# Three overlapping slashes at slightly different angles rather than
+	# one — this is a flurry of hits landing at once, not one bigger swing.
+	_spawn_attack_slash(flurry_range * 0.6, -18.0)
+	_spawn_attack_slash(flurry_range * 0.6, 0.0)
+	_spawn_attack_slash(flurry_range * 0.6, 18.0)
 	print("Monk: Flurry Strike!")

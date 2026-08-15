@@ -47,5 +47,10 @@ func _use_magic() -> void:
 		get_parent().add_child(bolt)
 		bolt.launch(global_position, Vector2.RIGHT.rotated(rotation))
 
+	# A small casting flash where the bolt actually launches from — the
+	# Rite already reads as distinct via the bolt itself; this is just the
+	# moment of casting it, not a second copy of the same effect.
+	_spawn_magic_burst(global_position, Color(0.55, 0.4, 0.85, 0.75))
+
 	record_ability_used(rite_damage)
 	print("Exorcist: Banishing Rite!")

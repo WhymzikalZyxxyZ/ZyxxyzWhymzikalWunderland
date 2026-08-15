@@ -40,5 +40,7 @@ func _use_magic() -> void:
 
 	stats.heal(mend_heal_amount)
 	record_ability_used(mend_heal_amount)
-	_spawn_attack_slash(basic_attack_range * 0.6)
+	# A healing glow on self, not a combat slash — Mend doesn't swing
+	# anything at anyone, so it shouldn't look like it does.
+	_spawn_magic_burst(global_position, Color(0.45, 0.95, 0.6, 0.85))
 	print("Cleric: Sacred Mend!")
