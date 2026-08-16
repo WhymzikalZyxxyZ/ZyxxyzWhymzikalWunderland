@@ -127,6 +127,9 @@ func _ready() -> void:
 	# earlier hits a null stats.
 	for upgrade_type in RunProgress.upgrades():
 		paladin.apply_boss_upgrade(upgrade_type)
+	# Permanent, every run — separate from the per-run upgrades above, see
+	# PlayerController.RELIC_DAMAGE_BONUS.
+	paladin.apply_relic_bonuses(RunProgress.unlocked_relics().size())
 
 	_expand_room(start, start_room, 0)
 

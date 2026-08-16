@@ -29,6 +29,14 @@ const CRIT_DAMAGE_UPGRADE_AMOUNT := 0.25
 ## floor no amount of stacking can go under.
 const MIN_ATTACK_COOLDOWN := 0.08
 
+## Permanent, not per-run: every relic RunProgress.unlocked_relics() has
+## ever earned grants this much bonus_damage_multiplier at the start of
+## EVERY future run (see apply_relic_bonuses, called by DungeonGenerator
+## right after replaying the current run's own upgrades) — smaller than a
+## single Damage boss upgrade (0.15) since it's unconditional and stacks
+## across a whole meta-progression's worth of runs, not one.
+const RELIC_DAMAGE_BONUS := 0.05
+
 ## Multiplies every point of melee/ranged damage this character deals —
 ## see _rolled_damage(). Grown by the Damage boss upgrade; nothing else
 ## touches it.
@@ -482,6 +490,14 @@ func apply_random_boss_upgrade() -> String:
 	var upgrade: BossUpgradeType = BossUpgradeType.values()[randi() % BossUpgradeType.size()]
 	apply_boss_upgrade(upgrade)
 	return describe_upgrade(upgrade)
+
+
+## Applies this run's permanent relic bonus — see RELIC_DAMAGE_BONUS.
+## relic_count is RunProgress.unlocked_relics().size(), passed in rather
+## than read directly so this stays testable without touching RunProgress
+## at all.
+func apply_relic_bonuses(relic_count: int) -> void:
+	bonus_damage_multiplier += RELIC_DAMAGE_BONUS * relic_count
 
 
 ## source_position is the attacker's position, used to push the player away

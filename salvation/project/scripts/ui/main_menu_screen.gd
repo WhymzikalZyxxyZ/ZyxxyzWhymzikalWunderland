@@ -22,6 +22,7 @@ func _ready() -> void:
 	var how_to_play_button := get_node_or_null("VBox/HowToPlayButton")
 	var reset_button := get_node_or_null("VBox/ResetButton")
 	var reset_dialog := get_node_or_null("ResetConfirmDialog")
+	var settings_button := get_node_or_null("VBox/SettingsButton")
 	var progress_label := get_node_or_null("VBox/ProgressLabel")
 	var stats_label := get_node_or_null("VBox/StatsLabel")
 	var completions_label := get_node_or_null("VBox/CompletionsLabel")
@@ -41,6 +42,9 @@ func _ready() -> void:
 	if reset_button != null and reset_dialog != null:
 		reset_button.pressed.connect(reset_dialog.popup_centered)
 		reset_dialog.confirmed.connect(_on_reset_confirmed)
+
+	if settings_button != null:
+		settings_button.pressed.connect(_on_settings_pressed)
 
 	if progress_label != null:
 		progress_label.text = _progress_summary()
@@ -82,6 +86,10 @@ func _on_how_to_play_pressed() -> void:
 	get_tree().change_scene_to_file(tutorial_scene_path)
 
 
+func _on_settings_pressed() -> void:
+	get_tree().change_scene_to_file("res://scenes/ui/settings_screen.tscn")
+
+
 func _on_reset_confirmed() -> void:
 	RunProgress.reset_all()
 
@@ -106,7 +114,9 @@ func _progress_summary() -> String:
 	var relic_count := RunProgress.unlocked_relics().size()
 	if relic_count == 0:
 		return "%d of 5 faithful answered." % unlocked_count
-	return "%d of 5 faithful answered. %d relic(s) earned." % [unlocked_count, relic_count]
+
+	var bonus_percent := roundi(relic_count * PlayerController.RELIC_DAMAGE_BONUS * 100)
+	return "%d of 5 faithful answered. %d relic(s) earned (+%d%% Damage, every run)." % [unlocked_count, relic_count, bonus_percent]
 
 
 func _completions_summary() -> String:

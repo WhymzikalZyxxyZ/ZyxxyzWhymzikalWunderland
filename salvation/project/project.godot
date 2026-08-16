@@ -26,6 +26,7 @@ window/stretch/aspect="expand"
 [autoload]
 
 RunProgress="*res://scripts/core/run_progress.gd"
+GameSettings="*res://scripts/core/game_settings.gd"
 
 [editor_plugins]
 

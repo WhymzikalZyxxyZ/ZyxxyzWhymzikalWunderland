@@ -57,6 +57,10 @@ text = "New Run"
 layout_mode = 2
 text = "How to Play"
 
+[node name="SettingsButton" type="Button" parent="VBox"]
+layout_mode = 2
+text = "Settings"
+
 [node name="Spacer2" type="Control" parent="VBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 12)

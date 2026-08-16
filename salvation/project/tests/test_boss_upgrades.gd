@@ -115,6 +115,24 @@ func test_apply_boss_upgrade_applies_exactly_the_type_given_not_a_random_one() -
 	assert_eq(paladin.bonus_damage_multiplier, 1.0, "Only Move Speed was applied — Damage shouldn't have changed.")
 
 
+func test_apply_relic_bonuses_scales_with_relic_count() -> void:
+	var paladin := Paladin.new()
+	add_child_autofree(paladin)
+
+	paladin.apply_relic_bonuses(3)
+
+	assert_almost_eq(paladin.bonus_damage_multiplier, 1.0 + 3 * PlayerController.RELIC_DAMAGE_BONUS, 0.001)
+
+
+func test_apply_relic_bonuses_with_zero_relics_changes_nothing() -> void:
+	var paladin := Paladin.new()
+	add_child_autofree(paladin)
+
+	paladin.apply_relic_bonuses(0)
+
+	assert_eq(paladin.bonus_damage_multiplier, 1.0)
+
+
 func test_crit_flag_reaches_take_damage_on_a_guaranteed_crit() -> void:
 	var root := Node2D.new()
 	add_child_autofree(root)
