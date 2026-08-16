@@ -1,0 +1,20 @@
+[gd_scene load_steps=2 format=3 uid="uid://j1q9g4u7sloth"]
+
+[ext_resource type="Script" path="res://scripts/bosses/sloth_boss.gd" id="1_script"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(56, 56)
+
+[node name="SlothBoss" type="CharacterBody2D"]
+script = ExtResource("1_script")
+is_boss = true
+display_name = "Sloth"
+next_boss_name = "Lust"
+next_level_scene_path = "res://scenes/levels/level7.tscn"
+signature_interval = 5.0
+enraged_signature_interval = 3.2
+base_attack_damage = 20.0
+base_attack_interval = 3.5
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")

@@ -25,7 +25,8 @@ func _build_sprite() -> Texture2D:
 
 
 func _attack() -> void:
-	_strike_in_facing_cone(basic_attack_damage, basic_attack_range)
+	var rolled := _rolled_damage(basic_attack_damage)
+	_strike_in_facing_cone(rolled, basic_attack_range, _last_roll_was_crit)
 	_spawn_attack_slash(basic_attack_range * 0.6)
 	print("Paladin: sword strike!")
 
@@ -35,39 +36,14 @@ func _use_magic() -> void:
 		print("Paladin: not enough Magic to Smite.")
 		return
 
-	var landed := _strike_in_facing_cone(smite_damage, smite_range)
+	var rolled := _rolled_damage(smite_damage)
+	var landed := _strike_in_facing_cone(rolled, smite_range, _last_roll_was_crit)
 	if landed:
-		record_ability_used(smite_damage)
+		record_ability_used(rolled)
 
 	_spawn_attack_slash(smite_range * 0.6)
+	# Radiant gold, at the point of impact rather than on self — Smite
+	# strikes down where the sword lands, not where the Paladin is standing.
+	_spawn_magic_burst(global_position + Vector2.RIGHT.rotated(rotation) * smite_range * 0.6, Color(1.0, 0.85, 0.35, 0.9))
+	_trigger_arcane_echo(smite_damage, Color(1.0, 0.85, 0.35, 0.7))
 	print("Paladin: Divine Smite!")
-
-
-func _strike_in_facing_cone(damage: float, attack_range: float) -> bool:
-	var origin := global_position
-	var facing := Vector2.RIGHT.rotated(rotation)
-	var landed := false
-
-	for target: Enemy in Enemy.active_enemies:
-		if not is_instance_valid(target):
-			continue
-		if origin.distance_to(target.global_position) > attack_range:
-			continue
-		if origin.direction_to(target.global_position).dot(facing) < 0.5:
-			continue
-
-		target.take_damage(damage)
-		landed = true
-
-	for rock: Rock in Rock.active_rocks:
-		if not is_instance_valid(rock):
-			continue
-		if origin.distance_to(rock.global_position) > attack_range:
-			continue
-		if origin.direction_to(rock.global_position).dot(facing) < 0.5:
-			continue
-
-		rock.take_damage(damage)
-		landed = true
-
-	return landed

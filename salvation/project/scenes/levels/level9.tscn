@@ -1,0 +1,28 @@
+[gd_scene load_steps=7 format=3 uid="uid://i9z7d1t9level9"]
+
+[ext_resource type="Script" path="res://scripts/rooms/dungeon_generator.gd" id="1_generator"]
+[ext_resource type="PackedScene" path="res://scenes/player/paladin.tscn" id="2_paladin"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/sinner.tscn" id="3_sinner"]
+[ext_resource type="PackedScene" path="res://scenes/bosses/doubt_boss.tscn" id="4_boss"]
+[ext_resource type="PackedScene" path="res://scenes/ui/boss_health_bar.tscn" id="5_healthbar"]
+[ext_resource type="PackedScene" path="res://scenes/ui/player_hud.tscn" id="6_playerhud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/level_title_card.tscn" id="7_titlecard"]
+
+[node name="Level9" type="Node2D"]
+
+[node name="BossHealthBarLayer" parent="." instance=ExtResource("5_healthbar")]
+
+[node name="PlayerHudLayer" parent="." instance=ExtResource("6_playerhud")]
+
+[node name="LevelTitleCardLayer" parent="." instance=ExtResource("7_titlecard")]
+[node name="LevelTitleCard" parent="LevelTitleCardLayer" index="0"]
+title_text = "DOUBT"
+subtitle_text = "TRIAL IX"
+
+[node name="DungeonGenerator" type="Node2D" parent="."]
+script = ExtResource("1_generator")
+sinner_scene = ExtResource("3_sinner")
+level_index = 9
+level_title_card_path = NodePath("../LevelTitleCardLayer/LevelTitleCard")
+boss_health_bar_path = NodePath("../BossHealthBarLayer/BossHealthBar")
+player_hud_path = NodePath("../PlayerHudLayer/PlayerHud")

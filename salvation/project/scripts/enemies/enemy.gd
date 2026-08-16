@@ -19,7 +19,18 @@ static var active_enemies: Array[Enemy] = []
 @export var next_boss_name: String = ""
 @export var victory_screen_path: String = "res://scenes/ui/victory_screen.tscn"
 
+## Only meaningful when is_boss is true. Scene VictoryScreen actually
+## continues into once dismissed — empty means this is the final trial, so
+## VictoryScreen grants a run-completion reward and returns to the title
+## screen instead of trying to load a level that doesn't exist.
+@export var next_level_scene_path: String = ""
+
 @export var hit_flash_duration: float = 0.08
+## Longer and a distinct gold color rather than the plain white hit_flash —
+## a critical hit landing needs to actually read as different in the
+## moment, not just deal more damage the player has to infer from the
+## health bar afterward.
+@export var crit_flash_duration: float = 0.16
 @export var knockback_force: float = 260.0
 @export var knockback_duration: float = 0.12
 
@@ -34,6 +45,7 @@ var _contact_damage_cooldown_remaining: float = 0.0
 var sprite: Sprite2D
 
 var _hit_flash_remaining: float = 0.0
+var _crit_flash_remaining: float = 0.0
 var _knockback_remaining: float = 0.0
 var _knockback_velocity: Vector2 = Vector2.ZERO
 
@@ -80,7 +92,11 @@ func _physics_process(delta: float) -> void:
 	_chase()
 	move_and_slide()
 
-	if _hit_flash_remaining > 0.0:
+	if _crit_flash_remaining > 0.0:
+		_crit_flash_remaining -= delta
+		if sprite != null:
+			sprite.modulate = Color(2.2, 1.9, 0.3) if _crit_flash_remaining > 0.0 else Color.WHITE
+	elif _hit_flash_remaining > 0.0:
 		_hit_flash_remaining -= delta
 		if sprite != null:
 			sprite.modulate = Color(1.8, 1.8, 1.8) if _hit_flash_remaining > 0.0 else Color.WHITE
@@ -97,9 +113,34 @@ func _physics_process(delta: float) -> void:
 		if not (collider is PlayerController) or not is_alive_player(collider):
 			continue
 
-		collider.take_damage(contact_damage)
+		collider.take_damage(contact_damage, global_position)
+		_spawn_attack_slash(collider.global_position, 28.0)
 		_contact_damage_cooldown_remaining = contact_damage_cooldown
 		break
+
+
+## Basic pixel-level attack feedback for enemies — same sweeping-crescent
+## effect the player's own attacks use (see PlayerController._spawn_attack_slash),
+## tinted red so an enemy's strike always reads as distinct from the
+## player's own white/neutral one at a glance. target_position picks the
+## facing angle; concrete attacks (contact damage here, Pride's mirror and
+## base attack in pride_boss.gd) each call this at the moment damage lands.
+func _spawn_attack_slash(target_position: Vector2, swing_radius: float) -> void:
+	if get_parent() == null:
+		return
+
+	var facing := global_position.direction_to(target_position).angle()
+	var slash := AttackSlash.new()
+	slash.texture = CharacterSprites.build_slash()
+	slash.pivot = self
+	slash.facing_angle = facing
+	slash.radius = swing_radius
+	slash.global_position = global_position + Vector2.RIGHT.rotated(facing) * swing_radius
+	slash.rotation = facing
+	slash.modulate = Color(1.0, 0.15, 0.15)
+	slash.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	slash.z_index = ACTOR_Z_INDEX
+	get_parent().add_child(slash)
 
 
 func _chase() -> void:
@@ -131,9 +172,12 @@ func find_nearest_player() -> PlayerController:
 	return nearest
 
 
-func take_damage(amount: float) -> void:
+func take_damage(amount: float, is_crit: bool = false) -> void:
 	stats.take_damage(amount)
-	_hit_flash_remaining = hit_flash_duration
+	if is_crit:
+		_crit_flash_remaining = crit_flash_duration
+	else:
+		_hit_flash_remaining = hit_flash_duration
 
 	var nearest_player := find_nearest_player()
 	if nearest_player != null:
@@ -157,6 +201,16 @@ func _defeat() -> void:
 
 	if is_boss and is_inside_tree():
 		VictoryScreen.next_boss_name = next_boss_name
+		VictoryScreen.next_level_scene_path = next_level_scene_path
+		# Every non-final boss defeat offers a choice of two upgrades — the
+		# player picks one on VictoryScreen, which records it via
+		# RunProgress.add_upgrade() (replayed onto whatever character the
+		# next level spawns; see DungeonGenerator._spawn_player). The final
+		# trial (next_level_scene_path empty) skips this entirely: there's
+		# no next level left for an upgrade to matter on.
+		VictoryScreen.upgrade_choices = (
+			PlayerController.random_upgrade_choices(2) if next_level_scene_path != "" else []
+		)
 		get_tree().change_scene_to_file(victory_screen_path)
 
 	queue_free()

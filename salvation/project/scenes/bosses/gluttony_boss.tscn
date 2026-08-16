@@ -1,0 +1,20 @@
+[gd_scene load_steps=2 format=3 uid="uid://h6n7e2s5glutt"]
+
+[ext_resource type="Script" path="res://scripts/bosses/gluttony_boss.gd" id="1_script"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(56, 56)
+
+[node name="GluttonyBoss" type="CharacterBody2D"]
+script = ExtResource("1_script")
+is_boss = true
+display_name = "Gluttony"
+next_boss_name = "Greed"
+next_level_scene_path = "res://scenes/levels/level5.tscn"
+signature_interval = 4.2
+enraged_signature_interval = 2.6
+base_attack_damage = 14.0
+base_attack_interval = 2.6
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")

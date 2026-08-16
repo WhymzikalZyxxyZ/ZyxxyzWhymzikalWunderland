@@ -1,0 +1,51 @@
+class_name Cleric
+extends PlayerController
+## The Cleric: least armored of the five, and the only one whose Magic
+## ability doesn't deal damage at all. Sacred Mend heals instead of
+## striking — the game's one self-sustain tool. record_ability_used still
+## fires with the heal amount, same as every damaging ability does, so
+## Pride's mirror (and anything else that reads last_ability_damage) mirrors
+## whatever value the last ability actually used, healing or not — no
+## special-casing needed for a mirror to make dark sense of a heal.
+
+@export var basic_attack_damage: float = 8.0
+@export var basic_attack_range: float = 46.0
+
+@export var mend_heal_amount: float = 35.0
+@export var mend_magic_cost: float = 25.0
+
+
+func _init() -> void:
+	character_id = CharacterId.CLERIC
+
+
+func _create_stats() -> Stats:
+	return Stats.new(100.0, 70.0, 190.0, 12.0, 5.0, 8.0)
+
+
+func _build_sprite() -> Texture2D:
+	return CharacterSprites.build_cleric()
+
+
+func _attack() -> void:
+	var rolled := _rolled_damage(basic_attack_damage)
+	_strike_in_facing_cone(rolled, basic_attack_range, _last_roll_was_crit)
+	_spawn_attack_slash(basic_attack_range * 0.6)
+	print("Cleric: mace strike!")
+
+
+func _use_magic() -> void:
+	if not stats.try_spend_magic(mend_magic_cost):
+		print("Cleric: not enough Magic to Mend.")
+		return
+
+	# Deliberately not routed through _rolled_damage/bonus_damage_multiplier —
+	# those exist to scale damage, and a heal isn't damage. Crit/Damage boss
+	# upgrades don't touch Sacred Mend's heal amount.
+	stats.heal(mend_heal_amount)
+	record_ability_used(mend_heal_amount)
+	# A healing glow on self, not a combat slash — Mend doesn't swing
+	# anything at anyone, so it shouldn't look like it does.
+	_spawn_magic_burst(global_position, Color(0.45, 0.95, 0.6, 0.85))
+	_trigger_arcane_echo(basic_attack_damage, Color(0.45, 0.95, 0.6, 0.7))
+	print("Cleric: Sacred Mend!")
