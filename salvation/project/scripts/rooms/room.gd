@@ -48,6 +48,8 @@ var is_revealed: bool = false
 var _enemies: Array[Enemy] = []
 var _enemies_spawned: bool = false
 var _camera: Camera2D
+var _wall_bodies: Array[StaticBody2D] = []
+var _obstacle_bodies: Array[Rock] = []
 
 
 func _ready() -> void:
@@ -123,6 +125,31 @@ func _spawn_pending_enemies() -> void:
 ## generation time isn't possible anymore (nothing has spawned yet then).
 func get_spawned_enemies() -> Array[Enemy]:
 	return _enemies.duplicate()
+
+
+## Called by DungeonGenerator once it's finished setting this room's own
+## has_*_door flags for every neighbor it just built (see
+## DungeonGenerator._expand_room, which runs at most once per room). Walls
+## and obstacles are built the instant this room enters the tree (_ready()),
+## but that happens before this room's *own* outward-facing flags are known
+## for every side except whichever one it was entered through — so the
+## geometry built at _ready() is only ever provisional and has to be torn
+## down and rebuilt here against the final flags, or every side but the
+## entrance stays a solid, undoored wall despite a real Door and corridor
+## waiting on the other side of it.
+func rebuild_geometry() -> void:
+	for body in _wall_bodies:
+		if is_instance_valid(body):
+			body.queue_free()
+	_wall_bodies.clear()
+
+	for body in _obstacle_bodies:
+		if is_instance_valid(body):
+			body.queue_free()
+	_obstacle_bodies.clear()
+
+	_build_walls()
+	_build_obstacles()
 
 
 ## Isaac-style locked room camera: fixed on this room's center, swapped in via make_current the moment the room is revealed.
@@ -236,6 +263,7 @@ func _add_wall(center: Vector2, size: Vector2) -> void:
 	body.add_child(EnvironmentArt.build_tiled_sprite(tile, -size / 2.0, size))
 
 	add_child(body)
+	_wall_bodies.append(body)
 
 
 ## Scatters a handful of rock obstacles, but never one that would cut the
@@ -373,3 +401,4 @@ func _add_obstacle(pos: Vector2, radius: float) -> void:
 	body._sprite = sprite
 
 	add_child(body)
+	_obstacle_bodies.append(body)

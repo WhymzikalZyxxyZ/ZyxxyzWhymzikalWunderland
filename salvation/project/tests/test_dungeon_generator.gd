@@ -46,6 +46,48 @@ func test_spawned_player_replays_every_accumulated_run_upgrade() -> void:
 	RunProgress.clear_run_progress()
 
 
+func test_start_room_walls_actually_have_gaps_matching_its_door_flags() -> void:
+	# Regression test: Room._ready() builds walls the instant the room
+	# enters the tree — but DungeonGenerator doesn't finish setting a
+	# room's own *outward-facing* door flags until _expand_room runs on it,
+	# which for the start room happens after add_child(start_room), i.e.
+	# after Room._ready() already built walls using none of those flags.
+	# Without Room.rebuild_geometry() actually tearing that provisional
+	# geometry down and rebuilding it, every side but the entrance comes
+	# out as a solid, undoored wall despite a real Door/corridor sitting
+	# right behind it — sealing the player into the start room entirely.
+	var generator := _build_generator(1)
+	var start_room: Room = generator._rooms_by_cell[Vector2i.ZERO]
+
+	assert_true(
+		start_room.has_left_door and start_room.has_right_door and start_room.has_top_door and start_room.has_bottom_door,
+		"Sanity check: seed 1 gives the start room all four children (see test_start_room_gets_up_to_four_real_children_immediately)."
+	)
+
+	var door_points := {
+		"right": Vector2(start_room.bounds.end.x - 10.0, start_room.door_gap_center_y),
+		"left": Vector2(start_room.bounds.position.x + 10.0, start_room.door_gap_center_y),
+		"top": Vector2(start_room.door_gap_center_x, start_room.bounds.position.y + 10.0),
+		"bottom": Vector2(start_room.door_gap_center_x, start_room.bounds.end.y - 10.0),
+	}
+
+	for label in door_points.keys():
+		var point: Vector2 = door_points[label]
+		var blocked := false
+		for child in start_room.get_children():
+			if not (child is StaticBody2D):
+				continue
+			var collision := child.get_node_or_null("CollisionShape2D")
+			if collision == null or collision.shape == null:
+				continue
+			var shape: RectangleShape2D = collision.shape
+			var wall_rect := Rect2(child.position - shape.size / 2.0, shape.size)
+			if wall_rect.has_point(point):
+				blocked = true
+				break
+		assert_false(blocked, "Door gap on the %s side should not be covered by a solid wall." % label)
+
+
 func test_start_room_gets_up_to_four_real_children_immediately() -> void:
 	var generator := _build_generator(1)
 

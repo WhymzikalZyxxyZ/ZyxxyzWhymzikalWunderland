@@ -18,10 +18,18 @@ extends Node2D
 ## is (not which of the four directions got taken to get there), the actual
 ## order the player enters rooms in never changes the odds — only depth does.
 ##
-## Room population order matters: Room._ready() (which builds walls from
-## its door flags) fires the instant a Room enters the SceneTree. Door
-## flags and the player have to be attached *before* add_child(room), not
-## after, or Room._ready() runs against a half-configured room.
+## The player has to be attached to start_room *before* add_child(start_room),
+## or Paladin._ready() runs before start_room is actually in the tree (see
+## _spawn_player's own docstring). Door flags don't have the same
+## constraint despite Room._ready() building walls from them the instant a
+## Room enters the tree: a room only ever has its "entrance" flag (if any)
+## known at that point, since its own outward-facing flags aren't decided
+## until _expand_room runs on it — which, for every room except the eagerly-
+## expanded start room, is necessarily *after* it's already in the tree
+## (expansion is gated on the room being revealed). So Room._ready() builds
+## provisional geometry, and _expand_room calls Room.rebuild_geometry() once
+## it's done setting every flag a room will ever get, tearing the
+## provisional walls/obstacles down and rebuilding them for real.
 ##
 ## Which sin actually guards this level's boss room is runtime data, not
 ## something authored per level: BossRoster.boss_at() resolves it from
@@ -121,8 +129,8 @@ func _ready() -> void:
 
 	# Only safe once start_room is actually in the tree: paladin was
 	# attached to start_room *before* add_child(start_room) (Room._ready()
-	# needs its children already in place, same reasoning as the door-flags
-	# comment above), which means Paladin._ready() — and the stats it
+	# needs its children already in place — see the class docstring's player-
+	# attachment note), which means Paladin._ready() — and the stats it
 	# sets up — hasn't run yet until this line. Replaying upgrades any
 	# earlier hits a null stats.
 	for upgrade_type in RunProgress.upgrades():
@@ -198,6 +206,8 @@ func _expand_room(cell: Vector2i, room: Room, depth: int) -> void:
 	if room.is_boss_room:
 		return
 
+	var built_any_child := false
+
 	for direction in DIRECTIONS:
 		var next_cell: Vector2i = cell + direction
 		if _rooms_by_cell.has(next_cell):
@@ -220,6 +230,17 @@ func _expand_room(cell: Vector2i, room: Room, depth: int) -> void:
 
 		add_child(child)
 		_build_door(room, child, direction)
+		built_any_child = true
+
+	# room's own walls/obstacles were already built back when IT entered the
+	# tree (Room._ready()), using only whichever single has_*_door flag it
+	# had at that point (the one leading back to wherever it was entered
+	# from, if any). The loop above just finished setting 0-3 more flags on
+	# room itself, for each new child it got — those need room's geometry
+	# actually rebuilt to take effect, or every side but the entrance stays
+	# a solid wall despite a real door and corridor sitting right behind it.
+	if built_any_child:
+		room.rebuild_geometry()
 
 
 func _cell_world_position(cell: Vector2i) -> Vector2:
