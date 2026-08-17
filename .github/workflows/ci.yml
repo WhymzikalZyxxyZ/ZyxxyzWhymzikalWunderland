@@ -1,4 +1,4 @@
-﻿name: CI — lint + test all languages
+name: CI — lint + test all languages
 
 # Runs on every push to a version/* or feature/* branch, and on PRs into development.
 # The promote workflow waits for this to pass before merging to test/main.
@@ -288,7 +288,7 @@ jobs:
     if: needs.detect-changes.outputs.dotnet == 'true' || needs.detect-changes.outputs.ci == 'true'
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '9.0.x'
       - name: Restore + build shared (Roslyn warnings-as-errors)
@@ -668,7 +668,7 @@ jobs:
     if: needs.detect-changes.outputs.dotnet == 'true' || needs.detect-changes.outputs.ci == 'true'
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '9.0.x'
       - name: Check for vulnerable packages
