@@ -1,4 +1,4 @@
-﻿name: Deploy to GitHub Pages + Cloudflare + Fly.io
+name: Deploy to GitHub Pages + Cloudflare + Fly.io
 
 # Fires when main is updated (typically by promote.yml after CI passes).
 # By the time code lands on main, the full CI matrix has already blessed it,
@@ -50,7 +50,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
 
@@ -81,7 +81,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
 
@@ -151,7 +151,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
 
