@@ -1,4 +1,4 @@
-﻿name: CI — lint + test all languages
+name: CI — lint + test all languages
 
 # Runs on every push to a version/* or feature/* branch, and on PRs into development.
 # The promote workflow waits for this to pass before merging to test/main.
@@ -265,7 +265,7 @@ jobs:
       # No gradlew wrapper is committed in kotlin/, so setup-gradle provisions
       # a matching Gradle directly (8.9 — within AGP 8.5.2's supported range)
       # and we invoke `gradle` rather than `./gradlew`.
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '8.9'
       - name: Ensure compileSdk 35 platform is installed
