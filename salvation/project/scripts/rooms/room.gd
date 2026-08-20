@@ -42,6 +42,12 @@ const WALL_Z_INDEX := -1
 ## boss scene, which is what actually makes it spawn.
 @export var is_boss_room: bool = false
 
+## Set by DungeonGenerator._build_room from _difficulty_multiplier() — the
+## same value for every room in a given level (difficulty escalates level
+## to level, not room to room within one). Applied to every enemy this room
+## spawns; see _spawn_pending_enemies and Enemy.apply_difficulty_scale.
+@export var difficulty_multiplier: float = 1.0
+
 var is_cleared: bool = false
 var is_revealed: bool = false
 
@@ -115,6 +121,7 @@ func _spawn_pending_enemies() -> void:
 			rng.randf_range(bounds.position.y + 60.0, bounds.end.y - 60.0)
 		)
 		add_child(enemy)
+		enemy.apply_difficulty_scale(difficulty_multiplier)
 		_enemies.append(enemy)
 
 	is_cleared = _enemies.is_empty()

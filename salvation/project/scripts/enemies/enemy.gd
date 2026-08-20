@@ -88,6 +88,19 @@ func _create_stats() -> Stats:
 	return Stats.new(40.0, 0.0, 90.0, 6.0, 2.0)
 
 
+## Called once, right after spawning, by Room._spawn_pending_enemies() with
+## that room's difficulty_multiplier (see DungeonGenerator._difficulty_multiplier)
+## — the one shared hook the trial-to-trial difficulty ramp scales through,
+## for rank-and-file Sinners and bosses alike, since SinBoss extends Enemy
+## too. Health and power scale; defense is left alone deliberately, so a
+## later trial reads as more dangerous rather than just more tedious to
+## whittle down.
+func apply_difficulty_scale(multiplier: float) -> void:
+	stats.max_health *= multiplier
+	stats.health = stats.max_health
+	stats.power *= multiplier
+
+
 func _physics_process(delta: float) -> void:
 	_chase()
 	move_and_slide()
@@ -176,8 +189,10 @@ func take_damage(amount: float, is_crit: bool = false) -> void:
 	stats.take_damage(amount)
 	if is_crit:
 		_crit_flash_remaining = crit_flash_duration
+		AudioDirector.play_sfx(SfxLibrary.build_crit())
 	else:
 		_hit_flash_remaining = hit_flash_duration
+		AudioDirector.play_sfx(SfxLibrary.build_hit())
 
 	var nearest_player := find_nearest_player()
 	if nearest_player != null:
@@ -199,7 +214,10 @@ func _defeat() -> void:
 	if collision != null:
 		collision.disabled = true
 
+	AudioDirector.play_sfx(SfxLibrary.build_boss_defeat() if is_boss else SfxLibrary.build_enemy_death())
+
 	if is_boss and is_inside_tree():
+		RunProgress.record_boss_defeat()
 		VictoryScreen.next_boss_name = next_boss_name
 		VictoryScreen.next_level_scene_path = next_level_scene_path
 		# Every non-final boss defeat offers a choice of two upgrades — the

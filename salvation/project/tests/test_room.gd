@@ -76,6 +76,32 @@ func test_room_generates_at_least_one_wall_body() -> void:
 	assert_gt(wall_count, 0, "Room._ready() should generate at least one StaticBody2D wall.")
 
 
+func test_difficulty_multiplier_scales_a_spawned_enemys_health_and_power() -> void:
+	var room := Room.new()
+	room.bounds = Rect2(-100, -100, 200, 200)
+	room.difficulty_multiplier = 2.0
+	room.enemy_scenes_to_spawn = [SINNER_SCENE]
+	add_child_autofree(room)  # starts_hidden defaults false, so this reveals and spawns immediately
+
+	var sinner: Enemy = room.get_spawned_enemies()[0]
+
+	assert_eq(sinner.stats.max_health, 60.0, "Sinner's base 30 health should be doubled by a 2.0 difficulty_multiplier.")
+	assert_eq(sinner.stats.health, 60.0, "A freshly-scaled enemy should spawn at its (scaled) full health, not the pre-scale amount.")
+	assert_eq(sinner.stats.power, 10.0, "Sinner's base 5 power should be doubled too.")
+
+
+func test_default_difficulty_multiplier_of_one_leaves_stats_unchanged() -> void:
+	var room := Room.new()
+	room.bounds = Rect2(-100, -100, 200, 200)
+	room.enemy_scenes_to_spawn = [SINNER_SCENE]
+	add_child_autofree(room)
+
+	var sinner: Enemy = room.get_spawned_enemies()[0]
+
+	assert_eq(sinner.stats.max_health, 30.0)
+	assert_eq(sinner.stats.power, 5.0)
+
+
 func test_obstacle_directly_on_the_only_door_makes_it_unreachable() -> void:
 	var room := Room.new()
 	room.bounds = Rect2(-200, -200, 400, 400)

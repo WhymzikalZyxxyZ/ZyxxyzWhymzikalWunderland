@@ -170,6 +170,30 @@ static func build_magic_orb() -> Texture2D:
 	)
 
 
+## A small faceted gem, for StatItemPickup — baked near-white/neutral and
+## tinted per item type via Sprite2D.modulate at the call site, the same
+## "one shared texture, tint at the call site" convention MagicBurst/
+## AttackSlash already use, rather than baking six near-identical colored
+## variants that would each cost their own cache entry.
+static func build_item_gem() -> Texture2D:
+	return _cached("item_gem", func() -> Texture2D:
+		var canvas := PixelCanvas.new(10, 10)
+		canvas.fill_triangle(Vector2(1, 4), Vector2(5, 0), Vector2(9, 4), "g")
+		canvas.fill_triangle(Vector2(1, 4), Vector2(9, 4), Vector2(5, 9), "G")
+		canvas.set_px(4, 2, "h")
+		canvas.set_px(5, 2, "h")
+		canvas.auto_outline("o")
+
+		var palette := {
+			"g": Color(0.92, 0.92, 0.98),
+			"G": Color(0.72, 0.72, 0.85),
+			"h": Color(1.0, 1.0, 1.0),
+			"o": Color(0.05, 0.05, 0.08),
+		}
+		return canvas.bake(palette, 3)
+	)
+
+
 ## Configures a Sprite2D to tile the given texture across a rectangular area, crisp edges preserved.
 static func build_tiled_sprite(tile: Texture2D, top_left: Vector2, size: Vector2) -> Sprite2D:
 	var sprite := Sprite2D.new()

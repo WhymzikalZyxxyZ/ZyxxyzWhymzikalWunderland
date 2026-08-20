@@ -88,6 +88,64 @@ func test_start_room_walls_actually_have_gaps_matching_its_door_flags() -> void:
 		assert_false(blocked, "Door gap on the %s side should not be covered by a solid wall." % label)
 
 
+func test_difficulty_multiplier_is_one_at_level_one() -> void:
+	var generator := _build_generator(1)
+
+	assert_eq(generator._difficulty_multiplier(), 1.0)
+
+
+func test_difficulty_multiplier_climbs_ten_percent_per_level() -> void:
+	var generator := _build_generator(1)
+	generator.level_index = 5
+
+	assert_almost_eq(generator._difficulty_multiplier(), 1.4, 0.001)
+
+
+func test_difficulty_multiplier_at_the_final_trial() -> void:
+	var generator := _build_generator(1)
+	generator.level_index = 10
+
+	assert_almost_eq(generator._difficulty_multiplier(), 1.9, 0.001)
+
+
+func test_built_rooms_carry_the_generators_difficulty_multiplier() -> void:
+	var generator := DungeonGenerator.new()
+	generator.sinner_scene = SINNER_SCENE
+	generator.boss_scene_override = PRIDE_BOSS_SCENE
+	generator.seed_value = 1
+	generator.level_index = 6
+	add_child_autofree(generator)
+
+	var start_room: Room = generator._rooms_by_cell[Vector2i.ZERO]
+
+	assert_almost_eq(start_room.difficulty_multiplier, 1.5, 0.001)
+
+
+func test_room_cleared_is_counted_on_run_progress() -> void:
+	RunProgress.clear_run_progress()
+	var generator := _build_generator(1)
+
+	# The start room has nothing queued, so it's already is_cleared the
+	# instant it's built — one _process() pass should pick that up without
+	# needing anything to actually be defeated.
+	generator._process(0.016)
+
+	assert_eq(RunProgress.rooms_cleared_this_run(), 1)
+	RunProgress.clear_run_progress()
+
+
+func test_room_cleared_is_only_counted_once_even_across_repeated_process_calls() -> void:
+	RunProgress.clear_run_progress()
+	var generator := _build_generator(1)
+
+	generator._process(0.016)
+	generator._process(0.016)
+	generator._process(0.016)
+
+	assert_eq(RunProgress.rooms_cleared_this_run(), 1, "A room already counted shouldn't be counted again on a later frame.")
+	RunProgress.clear_run_progress()
+
+
 func test_start_room_gets_up_to_four_real_children_immediately() -> void:
 	var generator := _build_generator(1)
 

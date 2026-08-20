@@ -43,6 +43,44 @@ value = 100.0
 show_percentage = false
 modulate = Color(0.36, 0.2, 0.5, 1)
 
+[node name="Identity" type="VBoxContainer" parent="PlayerHud"]
+layout_mode = 1
+offset_left = 24.0
+offset_top = 20.0
+offset_right = 420.0
+offset_bottom = 80.0
+
+[node name="NameLabel" type="Label" parent="PlayerHud/Identity"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = ""
+
+[node name="BioLabel" type="Label" parent="PlayerHud/Identity"]
+custom_minimum_size = Vector2(380, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+autowrap_mode = 3
+text = ""
+
+[node name="RunStats" type="VBoxContainer" parent="PlayerHud"]
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -260.0
+offset_top = 20.0
+offset_right = -24.0
+offset_bottom = 80.0
+
+[node name="RoomsLabel" type="Label" parent="PlayerHud/RunStats"]
+layout_mode = 2
+horizontal_alignment = 2
+text = "Rooms Cleared: 0"
+
+[node name="BossesLabel" type="Label" parent="PlayerHud/RunStats"]
+layout_mode = 2
+horizontal_alignment = 2
+text = "Bosses Defeated: 0/10"
+
 [node name="AttackButton" type="TouchScreenButton" parent="."]
 position = Vector2(950, 520)
 texture_normal = SubResource("PlaceholderTexture2D_button")

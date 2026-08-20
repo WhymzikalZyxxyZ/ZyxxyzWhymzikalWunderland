@@ -80,6 +80,11 @@ var _boss_info: Dictionary
 var _rooms_by_cell: Dictionary = {}
 var _depth_by_cell: Dictionary = {}
 var _expanded_cells: Dictionary = {}
+## Cells already counted toward RunProgress.rooms_cleared_this_run() — a
+## room only ever gets counted once, the first frame its own is_cleared
+## flips true (see _process). Separate dictionary from _expanded_cells
+## since a room can clear well before or after it's expanded.
+var _counted_cleared_cells: Dictionary = {}
 
 # The boss doesn't exist until its room is revealed and lazily spawns it, so
 # rather than pre-picking "the" boss room (multiple sibling branches can
@@ -109,10 +114,16 @@ func _ready() -> void:
 	# needs to load back into.
 	var scene := get_tree().current_scene
 	if scene != null and not scene.scene_file_path.is_empty():
-		RunProgress.save_run_progress(scene.scene_file_path, CharacterId.chosen_character_id)
+		RunProgress.save_run_progress(scene.scene_file_path, CharacterId.chosen_character_id, level_index)
 
 	RunProgress.ensure_boss_order(_rng)
 	_boss_info = BossRoster.boss_at(RunProgress.boss_order(), level_index)
+
+	# The whole level's BGM is this level's boss's own theme, not just
+	# something that starts once the boss fight itself begins — see
+	# BossThemeLibrary's class docstring for why "the boss's name is the
+	# song."
+	AudioDirector.play_boss_theme(_boss_info["name"])
 
 	if not level_title_card_path.is_empty():
 		var title_card := get_node_or_null(level_title_card_path)
@@ -161,6 +172,20 @@ func _process(_delta: float) -> void:
 		if not is_instance_valid(room) or not room.is_revealed:
 			continue
 		_expand_room(cell, room, _depth_by_cell[cell])
+
+	# Same snapshot-then-check shape as the expansion loop above, for the
+	# same reason: rooms_cleared_this_run() is a whole-run total (persisted
+	# in RunProgress, since a level's own DungeonGenerator is destroyed at
+	# every level boundary), so it counts a room exactly once, the instant
+	# it's first observed cleared, rather than re-deriving it from scratch.
+	for cell in _rooms_by_cell.keys():
+		if _counted_cleared_cells.has(cell):
+			continue
+		var room: Room = _rooms_by_cell[cell]
+		if not is_instance_valid(room) or not room.is_cleared:
+			continue
+		_counted_cleared_cells[cell] = true
+		RunProgress.record_room_cleared()
 
 	if _boss_configured and (_boss_bar == null or _boss_bar_bound):
 		return
@@ -262,7 +287,19 @@ func _build_room(cell: Vector2i, is_start: bool, is_boss: bool) -> Room:
 	room.is_boss_room = is_boss
 	room.floor_color = Color(0.16, 0.05, 0.07) if is_boss else Color(0.09, 0.08, 0.1)
 	room.gore_seed = _rng.randi()
+	room.difficulty_multiplier = _difficulty_multiplier()
 	return room
+
+
+## +10% enemy/boss health and power per trial beyond the first — Trial X
+## (level_index 10) ends up at 1.9x Trial I's numbers. One constant here is
+## the entire difficulty ramp; every room built by this generator (start,
+## mob, boss) shares the same multiplier since a level's difficulty is
+## meant to be constant across its own dungeon, only escalating level to
+## level. See Room.difficulty_multiplier / Enemy.apply_difficulty_scale for
+## where this actually gets applied.
+func _difficulty_multiplier() -> float:
+	return 1.0 + float(level_index - 1) * 0.10
 
 
 ## direction points from source (the already-placed room) to target (the

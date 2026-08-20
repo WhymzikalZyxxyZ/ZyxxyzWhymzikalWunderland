@@ -61,6 +61,10 @@ text = "How to Play"
 layout_mode = 2
 text = "Settings"
 
+[node name="ItemsButton" type="Button" parent="VBox"]
+layout_mode = 2
+text = "Items"
+
 [node name="Spacer2" type="Control" parent="VBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 12)

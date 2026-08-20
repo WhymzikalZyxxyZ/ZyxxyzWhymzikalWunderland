@@ -1,14 +1,17 @@
 class_name Rock
 extends StaticBody2D
 ## A breakable obstacle: three hits to shatter, then a 21% chance to leave
-## behind a HealthPickup and a separate, mutually exclusive 21% chance to
-## leave behind a MagicPickup instead. Tracked via a hand-kept registry the
-## same way Enemy is, so player attacks can find rocks in range without
-## every attack needing its own room reference.
+## behind a HealthPickup, a separate 21% chance to leave behind a
+## MagicPickup, and a separate 10% chance to leave behind a random
+## StatItemPickup — all three mutually exclusive, rolled against the same
+## draw. Tracked via a hand-kept registry the same way Enemy is, so player
+## attacks can find rocks in range without every attack needing its own
+## room reference.
 
 const MAX_HITS := 3
 const HEALTH_DROP_CHANCE := 0.21
 const MAGIC_DROP_CHANCE := 0.21
+const ITEM_DROP_CHANCE := 0.10
 
 static var active_rocks: Array[Rock] = []
 
@@ -59,6 +62,8 @@ func take_damage(_amount: float = 1.0, is_crit: bool = false) -> void:
 
 
 func _break() -> void:
+	AudioDirector.play_sfx(SfxLibrary.build_enemy_death())
+
 	var roll := randf()
 	if roll < HEALTH_DROP_CHANCE:
 		var pickup := HealthPickup.new()
@@ -66,6 +71,11 @@ func _break() -> void:
 		get_parent().add_child(pickup)
 	elif roll < HEALTH_DROP_CHANCE + MAGIC_DROP_CHANCE:
 		var pickup := MagicPickup.new()
+		pickup.global_position = global_position
+		get_parent().add_child(pickup)
+	elif roll < HEALTH_DROP_CHANCE + MAGIC_DROP_CHANCE + ITEM_DROP_CHANCE:
+		var pickup := StatItemPickup.new()
+		pickup.item_type = ItemRoster.random_item_type()
 		pickup.global_position = global_position
 		get_parent().add_child(pickup)
 

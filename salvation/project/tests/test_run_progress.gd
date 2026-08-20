@@ -368,6 +368,144 @@ func test_upgrades_survive_across_instances_pointed_at_the_same_path() -> void:
 	assert_eq(second.upgrades(), [PlayerController.BossUpgradeType.MOVE_SPEED, PlayerController.BossUpgradeType.NEW_MAGIC])
 
 
+func test_item_lifetime_uses_and_best_level_start_at_zero() -> void:
+	var progress := _build()
+
+	assert_eq(progress.item_lifetime_uses(ItemRoster.ItemType.VITALITY), 0)
+	assert_eq(progress.item_best_level(ItemRoster.ItemType.VITALITY), 0)
+
+
+func test_record_item_pickup_increments_lifetime_uses_immediately() -> void:
+	var progress := _build()
+
+	progress.record_item_pickup(ItemRoster.ItemType.HASTE)
+	progress.record_item_pickup(ItemRoster.ItemType.HASTE)
+	progress.record_item_pickup(ItemRoster.ItemType.WARD)
+
+	assert_eq(progress.item_lifetime_uses(ItemRoster.ItemType.HASTE), 2)
+	assert_eq(progress.item_lifetime_uses(ItemRoster.ItemType.WARD), 1)
+
+
+func test_item_best_level_only_banks_once_the_run_actually_ends() -> void:
+	var progress := _build()
+	progress.save_run_progress("res://scenes/levels/level4.tscn", CharacterId.PALADIN, 4)
+	progress.record_item_pickup(ItemRoster.ItemType.MIGHT)
+
+	assert_eq(progress.item_best_level(ItemRoster.ItemType.MIGHT), 0, "Shouldn't bank until the run ends (death or victory).")
+
+	progress.clear_run_progress()
+
+	assert_eq(progress.item_best_level(ItemRoster.ItemType.MIGHT), 4)
+
+
+func test_item_best_level_keeps_the_deeper_of_two_runs() -> void:
+	var progress := _build()
+	progress.save_run_progress("res://scenes/levels/level2.tscn", CharacterId.PALADIN, 2)
+	progress.record_item_pickup(ItemRoster.ItemType.FOCUS)
+	progress.clear_run_progress()
+
+	progress.save_run_progress("res://scenes/levels/level7.tscn", CharacterId.PALADIN, 7)
+	progress.record_item_pickup(ItemRoster.ItemType.FOCUS)
+	progress.clear_run_progress()
+
+	progress.save_run_progress("res://scenes/levels/level1.tscn", CharacterId.PALADIN, 1)
+	progress.record_item_pickup(ItemRoster.ItemType.FOCUS)
+	progress.clear_run_progress()
+
+	assert_eq(progress.item_best_level(ItemRoster.ItemType.FOCUS), 7, "A shallower later run shouldn't overwrite a deeper earlier one.")
+
+
+func test_complete_run_also_banks_item_best_level() -> void:
+	var progress := _build()
+	progress.save_run_progress("res://scenes/levels/level10.tscn", CharacterId.PALADIN, 10)
+	progress.record_item_pickup(ItemRoster.ItemType.FORTUNE)
+
+	progress.complete_run()
+
+	assert_eq(progress.item_best_level(ItemRoster.ItemType.FORTUNE), 10)
+
+
+func test_item_lifetime_stats_survive_reset_of_run_state_but_not_reset_all() -> void:
+	var progress := _build()
+	progress.save_run_progress("res://scenes/levels/level3.tscn", CharacterId.PALADIN, 3)
+	progress.record_item_pickup(ItemRoster.ItemType.VITALITY)
+	progress.clear_run_progress()
+
+	assert_eq(progress.item_lifetime_uses(ItemRoster.ItemType.VITALITY), 1, "clear_run_progress() is per-run only; lifetime stats are meta-progression.")
+
+	progress.reset_all()
+
+	assert_eq(progress.item_lifetime_uses(ItemRoster.ItemType.VITALITY), 0)
+	assert_eq(progress.item_best_level(ItemRoster.ItemType.VITALITY), 0)
+
+
+func test_item_stats_survive_across_instances_pointed_at_the_same_path() -> void:
+	var first: Node = RunProgressScript.new(_temp_path)
+	add_child_autofree(first)
+	first.save_run_progress("res://scenes/levels/level5.tscn", CharacterId.PALADIN, 5)
+	first.record_item_pickup(ItemRoster.ItemType.WARD)
+	first.clear_run_progress()
+
+	var second: Node = RunProgressScript.new(_temp_path)
+	add_child_autofree(second)
+
+	assert_eq(second.item_lifetime_uses(ItemRoster.ItemType.WARD), 1)
+	assert_eq(second.item_best_level(ItemRoster.ItemType.WARD), 5)
+
+
+func test_rooms_and_bosses_this_run_start_at_zero() -> void:
+	var progress := _build()
+
+	assert_eq(progress.rooms_cleared_this_run(), 0)
+	assert_eq(progress.bosses_defeated_this_run(), 0)
+
+
+func test_record_room_cleared_and_boss_defeat_increment_independently() -> void:
+	var progress := _build()
+
+	progress.record_room_cleared()
+	progress.record_room_cleared()
+	progress.record_boss_defeat()
+
+	assert_eq(progress.rooms_cleared_this_run(), 2)
+	assert_eq(progress.bosses_defeated_this_run(), 1)
+
+
+func test_clear_run_progress_resets_rooms_and_bosses_this_run() -> void:
+	var progress := _build()
+	progress.record_room_cleared()
+	progress.record_boss_defeat()
+
+	progress.clear_run_progress()
+
+	assert_eq(progress.rooms_cleared_this_run(), 0)
+	assert_eq(progress.bosses_defeated_this_run(), 0)
+
+
+func test_rooms_and_bosses_this_run_survive_across_instances_pointed_at_the_same_path() -> void:
+	var first: Node = RunProgressScript.new(_temp_path)
+	add_child_autofree(first)
+	first.record_room_cleared()
+	first.record_room_cleared()
+	first.record_boss_defeat()
+
+	var second: Node = RunProgressScript.new(_temp_path)
+	add_child_autofree(second)
+
+	assert_eq(second.rooms_cleared_this_run(), 2)
+	assert_eq(second.bosses_defeated_this_run(), 1)
+
+
+func test_save_run_progress_defaults_level_index_to_one() -> void:
+	var progress := _build()
+
+	progress.save_run_progress("res://scenes/levels/level1.tscn", CharacterId.PALADIN)
+	progress.record_item_pickup(ItemRoster.ItemType.HASTE)
+	progress.clear_run_progress()
+
+	assert_eq(progress.item_best_level(ItemRoster.ItemType.HASTE), 1)
+
+
 func test_a_corrupted_save_file_is_treated_as_a_fresh_start() -> void:
 	var file := FileAccess.open(_temp_path, FileAccess.WRITE)
 	file.store_string("not a valid config file")

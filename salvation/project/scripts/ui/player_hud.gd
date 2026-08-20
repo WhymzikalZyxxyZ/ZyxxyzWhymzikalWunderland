@@ -13,6 +13,10 @@ extends Control
 
 var _health_bar: ProgressBar
 var _magic_bar: ProgressBar
+var _name_label: Label
+var _bio_label: Label
+var _rooms_label: Label
+var _bosses_label: Label
 var _player: PlayerController
 
 var _target_health_ratio: float = 1.0
@@ -29,6 +33,11 @@ var _magic_button_base_scale: Vector2 = Vector2.ONE
 func _ready() -> void:
 	_health_bar = get_node("Bars/HealthBar")
 	_magic_bar = get_node("Bars/MagicBar")
+	_name_label = get_node("Identity/NameLabel")
+	_bio_label = get_node("Identity/BioLabel")
+	_rooms_label = get_node("RunStats/RoomsLabel")
+	_bosses_label = get_node("RunStats/BossesLabel")
+	_update_run_stats_labels()
 
 	if not player_path.is_empty():
 		var player := get_node_or_null(player_path)
@@ -54,6 +63,14 @@ func bind_player(player: PlayerController) -> void:
 	_displayed_magic_ratio = _target_magic_ratio
 	_apply_bar_values()
 
+	# Identity is fixed for the whole run (the character doesn't change
+	# mid-run), so this is set once here rather than refreshed every frame
+	# like the run-stat labels below.
+	if _name_label != null:
+		_name_label.text = CharacterId.name_of(player.character_id)
+	if _bio_label != null:
+		_bio_label.text = CharacterRoster.blurb_for(player.character_id)
+
 
 func _physics_process(delta: float) -> void:
 	if _player == null or not is_instance_valid(_player):
@@ -77,6 +94,7 @@ func _physics_process(delta: float) -> void:
 
 	_update_button_press(_attack_button, _attack_button_base_scale, delta)
 	_update_button_press(_magic_button, _magic_button_base_scale, delta)
+	_update_run_stats_labels()
 
 
 static func _update_button_press(button: TouchScreenButton, base_scale: Vector2, delta: float) -> void:
@@ -85,6 +103,17 @@ static func _update_button_press(button: TouchScreenButton, base_scale: Vector2,
 
 	var target: Vector2 = base_scale * 0.9 if button.is_pressed() else base_scale
 	button.scale = button.scale.lerp(target, clampf(16.0 * delta, 0.0, 1.0))
+
+
+## RunProgress is the source of truth (see DungeonGenerator/Enemy — both
+## counters have to survive the level boundary, which this HUD instance
+## itself doesn't), so this just re-reads it every tick rather than needing
+## any signal wired up.
+func _update_run_stats_labels() -> void:
+	if _rooms_label != null:
+		_rooms_label.text = "Rooms Cleared: %d" % RunProgress.rooms_cleared_this_run()
+	if _bosses_label != null:
+		_bosses_label.text = "Bosses Defeated: %d/%d" % [RunProgress.bosses_defeated_this_run(), BossRoster.TRIAL_COUNT]
 
 
 func _apply_bar_values() -> void:
