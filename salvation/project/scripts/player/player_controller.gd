@@ -178,6 +178,7 @@ func _physics_process(delta: float) -> void:
 		_dash_time_remaining = dash_duration
 		_dash_cooldown_remaining = dash_cooldown
 		is_invulnerable = true
+		AudioDirector.play_sfx(SfxLibrary.build_dash())
 
 	if _is_dashing:
 		_dash_time_remaining -= delta
@@ -253,8 +254,10 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("attack") and _attack_cooldown_remaining <= 0.0:
 		_attack()
 		_attack_cooldown_remaining = attack_cooldown
+		AudioDirector.play_sfx(SfxLibrary.build_attack())
 	if Input.is_action_just_pressed("magic"):
 		_use_magic()
+		AudioDirector.play_sfx(SfxLibrary.build_magic())
 
 
 func _spawn_dash_afterimage() -> void:
@@ -514,10 +517,12 @@ func take_damage(amount: float, source_position: Vector2 = Vector2.INF) -> void:
 		_is_parrying = false
 		_parry_flash_remaining = 0.18
 		stats.restore_magic(parry_magic_refund)
+		AudioDirector.play_sfx(SfxLibrary.build_parry())
 		return
 
 	stats.take_damage(amount)
 	_hit_flash_remaining = hit_flash_duration
+	AudioDirector.play_sfx(SfxLibrary.build_player_hurt())
 
 	if source_position.is_finite() and source_position != global_position:
 		_knockback_velocity = source_position.direction_to(global_position) * knockback_force

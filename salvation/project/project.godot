@@ -27,6 +27,7 @@ window/stretch/aspect="expand"
 
 RunProgress="*res://scripts/core/run_progress.gd"
 GameSettings="*res://scripts/core/game_settings.gd"
+AudioDirector="*res://scripts/core/audio_director.gd"
 
 [editor_plugins]
 

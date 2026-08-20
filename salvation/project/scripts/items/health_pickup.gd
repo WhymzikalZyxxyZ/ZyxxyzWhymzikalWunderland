@@ -26,4 +26,5 @@ func _ready() -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if body is PlayerController:
 		body.stats.heal(heal_amount)
+		AudioDirector.play_sfx(SfxLibrary.build_pickup())
 		queue_free()

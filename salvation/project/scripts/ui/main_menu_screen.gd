@@ -23,6 +23,7 @@ func _ready() -> void:
 	var reset_button := get_node_or_null("VBox/ResetButton")
 	var reset_dialog := get_node_or_null("ResetConfirmDialog")
 	var settings_button := get_node_or_null("VBox/SettingsButton")
+	var items_button := get_node_or_null("VBox/ItemsButton")
 	var progress_label := get_node_or_null("VBox/ProgressLabel")
 	var stats_label := get_node_or_null("VBox/StatsLabel")
 	var completions_label := get_node_or_null("VBox/CompletionsLabel")
@@ -45,6 +46,9 @@ func _ready() -> void:
 
 	if settings_button != null:
 		settings_button.pressed.connect(_on_settings_pressed)
+
+	if items_button != null:
+		items_button.pressed.connect(_on_items_pressed)
 
 	if progress_label != null:
 		progress_label.text = _progress_summary()
@@ -88,6 +92,10 @@ func _on_how_to_play_pressed() -> void:
 
 func _on_settings_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/ui/settings_screen.tscn")
+
+
+func _on_items_pressed() -> void:
+	get_tree().change_scene_to_file("res://scenes/ui/items_screen.tscn")
 
 
 func _on_reset_confirmed() -> void:

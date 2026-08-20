@@ -74,6 +74,28 @@ var _upgrades: Array[int] = []
 var _run_elapsed_seconds: float = 0.0
 var _session_start_time: float = -1.0
 
+## Which level (1-10) the current run is on — set alongside level_path/
+## character_id by save_run_progress(). Exists purely so item pickups can
+## record "how far a run got" (see _item_best_level below); nothing else
+## reads it.
+var _current_level_index: int = 1
+
+## ItemRoster.ItemType values picked up so far THIS run, in pickup order —
+## same per-run/replayed-per-level shape as _upgrades, except nothing
+## replays these onto anything: they only exist to bank into
+## _item_best_level the moment this run ends (see _bank_item_best_levels).
+var _run_items: Array[int] = []
+
+## Meta-progression, never reset except by reset_all(): ItemType ->
+## lifetime pickup count, and ItemType -> the deepest level_index any run
+## that picked it up ever reached.
+var _item_lifetime_uses: Dictionary = {}
+var _item_best_level: Dictionary = {}
+
+## Per-run counters, reset alongside the rest of the resume point.
+var _rooms_cleared_this_run: int = 0
+var _bosses_defeated_this_run: int = 0
+
 
 func _init(save_path: String = SAVE_PATH) -> void:
 	_save_path = save_path
@@ -155,6 +177,48 @@ func add_upgrade(type: int) -> void:
 	_save()
 
 
+## Lifetime pickup count for one ItemRoster.ItemType — "how many times the
+## player has used that item," across every run ever.
+func item_lifetime_uses(type: int) -> int:
+	return _item_lifetime_uses.get(type, 0)
+
+
+## Deepest level_index any run that picked up this ItemRoster.ItemType at
+## least once ever reached — "how far they got" with it. 0 if never picked
+## up (there is no level_index 0, so this doubles as "never").
+func item_best_level(type: int) -> int:
+	return _item_best_level.get(type, 0)
+
+
+## Called by StatItemPickup the instant it's collected. Lifetime use count
+## updates immediately; "how far they got" only banks once this run
+## actually ends (death or victory) — see _bank_item_best_levels.
+func record_item_pickup(type: int) -> void:
+	_run_items.append(type)
+	_item_lifetime_uses[type] = _item_lifetime_uses.get(type, 0) + 1
+	_save()
+
+
+func rooms_cleared_this_run() -> int:
+	return _rooms_cleared_this_run
+
+
+func bosses_defeated_this_run() -> int:
+	return _bosses_defeated_this_run
+
+
+## Called by DungeonGenerator the instant a room's is_cleared flips true.
+func record_room_cleared() -> void:
+	_rooms_cleared_this_run += 1
+	_save()
+
+
+## Called by Enemy._defeat() the instant a boss (is_boss true) falls.
+func record_boss_defeat() -> void:
+	_bosses_defeated_this_run += 1
+	_save()
+
+
 ## Live elapsed time for the current run, in seconds — the banked total
 ## plus whatever's accumulated since the session last started ticking (see
 ## _session_start_time). Read-only; doesn't bank anything itself.
@@ -194,9 +258,10 @@ func ensure_boss_order(rng: RandomNumberGenerator) -> void:
 ## Continue later resumes at that level's own start (a freshly-generated
 ## dungeon, not mid-dungeon state; the lazy room generation has nothing
 ## durable to resume into below the level boundary).
-func save_run_progress(level_path: String, character_id: int) -> void:
+func save_run_progress(level_path: String, character_id: int, level_index: int = 1) -> void:
 	_current_level_path = level_path
 	_current_character_id = character_id
+	_current_level_index = level_index
 	if _session_start_time < 0.0:
 		_session_start_time = Time.get_unix_time_from_system()
 	_save()
@@ -207,10 +272,21 @@ func save_run_progress(level_path: String, character_id: int) -> void:
 ## resume point is cleared rather than left pointing at a level whose
 ## in-progress dungeon no longer exists.
 func clear_run_progress() -> void:
+	# Must happen before anything below is wiped — same ordering footgun as
+	# the elapsed timer and current_character_id (see the class docstring):
+	# both DeathScreen and complete_run() call this as their first step, so
+	# this is the one place guaranteed to see _run_items/_current_level_index
+	# still intact for every path a run can end on.
+	_bank_item_best_levels()
+
 	_current_level_path = ""
 	_current_character_id = -1
+	_current_level_index = 1
 	_boss_order = []
 	_upgrades = []
+	_run_items = []
+	_rooms_cleared_this_run = 0
+	_bosses_defeated_this_run = 0
 	_run_elapsed_seconds = 0.0
 	_session_start_time = -1.0
 	_save()
@@ -256,13 +332,29 @@ func reset_all() -> void:
 	_total_victories = 0
 	_victories_by_character = {}
 	_tutorial_seen = false
+	_item_lifetime_uses = {}
+	_item_best_level = {}
 	_current_level_path = ""
 	_current_character_id = -1
+	_current_level_index = 1
 	_boss_order = []
 	_upgrades = []
+	_run_items = []
+	_rooms_cleared_this_run = 0
+	_bosses_defeated_this_run = 0
 	_run_elapsed_seconds = 0.0
 	_session_start_time = -1.0
 	_save()
+
+
+## Folds this run's picked-up items into the lifetime "how far did they get
+## with it" record — every distinct type gets _current_level_index if
+## that's deeper than whatever was already banked for it. Called once, at
+## the very start of clear_run_progress(), before _run_items/
+## _current_level_index are wiped.
+func _bank_item_best_levels() -> void:
+	for type in _run_items:
+		_item_best_level[type] = maxi(_item_best_level.get(type, 0), _current_level_index)
 
 
 ## Folds whatever's accumulated since the session last started ticking
@@ -287,10 +379,16 @@ func _save() -> void:
 	config.set_value("progress", "total_victories", _total_victories)
 	config.set_value("progress", "victories_by_character", _victories_by_character)
 	config.set_value("progress", "tutorial_seen", _tutorial_seen)
+	config.set_value("progress", "item_lifetime_uses", _item_lifetime_uses)
+	config.set_value("progress", "item_best_level", _item_best_level)
 	config.set_value("run", "level_path", _current_level_path)
 	config.set_value("run", "character_id", _current_character_id)
+	config.set_value("run", "level_index", _current_level_index)
 	config.set_value("run", "boss_order", _boss_order)
 	config.set_value("run", "upgrades", _upgrades)
+	config.set_value("run", "items", _run_items)
+	config.set_value("run", "rooms_cleared", _rooms_cleared_this_run)
+	config.set_value("run", "bosses_defeated", _bosses_defeated_this_run)
 	config.set_value("run", "elapsed_seconds", _run_elapsed_seconds)
 	config.save(_save_path)
 
@@ -312,9 +410,12 @@ func _load() -> void:
 	_total_victories = config.get_value("progress", "total_victories", 0)
 	_victories_by_character = config.get_value("progress", "victories_by_character", {})
 	_tutorial_seen = config.get_value("progress", "tutorial_seen", false)
+	_item_lifetime_uses = config.get_value("progress", "item_lifetime_uses", {})
+	_item_best_level = config.get_value("progress", "item_best_level", {})
 
 	_current_level_path = config.get_value("run", "level_path", "")
 	_current_character_id = config.get_value("run", "character_id", -1)
+	_current_level_index = config.get_value("run", "level_index", 1)
 
 	var order = config.get_value("run", "boss_order", [])
 	_boss_order = []
@@ -325,6 +426,14 @@ func _load() -> void:
 	_upgrades = []
 	for type in upgrades:
 		_upgrades.append(type)
+
+	var items = config.get_value("run", "items", [])
+	_run_items = []
+	for type in items:
+		_run_items.append(type)
+
+	_rooms_cleared_this_run = config.get_value("run", "rooms_cleared", 0)
+	_bosses_defeated_this_run = config.get_value("run", "bosses_defeated", 0)
 
 	_run_elapsed_seconds = config.get_value("run", "elapsed_seconds", 0.0)
 	_session_start_time = -1.0
